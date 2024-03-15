@@ -1,4 +1,5 @@
 # Tangled Program Graphs (TPG)
+This code reproduces results from the paper *Evolving hierarchical memory‑prediction machines inmulti‑task reinforcement learning, StephenKelly, TatianaVoegerl, WolfgangBanzhaf, and CedricGondro* [pdf](https://rdcu.be/czd3s).
 
 ## Quick Start
 
@@ -30,7 +31,7 @@ scons --opt
 ```
 
 ### 4. Run an experiment
-The folder tpg/classic_control_example contains scripts to evolve policies for classic control tasks. It's possible to reproduce all experiments from this [paper](https://rdcu.be/czd3s). Parameters are set in parameters.txt. The default settings will evolve a policy for the [CartPole](https://gymnasium.farama.org/environments/classic_control/cart_pole/) task.
+The folder tpg/classic_control_example contains scripts to evolve policies for classic control tasks. Parameters are set in parameters.txt. The default settings will evolve a policy for the [CartPole](https://gymnasium.farama.org/environments/classic_control/cart_pole/) task.
 
 To run an experiment using 4 parallel MPI processes, make tpg/classic_control_example your working directory and run:
 ```
