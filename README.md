@@ -5,18 +5,26 @@
 This code is designed to be used in Linux
 
 ### 1. Install required software
+From the tpg directory run:
 ```
 sudo xargs --arg-file requirements.txt apt install
 ```
 
-### 2. Set environment variables in ~/.profile
+### 2. Set environment variables.
+In order to easily access tpg scripts, we must add appropriate folders to the $PATH environment variable.
+To do so, add the following to ~/.profile
 ```
 export TPG_PATH=<YOUR_PATH_HERE>/tpg
 export PATH=$PATH:$TPG_PATH/scripts/plot
 export PATH=$PATH:$TPG_PATH/scripts/run
 ```
+Then run:
+```
+source ~/.profile
+```
 
 ### 3. Compile tpg
+From the tpg directory run:
 ```
 scons --opt
 ```
