@@ -1,14 +1,12 @@
 # Tangled Program Graphs (TPG)
-This code reproduces results from the paper 
+This code reproduces results from the paper: 
 
 Stephen Kelly, Tatiana Voegerl, Wolfgang Banzhaf, and Cedric Gondro. Evolving Hierarchical Memory-Prediction Machines in Multi-Task Reinforcement Learning. Genetic Programming and Evolvable Machines, 2021. [pdf](https://rdcu.be/czd3s).
 
 ## Quick Start
 
-This code is designed to be used in Linux
-
 ### 1. Install required software
-From the tpg directory run:
+This code is designed to be used in Linux. From the tpg directory run:
 ```
 sudo xargs --arg-file requirements.txt apt install
 ```
