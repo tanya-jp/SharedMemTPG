@@ -1,0 +1,26 @@
+Import('env')
+
+ccanada = ARGUMENTS.get('ccanada', 0)
+hpcc = ARGUMENTS.get('hpcc', 0)
+think = ARGUMENTS.get('think', 0)
+
+import os
+env['TPGPATH'] = os.environ.get('TPGPATH','default')
+env['HOME'] = os.environ.get('HOME','default')
+env['EBROOTOPENCV'] = os.environ.get('EBROOTOPENCV','default')
+
+env.Append(CPPPATH = ['../TPG', '../env', '../genomic', '../env/classicRL',"$EBROOTBOOST/include",'/usr/include/hdf5/serial/','/usr/include/eigen3',"$EBROOTOPENCV/include/opencv4/","/usr/include/opencv4/","$EBROOTOPENCV/include/opencv4/opencv2"])
+
+env.Append(LIBS = ['TPG','boost_thread','boost_system','boost_mpi','boost_serialization','pthread','boost_iostreams','hdf5','armadillo','opencv_core','opencv_highgui','opencv_imgcodecs'])
+
+##if int(hpcc):
+##  env.Append(LIBS = [''])
+##else:
+##  env.Append(LIBS = ['glut','GLU','GL'])
+
+env.Append(LIBPATH = ['../TPG', '../env', '/usr/lib/x86_64-linux-gnu','/usr/lib/x86_64-linux-gnu/hdf5/serial/',"$EBROOTOPENCV/lib64/"])
+
+env.Program('tpgExpClassicRL_MPI', ['tpgExpClassicRL_MPI.cc'])
+if int(think):
+    env.ParseConfig('pkg-config x11 --cflags --libs opencv4')
+

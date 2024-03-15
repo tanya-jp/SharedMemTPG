@@ -1,0 +1,161 @@
+#ifndef memoryEigen_h
+#define memoryEigen_h
+
+#include <Eigen/Dense>
+#include <any>
+
+#include "misc.h"
+
+using namespace Eigen;
+
+typedef Matrix<bool, Dynamic, Dynamic> MatrixXb;
+class memoryEigen {
+ public:
+  static const uint8_t NA_TYPE = -1;
+  static const uint8_t SCALAR_TYPE = 0;
+  static const uint8_t VECTOR_TYPE = 1;
+  static const uint8_t MATRIX_TYPE = 2;
+  static const uint8_t NUM_MEMORY_TYPES = 3;
+  
+  inline Ref<MatrixXb> getActiveE() { return active_; }
+  inline Ref<MatrixXd> getReadTimeE() { return read_time_; }
+  inline Ref<MatrixXd> getWriteTimeE() { return write_time_; }
+
+  inline void clear() {
+    for (size_t i = 0; i < memoryIndices_; i++) mem_[i].setZero();
+  }
+  inline void clearActive() { active_.fill(false); }
+  inline void setActive() { active_.fill(true); }
+  inline void clearReadTime() { read_time_.setZero(); }
+  inline void clearWriteTime() { write_time_.setZero(); }
+  inline long id() { return id_; }
+  inline void id(long id) { id_ = id; }
+  constexpr size_t indexSize() { return memoryIndices_; }
+  inline void getActiveReadTime(std::vector<double> &v) {
+    for (size_t i = 0; i < memoryIndices_; i++)
+      if (active_(i, 0)) v[i] = read_time_(i, 0);
+  }
+  inline void getActiveWriteTime(std::vector<double> &v) {
+    for (size_t i = 0; i < memoryIndices_; i++)
+      if (active_(i, 0)) v[i] = write_time_(i, 0);
+  }
+  inline size_t memoryRows() { return memoryRows_; }  // always square
+  inline size_t memoryCols() { return memoryCols_; }
+  inline int refs() { return nrefs_; }
+  inline void refs(int i) { nrefs_ = i; }
+  inline int refDec() { return --nrefs_; }
+  inline int refInc() { return ++nrefs_; }
+  inline int refsPolicy() { return nrefs_policy_; }
+  inline void refsPolicy(int i) { nrefs_policy_ = i; }
+  inline int refsPolicyInc() { return ++nrefs_policy_; }
+  void resizeMemory() {
+    mem_.resize(memoryIndices_);
+    for (size_t i = 0; i < memoryIndices_; i++) {
+      if (type_ == SCALAR_TYPE) {
+        // memoryRows_ = memoryCols_ = 1;
+        mem_[i].resize(1, 1);
+      } else if (type_ == VECTOR_TYPE) {
+        // memoryCols_ = 1;
+        mem_[i].resize(memoryRows_, 1);
+      } else if (type_ == MATRIX_TYPE)
+        mem_[i].resize(memoryRows_, memoryCols_);
+    }
+    active_.resize(memoryIndices_, 1);
+    read_time_.resize(memoryIndices_, 1);
+    write_time_.resize(memoryIndices_, 1);
+  }
+  inline int type() { return type_; }
+  inline void type(int t) { type_ = t; }
+
+  string checkpoint() {
+    ostringstream oss;
+
+    oss << "memoryEigen:" << id_ << ":" << type_ << ":" << memoryIndices_ << ":"
+        << memoryRows_ << ":" << memoryCols_ << ":" << nrefs_ << endl;
+
+    return oss.str();
+  }
+
+  memoryEigen(long i, int type, size_t memoryIndices, size_t memoryRows,
+              size_t memoryCols) {
+    id_ = i;
+    nrefs_ = 0;
+    type_ = type;
+    memoryIndices_ = memoryIndices;
+    memoryRows_ = memoryRows;
+    memoryCols_ = memoryCols;
+    resizeMemory();
+    clear();
+    clearActive();
+    clearReadTime();
+    clearWriteTime();
+  }
+
+  memoryEigen(long i, int type,
+              std::unordered_map<std::string, std::any> params) {
+    id_ = i;
+    nrefs_ = 0;
+    type_ = type;
+    memoryIndices_ = std::any_cast<int>(params["memory_indices"]);
+    memoryRows_ = std::any_cast<int>(params["memory_rows"]);
+    memoryCols_ = std::any_cast<int>(params["memory_cols"]);
+    resizeMemory();
+    clear();
+    clearActive();
+    clearReadTime();
+    clearWriteTime();
+  }
+
+  memoryEigen(long i, int type, size_t memoryIndices, size_t memoryRows,
+              size_t memoryCols, int nr) {
+    id_ = i;
+    nrefs_ = nr;
+    type_ = type;
+    memoryIndices_ = memoryIndices;
+    memoryRows_ = memoryRows;
+    memoryCols_ = memoryCols;
+    resizeMemory();
+    clear();
+    clearActive();
+    clearReadTime();
+    clearWriteTime();
+  }
+
+  memoryEigen(memoryEigen *m) {
+    id_ = m->id();
+    nrefs_ = m->refs();
+    type_ = m->type();
+    memoryIndices_ = m->indexSize();
+    memoryRows_ = m->memoryRows();
+    memoryCols_ = m->memoryCols();
+    resizeMemory();
+    clear();
+    clearActive();
+    clearReadTime();
+    clearWriteTime();
+  }
+
+  ~memoryEigen() {}
+
+  // protected:
+
+  long id_;
+  int type_;
+  size_t memoryIndices_;
+  size_t memoryRows_;
+  size_t memoryCols_;
+  std::vector<Matrix<double, Dynamic, Dynamic> > mem_;
+  Matrix<bool, Dynamic, 1> active_;
+  Matrix<double, Dynamic, 1> read_time_;
+  Matrix<double, Dynamic, 1> write_time_;
+  int nrefs_;         // Num references by programs
+  int nrefs_policy_;  // Num references within a particular policy graph
+};
+
+struct memoryEigenIdComp {
+  bool operator()(memoryEigen *m1, memoryEigen *m2) const {
+    return m1->id() < m2->id();
+  }
+};
+
+#endif
