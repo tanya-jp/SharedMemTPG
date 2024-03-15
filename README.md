@@ -1,5 +1,7 @@
 # Tangled Program Graphs (TPG)
-This code reproduces results from the paper *"Evolving hierarchical memory‑prediction machines inmulti‑task reinforcement learning", Stephen Kelly, TatianaVoegerl, WolfgangBanzhaf, and CedricGondro* [pdf](https://rdcu.be/czd3s).
+This code reproduces results from the paper 
+
+Stephen Kelly, Tatiana Voegerl, Wolfgang Banzhaf, and Cedric Gondro. Evolving Hierarchical Memory-Prediction Machines in Multi-Task Reinforcement Learning. Genetic Programming and Evolvable Machines, 2021. [pdf](https://rdcu.be/czd3s).
 
 ## Quick Start
 
