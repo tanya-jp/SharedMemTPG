@@ -24,7 +24,7 @@ Then run:
 source ~/.profile
 ```
 
-### 3. Compile tpg
+### 3. Compile
 From the tpg directory run:
 ```
 scons --opt
