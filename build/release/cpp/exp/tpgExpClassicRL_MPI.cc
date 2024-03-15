@@ -45,14 +45,16 @@ int main(int argc, char** argv) {
     tasks.push_back(new mountainCarContinuous());
   string allTaskString = "";
   for (size_t i = 0; i < tasks.size(); i++) allTaskString += to_string(i);
-  // cout << "dbg allTaskS " << allTaskString << endl;
 
   tpg.params_["n_task"] = (int)tasks.size();
   tpg.state_["active_task"] = 0;
   tpg.params_["n_point_aux_double"] = NUM_POINT_AUX_DOUBLE;
   tpg.params_["n_point_aux_int"] = NUM_POINT_AUX_INT;
   tpg.state_["phase"] = _TRAIN_PHASE;
-  if (world.rank() == 0) cout << "world_size " << world.size() << endl;
+  if (world.rank() == 0) { 
+    os << "world_size " << world.size() << endl;
+    os << "n_task " << tpg.GetParam<int>("n_task") << endl;
+  }
 
   // placeholders for logging stats only
   set<team*, teamIdComp> visitedTeamsAll;
@@ -83,8 +85,6 @@ int main(int argc, char** argv) {
     chrono::duration<double> endEval;
     auto startChkp = chrono::system_clock::now();
     chrono::duration<double> endChkp;
-    auto startInternalMu = chrono::system_clock::now();
-    chrono::duration<double> endInternalMu;
     auto startMODES = chrono::system_clock::now();
     chrono::duration<double> endMODES;
     auto startReport = chrono::system_clock::now();
@@ -122,7 +122,6 @@ int main(int argc, char** argv) {
       // evaluate on all tasks
       evaluate_main(tpg, os, world, tasks, taskSet);
       endEval = chrono::system_clock::now() - startEval;
-      cout << "eval out" << endl;
 
       /* selection *********************************************************/
       startSetEliteTeams = chrono::system_clock::now();
@@ -137,47 +136,25 @@ int main(int argc, char** argv) {
                     chrono::duration_cast<chrono::milliseconds>(endGen).count())
               : 0);  // also does some reporting
       endSelTeams = chrono::system_clock::now() - startSelTeams;
-      cout << "sel out" << endl;
 
       /* accounting and reporting ******************************************/
       startReport = chrono::system_clock::now();
-      // if (tpg.GetState("t_current") % tpg.GetParam<int>("test_mod") == 0) {
-      //   tpg.state_["phase"] = _TEST_PHASE;
-      //   evaluate_main(tpg, os, world, tasks, S);
-      //   tpg.setEliteTeams(tpg.GetState("t_current"), _TEST_PHASE,
-      //                     tpg.GetParam<int>("fit_mode"), true);
-      //   if (tpg.GetParam<int>("write_checkpoints")) {
-      //     // checkpoint single elite program graph in each dimension
-      //     tpg.writeCheckpoint(tpg.GetState("t_current"), true);
-      //   }
-      //   tpg.state_["phase"] = _TRAIN_PHASE;
-      //   // if (std::any_cast<int>(tpg.params_["write_checkpoints"])) {
-      //   //   tpg.printPhyloGraphDot(tpg.getEliteTeam(
-      //   //       allTaskString, tpg.hostFitnessMode(), _TEST_PHASE));
-      //   // }
-      // }
-      cout << "acc out" << endl;
+      if (tpg.GetState("t_current") % tpg.GetParam<int>("test_mod") == 0) {
+        tpg.state_["phase"] = _TEST_PHASE;
+        evaluate_main(tpg, os, world, tasks, S);
+        tpg.setEliteTeams(tpg.GetState("t_current"), _TEST_PHASE,
+                          tpg.GetParam<int>("fit_mode"), true);
+        if (tpg.GetParam<int>("write_checkpoints")) {
+          // checkpoint single elite program graph in each dimension
+          tpg.writeCheckpoint(tpg.GetState("t_current"), true);
+        }
+        tpg.state_["phase"] = _TRAIN_PHASE;
+        // if (std::any_cast<int>(tpg.params_["write_checkpoints"])) {
+        //   tpg.printPhyloGraphDot(tpg.getEliteTeam(
+        //       allTaskString, tpg.hostFitnessMode(), _TEST_PHASE));
+        // }
+      }
       endReport = chrono::system_clock::now() - startReport;
-
-      /* internal graph variation ******************************************/
-      startInternalMu = chrono::system_clock::now();
-      // map <long, team*>  associatedRoots;
-      // if (tpg.hierarchyInPop() && tpg.muInternal()){ //&&
-      // tpg.GetState("t_current") % std::any_cast<int>(tpg.params_["test_mod"])
-      // == 0){
-      //    set < team*, teamIdComp >  internalReplacements; //new candidates
-      //    map < long, team* > associatedRoots; //associated root teams
-      //    team* internalTeam = tpg.genTeamsInternal(tpg.GetState("t_current"),
-      //    rngTPG, internalReplacements, associatedRoots);
-      //    internalReplacements.insert(internalTeam);
-      //    tpg.phase(_VALIDATION_PHASE);
-      //    evaluate_main_internals(tpg, os, world, tasks, S, internalTeam,
-      //    internalReplacements, associatedRoots);
-      //    tpg.internalReplacementPareto(tpg.phase(), 0, INSTRUCTIONS_IDX,
-      //    internalTeam, associatedRoots, internalReplacements, rngTPG);
-      //    tpg.phase(_TRAIN_PHASE);
-      // }
-      endInternalMu = chrono::system_clock::now() - startInternalMu;
 
       /* MODES *************************************************************/
       startMODES = chrono::system_clock::now();
@@ -205,15 +182,13 @@ int main(int argc, char** argv) {
       os << " elTms " << endSetEliteTeams.count();
       os << " sTms " << endSelTeams.count();
       os << " chkp " << endChkp.count();
-      os << " iMu " << endInternalMu.count();
-      // os << " aRsz " << associatedRoots.size();
       os << " rprt " << endReport.count();
       os << " MDS " << endMODES.count();
       os << " lost ";
       os << endGen.count() -
                 (endEval.count() + endGenTeams.count() +
                  endSetEliteTeams.count() + endSelTeams.count() +
-                 endChkp.count() + endInternalMu.count() + endReport.count());
+                 endChkp.count() + endReport.count());
       os << " tskS " << vecToStrNoSpace(taskSet);
       os << endl;
       tpg.printOss(os);
