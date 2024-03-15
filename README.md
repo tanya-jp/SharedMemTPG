@@ -41,7 +41,7 @@ tpg-run-mpi.sh -n 4
 ```
 tpg-plot-stats.sh
 ```
-This should produce classic_control_p0.pdf with various statistics. The first page will be a training curve looking something like this:
+This should produce classic_control_p0.pdf with various statistics. The first page will be a training curve looking something like this the plot below. A fitness of 300 indicates the agent balances the pole for 300 timesteps, thus solving the task.
 
 <img src="./classic_control_example/images/cartpole-example.png" height="300" />
 
