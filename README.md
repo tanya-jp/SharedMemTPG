@@ -42,6 +42,7 @@ tpg-run-mpi.sh -n 4
 tpg-plot-stats.sh
 ```
 This should produce a pdf named *classic_control_p0.pdf* with various statistics. The first page will be a training curve looking something like this:
-<img src="./classic_control_example/images/cartpole-example.png" height="200" />
+
+<img src="./classic_control_example/images/cartpole-example.png" height="400" />
 
 
