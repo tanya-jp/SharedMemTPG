@@ -1,3 +1,0 @@
-Import('env')
-env.Library('TPG', ['TPG.cc', 'instruction.cc', 'linearM.h','linearM.cc','point.cc','team.cc','misc.cc'], LIBS = ['bz2','boost_iostreams','eigen3'], LIBPATH = ['/lib/x86_64-linux-gnu/'],CPPPATH=['.','/usr/include/eigen3'])
-
