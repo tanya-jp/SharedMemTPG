@@ -11,7 +11,7 @@ This code is designed to be used in Linux. From the tpg directory run:
 sudo xargs --arg-file requirements.txt apt install
 ```
 
-### 2. Set environment variables.
+### 2. Set environment variables
 In order to easily access tpg scripts, we must add appropriate folders to the $PATH environment variable.
 To do so, add the following to *~/.profile*
 ```
