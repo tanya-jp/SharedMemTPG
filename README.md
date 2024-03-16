@@ -52,3 +52,9 @@ tpg-run-mpi.sh -m 1
 ```
 This should display an OpenGL animation of the single best policy interacting with the environment. 
 
+### 7. Cleanup
+Delete all checkpoints and output files.
+```
+tpg-cleanup.sh
+```
+
