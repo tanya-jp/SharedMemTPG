@@ -11,7 +11,7 @@ This code is designed to be used in Linux. From the tpg directory run:
 sudo xargs --arg-file requirements.txt apt install
 ```
 
-### 2. Set environment variables.
+### 2. Set environment variables
 In order to easily access tpg scripts, we must add appropriate folders to the $PATH environment variable.
 To do so, add the following to *~/.profile*
 ```
@@ -39,11 +39,23 @@ tpg-run-mpi.sh -n 4
 ```
 
 ### 5. Plot results
+Generate classic_control_example_p0.pdf with various statistics:
 ```
 tpg-plot-stats.sh
 ```
-This should produce classic_control_p0.pdf with various statistics. The first page will be a training curve looking something like the plot below. A fitness of 300 indicates the agent balances the pole for 300 timesteps, thus solving the task.
+The first page will be a training curve looking something like the plot below. A fitness of 300 indicates the agent balances the pole for 300 timesteps, thus solving the task.
 
 <img src="./classic_control_example/images/cartpole-example.png" height="300" />
 
+### 6. Visualize the best policy's behaviour
+Display an OpenGL animation of the single best policy interacting with the environment:
+```
+tpg-run-mpi.sh -m 1
+```
+ 
+### 7. Cleanup
+Delete all checkpoints and output files:
+```
+tpg-cleanup.sh
+```
 
