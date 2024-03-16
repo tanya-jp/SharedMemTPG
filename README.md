@@ -46,4 +46,9 @@ This should produce classic_control_p0.pdf with various statistics. The first pa
 
 <img src="./classic_control_example/images/cartpole-example.png" height="300" />
 
+### 6. Visualize the best policy's behaviour
+```
+tpg-run-mpi.sh -m 1
+```
+This should display an OpenGL animation of the single best policy interacting with the environment. 
 
