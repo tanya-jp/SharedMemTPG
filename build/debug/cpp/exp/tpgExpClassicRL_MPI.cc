@@ -20,12 +20,16 @@
 #define MODES_T 50
 
 int main(int argc, char** argv) {
+  cout << "dbg hello 1" << endl;
   mpi::environment env(argc, argv);
   mpi::communicator world;
+  cout << "dbg hello 2" << endl;
   TPG tpg;
   tpg.params_["id"] = -1;  // remove later
   tpg_arg_parse(tpg, argc, argv);
+  cout << "dbg hello 3" << endl;
   tpg.setParams();
+  cout << "dbg hello 4" << endl;
   ostringstream os;  // logging
 
   /* task sets ***************************************************************/
@@ -66,8 +70,12 @@ int main(int argc, char** argv) {
   teamUseMapPerTask.reserve(tasks.size());
   teamUseMapPerTask.resize(tasks.size());
 
-  if (tpg.GetParam<int>("replay"))
+  cout << "dbg replay 1" << endl;
+  if (tpg.GetParam<int>("replay") == 1) {
+    cout << "dbg replay in" << endl;
     replay(tpg, tasks, world);
+    cout << "dbg replay out" << endl;
+}
   else if (world.rank() == 0) {  // Master Process
     string my_string = "MAIN";
 

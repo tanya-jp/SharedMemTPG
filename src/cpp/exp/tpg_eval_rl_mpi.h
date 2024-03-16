@@ -359,12 +359,14 @@ void evaluate_sub_replay(TPG &tpg, mpi::communicator &world,
                          set<team *, teamIdComp> &visitedTeamsAllTasks,
                          map<long, double> &teamUseMap,
                          vector<map<long, double>> &teamUseMapPerTask) {
+
+  cout << "dbg host_to_replay " << tpg.GetParam<int>("host_to_replay") << endl;
   classicRLEnv *game = tasks[0];  // gets updated prior to eval below
   size_t saveFrame = 0;
 #if !defined(CCANADA) && !defined(HPCC)
   /* opengl setup for visual mode
    * *********************************************/
-  if (tpg.GetParam<int>("visual")) {
+  if (tpg.GetParam<int>("visual") == 1) {///////////////////////////////////////////////////////////////////////
     double _width = 1200;
     double _height = 1200;
     int argc = 1;
@@ -410,23 +412,25 @@ void evaluate_sub_replay(TPG &tpg, mpi::communicator &world,
 
     evalResult = "";
     set<program *, programIdComp> active;
-    if (tpg.GetParam<int>("replay") ||
+    if (tpg.GetParam<int>("replay") == 1 ||
         (checkpointString.compare("x") != 0 &&
          checkpointString.compare("done") != 0)) {
-      if (!tpg.GetParam<int>("replay"))
+      if (tpg.GetParam<int>("replay") == 0)
         tpg.readCheckpoint(-1, _TRAIN_PHASE, -1, true,
                            checkpointString);  // setRoots
-      tpg.getTeams(teams, tpg.GetParam<int>("replay") ? false : true);
+      tpg.getTeams(teams, tpg.GetParam<int>("replay") == 1 ? false : true);
       game = tasks[tpg.GetState("active_task")];
       behavSeq.reserve(game->maxStep() +
                        game->maxStep() * tpg.GetParam<int>("n_input"));
       map<long, team *> teamMap;
       tpg.teamMap(teamMap);
+      cout << "dbg teasm size " << teams.size() << endl;
       for (size_t i = 0; i < teams.size(); i++) {
         program *atomicProgram = tpg._L.begin()->second;
+        cout <<"dbg try continue " << teams[i]->id_ << " " << tpg.GetParam<int>("host_to_replay") << endl;
         if (tpg.GetParam<int>("replay") &&
-            teams[i]->id_ != tpg.GetState("host_to_replay"))
-          continue;
+            teams[i]->id_ != tpg.GetParam<int>("host_to_replay")) { continue; }
+          cout <<"dbg not continue" << endl;
         tpg.markEffectiveCode(teams[i]);
         // if (tpg.replay()) teams[i]->prunePrograms();
         // teams[i]->clearMembersRunTally();
@@ -591,13 +595,13 @@ void evaluate_sub_replay(TPG &tpg, mpi::communicator &world,
                   // teamPath, r==repeats ? true: false,
                   // visitedTeamsAllTasks);
                   tpg.printGraphDotGPEMAnimate(
-                      tpg.GetState("host_to_replay"), saveFrame, e,
+                      tpg.GetParam<int>("host_to_replay"), saveFrame, e,
                       repeats > 1 && r < repeats ? 0 : game->getStep(), d,
                       allPrograms, winningPrograms, visitedTeamsAllTasks,
                       teamUseMapPerTask, teamPath);
 
 #if !defined(CCANADA) && !defined(HPCC)
-                  if (tpg.GetParam<int>("visual"))
+                  if (tpg.GetParam<int>("visual") == 1)
                     game->display_function(
                         e,
                         game->getStep() == 0 && r < repeats
@@ -799,11 +803,11 @@ void evaluate_sub_replay(TPG &tpg, mpi::communicator &world,
                 // d, allPrograms, winningPrograms, decisionFeatures,
                 // decisionMemories, teamPath, true, visitedTeamsAllTasks);
                 tpg.printGraphDotGPEMAnimate(
-                    tpg.GetState("host_to_replay"), saveFrame, e,
+                    tpg.GetParam<int>("host_to_replay"), saveFrame, e,
                     game->getStep(), d, allPrograms, winningPrograms,
                     visitedTeamsAllTasks, teamUseMapPerTask, teamPath);
 #if !defined(CCANADA) && !defined(HPCC)
-                if (tpg.GetParam<int>("visual"))
+                if (tpg.GetParam<int>("visual") == 1)
                   game->display_function(
                       e, (atomicProgram->action() * -1) - 1,
                       (atomicProgram->memGet(memoryEigen::SCALAR_TYPE))
@@ -883,6 +887,7 @@ void evaluate_sub_replay(TPG &tpg, mpi::communicator &world,
 /******************************************************************************/
 
 void replay(TPG &tpg, vector<classicRLEnv *> &tasks, mpi::communicator &world) {
+  cout << "dbg replay() 1" << endl;
   set<team *, teamIdComp> visitedTeamsAll;
   vector<set<team *, teamIdComp>> visitedTeamsAllPerTask;
   set<team *, teamIdComp> visitedTeamsAllTasks;
@@ -893,21 +898,25 @@ void replay(TPG &tpg, vector<classicRLEnv *> &tasks, mpi::communicator &world) {
   teamUseMapPerTask.resize(tasks.size());
 
   long tmpSeed = tpg._seeds[AUX_SEED_INDEX];
-  tpg.readCheckpoint(tpg.GetParam<long>("t_pickup"),
+  tpg.readCheckpoint(tpg.GetParam<int>("t_pickup"),
                      tpg.GetParam<int>("checkpoint_in_phase"), -1, false,
                      "");  // setRoots
   tpg.seed(AUX_SEED_INDEX, tmpSeed);
   tpg.state_["active_task"] = 0;
   tpg.params_["phase"] = _TEST_PHASE;
-  if (tpg.GetParam<int>("animate"))
+  if (tpg.GetParam<int>("animate")) {
     tpg._numStoredOutcomesPerHost[_TEST_PHASE] = 1;
+  }
+    cout << "dbg replay() 2" << endl;
   evaluate_sub_replay(tpg, world, tasks, visitedTeamsAll, visitedTeamsAllTasks,
                       teamUseMap, teamUseMapPerTask);
-  tpg.printTeamInfo(tpg.GetParam<long>("t_pickup"),
+                      cout << "dbg replay() 3" << endl;
+  tpg.printTeamInfo(tpg.GetParam<int>("t_pickup"),
                     tpg.GetParam<int>("checkpoint_in_phase"), false,
                     tpg.GetParam<int>("host_to_replay"));
   tpg.printOss();
 
+  
   ////GPEM graphs
   // if (tpg.replay()){
 
@@ -925,7 +934,7 @@ void replay(TPG &tpg, vector<classicRLEnv *> &tasks, mpi::communicator &world) {
   //   elevenColors.push_back("#6a3d9a");
   //   elevenColors.push_back("#ffff99");
 
-  //   tpg.readCheckpoint(tpg.GetParam<long>("t_pickup"),
+  //   tpg.readCheckpoint(tpg.GetParam<int>("t_pickup"),
   //   tpg.checkpointInPhase(), -1, false, ""); //setRoots
 
   //   vector<map<long,double>> teamUseMapPerTaskCopy;// = teamUseMapPerTask;
@@ -992,7 +1001,7 @@ void replay(TPG &tpg, vector<classicRLEnv *> &tasks, mpi::communicator &world) {
   //   ActiveTaskSetColMap[vecToStrNoSpace(it->second)] << "-" <<
   //   teamColMap[it->first]  << endl;
 
-  //   tpg.printTeamInfo(tpg.GetParam<long>("t_pickup"),
+  //   tpg.printTeamInfo(tpg.GetParam<int>("t_pickup"),
   //   tpg.checkpointInPhase(), false, tpg.hostToReplay()); tpg.printOss();
   //   //tpg.printGraphDotGPEM(tpg.hostToReplay(), teamColMap,
   //   visitedTeamsAllTasks, teamUseMapPerTaskCopy);
