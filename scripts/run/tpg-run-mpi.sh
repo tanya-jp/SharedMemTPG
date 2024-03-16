@@ -33,11 +33,11 @@ if [ $mode -eq 1 ]; then
    bestScore=$(grep setElTmsST  tpg.${seed}.*.std | grep " fm 0 " | grep " phs $phs " | awk -F"mnOut" '{print $2}' | awk -F "p${phs}t0a0 " '{print $2}' | awk '{print $1}' | sort -n | uniq | tail -n 1)
    t=$(grep setElTmsST tpg.${seed}.*.std | grep " fm 0 " | grep "p${phs}t0a0 ${bestScore} " tpg.${seed}.*.std | grep " phs $phs " | head -n 1 | awk -F" t " '{print $2}' | awk '{print $1}')
    tm=$(grep setElTmsST tpg.${seed}.*.std | grep " fm 0 " |  grep "p${phs}t0a0 ${bestScore} " tpg.${seed}.*.std | grep " phs $phs " | grep " t $t " | head -n 1 | awk -F" id " '{print $2}' | awk '{print $1}')
-   echo "CHECK bs $bestScore t $t tm $tm"
-   # mpirun --oversubscribe -np 1 $TPG_PATH/build/release/cpp/exp/tpgExpClassicRL_MPI -V -C $phs -t $t -s $seed -g $seed \
-   #    1> tpg.$seed.replay.std 2> tpg.$seed.replay.err &
-   mpirun --oversubscribe -np 1 xterm -hold -e gdb -ex run --args $TPG_PATH/build/release/cpp/exp/tpgExpClassicRL_MPI -v -C $phs -t $t -s $seed -g $seed \
+   echo "Fitness:$bestScore Generation:$t Team:$tm"
+   mpirun --oversubscribe -np 1 $TPG_PATH/build/release/cpp/exp/tpgExpClassicRL_MPI -V -C $phs -R $tm -t $t -s $seed -g $seed \
       1> tpg.$seed.replay.std 2> tpg.$seed.replay.err &
+   # mpirun --oversubscribe -np 1 xterm -hold -e gdb -ex run --args $TPG_PATH/build/release/cpp/exp/tpgExpClassicRL_MPI -v -C $phs -t $t -s $seed -g $seed \
+   #    1> tpg.$seed.replay.std 2> tpg.$seed.replay.err &
 fi
 
 # Debug

@@ -359,8 +359,6 @@ void evaluate_sub_replay(TPG &tpg, mpi::communicator &world,
                          set<team *, teamIdComp> &visitedTeamsAllTasks,
                          map<long, double> &teamUseMap,
                          vector<map<long, double>> &teamUseMapPerTask) {
-
-  cout << "dbg host_to_replay " << tpg.GetParam<int>("host_to_replay") << endl;
   classicRLEnv *game = tasks[0];  // gets updated prior to eval below
   size_t saveFrame = 0;
 #if !defined(CCANADA) && !defined(HPCC)
@@ -424,13 +422,10 @@ void evaluate_sub_replay(TPG &tpg, mpi::communicator &world,
                        game->maxStep() * tpg.GetParam<int>("n_input"));
       map<long, team *> teamMap;
       tpg.teamMap(teamMap);
-      cout << "dbg teasm size " << teams.size() << endl;
       for (size_t i = 0; i < teams.size(); i++) {
         program *atomicProgram = tpg._L.begin()->second;
-        cout <<"dbg try continue " << teams[i]->id_ << " " << tpg.GetParam<int>("host_to_replay") << endl;
         if (tpg.GetParam<int>("replay") &&
             teams[i]->id_ != tpg.GetParam<int>("host_to_replay")) { continue; }
-          cout <<"dbg not continue" << endl;
         tpg.markEffectiveCode(teams[i]);
         // if (tpg.replay()) teams[i]->prunePrograms();
         // teams[i]->clearMembersRunTally();
@@ -887,7 +882,6 @@ void evaluate_sub_replay(TPG &tpg, mpi::communicator &world,
 /******************************************************************************/
 
 void replay(TPG &tpg, vector<classicRLEnv *> &tasks, mpi::communicator &world) {
-  cout << "dbg replay() 1" << endl;
   set<team *, teamIdComp> visitedTeamsAll;
   vector<set<team *, teamIdComp>> visitedTeamsAllPerTask;
   set<team *, teamIdComp> visitedTeamsAllTasks;
@@ -907,10 +901,8 @@ void replay(TPG &tpg, vector<classicRLEnv *> &tasks, mpi::communicator &world) {
   if (tpg.GetParam<int>("animate")) {
     tpg._numStoredOutcomesPerHost[_TEST_PHASE] = 1;
   }
-    cout << "dbg replay() 2" << endl;
   evaluate_sub_replay(tpg, world, tasks, visitedTeamsAll, visitedTeamsAllTasks,
                       teamUseMap, teamUseMapPerTask);
-                      cout << "dbg replay() 3" << endl;
   tpg.printTeamInfo(tpg.GetParam<int>("t_pickup"),
                     tpg.GetParam<int>("checkpoint_in_phase"), false,
                     tpg.GetParam<int>("host_to_replay"));

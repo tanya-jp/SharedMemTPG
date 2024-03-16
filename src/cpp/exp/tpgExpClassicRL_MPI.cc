@@ -20,16 +20,12 @@
 #define MODES_T 50
 
 int main(int argc, char** argv) {
-  cout << "dbg hello 1" << endl;
   mpi::environment env(argc, argv);
   mpi::communicator world;
-  cout << "dbg hello 2" << endl;
   TPG tpg;
   tpg.params_["id"] = -1;  // remove later
-  tpg_arg_parse(tpg, argc, argv);
-  cout << "dbg hello 3" << endl;
   tpg.setParams();
-  cout << "dbg hello 4" << endl;
+  tpg_arg_parse(tpg, argc, argv);
   ostringstream os;  // logging
 
   /* task sets ***************************************************************/
@@ -70,13 +66,9 @@ int main(int argc, char** argv) {
   teamUseMapPerTask.reserve(tasks.size());
   teamUseMapPerTask.resize(tasks.size());
 
-  cout << "dbg replay 1" << endl;
   if (tpg.GetParam<int>("replay") == 1) {
-    cout << "dbg replay in" << endl;
     replay(tpg, tasks, world);
-    cout << "dbg replay out" << endl;
-}
-  else if (world.rank() == 0) {  // Master Process
+} else if (world.rank() == 0) {  // Master Process
     string my_string = "MAIN";
 
     // time logging
@@ -210,7 +202,7 @@ int main(int argc, char** argv) {
       world.send(ev, 0, d);
     }
     tpg.printOss();
-    cout << "Goodbye cruel world." << world.rank() << endl;
+    cout << "Goodbye cruel world:" << world.rank() << endl;
   } else {  // Evaluator Process
     evaluate_sub(tpg, world, tasks);
   }

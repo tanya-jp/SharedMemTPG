@@ -5,7 +5,7 @@
 
 void tpg_arg_parse(TPG& tpg, int argc, char** argv) {
   int option_char;
-  while ((option_char = getopt(argc, argv, "C:g:s:t:V")) != -1)
+  while ((option_char = getopt(argc, argv, "C:g:R:s:t:V")) != -1)
     switch (option_char) {
       case 'C':
         tpg.params_["checkpoint"] = true;
@@ -13,6 +13,10 @@ void tpg_arg_parse(TPG& tpg, int argc, char** argv) {
         break;
       case 'g':
         tpg.seed(AUX_SEED_INDEX, atoi(optarg));
+        break;
+      case 'R':
+        tpg.params_["replay"] = 1;
+        tpg.params_["host_to_replay"] = atoi(optarg);
         break;
       case 's':
         tpg.seed(TPG_SEED_INDEX, atoi(optarg));
@@ -24,9 +28,9 @@ void tpg_arg_parse(TPG& tpg, int argc, char** argv) {
       case 'V':
         tpg.params_["visual"] = 1;
         break;
-      // case '?':
-      //   exit(0);
-      //   break;
+      case '?':
+        exit(0);
+        break;
     }
 }
 

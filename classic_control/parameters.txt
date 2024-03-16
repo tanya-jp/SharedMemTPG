@@ -5,7 +5,7 @@ checkpoint 0
 write_checkpoints 1
 
 # re-evaluate an individual from a checkpoint file
-replay 1
+replay 0
 
 # use the partially-observable version of a task, if available
 partially_observable 0
@@ -136,11 +136,6 @@ fit_prop_select 0
 
 # which diversity mode to use, if available
 diversity_mode 0
-
-################################################################################
-host_to_replay 1239
-visual 1
-################################################################################
 
 # operations, uncomment to activate
 SCALAR_SUM_OP

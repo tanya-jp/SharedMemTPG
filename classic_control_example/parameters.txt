@@ -2,7 +2,7 @@
 checkpoint 0
 
 # write checkpoints
-write_checkpoints 0
+write_checkpoints 1
 
 # re-evaluate an individual from a checkpoint file
 replay 0
