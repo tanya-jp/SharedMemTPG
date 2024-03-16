@@ -39,7 +39,7 @@ tpg-run-mpi.sh -n 4
 ```
 
 ### 5. Plot results
-Generate classic_control_p0.pdf with various statistics:
+Generate classic_control_example_p0.pdf with various statistics:
 ```
 tpg-plot-stats.sh
 ```
