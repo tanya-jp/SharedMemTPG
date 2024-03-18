@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
   tpg.params_["n_point_aux_double"] = NUM_POINT_AUX_DOUBLE;
   tpg.params_["n_point_aux_int"] = NUM_POINT_AUX_INT;
   tpg.state_["phase"] = _TRAIN_PHASE;
-  if (world.rank() == 0) { 
+  if (world.rank() == 0) {
     os << "world_size " << world.size() << endl;
     os << "n_task " << tpg.GetParam<int>("n_task") << endl;
   }
@@ -66,9 +66,10 @@ int main(int argc, char** argv) {
   teamUseMapPerTask.reserve(tasks.size());
   teamUseMapPerTask.resize(tasks.size());
 
-  if (tpg.GetParam<int>("replay") == 1) {
-    replay(tpg, tasks, world);
-} else if (world.rank() == 0) {  // Master Process
+  //   if (tpg.GetParam<int>("replay") == 1) {
+  //     replay(tpg, tasks, world);
+  // } else
+  if (world.rank() == 0) {  // Master Process
     string my_string = "MAIN";
 
     // time logging
@@ -109,93 +110,96 @@ int main(int argc, char** argv) {
       taskSet.push_back(tsk);
       S.push_back(tsk);
     }
-    while (tpg.GetState("t_current") <= tpg.GetParam<int>("n_generations")) {
-      /* replacement *******************************************************/
-      if (tpg.GetState("t_current") > tpg.GetParam<int>("t_start")) {
-        startGenTeams = chrono::system_clock::now();
-        tpg.genTeams();
-        endGenTeams = chrono::system_clock::now() - startGenTeams;
-      }
-
-      /* evaluation ********************************************************/
-      startEval = chrono::system_clock::now();
-      // evaluate on all tasks
+    if (tpg.GetParam<int>("replay")) {
       evaluate_main(tpg, os, world, tasks, taskSet);
-      endEval = chrono::system_clock::now() - startEval;
-
-      /* selection *********************************************************/
-      startSetEliteTeams = chrono::system_clock::now();
-      tpg.setEliteTeams(tpg.GetState("t_current"), tpg.GetState("phase"), 0,
-                        true);
-      endSetEliteTeams = chrono::system_clock::now() - startSetEliteTeams;
-      startSelTeams = chrono::system_clock::now();
-      tpg.selTeams(
-          tpg.GetState("t_current"), true,
-          tpg.GetState("t_current") > 1
-              ? floor(
-                    chrono::duration_cast<chrono::milliseconds>(endGen).count())
-              : 0);  // also does some reporting
-      endSelTeams = chrono::system_clock::now() - startSelTeams;
-
-      /* accounting and reporting ******************************************/
-      startReport = chrono::system_clock::now();
-      if (tpg.GetState("t_current") % tpg.GetParam<int>("test_mod") == 0) {
-        tpg.state_["phase"] = _TEST_PHASE;
-        evaluate_main(tpg, os, world, tasks, S);
-        tpg.setEliteTeams(tpg.GetState("t_current"), _TEST_PHASE,
-                          tpg.GetParam<int>("fit_mode"), true);
-        if (tpg.GetParam<int>("write_checkpoints")) {
-          // checkpoint single elite program graph in each dimension
-          tpg.writeCheckpoint(tpg.GetState("t_current"), true);
+    } else {
+      while (tpg.GetState("t_current") <= tpg.GetParam<int>("n_generations")) {
+        /* replacement *******************************************************/
+        if (tpg.GetState("t_current") > tpg.GetParam<int>("t_start")) {
+          startGenTeams = chrono::system_clock::now();
+          tpg.genTeams();
+          endGenTeams = chrono::system_clock::now() - startGenTeams;
         }
-        tpg.state_["phase"] = _TRAIN_PHASE;
-        // if (std::any_cast<int>(tpg.params_["write_checkpoints"])) {
-        //   tpg.printPhyloGraphDot(tpg.getEliteTeam(
-        //       allTaskString, tpg.hostFitnessMode(), _TEST_PHASE));
-        // }
+
+        /* evaluation ********************************************************/
+        startEval = chrono::system_clock::now();
+        // evaluate on all tasks
+        evaluate_main(tpg, os, world, tasks, taskSet);
+        endEval = chrono::system_clock::now() - startEval;
+
+        /* selection *********************************************************/
+        startSetEliteTeams = chrono::system_clock::now();
+        tpg.setEliteTeams(tpg.GetState("t_current"), tpg.GetState("phase"), 0,
+                          true);
+        endSetEliteTeams = chrono::system_clock::now() - startSetEliteTeams;
+        startSelTeams = chrono::system_clock::now();
+        tpg.selTeams(
+            tpg.GetState("t_current"), true,
+            tpg.GetState("t_current") > 1
+                ? floor(chrono::duration_cast<chrono::milliseconds>(endGen)
+                            .count())
+                : 0);  // also does some reporting
+        endSelTeams = chrono::system_clock::now() - startSelTeams;
+
+        /* accounting and reporting ******************************************/
+        startReport = chrono::system_clock::now();
+        if (tpg.GetState("t_current") % tpg.GetParam<int>("test_mod") == 0) {
+          tpg.state_["phase"] = _TEST_PHASE;
+          evaluate_main(tpg, os, world, tasks, S);
+          tpg.setEliteTeams(tpg.GetState("t_current"), _TEST_PHASE,
+                            tpg.GetParam<int>("fit_mode"), true);
+          if (tpg.GetParam<int>("write_checkpoints")) {
+            // checkpoint single elite program graph in each dimension
+            tpg.writeCheckpoint(tpg.GetState("t_current"), true);
+          }
+          tpg.state_["phase"] = _TRAIN_PHASE;
+          // if (std::any_cast<int>(tpg.params_["write_checkpoints"])) {
+          //   tpg.printPhyloGraphDot(tpg.getEliteTeam(
+          //       allTaskString, tpg.hostFitnessMode(), _TEST_PHASE));
+          // }
+        }
+        endReport = chrono::system_clock::now() - startReport;
+
+        /* MODES *************************************************************/
+        startMODES = chrono::system_clock::now();
+        if (tpg.GetState("t_current") == tpg.GetParam<int>("t_start") ||
+            tpg.GetState("t_current") % MODES_T == 0)
+          tpg.updateMODESFilters(true);
+        endMODES = chrono::system_clock::now() - startMODES;
+
+        /* checkpoint ********************************************************/
+        startChkp = chrono::system_clock::now();
+        if (tpg.GetParam<int>("write_checkpoints") &&
+            tpg.GetState("t_current") % CHECKPOINT_MOD == 0) {
+          tpg.writeCheckpoint(tpg.GetState("t_current"),
+                              false);  // checkpoint entire pop
+        }
+        endChkp = chrono::system_clock::now() - startChkp;
+        endGen = chrono::system_clock::now() - startGen;
+
+        /* print generation timing *******************************************/
+        os << setprecision(5) << fixed;
+        os << "gTime t " << tpg.GetState("t_current");
+        os << " sec " << endGen.count();
+        os << " evl " << endEval.count();
+        os << " gTms " << endGenTeams.count();
+        os << " elTms " << endSetEliteTeams.count();
+        os << " sTms " << endSelTeams.count();
+        os << " chkp " << endChkp.count();
+        os << " rprt " << endReport.count();
+        os << " MDS " << endMODES.count();
+        os << " lost ";
+        os << endGen.count() - (endEval.count() + endGenTeams.count() +
+                                endSetEliteTeams.count() + endSelTeams.count() +
+                                endChkp.count() + endReport.count());
+        os << " tskS " << vecToStrNoSpace(taskSet);
+        os << endl;
+        tpg.printOss(os);
+
+        startGen = chrono::system_clock::now();
+        if (tpg.GetState("t_current") % PRINT_MOD == 0) tpg.printOss();
+        tpg.state_["t_current"]++;
       }
-      endReport = chrono::system_clock::now() - startReport;
-
-      /* MODES *************************************************************/
-      startMODES = chrono::system_clock::now();
-      if (tpg.GetState("t_current") == tpg.GetParam<int>("t_start") ||
-          tpg.GetState("t_current") % MODES_T == 0)
-        tpg.updateMODESFilters(true);
-      endMODES = chrono::system_clock::now() - startMODES;
-
-      /* checkpoint ********************************************************/
-      startChkp = chrono::system_clock::now();
-      if (tpg.GetParam<int>("write_checkpoints") &&
-          tpg.GetState("t_current") % CHECKPOINT_MOD == 0) {
-        tpg.writeCheckpoint(tpg.GetState("t_current"),
-                            false);  // checkpoint entire pop
-      }
-      endChkp = chrono::system_clock::now() - startChkp;
-      endGen = chrono::system_clock::now() - startGen;
-
-      /* print generation timing *******************************************/
-      os << setprecision(5) << fixed;
-      os << "gTime t " << tpg.GetState("t_current");
-      os << " sec " << endGen.count();
-      os << " evl " << endEval.count();
-      os << " gTms " << endGenTeams.count();
-      os << " elTms " << endSetEliteTeams.count();
-      os << " sTms " << endSelTeams.count();
-      os << " chkp " << endChkp.count();
-      os << " rprt " << endReport.count();
-      os << " MDS " << endMODES.count();
-      os << " lost ";
-      os << endGen.count() -
-                (endEval.count() + endGenTeams.count() +
-                 endSetEliteTeams.count() + endSelTeams.count() +
-                 endChkp.count() + endReport.count());
-      os << " tskS " << vecToStrNoSpace(taskSet);
-      os << endl;
-      tpg.printOss(os);
-
-      startGen = chrono::system_clock::now();
-      if (tpg.GetState("t_current") % PRINT_MOD == 0) tpg.printOss();
-      tpg.state_["t_current"]++;
     }
     for (int ev = 1; ev <= world.size() - 1; ev++) {
       string d = "done";
@@ -204,7 +208,7 @@ int main(int argc, char** argv) {
     tpg.printOss();
     cout << "Goodbye cruel world:" << world.rank() << endl;
   } else {  // Evaluator Process
-    evaluate_sub(tpg, world, tasks);
+    evaluator(tpg, world, tasks);
   }
   tpg.finalize();
   for (size_t tsk = 0; tsk < tasks.size(); tsk++) delete tasks[tsk];

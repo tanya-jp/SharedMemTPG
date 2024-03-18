@@ -2312,11 +2312,11 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       long gtime = atoi(outcomeFields[f++].c_str());
       m = new team(gtime, id);
       // cerr << "new0 " << id << endl;
-      m->numEval_ = atoi(outcomeFields[f++].c_str());
+      m->_n_eval = atoi(outcomeFields[f++].c_str());
       // m->clearEvalSeeds();
       // for (size_t es = 0; es < m->numEval(); es++)
       //    m->addEvalSeed(atoi(outcomeFields[f++].c_str()));
-      m->taskCode(outcomeFields[f++]);
+      // m->taskCode(outcomeFields[f++]);
       // add programs in order
       for (size_t ii = f; ii < outcomeFields.size(); ii++) {
         memberId = atoi(outcomeFields[ii].c_str());

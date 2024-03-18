@@ -33,7 +33,7 @@ class team {
   void clearMemory(map<long, team *> &);
   inline void getAncestorIds(vector<long> &a) { a = ancestorIds_; }
   inline void setAncestorIds(vector<long> &a) { ancestorIds_ = a; }
-  inline size_t numAncestorIds() { return ancestorIds_.size(); }
+  inline int numAncestorIds() { return ancestorIds_.size(); }
   inline bool elite(int phase) const { return elite_[phase]; }
   inline void elite(int phase, bool e) { elite_[phase] = e; }
   inline void getActiveMembersByRef(set<program *, programIdComp> &m) const {
@@ -113,7 +113,7 @@ class team {
     m.assign(members_.begin(), members_.end());
   }
   inline void getMembersRef(list<program *> *&m) { m = &members_; }
-  inline size_t numEffectiveInstructions() const {
+  inline int numEffectiveInstructions() const {
     return numEffectiveInstructions_;
   }
   double novelty(int, int) const;
@@ -180,7 +180,7 @@ class team {
   }
   inline void unSetActive(program *l) { active_.erase(l); }
   void setOutcome(point *);
-  inline size_t size() const { return members_.size(); }
+  inline int size() const { return members_.size(); }
   double symbiontUtilityDistance(team *) const;
   double symbiontUtilityDistance(vector<long> &) const;
   inline void swapProgramOrder(int i, int j) {
@@ -199,8 +199,8 @@ class team {
     members_.splice(leiter_destination, members_, leiter_source);
   }
 
-  void updateComplexityRecord(map<long, team *> &, size_t);
-  void updateComplexityRecord(map<long, team *> &, size_t, int, long, int);
+  void updateComplexityRecord(map<long, team *> &, int);
+  void updateComplexityRecord(map<long, team *> &, int, int, long, int);
 
   string taskCode() const { return task_code_; }
   void taskCode(string tc) { task_code_ = tc; }
@@ -210,7 +210,7 @@ class team {
     cloneId_ = -1;
     clones_ = 0;
     //_depthSum = 0;
-    for (size_t i = 0; i < _NUM_PHASE; i++) elite_.push_back(false);
+    for (int i = 0; i < _NUM_PHASE; i++) elite_.push_back(false);
     //_visitedCount = 0;
     domBy_ = -1;
     domOf_ = -1;
@@ -220,7 +220,7 @@ class team {
     key_ = 0;
     lastCompareFactor_ = -1;
     numAtomic_ = 0;
-    numEval_ = 0;
+    _n_eval = 0;
     numLinearM_ = 0;
     root_ = true;
     runTimeComplexityIns_ = 0;
@@ -296,12 +296,12 @@ class team {
   vector<program *> membersRun_;
   // map <long, double > membersRun_Tally;//keep count of wins for each program
   int numAtomic_;
-  size_t numEval_;
+  int _n_eval;
   int numLinearM_;
-  size_t numActiveTeams_;
-  size_t numActivePrograms_;
-  size_t numEffectiveInstructions_;
-  size_t numActiveFeatures_;
+  int numActiveTeams_;
+  int numActivePrograms_;
+  int numEffectiveInstructions_;
+  int numActiveFeatures_;
   // Maps point[task][phase][envSeed] -> outcome
   map<int, map<int, map<int, point *>>> outcomes_;
   set<long> policyFeatures_;

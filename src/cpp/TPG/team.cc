@@ -41,10 +41,10 @@ string team::checkpoint(bool fitnessBins, long id) const {
       oss << ":" << (*iter).first << "-" << (*iter).second;
     oss << endl;
   } else {
-    oss << "team:" << idToWrite << ":" << gtime_ << ":" << numEval_;
-    //      for (size_t s = 0; s < _evalSeeds.size(); s++)
+    oss << "team:" << idToWrite << ":" << gtime_ << ":" << _n_eval;
+    //      for (int s = 0; s < _evalSeeds.size(); s++)
     //	     oss << ":" << _evalSeeds[s];
-    oss << ":" << task_code_;
+    // oss << ":" << task_code_;
     for (auto leiter = members_.begin(); leiter != members_.end(); leiter++)
       oss << ":" << (*leiter)->id_;
     for (auto leiter = active_.begin(); leiter != active_.end(); leiter++)
@@ -225,7 +225,7 @@ double team::symbiontUtilityDistance(vector<long> &compareWithThese) const {
 }
 
 /******************************************************************************/
-void team::updateComplexityRecord(map<long, team *> &teamMap, size_t rtcIndex) {
+void team::updateComplexityRecord(map<long, team *> &teamMap, int rtcIndex) {
   (void)teamMap;
   // set <team *, teamIdComp> teams;
   // set <program *, programIdComp> programs;
@@ -244,7 +244,7 @@ void team::updateComplexityRecord(map<long, team *> &teamMap, size_t rtcIndex) {
 }
 
 /******************************************************************************/
-void team::updateComplexityRecord(map<long, team *> &teamMap, size_t rtcIndex,
+void team::updateComplexityRecord(map<long, team *> &teamMap, int rtcIndex,
                                   int auxInt, long auxIntMatch, int phase) {
   (void)teamMap;
   // set <team *, teamIdComp> teams;
@@ -273,7 +273,7 @@ void team::getAllMemories(map<long, team *> &teamMap,
   for (auto leiter = members_.begin(); leiter != members_.end(); leiter++)
     if (!activePrograms ||
         (activePrograms && active_.find(*leiter) != active_.end())) {
-      for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES;
+      for (int memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES;
            memType++)
         memories.insert((*leiter)->memGet(memType));
       if ((*leiter)->action() >= 0 &&
@@ -328,7 +328,7 @@ void team::getAllNodes(map<long, team *> &teamMap,
     if (!activePrograms ||
         (activePrograms && active_.find(*leiter) != active_.end())) {
       programs.insert(*leiter);
-      for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES;
+      for (int memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES;
            memType++)
         memories.insert((*leiter)->memGet(memType));
       if ((*leiter)->action() >= 0 &&
@@ -829,7 +829,7 @@ program *team::getAction(
 
     (*leiter)->features(featuresSingle);
     features.insert(featuresSingle.begin(), featuresSingle.end());
-    for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++)
+    for (int memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++)
       memories.insert((*leiter)->memGet(memType));
   }
   decisionFeatures.push_back(features);

@@ -5,10 +5,10 @@
 
 void tpg_arg_parse(TPG& tpg, int argc, char** argv) {
   int option_char;
-  while ((option_char = getopt(argc, argv, "C:g:R:s:t:V")) != -1)
+  while ((option_char = getopt(argc, argv, "aC:g:R:s:t:")) != -1)
     switch (option_char) {
       case 'C':
-        tpg.params_["checkpoint"] = true;
+        tpg.params_["checkpoint"] = 1;
         tpg.params_["checkpoint_in_phase"] = atoi(optarg);
         break;
       case 'g':
@@ -25,8 +25,8 @@ void tpg_arg_parse(TPG& tpg, int argc, char** argv) {
         tpg.params_["t_pickup"] = atoi(optarg);
         tpg.params_["t_start"] = atoi(optarg) + 1;
         break;
-      case 'V':
-        tpg.params_["visual"] = 1;
+      case 'a':
+        tpg.params_["animate"] = 1;
         break;
       case '?':
         exit(0);

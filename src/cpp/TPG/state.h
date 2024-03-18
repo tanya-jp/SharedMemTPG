@@ -24,11 +24,11 @@ class state {
       return (double)(*featVecFloat_)[i];
   }
 
-  inline void setState(vector<double>& s) { featVecDouble_ = &s; }
+  inline void Set(vector<double>& s) { featVecDouble_ = &s; }
 
-  inline void setState(vector<float>& s) { featVecFloat_ = &s; }
+  inline void Set(vector<float>& s) { featVecFloat_ = &s; }
 
-  inline void setState(vector<short>& s) { featVecShort_ = &s; }
+  inline void Set(vector<short>& s) { featVecShort_ = &s; }
   state() {}
   state(long d) {
     dim = d;
