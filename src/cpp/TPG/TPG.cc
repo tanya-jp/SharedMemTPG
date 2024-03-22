@@ -698,7 +698,8 @@ void TPG::genTeams(team *pm1, team *pm2, bool crossover, team **cm,
                            state_["program_count"]++);
           if (lr->action() >= 0)
             _teamMap[lr->action()]->addIncomingProgram(lr->id_);
-          for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++) {
+          for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES;
+               memType++) {
             lr->memSet(memType, (*ccliter)->memGet(
                                     memType));  // copy memoryEigen reference
             lr->memGet(memType)->refInc();
@@ -718,8 +719,9 @@ void TPG::genTeams(team *pm1, team *pm2, bool crossover, team **cm,
             uniform_int_distribution<int> disMemory(0, _Memory.size() - 1);
             memoryEigen *memNew;
             do {
-              memNew = _Memory[memoryEigen::SCALAR_TYPE][_Memids[memoryEigen::SCALAR_TYPE][disMemory(
-                  _rngs[TPG_SEED_INDEX])]];
+              memNew = _Memory[memoryEigen::SCALAR_TYPE]
+                              [_Memids[memoryEigen::SCALAR_TYPE]
+                                      [disMemory(_rngs[TPG_SEED_INDEX])]];
             } while (lr->memGet(memoryEigen::SCALAR_TYPE)->id_ == memNew->id_);
             lr->memGet(memoryEigen::SCALAR_TYPE)->refDec();
             lr->memSet(memoryEigen::SCALAR_TYPE, memNew);
@@ -902,9 +904,8 @@ void TPG::setEliteTeams(int t, int phase, int fitMode, bool verbose) {
     for (auto teiter = _Mroot.begin(); teiter != _Mroot.end(); teiter++) {
       (*teiter)->elite(phase, false);
       if ((phase == _TRAIN_PHASE && (*teiter)->numOutcomes(phase, o) > 0) ||
-          (phase == _TEST_PHASE &&
-           (*teiter)->numOutcomes(phase, o) >=
-               _numStoredOutcomesPerHost[phase])) {
+          (phase == _TEST_PHASE && (*teiter)->numOutcomes(phase, o) >=
+                                       _numStoredOutcomesPerHost[phase])) {
         // if ((*teiter)->runTimeComplexityIns() == 0)
         //    (*teiter)->updateComplexityRecord(_teamMap, _numPointAuxDouble -
         //    2);
@@ -951,9 +952,8 @@ void TPG::setEliteTeams(int t, int phase, int fitMode, bool verbose) {
       for (size_t o = 0; o < set.size(); o++) {
         if (((phase == _TRAIN_PHASE &&
               (*teiter)->numOutcomes(phase, set[o]) > 0) ||
-             (phase == _TEST_PHASE &&
-              (*teiter)->numOutcomes(phase, set[o]) >=
-                  _numStoredOutcomesPerHost[phase]))) {
+             (phase == _TEST_PHASE && (*teiter)->numOutcomes(phase, set[o]) >=
+                                          _numStoredOutcomesPerHost[phase]))) {
           rawMeanScore = (*teiter)->getQuickMean(set[o], fitMode, phase);
           if (!isEqual(minScoresST[fitMode][set[o]],
                        maxScoresST[fitMode][set[o]]))
@@ -969,7 +969,7 @@ void TPG::setEliteTeams(int t, int phase, int fitMode, bool verbose) {
         (*teiter)->fit_ = *min_element(
             normalizedScores.begin(),
             normalizedScores.end());  // if PS.size() == 1 then
-                                       // normalizedScores.size() == 1
+                                      // normalizedScores.size() == 1
         teamsRankedVec.push_back(*teiter);
       }
     }
@@ -1198,7 +1198,8 @@ void TPG::initTeams() {
       auto l =
           new linearM(GetState("t_current"), discrete_action, params_,
                       state_["program_count"]++, _rngs[TPG_SEED_INDEX], _ops);
-      for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++) {
+      for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES;
+           memType++) {
         auto *m =
             new memoryEigen(state_["memory_eigen_count"]++, memType, params_);
         addMemory(m);
@@ -1972,7 +1973,7 @@ void TPG::printTeamInfo(long t, int phase, bool singleBest, long teamId) {
   set<team *, teamIdComp> visitedTeams;
   for (auto teiter = _M.begin(); teiter != _M.end(); teiter++) {
     if ((!singleBest && (*teiter)->root() && teamId == -1) ||  // all root teams
-        (!singleBest && (*teiter)->id_ == teamId) ||          // specific team
+        (!singleBest && (*teiter)->id_ == teamId) ||           // specific team
         (singleBest &&
          (*teiter)->id_ == bestTeam->id_))  // singleBest root team
     {
@@ -2064,7 +2065,7 @@ void TPG::printTeamInfo(long t, int phase, bool singleBest, long teamId) {
           << (tmSizesSub.size() > 0 ? vecMean(tmSizesSub) : 0);
 
       ////map < int, map< int, map <point *, double, pointLexicalLessThan > > >
-      ///outs;
+      /// outs;
       // map < int, map< int, map <int, point *> > > outs;
       //(*teiter)->outcomes(outs);
 
@@ -2200,9 +2201,9 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
 
   string str;
 
-  if (fromString)
+  if (fromString) {
     str = inString;
-  else {
+  } else {
     char filename[80];
     sprintf(filename, "%s/%s.%ld.%d.%d.%d.rslt", "checkpoints", "cp", t, chkpID,
             _seeds[TPG_SEED_INDEX], phase);
@@ -2275,7 +2276,8 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       long dim = atoi(outcomeFields[f++].c_str());
       (void)dim;
       int nrefs = atoi(outcomeFields[f++].c_str());
-      for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++)
+      for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES;
+           memType++)
         memTypeIds[memType] = atoi(outcomeFields[f++].c_str());
 
       vector<instruction *> bid;
@@ -2298,7 +2300,8 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       // _memoryRows, _memoryCols, id, nrefs, bid);
       l = new linearM(gtime, action, stateful, params_, id, nrefs, bid);
 
-      for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++) {
+      for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES;
+           memType++) {
         l->memSet(memType, _Memory[memType][memTypeIds[memType]]);
         l->memGet(memType)->refInc();
       }
@@ -2517,7 +2520,8 @@ void TPG::cleanupProgramsWithNoRefs(long t,
         delete tm;
       }
     }
-    for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++) {
+    for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES;
+         memType++) {
       leiter->memGet(memType)->refDec();
       if (leiter->memGet(memType)->refs() == 0) {
         removeMemory(leiter->memGet(memType));
@@ -2735,12 +2739,16 @@ void TPG::writeCheckpoint(long t, bool elite) {
          itr1++)  // taskset
       for (auto itr2 = itr1->second.begin(); itr2 != itr1->second.end();
            itr2++)  // fitmode
-        for (auto itr3 = itr2->second.begin(); itr3 != itr2->second.end();
-             itr3++) {  // phase
-          teams.clear();
-          itr3->second->getAllNodes(_teamMap, teams, programs, memories, false);
-          teamsAll.insert(teams.begin(), teams.end());
-        }
+      // for (auto itr3 = itr2->second.begin(); itr3 != itr2->second.end();
+      //  itr3++) // phase
+      {
+        auto tm = itr2->second[2];
+        teams.clear();
+        // itr3->second->getAllNodes(_teamMap, teams, programs, memories,
+        // false);
+        tm->getAllNodes(_teamMap, teams, programs, memories, false);
+        teamsAll.insert(teams.begin(), teams.end());
+      }
 
     for (auto meiter = memories.begin(); meiter != memories.end(); meiter++)
       ofs << (*meiter)->checkpoint();

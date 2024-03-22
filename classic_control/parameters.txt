@@ -19,7 +19,7 @@ animate 0
 stateful 1
 
 # how frequently to run text procedure
-test_mod 5
+test_mod 10
 
 # in multitask settings, which tasks are active
 # rhs should be a list of task codes like: 1346
@@ -120,16 +120,16 @@ memory_rows 2
 memory_cols 2
 
 # number of elite teams
-n_elite 50
+n_elite 100
 
 # number of training outcome to store
-n_stored_outcomes_TRAIN 1
+n_stored_outcomes_TRAIN 20
 
 # number of test outcomes to store
 n_stored_outcomes_VALIDATION 1
 
 # number of validation outcomes to store
-n_stored_outcomes_TEST 1
+n_stored_outcomes_TEST 100
 
 # fitness proportional selection
 fit_prop_select 0

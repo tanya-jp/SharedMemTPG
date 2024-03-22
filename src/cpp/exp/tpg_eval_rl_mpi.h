@@ -67,21 +67,12 @@ double WrapContinuousAction(EvalStruct &eval) {
 vector<team *> GetTeamsToEval(TPG &tpg) {
   auto root_teams = tpg.GetTeams(true);
   vector<team *> teams;
-  if (tpg.GetParam<int>("replay") == 1) {
-    teams.push_back(tpg._teamMap[tpg.GetParam<int>("host_to_replay")]);
-    if (tpg.GetParam<int>("animate"))
-      teams[0]->_n_eval = 1;
-    else
-      teams[0]->_n_eval = tpg._numStoredOutcomesPerHost[tpg.GetState("phase")];
-  } else {
-    for (auto it : root_teams) {
-      it.second->_n_eval =
-          tpg._numStoredOutcomesPerHost[tpg.GetState("phase")] -
-          it.second->numOutcomes(tpg.GetState("phase"),
-                                 tpg.GetState("active_task"));
-      if (it.second->_n_eval > 0) {
-        teams.push_back(it.second);
-      }
+  for (auto it : root_teams) {
+    it.second->_n_eval = tpg._numStoredOutcomesPerHost[tpg.GetState("phase")] -
+                         it.second->numOutcomes(tpg.GetState("phase"),
+                                                tpg.GetState("active_task"));
+    if (it.second->_n_eval > 0) {
+      teams.push_back(it.second);
     }
   }
   return teams;
@@ -188,15 +179,12 @@ bool NotDoneAndActive(EvalStruct &eval) {
          eval.checkpointString.compare("done") != 0;
 }
 
-/*
+/*******************************************************************************
  * 1. Assign agents to evaluator procs
  * 2. Wait for evals to finish
  * 3. Collect results
- */
-void evaluate_main(TPG &tpg, ostringstream &os, mpi::communicator &world,
-                   vector<classicRLEnv *> &tasks, vector<int> &taskSet) {
-  (void)tasks;
-  (void)os;
+ ******************************************************************************/
+void evaluate_main(TPG &tpg, mpi::communicator &world, vector<int> &taskSet) {
   string my_string = "MAIN";
   vector<team *> teams_this_eval;
   vector<string> all_strings;
@@ -209,6 +197,8 @@ void evaluate_main(TPG &tpg, ostringstream &os, mpi::communicator &world,
   for (size_t task = 0; task < taskSet.size(); task++) {
     tpg.state_["active_task"] = taskSet[task];
     auto teams_to_eval = GetTeamsToEval(tpg);
+    // vector<team*> teams_to_eval;
+    //   tpg.getTeams(teams_to_eval, false);
     AssignTeamsToEvaluators(tpg, world, teams_to_eval, world_size_per_task,
                             evaluator);
   }
@@ -258,13 +248,7 @@ void evaluator(TPG &tpg, mpi::communicator &world,
   while (NotDoneAndActive(eval)) {
     world.recv(0, 0, eval.checkpointString);
     if (NotDoneAndActive(eval)) {
-      if (tpg.GetParam<int>("replay")) {
-        tpg.readCheckpoint(tpg.GetParam<int>("t_pickup"),
-                     tpg.GetParam<int>("checkpoint_in_phase"), -1, false,
-                     "");  // setRoots
-      } else {
       tpg.readCheckpoint(-1, _TRAIN_PHASE, -1, true, eval.checkpointString);
-      }   
       tpg.getTeams(eval.teams, true);
       eval.game = tasks[tpg.GetState("active_task")];
       eval.evalResult = "";
@@ -291,8 +275,40 @@ void evaluator(TPG &tpg, mpi::communicator &world,
           FinalizeStepStats(tpg, eval);
         }
       }
-    gather(world, eval.evalResult, 0);
+      gather(world, eval.evalResult, 0);
     }
   }
   tpg.finalize();
+}
+
+void replayer(TPG &tpg, vector<classicRLEnv *> &tasks) {
+  MaybeStartAnimation(tpg);
+  EvalStruct eval(tpg);
+  tpg.getTeams(eval.teams, true);
+  eval.game = tasks[tpg.GetState("active_task")];
+  eval.evalResult = "";
+  // cout << "dbg teams " << eval.teams.size() << endl;
+  for (auto tm : eval.teams) {
+    eval.tm = tm;
+    if (eval.animate) eval.tm->_n_eval = 1;
+    tpg.markEffectiveCode(eval.tm);
+    for (eval.episode = 0; eval.episode < eval.tm->_n_eval; eval.episode++) {
+      tpg._rngs[AUX_SEED_INDEX].seed(eval.episode);
+      eval.tm->clearMemory(tpg._teamMap);
+      eval.game->reset(tpg._rngs[AUX_SEED_INDEX]);
+      eval.obs->Set(eval.game->getStateVec(eval.partially_observable));
+      while (!eval.game->terminal()) {
+        eval.leafProgram =
+            tpg.getAction(eval.tm, eval.obs, true, eval.visitedTeams,
+                          eval.decisionInstructions, eval.game->getStep(),
+                          eval.teamPath, tpg._rngs[AUX_SEED_INDEX]);
+        MaybeAnimateStep(eval);
+        eval.runTimeStats[REWARD_IDX] += eval.game->update(
+            WrapDiscreteAction(eval), WrapContinuousAction(eval),
+            tpg._rngs[AUX_SEED_INDEX]);
+        AccumulateStepStats(eval);
+      }
+      FinalizeStepStats(tpg, eval);
+    }
+  }
 }
