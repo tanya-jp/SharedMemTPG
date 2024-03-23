@@ -1,50 +1,91 @@
 #!/bin/bash
 
-# start tpg ###################################################
-
-#defaults
+# Default command line args
 mode=0 #Train:0, Replay:1, Debug:2
 numMPIProc=2
 seed=42
+tasks="1";
 
-while getopts m:n:s: flag
+while getopts m:n:s:t: flag
 do
    case "${flag}" in
       m) mode=${OPTARG};;
       n) numMPIProc=${OPTARG};;
       s) seed=${OPTARG};;
+      t) tasks=${OPTARG};;
    esac
 done
 
 # Evolve
 if [ $mode -eq 0 ]; then
    echo "Starting run $seedTPG..."
-   #run from scratch (in background)
-   mpirun --oversubscribe -np $numMPIProc $TPG_PATH/build/release/cpp/exp/tpgExpClassicRL_MPI -s $seed 1> tpg.$seed.$$.std 2> tpg.$seed.$$.err &
+   mpirun --oversubscribe -np $numMPIProc \
+     $TPG_PATH/build/release/cpp/exp/tpgExpClassicRL_MPI -s $seed -t $tasks \
+     1> tpg.$seed.$$.std 2> tpg.$seed.$$.err &
 fi
 
-# Replay best
+# Replay
 if [ $mode -eq 1 ]; then
-   #replay
-   phs=2
-   #seedEnv=0
+   # Training phase
+   phase=2
    if ls replay/frames/* 1> /dev/null 2>&1; then rm replay/frames/*; fi
    if ls replay/graphs/* 1> /dev/null 2>&1; then rm replay/graphs/*; fi
-   bestScore=$(grep setElTmsST  tpg.${seed}.*.std | grep " fm 0 " | grep " phs $phs " | awk -F"mnOut" '{print $2}' | awk -F "p${phs}t0a0 " '{print $2}' | awk '{print $1}' | sort -n | uniq | tail -n 1)
-   t=$(grep setElTmsST tpg.${seed}.*.std | grep " fm 0 " | grep "p${phs}t0a0 ${bestScore} " tpg.${seed}.*.std | grep " phs $phs " | head -n 1 | awk -F" t " '{print $2}' | awk '{print $1}')
-   tm=$(grep setElTmsST tpg.${seed}.*.std | grep " fm 0 " |  grep "p${phs}t0a0 ${bestScore} " tpg.${seed}.*.std | grep " phs $phs " | grep " t $t " | head -n 1 | awk -F" id " '{print $2}' | awk '{print $1}')
-   echo "Fitness:$bestScore Generation:$t Team:$tm"
-   mpirun --oversubscribe -np 2 $TPG_PATH/build/release/cpp/exp/tpgExpClassicRL_MPI -a -R $tm -C $phs -t $t -s $seed -g $seed \
-      1> tpg.$seed.replay.std 2> tpg.$seed.replay.err &
-   # mpirun --oversubscribe -np 2 xterm -hold -e gdb -ex run --args $TPG_PATH/build/release/cpp/exp/tpgExpClassicRL_MPI -a -R $tm -C $phs -t $t -s $seed -g $seed \
-   #    1> tpg.$seed.replay.std 2> tpg.$seed.replay.err &
+   
+   # Get fitness of best team
+   bestScore=$(grep setElTmsST  tpg.${seed}.*.std | \
+     grep " fm 0 " | \
+     grep " phs $phase " | \
+     awk -F"mnOut" '{print $2}' | \
+     awk -F "p${phase}t0a0 " '{print $2}' | \
+     awk '{print $1}' | \
+     sort -n | \
+     uniq | \
+     tail -n 1)
+
+   # Get generation of best team
+   t_pickup=$(grep setElTmsST tpg.${seed}.*.std | \
+     grep " fm 0 " | \
+     grep "p${phase}t0a0 ${bestScore} " tpg.${seed}.*.std | \
+     grep " phs $phase " | \
+     head -n 1 | \
+     awk -F" t " '{print $2}' | \
+     awk '{print $1}')
+   
+   # Get id of best team
+   tm=$(grep "setElTmsST" tpg.${seed}.*.std | \
+     grep " fm 0 " | \
+     grep "p${phase}t0a0 ${bestScore} " | \
+     grep " phs $phase " | \
+     grep " t $t_pickup " | \
+     head -n 1 | \
+     awk -F"id" '{print $2}' | \
+     awk '{print $1}')
+   
+   echo "Fitness:$bestScore Generation:$t_pickup Team:$tm"
+   
+   mpirun --oversubscribe -np 2 \
+     $TPG_PATH/build/release/cpp/exp/tpgExpClassicRL_MPI -a -R $tm -C $phase \
+     -p $t_pickup -s $seed -g $seed \
+     1> tpg.$seed.replay.std 2> tpg.$seed.replay.err &
+   
+   # # replay with debugger
+   # mpirun --oversubscribe -np 2 xterm -hold -e gdb -ex run --args \
+   #   $TPG_PATH/build/release/cpp/exp/tpgExpClassicRL_MPI -a -R $tm -C $phase \
+   #   -p $t_pickup -s $seed -g $seed \
+   #   1> tpg.$seed.replay.std 2> tpg.$seed.replay.err &
 fi
 
 # Debug
 if [ $mode -eq 2 ]; then
-   #debug
-   mpirun --oversubscribe -np $numMPIProc xterm -hold -e gdb -ex run --args ../build/release/cpp/exp/tpgExpClassicRL_MPI -s $seed 1> tpg.$seed.$$.std 2> tpg.$seed.$$.err &
+   mpirun --oversubscribe -np $numMPIProc xterm -hold -e gdb -ex run \
+     --args ../build/release/cpp/exp/tpgExpClassicRL_MPI -s $seed \
+     1> tpg.$seed.$$.std 2> tpg.$seed.$$.err &
 fi
+
+
+# below this line is just sketches to be cleaned ###############################
+
+
 
 # # Check for memoy leaks
 # if [ $mode -eq 3 ]; then

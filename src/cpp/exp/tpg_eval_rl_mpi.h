@@ -287,7 +287,6 @@ void replayer(TPG &tpg, vector<classicRLEnv *> &tasks) {
   tpg.getTeams(eval.teams, true);
   eval.game = tasks[tpg.GetState("active_task")];
   eval.evalResult = "";
-  // cout << "dbg teams " << eval.teams.size() << endl;
   for (auto tm : eval.teams) {
     eval.tm = tm;
     if (eval.animate) eval.tm->_n_eval = 1;
