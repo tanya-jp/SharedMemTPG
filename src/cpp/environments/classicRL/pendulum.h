@@ -73,9 +73,6 @@ class pendulum: public classicRLEnv
 
          max_costs = pow(M_PI, 2) + 0.1 * pow(maxSpeed, 2) + 0.001 * pow(maxTorque, 2);
          //max_costs_all = -(max_costs * max_step);
-
-         state[ID_INDEX_FO] = ID_PENDULUM;
-         state[ID_INDEX_PO] = ID_PENDULUM;
       }
 
       /**********************************************************************************************/
@@ -95,8 +92,6 @@ class pendulum: public classicRLEnv
          state[3] = disNoise(rng);
 
          reward = 0;
-         state[REWARD_INDEX_FO] = reward;
-         state_po[REWARD_INDEX_PO] = reward;
 
          step = 0;
          terminalState = false;
@@ -129,9 +124,6 @@ class pendulum: public classicRLEnv
          step++;
 
          reward = -costs; 
-
-         state[REWARD_INDEX_FO] = reward;
-         state_po[REWARD_INDEX_PO] = reward;
 
          return reward;
       }

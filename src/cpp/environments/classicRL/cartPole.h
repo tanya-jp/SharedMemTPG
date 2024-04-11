@@ -52,8 +52,6 @@ class cartPole: public classicRLEnv
          actionsDiscrete.push_back(FORCE_MAG);
          _id = 1;
          max_step = 300;
-         state[ID_INDEX_FO] = ID_CARTPOLE;
-         state[ID_INDEX_PO] = ID_CARTPOLE;
       }
 
       /**********************************************************************************************/
@@ -79,8 +77,6 @@ class cartPole: public classicRLEnv
          state[_x_dot] = disReset(rng);
          state[_theta_dot] = disReset(rng);
          reward = 0;
-         state[REWARD_INDEX_FO] = reward;
-         state_po[REWARD_INDEX_PO] = reward;
          step = 0;
          terminalState = false;
          normalizeState(true);
@@ -143,9 +139,6 @@ class cartPole: public classicRLEnv
          step++;
 
          reward = 1.0;
-
-         state[REWARD_INDEX_FO] = reward;
-         state_po[REWARD_INDEX_PO] = reward;
 
          normalizeState(true);
          return reward;

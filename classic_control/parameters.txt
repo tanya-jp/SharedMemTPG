@@ -120,7 +120,7 @@ memory_rows 2
 memory_cols 2
 
 # number of elite teams
-n_elite 200
+n_elite 300
 
 # number of training outcome to store
 n_stored_outcomes_TRAIN 20

@@ -13,7 +13,7 @@
 
 using namespace std;
 
-/**********************************************************************************************/
+/******************************************************************************/
 class mountainCarContinuous: public classicRLEnv 
 {
    protected:
@@ -49,8 +49,6 @@ class mountainCarContinuous: public classicRLEnv
          disReset = uniform_real_distribution<>(-0.6, -0.4);
          _id = 6;
          max_step = 200;
-         state[ID_INDEX_FO] = ID_MOUNTAIN_CAR_CONTINUOUS;
-         state[ID_INDEX_PO] = ID_MOUNTAIN_CAR_CONTINUOUS;
       }
 
       /**********************************************************************************************/
@@ -75,8 +73,6 @@ class mountainCarContinuous: public classicRLEnv
          state[3] = disNoise(rng);
 
          reward = 0;
-         state[REWARD_INDEX_FO] = reward;
-         state_po[REWARD_INDEX_PO] = reward;
 
          step = 0;
          terminalState = false;
@@ -116,14 +112,11 @@ class mountainCarContinuous: public classicRLEnv
          else
             reward = -(pow(force, 2) * 0.1);
 
-         state[REWARD_INDEX_FO] = reward;
-         state_po[REWARD_INDEX_PO] = reward;
-
          normalizeState(true);
          return reward;
       }
 
-      /**********************************************************************************************/
+      /************************************************************************/
       //opengl
       void display_function(int episode, int actionD, double actionC)
       {

@@ -44,9 +44,6 @@ class cartCentering: public classicRLEnv
          actionsDiscrete.push_back(FORCE_MAG);
          _id = 3;
          max_step = 500;
-
-         state[ID_INDEX_FO] = ID_CART_CENTERING;
-         state[ID_INDEX_PO] = ID_CART_CENTERING;
       }
 
       /**********************************************************************************************/
@@ -77,8 +74,6 @@ class cartCentering: public classicRLEnv
          state[3] = disNoise(rng);
 
          reward = 0;
-         state[REWARD_INDEX_FO] = reward;
-         state_po[REWARD_INDEX_PO] = reward;
 
          normalizeState(true);
       }
@@ -125,9 +120,6 @@ class cartCentering: public classicRLEnv
             reward = -((((abs(state[X])/MAX_X) + (abs(state[V])/MAX_V)/2)) + (((double)step/max_step)*0.1));
          else
             reward = 0;
-
-         state[REWARD_INDEX_FO] = reward;
-         state_po[REWARD_INDEX_PO] = reward;
 
          normalizeState(true);
 

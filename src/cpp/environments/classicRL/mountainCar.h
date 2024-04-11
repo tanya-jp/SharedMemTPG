@@ -36,8 +36,6 @@ class mountainCar: public classicRLEnv
          disReset = uniform_real_distribution<>(-0.6, -0.4);
          _id = 5;
          max_step = 200;
-         state[ID_INDEX_FO] = ID_MOUNTAIN_CAR;
-         state[ID_INDEX_PO] = ID_MOUNTAIN_CAR;
       }
 
       /**********************************************************************************************/
@@ -60,8 +58,6 @@ class mountainCar: public classicRLEnv
          state[3] = disNoise(rng);
 
          reward = 0;
-         state[REWARD_INDEX_FO] = reward;
-         state_po[REWARD_INDEX_PO] = reward;
 
          step = 0;
          terminalState = false;
@@ -95,9 +91,6 @@ class mountainCar: public classicRLEnv
          step++;
 
          reward = -1.0;
-
-         state[REWARD_INDEX_FO] = reward;
-         state_po[REWARD_INDEX_PO] = reward;
 
          normalizeState(true);
          return reward;

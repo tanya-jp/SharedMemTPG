@@ -51,9 +51,6 @@ class acrobot: public classicRLEnv
          actionsDiscrete.push_back(1.0);
          _id = 2;
          max_step = 200;
-
-         state[ID_INDEX_FO] = ID_ACROBOT;
-         state[ID_INDEX_PO] = ID_ACROBOT;
       }
 
       /**********************************************************************************************/
@@ -88,8 +85,6 @@ class acrobot: public classicRLEnv
          state[_theta2Dot] = disReset(rng);
 
          reward = 0;
-         state[REWARD_INDEX_FO] = reward;
-         state_po[REWARD_INDEX_PO] = reward;
 
          step = 0;
          terminalState = false;
@@ -145,9 +140,6 @@ class acrobot: public classicRLEnv
          step++;
 
          reward = -1.0;
-
-         state[REWARD_INDEX_FO] = reward;
-         state_po[REWARD_INDEX_PO] = reward;
 
          normalizeState(true);
          return reward;
