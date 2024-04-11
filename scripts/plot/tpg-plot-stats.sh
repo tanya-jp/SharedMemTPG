@@ -21,7 +21,7 @@ do
    esac
 done
 
-numTask=$(grep "n_task" tpg.*.std | cut -d ' ' -f 2)
+numTask=$(grep "n_task" tpg.*.std | cut -d ' ' -f 2 | head -n 1)
 
 c=1
 #if ls *p${phs}*rslt 1> /dev/null 2>&1; then rm *p${phs}.rslt; fi
@@ -328,5 +328,5 @@ fi
 
 pdfunite 0*.pdf ${wd}_p${phs}.pdf
 rm 0*.pdf
-rm *rslt
+#rm *rslt
 

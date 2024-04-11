@@ -102,7 +102,7 @@ class TPG {
   void readCheckpoint(long, int, int, bool, const string &);
 
   void ReadParameters(string file_name,
-                      std::unordered_map<string, std::any> &params); 
+                      std::unordered_map<string, std::any> &params);
   void recalculateProgramRefs();
   inline void resetOutcomes(int phase, bool roots);
   void selTeams(long, bool, int);

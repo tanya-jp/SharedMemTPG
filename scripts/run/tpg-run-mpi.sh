@@ -4,7 +4,7 @@
 mode=0 #Train:0, Replay:1, Debug:2
 numMPIProc=2
 seed=42
-tasks="1";
+tasks="134";
 
 while getopts m:n:s:t: flag
 do

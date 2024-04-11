@@ -23,7 +23,7 @@ test_mod 50
 
 # in multitask settings, which tasks are active
 # rhs should be a list of task codes like: 1346
-active_task 1
+active_task 134
 
 # number of fitness functions available
 n_fit_mode 1
@@ -120,7 +120,7 @@ memory_rows 2
 memory_cols 2
 
 # number of elite teams
-n_elite 100
+n_elite 200
 
 # number of training outcome to store
 n_stored_outcomes_TRAIN 20
