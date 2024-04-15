@@ -1,11 +1,11 @@
+#include <Acrobot.h>
+#include <CartCentering.h>
+#include <CartPole.h>
+#include <MountainCar.h>
+#include <MountainCarContinuous.h>
+#include <Pendulum.h>
 #include <TPG.h>
-#include <acrobot.h>
-#include <cartCentering.h>
-#include <cartPole.h>
-#include <classicRLEnv.h>
-#include <mountainCar.h>
-#include <mountainCarContinuous.h>
-#include <pendulum.h>
+#include <TaskEnv.h>
 
 #include <boost/mpi.hpp>
 #include <chrono>
@@ -23,6 +23,9 @@
 
 namespace mpi = boost::mpi;
 
+struct EvalStruct;
+typedef void (*EvaluatorFunction)(TPG &, EvalStruct &);
+
 struct EvalStruct {
   int episode;
   int saveFrame = 0;
@@ -38,7 +41,7 @@ struct EvalStruct {
   string evalResult;
   string checkpointString;
   set<program *, programIdComp> active;
-  classicRLEnv *game;
+  TaskEnv *game;
   program *leafProgram;
   bool animate;
   bool partially_observable;
@@ -149,10 +152,11 @@ void AccumulateStepStats(EvalStruct &eval) {
   eval.behavSeq.push_back(discretize(eval.obs->getStateVarDouble(1), 0, 1, 3));
   eval.runTimeStats[VISITED_TEAMS_IDX] += eval.visitedTeams.size();
   eval.runTimeStats[INSTRUCTIONS_IDX] += eval.decisionInstructions;
-  eval.obs->Set(eval.game->getStateVec(eval.partially_observable));
 }
 
 void FinalizeStepStats(TPG &tpg, EvalStruct &eval) {
+  // if (eval.game->eval_type_ == "RecursiveForecast")
+  //   eval.runTimeStats[REWARD_IDX] /= eval.game->getStep();
   eval.runTimeStats[VISITED_TEAMS_IDX] /= eval.game->getStep();
   eval.runTimeStats[INSTRUCTIONS_IDX] /= eval.game->getStep();
   eval.runTimeStats[MEMBERS_RUN_ENTROPY_IDX] = 0;  // place holder
@@ -238,11 +242,57 @@ void evaluate_main(TPG &tpg, mpi::communicator &world, vector<int> &taskSet) {
   }
 }
 
+/******************************************************************************/
+void EvalControl(TPG &tpg, EvalStruct &eval) {
+  eval.game->reset(tpg._rngs[AUX_SEED_INDEX]);
+  eval.obs->Set(eval.game->GetObsVec(eval.partially_observable));
+  while (!eval.game->terminal()) {
+    eval.leafProgram = tpg.getAction(
+        eval.tm, eval.obs, true, eval.visitedTeams, eval.decisionInstructions,
+        eval.game->getStep(), eval.teamPath, tpg._rngs[AUX_SEED_INDEX]);
+    MaybeAnimateStep(eval);
+    eval.runTimeStats[REWARD_IDX] +=
+        eval.game->update(WrapDiscreteAction(eval), WrapContinuousAction(eval),
+                          tpg._rngs[AUX_SEED_INDEX]);
+    AccumulateStepStats(eval);
+    eval.obs->Set(eval.game->GetObsVec(eval.partially_observable));
+  }
+}
+
+/******************************************************************************/
+void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
+  RecursiveUnivar *game = dynamic_cast<RecursiveUnivar *>(eval.game);
+  game->reset(tpg._rngs[AUX_SEED_INDEX]);
+  // prime
+  int sample = game->t_start[tpg.GetState("phase")][eval.episode];
+  for (int i = 0; i < game->num_samples_prime_; i++) {
+    eval.obs->Set(game->data[sample++]);
+    eval.leafProgram = tpg.getAction(
+        eval.tm, eval.obs, true, eval.visitedTeams, eval.decisionInstructions,
+        eval.game->getStep(), eval.teamPath, tpg._rngs[AUX_SEED_INDEX]);        
+  }
+  // predict
+  double m = 1.0 / game->num_samples_predict_[tpg.GetState("phase")];
+  for (int i = 0; i < game->num_samples_predict_[tpg.GetState("phase")]; i++) {
+    vector<double> prediction{WrapContinuousAction(eval)};  // prev predition
+    eval.obs->Set(prediction);
+    eval.leafProgram = tpg.getAction(eval.tm, eval.obs, true, eval.visitedTeams,
+                                     eval.decisionInstructions, game->getStep(),
+                                     eval.teamPath, tpg._rngs[AUX_SEED_INDEX]);
+    prediction[0] = WrapContinuousAction(eval);
+    eval.runTimeStats[REWARD_IDX] +=
+        m * game->update(sample++, prediction[0], tpg._rngs[AUX_SEED_INDEX]);
+    AccumulateStepStats(eval);
+  }
+}
+
 /*******************************************************************************
  * Receive agents from main MPI proc, eval in environment, return results
  */
-void evaluator(TPG &tpg, mpi::communicator &world,
-               vector<classicRLEnv *> &tasks) {
+void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
+  unordered_map<string, EvaluatorFunction> evaluator_map;
+  evaluator_map["Control"] = &EvalControl;
+  evaluator_map["RecursiveForecast"] = &EvalRecursiveForecast;
   MaybeStartAnimation(tpg);
   EvalStruct eval(tpg);
   while (NotDoneAndActive(eval)) {
@@ -259,19 +309,7 @@ void evaluator(TPG &tpg, mpi::communicator &world,
              eval.episode++) {
           tpg._rngs[AUX_SEED_INDEX].seed(eval.episode);
           eval.tm->clearMemory(tpg._teamMap);
-          eval.game->reset(tpg._rngs[AUX_SEED_INDEX]);
-          eval.obs->Set(eval.game->getStateVec(eval.partially_observable));
-          while (!eval.game->terminal()) {
-            eval.leafProgram =
-                tpg.getAction(eval.tm, eval.obs, true, eval.visitedTeams,
-                              eval.decisionInstructions, eval.game->getStep(),
-                              eval.teamPath, tpg._rngs[AUX_SEED_INDEX]);
-            MaybeAnimateStep(eval);
-            eval.runTimeStats[REWARD_IDX] += eval.game->update(
-                WrapDiscreteAction(eval), WrapContinuousAction(eval),
-                tpg._rngs[AUX_SEED_INDEX]);
-            AccumulateStepStats(eval);
-          }
+          evaluator_map[eval.game->eval_type_](tpg, eval);
           FinalizeStepStats(tpg, eval);
         }
       }
@@ -282,7 +320,7 @@ void evaluator(TPG &tpg, mpi::communicator &world,
 }
 
 /******************************************************************************/
-void replayer(TPG &tpg, vector<classicRLEnv *> &tasks) {
+void replayer(TPG &tpg, vector<TaskEnv *> &tasks) {
   MaybeStartAnimation(tpg);
   EvalStruct eval(tpg);
   tpg.getTeams(eval.teams, true);
@@ -295,19 +333,7 @@ void replayer(TPG &tpg, vector<classicRLEnv *> &tasks) {
     for (eval.episode = 0; eval.episode < eval.tm->_n_eval; eval.episode++) {
       tpg._rngs[AUX_SEED_INDEX].seed(eval.episode);
       eval.tm->clearMemory(tpg._teamMap);
-      eval.game->reset(tpg._rngs[AUX_SEED_INDEX]);
-      eval.obs->Set(eval.game->getStateVec(eval.partially_observable));
-      while (!eval.game->terminal()) {
-        eval.leafProgram =
-            tpg.getAction(eval.tm, eval.obs, true, eval.visitedTeams,
-                          eval.decisionInstructions, eval.game->getStep(),
-                          eval.teamPath, tpg._rngs[AUX_SEED_INDEX]);
-        MaybeAnimateStep(eval);
-        eval.runTimeStats[REWARD_IDX] += eval.game->update(
-            WrapDiscreteAction(eval), WrapContinuousAction(eval),
-            tpg._rngs[AUX_SEED_INDEX]);
-        AccumulateStepStats(eval);
-      }
+      EvalControl(tpg, eval);
       FinalizeStepStats(tpg, eval);
     }
   }

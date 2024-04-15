@@ -1,5 +1,5 @@
-#ifndef classicRLEnv_h
-#define classicRLEnv_h
+#ifndef TaskEnv_h
+#define TaskEnv_h
 
 #include <cstring>
 #include <deque>
@@ -13,9 +13,9 @@
 
 using namespace std;
 
-class classicRLEnv {
+class TaskEnv {
  public:
-  int _id;
+  string eval_type_;
   vector<double> state;     // state variables
   vector<double> state_po;  // state variables (partially observable)
   vector<double>
@@ -30,12 +30,8 @@ class classicRLEnv {
   bool terminalState;
   vector<deque<double> > actionTrace;
 
-  classicRLEnv() {
+  TaskEnv() {
     disNoise = uniform_real_distribution<>(-M_PI, M_PI);
-    // state.reserve(CLASSIC_RL_DIM);
-    // state.resize(CLASSIC_RL_DIM);
-    // state_po.reserve(CLASSIC_RL_DIM_PO);
-    // state_po.resize(CLASSIC_RL_DIM_PO);
     terminalState = false;
     actionTrace.reserve(3);
     actionTrace.resize(3);
@@ -49,8 +45,8 @@ class classicRLEnv {
   virtual void display_function(int, int, double) = 0;
   // const vector < double > & getStateVec(bool po) { return po ? state_po :
   // state; }
-  vector<double> &getStateVec(bool po) { return po ? state_po : state; }
-  double getStateVar(int var, bool po) {
+  vector<double> &GetObsVec(bool po) { return po ? state_po : state; }
+  double GetObsVar(int var, bool po) {
     return po ? state_po[var] : state[var];
   }
   void setStateVar(int var, double v) {
@@ -58,7 +54,7 @@ class classicRLEnv {
     state[var] = v;
   }
   void setStep(int s) { step = s; }
-  inline int id() const { return _id; }
+  inline string EvalType() const { return eval_type_; }
   virtual bool discreteActions() const { return true; }
   virtual double minActionContinuous() const { return 0.0; }
   virtual double maxActionContinuous() const { return 0.0; }
@@ -69,7 +65,7 @@ class classicRLEnv {
   virtual double update(int, double, mt19937 &) = 0;
   int getStep() { return step; }
   virtual bool terminal() = 0;
-  virtual ~classicRLEnv() {}
+  virtual ~TaskEnv() {}
 
 #if !defined(CCANADA) && !defined(HPCC)
   /****************************************************************************/

@@ -25,7 +25,8 @@ do
 done
 
 if [ $mode -eq 0 ]; then
-srun ../build/release/cpp/exp/tpgExpClassicRL_MPI -s $seed 1> tpg.$seed.$$.std 2> tpg.$seed.$$.err
+  srun ../build/release/cpp/experiments/TPGExperimentMPI -s $seed \
+  1> tpg.$seed.$$.std 2> tpg.$seed.$$.err
 fi
 
 ##pickup from checkpoint file

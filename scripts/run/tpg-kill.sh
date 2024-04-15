@@ -1,2 +1,2 @@
 #!/bin/bash
-pkill -f tpgExpClassicRL
+pkill -f TPGExperimentMPI

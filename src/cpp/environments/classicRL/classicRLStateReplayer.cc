@@ -10,7 +10,7 @@
 using namespace std;
 typedef double stateType;
 
-classicRLEnv *_game;
+TaskEnv *_game;
 double _actionC;
 int _actionD;
 int _millis;

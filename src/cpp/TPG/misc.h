@@ -189,31 +189,31 @@ inline std::vector < std::vector < int > > powerSet(size_t n) {
    return PS;
 }
 
-class CSVReader
-{
-   string fileName;
-   string delimiter;
-   int dim;
-   public:
-   CSVReader(string fname, int d, string delm = " "){
-      fileName = fname;
-      delimiter = delm;
-      dim = d;
-   }
-   std::vector < std::vector <double> > getData()
-   {
-      ifstream file(fileName);
-      std::vector < std::vector <double> > dataVec;
-      string line = "";
-      while (getline(file, line))
-      {
-         std::vector<double> doubleValues(dim);//features
-         doubleValues[0] = stod(line.c_str());
-         dataVec.push_back(doubleValues);
-      }
-      file.close();
-      return dataVec;
-   }
-};
+// class CSVReader
+// {
+//    string fileName;
+//    string delimiter;
+//    int dim;
+//    public:
+//    CSVReader(string fname, int d, string delm = " "){
+//       fileName = fname;
+//       delimiter = delm;
+//       dim = d;
+//    }
+//    std::vector < std::vector <double> > getData()
+//    {
+//       ifstream file(fileName);
+//       std::vector < std::vector <double> > dataVec;
+//       string line = "";
+//       while (getline(file, line))
+//       {
+//          std::vector<double> doubleValues(dim);//features
+//          doubleValues[0] = stod(line.c_str());
+//          dataVec.push_back(doubleValues);
+//       }
+//       file.close();
+//       return dataVec;
+//    }
+// };
 
 #endif

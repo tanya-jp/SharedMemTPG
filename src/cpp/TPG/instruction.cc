@@ -461,6 +461,7 @@ void instruction::mutate(bool uniform, vector<bool> &legal_ops, mt19937 &rng) {
         } while ((nOp > 1 && op_ == prev) || !legal_ops[op_]);
         break;
       case 5:  // change in1 index
+        if (num_input_ < 2) break;
         prev = in1Idx_;
         dis = std::uniform_int_distribution<>(
             0, (in1Src_ > 1 ? num_input_ - 1 : memIndices_ - 1));
@@ -469,6 +470,7 @@ void instruction::mutate(bool uniform, vector<bool> &legal_ops, mt19937 &rng) {
         } while (in1Idx_ == prev);
         break;
       case 6:  // change in 2 index
+        if (num_input_ < 2) break;
         prev = in2Idx_;
         dis = std::uniform_int_distribution<>(
             0, (in2Src_ > 1 ? num_input_ - 1 : memIndices_ - 1));

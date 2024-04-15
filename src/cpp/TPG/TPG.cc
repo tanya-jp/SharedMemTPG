@@ -410,8 +410,10 @@ void TPG::ReadParameters(string file_name,
       _ops[instruction::SCALAR_TANH_OP_] = true;
     if (outcome_fields[0] == "SCALAR_SQRT_OP")
       _ops[instruction::SCALAR_SQRT_OP_] = true;
-    // cout << "param: " << vecToStr(outcome_fields) << endl;
-    if (outcome_fields[1].find('.') !=
+      
+    if (outcome_fields[0] == "active_tasks")
+      params[outcome_fields[0]] = outcome_fields[1];
+    else if (outcome_fields[1].find('.') !=
         std::string::npos)  // found double parameter
       params[outcome_fields[0]] = stringToDouble(outcome_fields[1]);
     else  // found int parameter
@@ -685,11 +687,10 @@ void TPG::genTeams(team *pm1, team *pm2, bool crossover, team **cm,
 
     while (GetParam<double>("pmm") > 0 && changedM == false) {
       for (auto ccliter = cprogramsCopy.begin(); ccliter != cprogramsCopy.end();
-           ++ccliter)
+           ++ccliter)   
         if (real_distribution_(_rngs[TPG_SEED_INDEX]) <
             GetParam<double>("pmm")) {
           changedM = true;
-
           teamToMutate->removeProgram(*ccliter);
 
           // clone program
@@ -704,15 +705,12 @@ void TPG::genTeams(team *pm1, team *pm2, bool crossover, team **cm,
                                     memType));  // copy memoryEigen reference
             lr->memGet(memType)->refInc();
           }
-
           if (linearCrossover) delete *ccliter;
-
           // modify program
           do {
             changedL = lr->muBid(params_, _rngs[TPG_SEED_INDEX],
                                  real_distribution_, _ops);
           } while (changedL == false);
-
           // change memory pointer
           if (real_distribution_(_rngs[TPG_SEED_INDEX]) <
               GetParam<double>("pms")) {
@@ -741,8 +739,7 @@ void TPG::genTeams(team *pm1, team *pm2, bool crossover, team **cm,
                             // another atomic
                 real_distribution_(_rngs[TPG_SEED_INDEX]) <
                     GetParam<double>("p_atomic")) {
-              // changing atomic actions has no effect under continous outputs
-              if (!GetParam<int>("continuous_output")) {
+              if (GetParam<int>("n_discrete_action") > 1) {
                 do {
                   a = -1 -
                       disAct(_rngs[TPG_SEED_INDEX]);  // atomic actions are

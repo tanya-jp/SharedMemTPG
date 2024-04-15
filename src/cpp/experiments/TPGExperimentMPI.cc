@@ -1,17 +1,18 @@
+#include <Acrobot.h>
+#include <CartCentering.h>
+#include <CartPole.h>
+#include <MountainCar.h>
+#include <MountainCarContinuous.h>
+#include <Pendulum.h>
+#include <RecursiveUnivar.h>
 #include <TPG.h>
-#include <acrobot.h>
-#include <cartCentering.h>
-#include <cartPole.h>
-#include <mountainCar.h>
-#include <mountainCarContinuous.h>
-#include <pendulum.h>
 
 #include <algorithm>
 #include <boost/mpi.hpp>
 #include <chrono>
 
 #include "tpg_arg_parse.h"
-#include "tpg_eval_rl_mpi.h"
+#include "tpg_eval_mpi.h"
 #define CHECKPOINT_MOD 1000000
 #define PRINT_MOD 1
 // rawfitness,  mean visitedTeams, decisionInstructions, membersRunEntropy
@@ -29,20 +30,31 @@ int main(int argc, char** argv) {
   ostringstream os;  // logging
 
   /* task sets ***************************************************************/
-  vector<classicRLEnv*> tasks;
-  string taskString = to_string(tpg.GetParam<int>("active_task"));
-  if (taskString.find_first_of("1") != std::string::npos)
-    tasks.push_back(new cartPole());
-  if (taskString.find_first_of("2") != std::string::npos)
-    tasks.push_back(new acrobot());
-  if (taskString.find_first_of("3") != std::string::npos)
-    tasks.push_back(new cartCentering());
-  if (taskString.find_first_of("4") != std::string::npos)
-    tasks.push_back(new pendulum());
-  if (taskString.find_first_of("5") != std::string::npos)
-    tasks.push_back(new mountainCar());
-  if (taskString.find_first_of("6") != std::string::npos)
-    tasks.push_back(new mountainCarContinuous());
+  vector<TaskEnv*> tasks;
+  stringstream ss(tpg.GetParam<string>("active_tasks"));
+  while (ss.good()) {
+    string substr;
+    getline(ss, substr, ',');
+    if (substr == "Cartpole")
+      tasks.push_back(new CartPole());
+    else if (substr == "Acrobot")
+      tasks.push_back(new Acrobot());
+    else if (substr == "CartCentering")
+      tasks.push_back(new CartCentering());
+    else if (substr == "Pendulum")
+      tasks.push_back(new Pendulum());
+    else if (substr == "Mountaincar")
+      tasks.push_back(new MountainCar());
+    else if (substr == "MountainCarContinuous")
+      tasks.push_back(new MountainCarContinuous());
+    else if (substr == "Sunspots") {
+      tasks.push_back(new RecursiveUnivar("Sunspots"));
+    } else {
+      cout << "Unrecognised task:" << substr << endl;
+      exit(1);
+    }
+  }
+
   string allTaskString = "";
   for (size_t i = 0; i < tasks.size(); i++) allTaskString += to_string(i);
 
@@ -66,7 +78,7 @@ int main(int argc, char** argv) {
   teamUseMapPerTask.reserve(tasks.size());
   teamUseMapPerTask.resize(tasks.size());
 
-    if (world.rank() == 0) {  // Master Process
+  if (world.rank() == 0) {  // Master Process
     string my_string = "MAIN";
 
     // time logging
@@ -89,17 +101,12 @@ int main(int argc, char** argv) {
     chrono::duration<double> endReport;
 
     // initialization
-    if (tpg.GetParam<int>("checkpoint")){
+    if (tpg.GetParam<int>("checkpoint")) {
       tpg.readCheckpoint(tpg.GetParam<int>("t_pickup"),
                          tpg.GetParam<int>("checkpoint_in_phase"), -1, false,
                          "");
-                         string s = "";
-      // vector<team*> tms;
-      // tpg.getTeams(tms, true);
-      // tpg.writeCheckpoint(s, tms);
-      // cout << "dbg cp1:" << s << endl;
-    }
-    else {
+      string s = "";
+    } else {
       tpg.initTeams();
     }
 
@@ -123,13 +130,13 @@ int main(int argc, char** argv) {
           tpg.genTeams();
           endGenTeams = chrono::system_clock::now() - startGenTeams;
         }
-
+        
         /* evaluation ********************************************************/
         startEval = chrono::system_clock::now();
         // evaluate on all tasks
         evaluate_main(tpg, world, taskSet);
         endEval = chrono::system_clock::now() - startEval;
-
+        
         /* selection *********************************************************/
         startSetEliteTeams = chrono::system_clock::now();
         tpg.setEliteTeams(tpg.GetState("t_current"), tpg.GetState("phase"), 0,
@@ -143,7 +150,7 @@ int main(int argc, char** argv) {
                             .count())
                 : 0);  // also does some reporting
         endSelTeams = chrono::system_clock::now() - startSelTeams;
-
+        
         /* accounting and reporting ******************************************/
         startReport = chrono::system_clock::now();
         if (tpg.GetState("t_current") % tpg.GetParam<int>("test_mod") == 0) {
@@ -169,7 +176,7 @@ int main(int argc, char** argv) {
             tpg.GetState("t_current") % MODES_T == 0)
           tpg.updateMODESFilters(true);
         endMODES = chrono::system_clock::now() - startMODES;
-
+        
         /* checkpoint ********************************************************/
         startChkp = chrono::system_clock::now();
         if (tpg.GetParam<int>("write_checkpoints") &&
@@ -179,7 +186,7 @@ int main(int argc, char** argv) {
         }
         endChkp = chrono::system_clock::now() - startChkp;
         endGen = chrono::system_clock::now() - startGen;
-
+        
         /* print generation timing *******************************************/
         os << setprecision(5) << fixed;
         os << "gTime t " << tpg.GetState("t_current");

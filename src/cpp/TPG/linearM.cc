@@ -224,7 +224,7 @@ bool linearM::muBid(std::unordered_map<std::string, std::any> &params,
 
     changed = true;
   }
-
+ 
   /* Flip single bit of random instruction. */
   if (disR(rng) < std::any_cast<double>(params["p_bid_mutate"])) {
     uniform_int_distribution<int> disBid(0, bid_.size() - 1);

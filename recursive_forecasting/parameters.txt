@@ -19,11 +19,11 @@ animate 0
 stateful 1
 
 # how frequently to run test procedure
-test_mod 50
+test_mod 1000000
 
 # in multitask settings, which tasks are active
 # rhs should be a comma-separated list like Cartpole,Acrobot
-active_tasks Cartpole,Pendulum
+active_tasks Sunspots
 
 # number of fitness functions available
 n_fit_mode 1
@@ -43,20 +43,20 @@ seed_aux -1
 # max number of generations
 n_generations 1000000
 
-# allow mutation of internal teams (i.e. non-root teams (in-progress)
+# allow mutation of internal teams (i.e. non-root teams ,in-progress)
 mu_internal 0
 
 # number of discrete actions
-n_discrete_action 3
+n_discrete_action 1
 
 # initial team size
-initial_team_size 5
+initial_team_size 2
 
 # max team size
-max_team_size 1000000
+max_team_size 100
 
 # max teams per graph
-max_teams_per_graph 1000000
+max_teams_per_graph 1000
 
 # when changing action pointer, probability of selecting atomic action
 p_atomic 0.9
@@ -86,13 +86,13 @@ pmx 0.5
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 2
+n_input 1
 
 # max initial program size
 max_initial_prog_size 100
 
 # max program size
-max_prog_size 1000000
+max_prog_size 1000
 
 # program variation: probability of changing the program
 p_bid_mutate 1.0
@@ -114,22 +114,28 @@ p_bid_xover 0.0
 memory_indices 4
 
 # memory size: number of rows
-memory_rows 2
+memory_rows 4
 
 # memory size: number of columns
-memory_cols 2
+memory_cols 4
 
 # number of elite teams
-n_elite 100
+n_elite 200
 
-# number of training outcome to store
-n_stored_outcomes_TRAIN 20
+# number of training outcomes to store
+# for recursive time series, this should match the number of t_starts[TRAIN_PHASE]
+# in the dataset. See environments/time_series/RecursiveUniver.h
+n_stored_outcomes_TRAIN 19
 
 # number of test outcomes to store
-n_stored_outcomes_VALIDATION 1
+# for recursive time series, this should match the number of t_starts[VALIDATION_PHASE]
+# in the dataset. See environments/time_series/RecursiveUniver.h
+n_stored_outcomes_VALIDATION 9
 
 # number of validation outcomes to store
-n_stored_outcomes_TEST 100
+# for recursive time series, this should match the number of t_starts[TEST_PHASE]
+# in the dataset. See environments/time_series/RecursiveUniver.h
+n_stored_outcomes_TEST 1
 
 # fitness proportional selection
 fit_prop_select 0
@@ -138,6 +144,36 @@ fit_prop_select 0
 diversity_mode 0
 
 # operations, uncomment to activate
+
+## scalar op set
+#SCALAR_SUM_OP
+#SCALAR_DIFF_OP
+#SCALAR_PRODUCT_OP
+#SCALAR_DIVISION_OP
+#SCALAR_ABS_OP
+#SCALAR_RECIPROCAL_OP
+#SCALAR_SIN_OP
+#SCALAR_COS_OP
+#SCALAR_TAN_OP
+#SCALAR_ARCSIN_OP
+#SCALAR_ARCCOS_OP
+#SCALAR_ARCTAN_OP
+#SCALAR_EXP_OP
+#SCALAR_LOG_OP
+#SCALAR_HEAVYSIDE_OP
+#SCALAR_MIN_OP
+#SCALAR_MAX_OP
+#SCALAR_CONST_SET_OP
+#VECTOR_CONST_SET_OP
+#SCALAR_COND_A_OP
+#SCALAR_COND_B_OP
+#SCALAR_POW_OP
+#SCALAR_SQR_OP
+#SCALAR_CUBE_OP
+#SCALAR_TANH_OP
+#SCALAR_SQRT_OP
+
+# full op set without rand
 SCALAR_SUM_OP
 SCALAR_DIFF_OP
 SCALAR_PRODUCT_OP
@@ -154,48 +190,48 @@ SCALAR_EXP_OP
 SCALAR_LOG_OP
 SCALAR_HEAVYSIDE_OP
 VECTOR_HEAVYSIDE_OP
-#MATRIX_HEAVYSIDE_OP
-#SCALAR_VECTOR_PRODUCT_OP
-#SCALAR_BROADCAST_OP
-#VECTOR_RECIPROCAL_OP
-#VECTOR_NORM_OP
-#VECTOR_ABS_OP
-#VECTOR_SUM_OP
-#VECTOR_DIFF_OP
-#VECTOR_PRODUCT_OP
-#VECTOR_DIVISION_OP
-#VECTOR_INNER_PRODUCT_OP
-#VECTOR_OUTER_PRODUCT_OP
-#SCALAR_MATRIX_PRODUCT_OP
-#MATRIX_RECIPROCAL_OP
-#MATRIX_VECTOR_PRODUCT_OP
-#VECTOR_COLUMN_BROADCAST_OP
-#VECTOR_ROW_BROADCAST_OP
-#MATRIX_NORM_OP
-#MATRIX_COLUMN_NORM_OP
-#MATRIX_ROW_NORM_OP
-#MATRIX_TRANSPOSE_OP
-#MATRIX_ABS_OP
-#MATRIX_SUM_OP
-#MATRIX_DIFF_OP
-#MATRIX_PRODUCT_OP
-#MATRIX_DIVISION_OP
-#MATRIX_MATRIX_PRODUCT_OP
+MATRIX_HEAVYSIDE_OP
+SCALAR_VECTOR_PRODUCT_OP
+SCALAR_BROADCAST_OP
+VECTOR_RECIPROCAL_OP
+VECTOR_NORM_OP
+VECTOR_ABS_OP
+VECTOR_SUM_OP
+VECTOR_DIFF_OP
+VECTOR_PRODUCT_OP
+VECTOR_DIVISION_OP
+VECTOR_INNER_PRODUCT_OP
+VECTOR_OUTER_PRODUCT_OP
+SCALAR_MATRIX_PRODUCT_OP
+MATRIX_RECIPROCAL_OP
+MATRIX_VECTOR_PRODUCT_OP
+VECTOR_COLUMN_BROADCAST_OP
+VECTOR_ROW_BROADCAST_OP
+MATRIX_NORM_OP
+MATRIX_COLUMN_NORM_OP
+MATRIX_ROW_NORM_OP
+MATRIX_TRANSPOSE_OP
+MATRIX_ABS_OP
+MATRIX_SUM_OP
+MATRIX_DIFF_OP
+MATRIX_PRODUCT_OP
+MATRIX_DIVISION_OP
+MATRIX_MATRIX_PRODUCT_OP
 SCALAR_MIN_OP
-#VECTOR_MIN_OP
-#MATRIX_MIN_OP
+VECTOR_MIN_OP
+MATRIX_MIN_OP
 SCALAR_MAX_OP
-#VECTOR_MAX_OP
-#MATRIX_MAX_OP
-#VECTOR_MEAN_OP
-#MATRIX_MEAN_OP
-#MATRIX_ROW_MEAN_OP
-#MATRIX_ROW_ST_DEV_OP
-#VECTOR_ST_DEV_OP
-#MATRIX_ST_DEV_OP
+VECTOR_MAX_OP
+MATRIX_MAX_OP
+VECTOR_MEAN_OP
+MATRIX_MEAN_OP
+MATRIX_ROW_MEAN_OP
+MATRIX_ROW_ST_DEV_OP
+VECTOR_ST_DEV_OP
+MATRIX_ST_DEV_OP
 SCALAR_CONST_SET_OP
-#VECTOR_CONST_SET_OP
-#MATRIX_CONST_SET_OP
+VECTOR_CONST_SET_OP
+MATRIX_CONST_SET_OP
 #SCALAR_UNIFORM_SET_OP
 #VECTOR_UNIFORM_SET_OP
 #MATRIX_UNIFORM_SET_OP

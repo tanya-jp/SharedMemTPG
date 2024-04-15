@@ -9,7 +9,7 @@
 using namespace std;
 typedef double stateType;
 
-classicRLEnv *_game;
+TaskEnv *_game;
 int _action;
 int _millis;
 double _reward;
