@@ -103,6 +103,7 @@ void AssignTeamsToEvaluators(TPG &tpg, mpi::communicator &world,
 }
 
 void MaybeStartAnimation(TPG &tpg) {
+(void)tpg;
 #if !defined(CCANADA) && !defined(HPCC)
   if (tpg.GetParam<int>("animate")) {
     double _width = 1200;
@@ -121,6 +122,7 @@ void MaybeStartAnimation(TPG &tpg) {
 }
 
 void MaybeAnimateStep(EvalStruct &eval) {
+(void)eval;
 #if !defined(CCANADA)
   if (eval.animate) {
     eval.game->display_function(eval.episode, WrapDiscreteAction(eval),

@@ -8,6 +8,7 @@
 #include <set>
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include <algorithm>
 #include <numeric>
 //#include <bzlib.h>
