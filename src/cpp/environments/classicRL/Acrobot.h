@@ -167,6 +167,7 @@ class Acrobot : public TaskEnv {
   void display_function(int episode, int actionD, double actionC) {
     (void)episode;
     (void)actionD;
+    (void)actionC;
 #if !defined(CCANADA) && !defined(HPCC)
     double r1 = 1.0;
     double r2 = 1.0;

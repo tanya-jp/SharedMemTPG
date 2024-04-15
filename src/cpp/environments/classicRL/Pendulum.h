@@ -127,7 +127,9 @@ class Pendulum : public TaskEnv {
 
   // opengl
   void display_function(int episode, int actionD, double actionC) {
+    (void)episode;
     (void)actionD;
+    (void)actionC;
 #if !defined(CCANADA) && !defined(HPCC)
     double r1 = 1.0;
     double x2, y2;

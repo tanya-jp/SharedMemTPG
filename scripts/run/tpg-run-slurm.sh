@@ -8,7 +8,7 @@
 # #SBATCH --time=0-12:00  # time (DD-HH:MM)
 
 # cpus anywhere
-#SBATCH --ntasks=316               
+#SBATCH --ntasks=32               
 #SBATCH --mem-per-cpu=2024M      
 #SBATCH --time=0-0:30  # time (DD-HH:MM)
 

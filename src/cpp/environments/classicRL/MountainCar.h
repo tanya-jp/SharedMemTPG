@@ -102,6 +102,7 @@ class MountainCar : public TaskEnv {
   void display_function(int episode, int actionD, double actionC) {
     (void)episode;
     (void)actionC;
+    (void)actionD;
 #if !defined(CCANADA) && !defined(HPCC)
     glClear(GL_COLOR_BUFFER_BIT);
 

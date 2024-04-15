@@ -23,8 +23,9 @@ if int(hpcc):
     common_env.Append(CPPDEFINES = ['HPCC'])
     common_env.Append(CCFLAGS = ['-std=c++17', '-Wno-deprecated', '-Wall'])
 else:
-    common_env.Append(CCFLAGS = ['-std=c++17', '-Wno-deprecated', '-Wall', '-Werror', '-Wextra', '-DARMA_DONT_USE_WRAPPER', '-DARMA_USE_BLAS', '-DARMA_USE_LAPACK', '-DARMA_USE_HDF5'])
+    common_env.Append(CCFLAGS = ['-std=c++17', '-Wno-deprecated', '-Wall', '-DARMA_DONT_USE_WRAPPER', '-DARMA_USE_BLAS', '-DARMA_USE_LAPACK', '-DARMA_USE_HDF5'])
 
+#common_env.Append(CCFLAGS = ['-std=c++17', '-Wno-deprecated', '-Wall', '-Werror', '-Wextra', '-DARMA_DONT_USE_WRAPPER', '-DARMA_USE_BLAS', '-DARMA_USE_LAPACK', '-DARMA_USE_HDF5'])
 common_env.MergeFlags(GetOption('cflags'))
 
 common_env.Append(CPPDEFINES={'VERSION': 1})

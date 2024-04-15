@@ -145,6 +145,8 @@ class CartPole : public TaskEnv {
   // opengl
   void display_function(int episode, int actionD, double actionC) {
     (void)actionC;
+    (void)actionD;
+    (void)episode;
 #if !defined(CCANADA) && !defined(HPCC)
     double r1 = 1.0;
     double x2, y2;
