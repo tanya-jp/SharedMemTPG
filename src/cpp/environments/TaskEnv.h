@@ -42,9 +42,7 @@ class TaskEnv {
     }
   }
   double bound(double x, double m, double M) { return min(max(x, m), M); }
-  virtual void display_function(int, int, double) = 0;
-  // const vector < double > & getStateVec(bool po) { return po ? state_po :
-  // state; }
+  virtual void display_function(int, int, double){};
   vector<double> &GetObsVec(bool po) { return po ? state_po : state; }
   double GetObsVar(int var, bool po) {
     return po ? state_po[var] : state[var];
@@ -58,13 +56,12 @@ class TaskEnv {
   virtual bool discreteActions() const { return true; }
   virtual double minActionContinuous() const { return 0.0; }
   virtual double maxActionContinuous() const { return 0.0; }
-  // virtual int numActions() const { return CLASSIC_RL_NUM_ACTION; }
   virtual void reset(mt19937 &) = 0;
   int maxStep() { return max_step; }
   void maxStep(int i) { max_step = i; }
   virtual double update(int, double, mt19937 &) = 0;
   int getStep() { return step; }
-  virtual bool terminal() = 0;
+  virtual bool terminal() { return false; }
   virtual ~TaskEnv() {}
 
 #if !defined(CCANADA) && !defined(HPCC)
@@ -73,16 +70,13 @@ class TaskEnv {
                             int windowHeight) {
     const int numberOfPixels = windowWidth * windowHeight * 3;
     unsigned char pixels[numberOfPixels];
-
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
     glReadBuffer(GL_FRONT);
     glReadPixels(0, 0, windowWidth, windowHeight, GL_BGR_EXT, GL_UNSIGNED_BYTE,
                  pixels);
-
     FILE *outputFile = fopen(filename.c_str(), "w");
     short header[] = {0, 2, 0, 0, 0, 0, (short)windowWidth, (short)windowHeight,
                       24};
-
     fwrite(&header, sizeof(header), 1, outputFile);
     fwrite(pixels, numberOfPixels, 1, outputFile);
     fclose(outputFile);
@@ -91,7 +85,6 @@ class TaskEnv {
   void drawBitmapText(char *string, float x, float y, float z) {
     char *c;
     glRasterPos3f(x, y, z);
-
     for (c = string; *c != ':'; c++)
       glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, *c);
   }
@@ -100,9 +93,7 @@ class TaskEnv {
     char *c;
     glPushMatrix();
     glTranslatef(x, y, z);
-    // glScalef(0.09f,-0.08f,z);
     glScalef(0.001f, 0.001f, z);
-
     for (c = string; *c != ':'; c++) {
       glutStrokeCharacter(GLUT_STROKE_ROMAN, *c);
     }
@@ -129,36 +120,12 @@ class TaskEnv {
     // action text
     char c[80];
     strcpy(c, label.c_str());
-    // drawBitmapText(c, 0, yActionTrace, 0);
     drawStrokeText(c, 0.05, yActionTrace, 0);
   }
-
-  ////actionProcessed should be in [-1.0,1.0]
-  // void drawActionTrace(double actionProcessed, double yActionTrace){
-  //    double traceXStep = 0.01;
-  //    actionTrace.push_front(0.1 * actionProcessed);
-  //    actionTrace.pop_back();
-  //    glBlendFunc(GL_DST_ALPHA,GL_ONE_MINUS_DST_ALPHA);
-  //    glPointSize(1);
-  //    glColor3f(1.0 ,1.0, 1.0);
-  //    glBegin(GL_LINES);
-  //    double x = 0;
-  //    for (size_t i = 0; i < actionTrace.size(); i++){
-  //       glVertex2d(x, yActionTrace + actionTrace[i]);
-  //       x = x - traceXStep;
-  //    }
-  //    glEnd();
-
-  //   //action text
-  //   char c[80];
-  //   sprintf(c, "%s:", "Action");
-  //   drawBitmapText(c, 0, yActionTrace, 0);
-  //}
 
   void drawEpisodeStepCounter(int episode, int step, float x, float y) {
     glColor3f(1.0, 1.0, 1.0);
     char c[80];
-    // sprintf(c, "Episode %d Step %d%s", episode, step, ":");
     (void)episode;
     sprintf(c, "Step %d%s", step, ":");
     drawStrokeText(c, x, y, 0);

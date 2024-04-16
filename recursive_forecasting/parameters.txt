@@ -50,7 +50,7 @@ mu_internal 0
 n_discrete_action 1
 
 # initial team size
-initial_team_size 2
+initial_team_size 5
 
 # max team size
 max_team_size 100
@@ -62,10 +62,10 @@ max_teams_per_graph 1000
 p_atomic 0.9
 
 # team mutation: probability of deleting program from team
-pmd 0.6
+pmd 1.0
 
 # team mtation: probability of adding program to team
-pma 0.3
+pma 0.5
 
 # team mutation: probability of mutating a program
 pmm 1.0
@@ -92,7 +92,7 @@ n_input 1
 max_initial_prog_size 100
 
 # max program size
-max_prog_size 1000
+max_prog_size 100
 
 # program variation: probability of changing the program
 p_bid_mutate 1.0
@@ -101,17 +101,17 @@ p_bid_mutate 1.0
 p_bid_swap 0.5
 
 # program variation: probability of deleting an instruction
-p_bid_delete 0.6
+p_bid_delete 1.0
 
 # program variation: probability of adding an instruction
-p_bid_add 0.3
+p_bid_add 0.5
 
 # program variation: probability of linear crossover with another team
 p_bid_xover 0.0
 
 # memory size: number of memory indices
 # each memory index points to a data structure with some number of rows and columns
-memory_indices 4
+memory_indices 8
 
 # memory size: number of rows
 memory_rows 4

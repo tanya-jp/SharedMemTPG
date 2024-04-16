@@ -23,7 +23,7 @@ test_mod 50
 
 # in multitask settings, which tasks are active
 # rhs should be a comma-separated list like Cartpole,Acrobot
-active_tasks Cartpole,Pendulum
+active_tasks Cartpole
 
 # number of fitness functions available
 n_fit_mode 1

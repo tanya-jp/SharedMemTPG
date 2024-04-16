@@ -791,7 +791,7 @@ program *team::getAction(state *s, map<long, team *> &teamMap,
       // membersRun_Tally[membersRun_[i]->id_]++;
       return membersRun_[i];  //->action();
     } else if (find(visitedTeams.begin(), visitedTeams.end(),
-                    teamMap[membersRun_[i]->action()]) == visitedTeams.end()) {
+                    teamMap[membersRun_[i]->action()]) == visitedTeams.end()) {                 
       teamIdToFollow = membersRun_[i]->action();
       if (root_ && updateActive) active_.insert(membersRun_[i]);
       // membersRun_Tally[membersRun_[i]->id_]++;

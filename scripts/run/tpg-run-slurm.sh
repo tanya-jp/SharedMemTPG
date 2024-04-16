@@ -9,7 +9,7 @@
 
 # cpus anywhere
 #SBATCH --ntasks=201               
-#SBATCH --mem-per-cpu=2024M      
+#SBATCH --mem-per-cpu=2048      
 #SBATCH --time=0-3:00  # time (DD-HH:MM)
 
 #defaults
