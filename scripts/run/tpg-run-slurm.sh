@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=64
 #SBATCH --mem=0
-#SBATCH --time=0-00:20  # time (DD-HH:MM)
+#SBATCH --time=0-03:00  # time (DD-HH:MM)
 
 # # cpus anywhere
 # #SBATCH --ntasks=101               
