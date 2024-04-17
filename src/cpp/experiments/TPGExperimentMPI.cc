@@ -18,7 +18,7 @@
 // rawfitness,  mean visitedTeams, decisionInstructions, membersRunEntropy
 #define NUM_POINT_AUX_DOUBLE 4
 #define NUM_POINT_AUX_INT 4
-#define MODES_T 50
+#define MODES_T 1000000000
 
 int main(int argc, char** argv) {
   mpi::environment env(argc, argv);
@@ -154,10 +154,18 @@ int main(int argc, char** argv) {
         /* accounting and reporting ******************************************/
         startReport = chrono::system_clock::now();
         if (tpg.GetState("t_current") % tpg.GetParam<int>("test_mod") == 0) {
+          // validation
+          tpg.state_["phase"] = _VALIDATION_PHASE;
+          evaluate_main(tpg, world, S);
+          tpg.setEliteTeams(tpg.GetState("t_current"), _VALIDATION_PHASE,
+                            tpg.GetParam<int>("fit_mode"), true);
+          
+          //test
           tpg.state_["phase"] = _TEST_PHASE;
           evaluate_main(tpg, world, S);
           tpg.setEliteTeams(tpg.GetState("t_current"), _TEST_PHASE,
                             tpg.GetParam<int>("fit_mode"), true);
+
           if (tpg.GetParam<int>("write_checkpoints")) {
             // checkpoint single elite program graph in each dimension
             tpg.writeCheckpoint(tpg.GetState("t_current"), true);

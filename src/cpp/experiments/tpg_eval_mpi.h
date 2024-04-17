@@ -70,12 +70,24 @@ double WrapContinuousAction(EvalStruct &eval) {
 vector<team *> GetTeamsToEval(TPG &tpg) {
   auto root_teams = tpg.GetTeams(true);
   vector<team *> teams;
-  for (auto it : root_teams) {
-    it.second->_n_eval = tpg._numStoredOutcomesPerHost[tpg.GetState("phase")] -
-                         it.second->numOutcomes(tpg.GetState("phase"),
-                                                tpg.GetState("active_task"));
-    if (it.second->_n_eval > 0) {
-      teams.push_back(it.second);
+  // train and validate all teams
+  if (tpg.GetState("phase") != _TEST_PHASE) {
+    for (auto it : root_teams) {
+      it.second->_n_eval =
+          tpg._numStoredOutcomesPerHost[tpg.GetState("phase")] -
+          it.second->numOutcomes(tpg.GetState("phase"),
+                                 tpg.GetState("active_task"));
+      if (it.second->_n_eval > 0) {
+        teams.push_back(it.second);
+      }
+    }
+  } else {
+    // only test the validation champions (set fitmode later)
+    auto PS = powerSet(tpg.GetParam<int>("n_task"));
+    for (auto &set : PS) {
+      team* tm = tpg._eliteTeamPS[vecToStrNoSpace(set)][tpg.GetParam<int>("fit_mode")][_VALIDATION_PHASE];
+      tm->_n_eval = tpg._numStoredOutcomesPerHost[tpg.GetState("phase")];
+      teams.push_back(tm);
     }
   }
   return teams;
@@ -103,7 +115,7 @@ void AssignTeamsToEvaluators(TPG &tpg, mpi::communicator &world,
 }
 
 void MaybeStartAnimation(TPG &tpg) {
-(void)tpg;
+  (void)tpg;
 #if !defined(CCANADA) && !defined(HPCC)
   if (tpg.GetParam<int>("animate")) {
     double _width = 1200;
@@ -122,7 +134,7 @@ void MaybeStartAnimation(TPG &tpg) {
 }
 
 void MaybeAnimateStep(EvalStruct &eval) {
-(void)eval;
+  (void)eval;
 #if !defined(CCANADA)
   if (eval.animate) {
     eval.game->display_function(eval.episode, WrapDiscreteAction(eval),
@@ -271,7 +283,7 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
     eval.obs->Set(game->data[sample++]);
     eval.leafProgram = tpg.getAction(
         eval.tm, eval.obs, true, eval.visitedTeams, eval.decisionInstructions,
-        eval.game->getStep(), eval.teamPath, tpg._rngs[AUX_SEED_INDEX]);        
+        eval.game->getStep(), eval.teamPath, tpg._rngs[AUX_SEED_INDEX]);
   }
   // predict
   double m = 1.0 / game->num_samples_predict_[tpg.GetState("phase")];

@@ -901,8 +901,7 @@ void TPG::setEliteTeams(int t, int phase, int fitMode, bool verbose) {
     for (auto teiter = _Mroot.begin(); teiter != _Mroot.end(); teiter++) {
       (*teiter)->elite(phase, false);
       if ((phase == _TRAIN_PHASE && (*teiter)->numOutcomes(phase, o) > 0) ||
-          (phase == _TEST_PHASE && (*teiter)->numOutcomes(phase, o) >=
-                                       _numStoredOutcomesPerHost[phase])) {
+          ((*teiter)->numOutcomes(phase, o) >= _numStoredOutcomesPerHost[phase])) {
         // if ((*teiter)->runTimeComplexityIns() == 0)
         //    (*teiter)->updateComplexityRecord(_teamMap, _numPointAuxDouble -
         //    2);
@@ -934,6 +933,8 @@ void TPG::setEliteTeams(int t, int phase, int fitMode, bool verbose) {
       minScoresST[fitMode][o] = (*(teamsRankedVec.rbegin()))->fit_;
     }
   }
+
+  // find multitask elites
   int n_nonempty_sets = 0;
   for (auto &set : powerSet(GetParam<int>("n_task")))
     n_nonempty_sets += set.size() == 0 ? 0 : 1;
@@ -949,7 +950,7 @@ void TPG::setEliteTeams(int t, int phase, int fitMode, bool verbose) {
       for (size_t o = 0; o < set.size(); o++) {
         if (((phase == _TRAIN_PHASE &&
               (*teiter)->numOutcomes(phase, set[o]) > 0) ||
-             (phase == _TEST_PHASE && (*teiter)->numOutcomes(phase, set[o]) >=
+             ((*teiter)->numOutcomes(phase, set[o]) >=
                                           _numStoredOutcomesPerHost[phase]))) {
           rawMeanScore = (*teiter)->getQuickMean(set[o], fitMode, phase);
           if (!isEqual(minScoresST[fitMode][set[o]],
@@ -1991,7 +1992,7 @@ void TPG::printTeamInfo(long t, int phase, bool singleBest, long teamId) {
       oss << setprecision(5) << fixed;
 
       oss << " mnOut";
-      for (int phs : {0, 2}) {
+      for (int phs : {0,1,2}) {
         bool allPhase = false;
         bool allTask = false;  // for genomic, set to true
 
