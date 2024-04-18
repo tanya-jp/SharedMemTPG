@@ -5,12 +5,12 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=64
 #SBATCH --mem=0
-#SBATCH --time=0-03:00  # time (DD-HH:MM)
+#SBATCH --time=0-12:00  # time (DD-HH:MM)
 
 # # cpus anywhere
 # #SBATCH --ntasks=101               
 # #SBATCH --mem-per-cpu=4096      
-# #SBATCH --time=0-3:00  # time (DD-HH:MM)
+# #SBATCH --time=0-12:00  # time (DD-HH:MM)
 
 #defaults
 mode=0 #Train:0, Replay:1, Debug:2
