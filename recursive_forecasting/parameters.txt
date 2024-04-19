@@ -62,10 +62,10 @@ max_teams_per_graph 1000
 p_atomic 0.99
 
 # team mutation: probability of deleting program from team
-pmd 0.7
+pmd 0.5
 
 # team mtation: probability of adding program to team
-pma 0.1
+pma 0.25
 
 # team mutation: probability of mutating a program
 pmm 1.0
@@ -101,10 +101,10 @@ p_bid_mutate 1.0
 p_bid_swap 0.5
 
 # program variation: probability of deleting an instruction
-p_bid_delete 0.9
+p_bid_delete 0.5
 
 # program variation: probability of adding an instruction
-p_bid_add 0.1
+p_bid_add 0.25
 
 # program variation: probability of linear crossover with another team
 p_bid_xover 0.0
