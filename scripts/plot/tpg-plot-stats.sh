@@ -174,7 +174,7 @@ done
 aux=3
 for task in `seq 0 $(echo "$numTask-1" | bc)`; do
    i=$((i+1))
-   Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R ${wd}_aux_${aux}_ST_${task}_p${phs}.rslt "Switching Entropy (single-task $task)" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
+   Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R ${wd}_aux_${aux}_ST_${task}_p${phs}.rslt "MSE (single-task $task)" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
 
 done
 
@@ -206,7 +206,7 @@ if [ $fitMode -eq 0 ] && [ $numTask -gt 1 ]; then
    aux=3
    for task in `seq 0 $(echo "$numTask-1" | bc)`; do
       i=$((i+1))
-      Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R ${wd}_aux_${aux}_MTA_${task}_p${phs}.rslt "Switching Entropy (multi-task $task)" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
+      Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R ${wd}_aux_${aux}_MTA_${task}_p${phs}.rslt "MSE (multi-task $task)" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
    done
 fi
 

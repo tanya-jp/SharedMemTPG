@@ -171,8 +171,10 @@ void AccumulateStepStats(EvalStruct &eval) {
 }
 
 void FinalizeStepStats(TPG &tpg, EvalStruct &eval) {
-  eval.runTimeStats[REWARD1_IDX] /= eval.game->getStep();
-  eval.runTimeStats[REWARD2_IDX] /= eval.game->getStep();
+  if (eval.game->eval_type_ == "RecursiveForecast") {
+    eval.runTimeStats[REWARD1_IDX] /= eval.game->getStep();
+    eval.runTimeStats[REWARD2_IDX] /= eval.game->getStep();
+  }
   eval.runTimeStats[VISITED_TEAMS_IDX] /= eval.game->getStep();
   eval.runTimeStats[INSTRUCTIONS_IDX] /= eval.game->getStep();
   eval.runTimeInts[POINT_AUX_INT_TASK] = tpg.GetState("active_task");
