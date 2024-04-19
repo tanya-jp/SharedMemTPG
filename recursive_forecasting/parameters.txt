@@ -62,7 +62,7 @@ max_teams_per_graph 1000
 p_atomic 0.99
 
 # team mutation: probability of deleting program from team
-pmd 0.6
+pmd 0.7
 
 # team mtation: probability of adding program to team
 pma 0.25

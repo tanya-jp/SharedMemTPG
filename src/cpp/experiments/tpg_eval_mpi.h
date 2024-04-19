@@ -279,7 +279,7 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
   game->reset(tpg._rngs[AUX_SEED_INDEX]);
   // prime
   int sample = game->t_start[tpg.GetState("phase")][eval.episode];
-  for (int i = 0; i < game->num_samples_prime_; i++) {
+  for (int i = 0; i < game->num_samples_prime_ - 1; i++) {
     eval.obs->Set(game->data[sample++]);
     eval.leafProgram = tpg.getAction(
         eval.tm, eval.obs, true, eval.visitedTeams, eval.decisionInstructions,

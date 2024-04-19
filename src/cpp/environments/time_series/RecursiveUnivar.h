@@ -92,7 +92,7 @@ class RecursiveUnivar : public TaskEnv {
   double update(int sample, double prediction, mt19937 &/*rng*/) {
     step++;
     prediction = 1 / (1 + exp(-prediction));  // sigmoid
-    double error = pow(prediction - data[sample][0], 2);
+    double error = pow(prediction - data[sample + 1][0], 2);
     return -error;
   }
 };
