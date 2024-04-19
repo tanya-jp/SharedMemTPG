@@ -89,7 +89,7 @@ class Acrobot : public TaskEnv {
     normalizeState(true);
   }
 
-  double update(int actionD, double actionC, mt19937 &rng) {
+  Results update(int actionD, double actionC, mt19937 &rng) {
     (void)actionD;
     (void)rng;
 
@@ -147,7 +147,7 @@ class Acrobot : public TaskEnv {
     reward = -1.0;
 
     normalizeState(true);
-    return reward;
+    return {-reward, 0.0};
   }
 
   bool terminal() {

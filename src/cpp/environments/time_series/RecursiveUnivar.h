@@ -19,6 +19,7 @@ class RecursiveUnivar : public TaskEnv {
     const string filename;
     const int dim;
     const string delim;
+
    public:
     CSVReader(string f, int d, string dlm = " ")
         : filename(f), dim(d), delim(dlm) {}
@@ -85,15 +86,14 @@ class RecursiveUnivar : public TaskEnv {
     t_start[2].insert(t_start[2].begin(), {950});
   }
 
-  void reset(mt19937 &/*rng*/) {
-    step = 0;
-  }
+  void reset(mt19937 & /*rng*/) { step = 0; }
 
-  double update(int sample, double prediction, mt19937 &/*rng*/) {
+  Results update(int sample, double prediction, mt19937 & /*rng*/) {
     step++;
     prediction = 1 / (1 + exp(-prediction));  // sigmoid
-    double error = pow(prediction - data[sample + 1][0], 2);
-    return -error;
+    double se = pow(prediction - data[sample + 1][0], 2);
+    double ae = abs(prediction - data[sample + 1][0]);
+    return {-se, -ae};
   }
 };
 #endif

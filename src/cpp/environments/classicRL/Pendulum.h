@@ -97,7 +97,7 @@ class Pendulum : public TaskEnv {
     return terminalState;
   }
 
-  double update(int actionD, double actionC, mt19937 &rng) {
+  Results update(int actionD, double actionC, mt19937 &rng) {
     (void)actionD;
     double torque = bound(actionC, -maxTorque, maxTorque);
 
@@ -122,7 +122,7 @@ class Pendulum : public TaskEnv {
 
     reward = -costs;
 
-    return reward;
+    return {reward, 0.0};
   }
 
   // opengl

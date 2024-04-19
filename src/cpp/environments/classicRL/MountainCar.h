@@ -73,7 +73,7 @@ class MountainCar : public TaskEnv {
     return terminalState;
   }
 
-  double update(int actionD, double actionC, mt19937 &rng) {
+   Results update(int actionD, double actionC, mt19937 &rng) {
     (void)actionC;
 
     state[_velocity] +=
@@ -95,7 +95,7 @@ class MountainCar : public TaskEnv {
     reward = -1.0;
 
     normalizeState(true);
-    return reward;
+    return {reward, 0.0};
   }
 
   // opengl

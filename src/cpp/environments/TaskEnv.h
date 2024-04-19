@@ -29,6 +29,10 @@ class TaskEnv {
   int max_step;
   bool terminalState;
   vector<deque<double> > actionTrace;
+      struct Results {
+      double r1;
+      double r2;
+    };
 
   TaskEnv() {
     disNoise = uniform_real_distribution<>(-M_PI, M_PI);
@@ -59,7 +63,7 @@ class TaskEnv {
   virtual void reset(mt19937 &) = 0;
   int maxStep() { return max_step; }
   void maxStep(int i) { max_step = i; }
-  virtual double update(int, double, mt19937 &) = 0;
+  virtual Results update(int, double, mt19937 &) { return {0.0, 0.0}; };
   int getStep() { return step; }
   virtual bool terminal() { return false; }
   virtual ~TaskEnv() {}

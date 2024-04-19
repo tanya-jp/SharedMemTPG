@@ -50,7 +50,7 @@ mu_internal 0
 n_discrete_action 1
 
 # initial team size
-initial_team_size 3
+initial_team_size 5
 
 # max team size
 max_team_size 100
@@ -89,7 +89,7 @@ continuous_output 1
 n_input 1
 
 # max initial program size
-max_initial_prog_size 10
+max_initial_prog_size 20
 
 # max program size
 max_prog_size 100

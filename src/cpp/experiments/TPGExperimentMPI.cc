@@ -15,7 +15,7 @@
 #include "tpg_eval_mpi.h"
 #define CHECKPOINT_MOD 1000000
 #define PRINT_MOD 1
-// rawfitness,  mean visitedTeams, decisionInstructions, membersRunEntropy
+// rawfitness,  mean visitedTeams, decisionInstructions, meanAbsoluteError
 #define NUM_POINT_AUX_DOUBLE 4
 #define NUM_POINT_AUX_INT 4
 #define MODES_T 1000000000

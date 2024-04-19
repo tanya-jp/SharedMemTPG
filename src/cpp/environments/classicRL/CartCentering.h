@@ -95,7 +95,7 @@ class CartCentering : public TaskEnv {
   }
 
   /**********************************************************************************************/
-  double update(int actionD, double actionC, mt19937 &rng) {
+  Results update(int actionD, double actionC, mt19937 &rng) {
     (void)actionC;
     double force;
 
@@ -131,7 +131,7 @@ class CartCentering : public TaskEnv {
 
     normalizeState(true);
 
-    return reward;
+    return {reward, 0.0};
   }
 
   /**********************************************************************************************/

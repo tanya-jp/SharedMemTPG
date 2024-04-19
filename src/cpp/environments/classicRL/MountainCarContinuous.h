@@ -81,7 +81,7 @@ class MountainCarContinuous : public TaskEnv {
     return terminalState;
   }
 
-  double update(int actionD, double actionC, mt19937 &rng) {
+  Results update(int actionD, double actionC, mt19937 &rng) {
     (void)actionD;
     double force = bound(actionC, min_action, max_action);
     state[_velocity] += force * power - gravity * cos(3 * state[_position]);
@@ -106,7 +106,7 @@ class MountainCarContinuous : public TaskEnv {
       reward = -(pow(force, 2) * 0.1);
 
     normalizeState(true);
-    return reward;
+    return {reward, 0.0};
   }
 
   // opengl

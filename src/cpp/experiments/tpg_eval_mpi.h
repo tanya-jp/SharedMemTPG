@@ -16,10 +16,10 @@
 #include <GL/glut.h>
 #endif
 
-#define REWARD_IDX 0
+#define REWARD1_IDX 0
 #define VISITED_TEAMS_IDX 1
 #define INSTRUCTIONS_IDX 2
-#define MEMBERS_RUN_ENTROPY_IDX 3
+#define REWARD2_IDX 3
 
 namespace mpi = boost::mpi;
 
@@ -85,7 +85,9 @@ vector<team *> GetTeamsToEval(TPG &tpg) {
     // only test the validation champions (set fitmode later)
     auto PS = powerSet(tpg.GetParam<int>("n_task"));
     for (auto &set : PS) {
-      team* tm = tpg._eliteTeamPS[vecToStrNoSpace(set)][tpg.GetParam<int>("fit_mode")][_VALIDATION_PHASE];
+      team *tm =
+          tpg._eliteTeamPS[vecToStrNoSpace(set)][tpg.GetParam<int>("fit_mode")]
+                          [_VALIDATION_PHASE];
       tm->_n_eval = tpg._numStoredOutcomesPerHost[tpg.GetState("phase")];
       teams.push_back(tm);
     }
@@ -169,11 +171,10 @@ void AccumulateStepStats(EvalStruct &eval) {
 }
 
 void FinalizeStepStats(TPG &tpg, EvalStruct &eval) {
-  // if (eval.game->eval_type_ == "RecursiveForecast")
-  //   eval.runTimeStats[REWARD_IDX] /= eval.game->getStep();
+  eval.runTimeStats[REWARD1_IDX] /= eval.game->getStep();
+  eval.runTimeStats[REWARD2_IDX] /= eval.game->getStep();
   eval.runTimeStats[VISITED_TEAMS_IDX] /= eval.game->getStep();
   eval.runTimeStats[INSTRUCTIONS_IDX] /= eval.game->getStep();
-  eval.runTimeStats[MEMBERS_RUN_ENTROPY_IDX] = 0;  // place holder
   eval.runTimeInts[POINT_AUX_INT_TASK] = tpg.GetState("active_task");
   eval.runTimeInts[POINT_AUX_INT_PHASE] = tpg.GetState("phase");
   eval.runTimeInts[POINT_AUX_INT_ENVSEED] = eval.episode;
@@ -265,9 +266,10 @@ void EvalControl(TPG &tpg, EvalStruct &eval) {
         eval.tm, eval.obs, true, eval.visitedTeams, eval.decisionInstructions,
         eval.game->getStep(), eval.teamPath, tpg._rngs[AUX_SEED_INDEX]);
     MaybeAnimateStep(eval);
-    eval.runTimeStats[REWARD_IDX] +=
+    TaskEnv::Results r =
         eval.game->update(WrapDiscreteAction(eval), WrapContinuousAction(eval),
                           tpg._rngs[AUX_SEED_INDEX]);
+    eval.runTimeStats[REWARD1_IDX] += r.r1;
     AccumulateStepStats(eval);
     eval.obs->Set(eval.game->GetObsVec(eval.partially_observable));
   }
@@ -286,7 +288,7 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
         eval.game->getStep(), eval.teamPath, tpg._rngs[AUX_SEED_INDEX]);
   }
   // predict
-  double m = 1.0 / game->num_samples_predict_[tpg.GetState("phase")];
+  // double m = 1.0 / game->num_samples_predict_[tpg.GetState("phase")];
   for (int i = 0; i < game->num_samples_predict_[tpg.GetState("phase")]; i++) {
     vector<double> prediction{WrapContinuousAction(eval)};  // prev predition
     eval.obs->Set(prediction);
@@ -294,8 +296,10 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
                                      eval.decisionInstructions, game->getStep(),
                                      eval.teamPath, tpg._rngs[AUX_SEED_INDEX]);
     prediction[0] = WrapContinuousAction(eval);
-    eval.runTimeStats[REWARD_IDX] +=
-        m * game->update(sample++, prediction[0], tpg._rngs[AUX_SEED_INDEX]);
+    TaskEnv::Results r =
+        game->update(sample++, prediction[0], tpg._rngs[AUX_SEED_INDEX]);
+    eval.runTimeStats[REWARD1_IDX] += r.r2;  // MAE
+    eval.runTimeStats[REWARD2_IDX] += r.r1;  // MSE
     AccumulateStepStats(eval);
   }
 }
