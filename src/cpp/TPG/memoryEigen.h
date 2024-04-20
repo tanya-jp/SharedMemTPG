@@ -21,13 +21,16 @@ class memoryEigen {
   inline Ref<MatrixXd> getReadTimeE() { return read_time_; }
   inline Ref<MatrixXd> getWriteTimeE() { return write_time_; }
 
-  inline void clear() {
-    for (size_t i = 0; i < memoryIndices_; i++) mem_[i].setZero();
+  inline void ClearWorking() {
+    for (size_t i = 0; i < memoryIndices_; i++) working_memory_[i].setZero();
   }
-  inline void clearActive() { active_.fill(false); }
-  inline void setActive() { active_.fill(true); }
-  inline void clearReadTime() { read_time_.setZero(); }
-  inline void clearWriteTime() { write_time_.setZero(); }
+  inline void ClearConst() {
+    for (size_t i = 0; i < memoryIndices_; i++) const_memory_[i].setZero();
+  }
+  inline void ClearActive() { active_.fill(false); }
+  inline void SetActive() { active_.fill(true); }
+  inline void ClearReadTime() { read_time_.setZero(); }
+  inline void ClearWriteTime() { write_time_.setZero(); }
   inline long id() { return id_; }
   inline void id(long id) { id_ = id; }
   constexpr size_t indexSize() { return memoryIndices_; }
@@ -49,16 +52,22 @@ class memoryEigen {
   inline void refsPolicy(int i) { nrefs_policy_ = i; }
   inline int refsPolicyInc() { return ++nrefs_policy_; }
   void resizeMemory() {
-    mem_.resize(memoryIndices_);
+    working_memory_.resize(memoryIndices_);
+    const_memory_.resize(memoryIndices_);
     for (size_t i = 0; i < memoryIndices_; i++) {
       if (type_ == SCALAR_TYPE) {
         // memoryRows_ = memoryCols_ = 1;
-        mem_[i].resize(1, 1);
+        working_memory_[i].resize(1, 1);
+        const_memory_[i].resize(1, 1);
       } else if (type_ == VECTOR_TYPE) {
         // memoryCols_ = 1;
-        mem_[i].resize(memoryRows_, 1);
-      } else if (type_ == MATRIX_TYPE)
-        mem_[i].resize(memoryRows_, memoryCols_);
+        working_memory_[i].resize(memoryRows_, 1);
+        const_memory_[i].resize(memoryRows_, 1);
+      } else if (type_ == MATRIX_TYPE) {
+        working_memory_[i].resize(memoryRows_, memoryCols_);
+        const_memory_[i].resize(memoryRows_, memoryCols_);
+      }
+
     }
     active_.resize(memoryIndices_, 1);
     read_time_.resize(memoryIndices_, 1);
@@ -85,10 +94,11 @@ class memoryEigen {
     memoryRows_ = memoryRows;
     memoryCols_ = memoryCols;
     resizeMemory();
-    clear();
-    clearActive();
-    clearReadTime();
-    clearWriteTime();
+    ClearWorking();
+    ClearConst();
+    ClearActive();
+    ClearReadTime();
+    ClearWriteTime();
   }
 
   memoryEigen(long i, int type,
@@ -100,10 +110,11 @@ class memoryEigen {
     memoryRows_ = std::any_cast<int>(params["memory_rows"]);
     memoryCols_ = std::any_cast<int>(params["memory_cols"]);
     resizeMemory();
-    clear();
-    clearActive();
-    clearReadTime();
-    clearWriteTime();
+    ClearWorking();
+    ClearConst();
+    ClearActive();
+    ClearReadTime();
+    ClearWriteTime();
   }
 
   memoryEigen(long i, int type, size_t memoryIndices, size_t memoryRows,
@@ -115,10 +126,11 @@ class memoryEigen {
     memoryRows_ = memoryRows;
     memoryCols_ = memoryCols;
     resizeMemory();
-    clear();
-    clearActive();
-    clearReadTime();
-    clearWriteTime();
+    ClearWorking();
+    ClearConst();
+    ClearActive();
+    ClearReadTime();
+    ClearWriteTime();
   }
 
   memoryEigen(memoryEigen *m) {
@@ -129,10 +141,11 @@ class memoryEigen {
     memoryRows_ = m->memoryRows();
     memoryCols_ = m->memoryCols();
     resizeMemory();
-    clear();
-    clearActive();
-    clearReadTime();
-    clearWriteTime();
+    ClearWorking();
+    ClearConst();
+    ClearActive();
+    ClearReadTime();
+    ClearWriteTime();
   }
 
   ~memoryEigen() {}
@@ -144,7 +157,8 @@ class memoryEigen {
   size_t memoryIndices_;
   size_t memoryRows_;
   size_t memoryCols_;
-  std::vector<Matrix<double, Dynamic, Dynamic> > mem_;
+  std::vector<Matrix<double, Dynamic, Dynamic> > working_memory_;
+  std::vector<Matrix<double, Dynamic, Dynamic> > const_memory_;
   Matrix<bool, Dynamic, 1> active_;
   Matrix<double, Dynamic, 1> read_time_;
   Matrix<double, Dynamic, 1> write_time_;

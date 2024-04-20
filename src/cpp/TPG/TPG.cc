@@ -112,9 +112,9 @@ void TPG::clearMemory() {
   for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++)
     for (auto meiter = _Memory[memType].begin();
          meiter != _Memory[memType].end(); meiter++) {
-      meiter->second->clear();
-      meiter->second->clearReadTime();
-      meiter->second->clearWriteTime();
+      meiter->second->ClearWorking();
+      meiter->second->ClearReadTime();
+      meiter->second->ClearWriteTime();
     }
 }
 
@@ -224,7 +224,7 @@ void TPG::markEffectiveCode(team *tm) {
   tm->getAllNodes(_teamMap, teams, programs, memories, false);
 
   for (auto meiter = memories.begin(); meiter != memories.end(); meiter++) {
-    (*meiter)->clearActive();
+    (*meiter)->ClearActive();
     (*meiter)->refsPolicy(0);
   }
 

@@ -68,9 +68,9 @@ void team::clearMemory(map<long, team *> &teamMap) {
   set<memoryEigen *, memoryEigenIdComp> memories;
   getAllMemories(teamMap, teams, memories, false);
   for (auto it = memories.begin(); it != memories.end(); it++) {
-    (*it)->clear();
-    (*it)->clearReadTime();   // needed?
-    (*it)->clearWriteTime();  // needed?
+    (*it)->ClearWorking();
+    (*it)->ClearReadTime();   // needed?
+    (*it)->ClearWriteTime();  // needed?
   }
 }
 

@@ -64,7 +64,7 @@ int WrapDiscreteAction(EvalStruct &eval) {
 }
 
 double WrapContinuousAction(EvalStruct &eval) {
-  return (eval.leafProgram->memGet(memoryEigen::SCALAR_TYPE))->mem_[0](0, 0);
+  return (eval.leafProgram->memGet(memoryEigen::SCALAR_TYPE))->working_memory_[0](0, 0);
 }
 
 vector<team *> GetTeamsToEval(TPG &tpg) {

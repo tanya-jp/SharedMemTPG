@@ -31,6 +31,8 @@ class program {
 
   vector<memoryEigen *> sharedMemoryPointers_;
   vector<memoryEigen *> privateMemoryPointers_;
+  vector<memoryEigen *> constMemoryPointers_;
+
   vector<memoryEigen *> tmpIn1MemoryPointers_;
   // read inputs into these a runtime
   vector<vector<memoryEigen *> > tmpMemoryPointers_;
