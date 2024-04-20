@@ -290,7 +290,6 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
         eval.game->getStep(), eval.teamPath, tpg._rngs[AUX_SEED_INDEX]);
   }
   // predict
-  // double m = 1.0 / game->num_samples_predict_[tpg.GetState("phase")];
   for (int i = 0; i < game->num_samples_predict_[tpg.GetState("phase")]; i++) {
     vector<double> prediction{WrapContinuousAction(eval)};  // prev predition
     eval.obs->Set(prediction);
@@ -300,8 +299,8 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
     prediction[0] = WrapContinuousAction(eval);
     TaskEnv::Results r =
         game->update(sample++, prediction[0], tpg._rngs[AUX_SEED_INDEX]);
-    eval.runTimeStats[REWARD1_IDX] += r.r2;  // MAE
-    eval.runTimeStats[REWARD2_IDX] += r.r1;  // MSE
+    eval.runTimeStats[REWARD2_IDX] += r.r2;  // MAE
+    eval.runTimeStats[REWARD1_IDX] += r.r1;  // MSE
     AccumulateStepStats(eval);
   }
 }
