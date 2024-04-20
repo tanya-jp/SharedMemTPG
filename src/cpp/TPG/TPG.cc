@@ -2258,6 +2258,19 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       int nrefs = atoi(outcomeFields[i++].c_str());
       memoryEigen *mem = new memoryEigen(id, type, memoryIndices, memoryRows,
                                          memoryCols, nrefs);
+      // read in evolved constants
+      for (int idx = 0; idx < memoryIndices; idx++) {
+        if (type == memoryEigen::SCALAR_TYPE) {
+          mem->const_memory_[idx](0, 0) = stod(outcomeFields[i++].c_str());
+        } else if (type == memoryEigen::VECTOR_TYPE) {
+          for (int r = 0; r < memoryRows; r++)
+            mem->const_memory_[idx](r, 0) = stod(outcomeFields[i++].c_str());
+        } else if (type == memoryEigen::MATRIX_TYPE) {
+          for (int r = 0; r < memoryRows; r++)
+            for (int c = 0; c < memoryCols; c++)
+              mem->const_memory_[idx](r, c) = stod(outcomeFields[i++].c_str());
+        }
+      }
       addMemory(mem);
     }
 

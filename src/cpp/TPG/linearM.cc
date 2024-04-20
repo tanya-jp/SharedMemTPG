@@ -48,7 +48,6 @@ linearM::linearM(long gtime, long action,
     bid_.push_back(in);
   }
   op_counts_.resize(instruction::NUM_OP);
-
   setupMemory(std::any_cast<int>(params["memory_indices"]), memoryRows_,
               memoryCols_);
 }
@@ -73,7 +72,6 @@ linearM::linearM(long gtime, linearM &plr,
     bid_.push_back(new instruction(**initer));
 
   op_counts_.resize(instruction::NUM_OP);
-
   setupMemory(std::any_cast<int>(params["memory_indices"]), memoryRows_,
               memoryCols_);
 }
@@ -343,6 +341,8 @@ double linearM::run(state *s, int timeStep, int graphDepth, mt19937 &rng) {
 /******************************************************************************/
 void linearM::setupMemory(size_t memoryIndices, size_t memoryRows,
                           size_t memoryCols) {
+                              
+
   tmpMemoryPointers_.resize(2);  // for in1 and in2
   for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++) {
     privateMemoryPointers_.push_back(
