@@ -231,6 +231,12 @@ bool linearM::muBid(std::unordered_map<std::string, std::any> &params,
     changed = true;
   }
 
+  /* Add noise to constants */
+  if (disR(rng) < std::any_cast<double>(params["p_bid_mu_const"])) {
+    for (auto m : privateMemoryPointers_)
+      m->NoiseToConst(rng, std::any_cast<double>(params["bid_mu_const_stddev"]));
+  }
+
   /* Swap positions of two instructions. */
   if (bid_.size() > 1 &&
       disR(rng) < std::any_cast<double>(params["p_bid_swap"])) {
@@ -346,8 +352,6 @@ void linearM::setupMemory(size_t memoryIndices, size_t memoryRows,
   tmpMemoryPointers_.resize(2);  // for in1 and in2
   for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++) {
     privateMemoryPointers_.push_back(
-        new memoryEigen(-1, memType, memoryIndices, memoryRows, memoryCols));
-    constMemoryPointers_.push_back(
         new memoryEigen(-1, memType, memoryIndices, memoryRows, memoryCols));
     tmpMemoryPointers_[0].push_back(
         new memoryEigen(-1, memType, memoryIndices, memoryRows, memoryCols));

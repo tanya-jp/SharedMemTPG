@@ -50,16 +50,16 @@ mu_internal 0
 n_discrete_action 1
 
 # initial team size
-initial_team_size 5
+initial_team_size 1
 
 # max team size
-max_team_size 100
+max_team_size 1
 
 # max teams per graph
-max_teams_per_graph 1000
+max_teams_per_graph 1
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 0.99
+p_atomic 1.0
 
 # team mutation: probability of deleting program from team
 pmd 0.7
@@ -89,10 +89,10 @@ continuous_output 1
 n_input 1
 
 # max initial program size
-max_initial_prog_size 20
+max_initial_prog_size 100
 
 # max program size
-max_prog_size 100
+max_prog_size 1000
 
 # program variation: probability of changing the program
 p_bid_mutate 1.0
@@ -108,6 +108,12 @@ p_bid_add 0.25
 
 # program variation: probability of linear crossover with another team
 p_bid_xover 0.0
+
+# program variation: probability of adding noise to constants
+p_bid_mu_const 0.5
+
+# program variation: stddev of normal noise added to each const
+bid_mu_const_stddev 0.05
 
 # memory size: number of memory indices
 # each memory index points to a data structure with some number of rows and columns
@@ -228,9 +234,9 @@ MATRIX_ROW_MEAN_OP
 MATRIX_ROW_ST_DEV_OP
 VECTOR_ST_DEV_OP
 MATRIX_ST_DEV_OP
-SCALAR_CONST_SET_OP
-VECTOR_CONST_SET_OP
-MATRIX_CONST_SET_OP
+#SCALAR_CONST_SET_OP
+#VECTOR_CONST_SET_OP
+#MATRIX_CONST_SET_OP
 #SCALAR_UNIFORM_SET_OP
 #VECTOR_UNIFORM_SET_OP
 #MATRIX_UNIFORM_SET_OP

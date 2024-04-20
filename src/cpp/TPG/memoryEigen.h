@@ -3,6 +3,7 @@
 
 #include <Eigen/Dense>
 #include <any>
+#include <random>
 
 #include "misc.h"
 
@@ -42,6 +43,17 @@ class memoryEigen {
   }
   inline void RandomizeConst() {
     for (size_t i = 0; i < memoryIndices_; i++) const_memory_[i].setRandom();
+  }
+  inline void NoiseToConst(mt19937& rng, double stddev) {
+    auto dis = std::normal_distribution<double>(0, stddev);
+    for (size_t i = 0; i < memoryIndices_; i++){
+      for(auto& x : const_memory_[i].reshaped())
+        x = x + dis(rng);
+    }
+  }
+  inline void CopyConstToWorking() {
+    for (size_t i = 0; i < memoryIndices_; i++)
+      working_memory_[i] = const_memory_[i];
   }
   inline void ClearActive() { active_.fill(false); }
   inline void SetActive() { active_.fill(true); }

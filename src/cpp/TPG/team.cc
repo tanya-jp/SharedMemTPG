@@ -75,6 +75,18 @@ void team::clearMemory(map<long, team *> &teamMap) {
 }
 
 /******************************************************************************/
+void team::InitMemory(map<long, team *> &teamMap) {
+  set<team *, teamIdComp> teams;
+  set<memoryEigen *, memoryEigenIdComp> memories;
+  getAllMemories(teamMap, teams, memories, false);
+  for (auto it = memories.begin(); it != memories.end(); it++) {
+    (*it)->CopyConstToWorking();
+    (*it)->ClearReadTime();   // needed?
+    (*it)->ClearWriteTime();  // needed?
+  }
+}
+
+/******************************************************************************/
 void team::clone(map<long, phyloRecord> &phyloGraph, team **tm) {
   phyloGraph[(*tm)->id_].ancestorIds.insert(id_);
   for (auto leiter = members_.begin(); leiter != members_.end(); leiter++) {
