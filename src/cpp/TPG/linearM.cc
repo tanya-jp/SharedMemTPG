@@ -232,7 +232,7 @@ bool linearM::muBid(std::unordered_map<std::string, std::any> &params,
   }
 
   /* Add noise to constants */
-  if (disR(rng) < std::any_cast<double>(params["p_bid_mu_const"])) {
+  if (params.find("p_bid_mu_const") != params.end() && disR(rng) < std::any_cast<double>(params["p_bid_mu_const"])) {
     for (auto m : privateMemoryPointers_)
       m->NoiseToConst(rng, std::any_cast<double>(params["bid_mu_const_stddev"]));
   }
