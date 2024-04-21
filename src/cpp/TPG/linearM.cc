@@ -6,8 +6,8 @@ string linearM::checkpoint(bool all) {
 
   oss << "linearM:" << id_ << ":" << gtime_ << ":" << action_ << ":"
       << stateful_ << ":" << num_input_ << ":" << nrefs_;
-  for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++)
-    oss << ":" << sharedMemoryPointers_[memType]->id();
+  for (size_t mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++)
+    oss << ":" << sharedMemoryPointers_[mem_t]->id();
 
   if (all)
     for (size_t i = 0; i < bid_.size(); i++)
@@ -122,8 +122,8 @@ void linearM::markIntrons(bool continuousOutput) {
   fill(op_counts_.begin(), op_counts_.end(), 0);
 
   map<int, vector<bool> > targets;  //[memory type][index]->true/false
-  for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++)
-    targets[memType] = vector<bool>(
+  for (size_t mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++)
+    targets[mem_t] = vector<bool>(
         privateMemoryPointers_[memoryEigen::SCALAR_TYPE]->indexSize(), false);
 
   features_.clear();
@@ -266,33 +266,13 @@ bool linearM::muBid(std::unordered_map<std::string, std::any> &params,
 double linearM::run(state *obs, int timeStep, int graphDepth, mt19937 &rng) {
   (void)rng;
   bool dbg = false;
-  // if (dbg) {
-  //   cerr << endl << "MEMin ";
-  //   for (int i = 0; i < 8; i++)
-  //     cerr << " "
-  //          << privateMemoryPointers_[memoryEigen::SCALAR_TYPE]
-  //                 ->working_memory_[0](0, 0);
-  //   cerr << " |";
-  //   for (int i = 0; i < 8; i++)
-  //     cerr << " "
-  //          << sharedMemoryPointers_[memoryEigen::SCALAR_TYPE]
-  //                 ->working_memory_[0](0, 0);
-  //   cerr << endl;
-  // }
-
-
 
   if (!stateful_) {
-    for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++) {
-      sharedMemoryPointers_[memType]->CopyConstToWorking();
+    for (size_t mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+      sharedMemoryPointers_[mem_t]->CopyConstToWorking();
     }
     CopySharedConstToWorking();
   }
-
-  // for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++) {
-  //   cout << "dbg runa p:" << privateMemoryPointers_[memType]->PrintWorking() << endl;
-  //   cout << "dbg runa s:" << sharedMemoryPointers_[memType]->PrintWorking() << endl;
-  // }
 
   for (auto initer = bidEffective_.begin(); initer != bidEffective_.end();
        initer++) {
@@ -319,12 +299,7 @@ double linearM::run(state *obs, int timeStep, int graphDepth, mt19937 &rng) {
                    col++)
                 (*initer)->inMem(in)->working_memory_[idx](row, col) =
                     obs->stateValueAtIndex(
-                        f++ % num_input_);  //(*feature)[f++ % num_input_];
-          // if (dbg){
-          //    cerr << "state " << (*feature)[0] << " " << (*feature)[1] << " |
-          //    "; cerr << "in" << in+1 << " feat idx " <<  (*initer)->inIdx(in)
-          //    << " val " << (*initer)->inMem(in)->getMemE(idx)(0,0) << endl;
-          // }
+                        f++ % num_input_);  
           (*initer)->inIdxE(in, idx);  // reset inIdxE to zero for input ref
         } else {                       // this input is a memory ref
           // track read time for temporal memory
@@ -333,27 +308,12 @@ double linearM::run(state *obs, int timeStep, int graphDepth, mt19937 &rng) {
                 timeStep + (graphDepth / MAX_GRAPH_DEPTH);
         }
       }
-
     // track write times for temporal memory
     if ((*initer)->outShared())
       (*initer)->out_->getWriteTimeE()((*initer)->outIdx_, 0) =
           timeStep + (graphDepth / MAX_GRAPH_DEPTH);
 
     (*initer)->exec(dbg);
-
-    // if (dbg) {
-    //   cerr << "MEMprog";
-    //   for (int i = 0; i < 8; i++)
-    //     cerr << " "
-    //          << privateMemoryPointers_[memoryEigen::SCALAR_TYPE]
-    //                 ->working_memory_[0](0, 0);
-    //   cerr << " |";
-    //   for (int i = 0; i < 8; i++)
-    //     cerr << " "
-    //          << sharedMemoryPointers_[memoryEigen::SCALAR_TYPE]
-    //                 ->working_memory_[0](0, 0);
-    //   cerr << endl;
-    // }
   }
   return privateMemoryPointers_[memoryEigen::SCALAR_TYPE]->working_memory_[0](
       0, 0);
@@ -363,13 +323,13 @@ double linearM::run(state *obs, int timeStep, int graphDepth, mt19937 &rng) {
 void linearM::setupMemory(size_t memoryIndices, size_t memoryRows,
                           size_t memoryCols) {
   tmpMemoryPointers_.resize(2);  // for in1 and in2
-  for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++) {
+  for (size_t mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
     privateMemoryPointers_.push_back(
-        new memoryEigen(-1, memType, memoryIndices, memoryRows, memoryCols));
+        new memoryEigen(-1, mem_t, memoryIndices, memoryRows, memoryCols));
     tmpMemoryPointers_[0].push_back(
-        new memoryEigen(-1, memType, memoryIndices, memoryRows, memoryCols));
+        new memoryEigen(-1, mem_t, memoryIndices, memoryRows, memoryCols));
     tmpMemoryPointers_[1].push_back(
-        new memoryEigen(-1, memType, memoryIndices, memoryRows, memoryCols));
+        new memoryEigen(-1, mem_t, memoryIndices, memoryRows, memoryCols));
   }
   sharedMemoryPointers_.resize(memoryEigen::NUM_MEMORY_TYPES);
 }

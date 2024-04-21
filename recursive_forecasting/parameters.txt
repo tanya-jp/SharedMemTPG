@@ -50,16 +50,16 @@ mu_internal 0
 n_discrete_action 1
 
 # initial team size
-initial_team_size 5
+initial_team_size 1
 
 # max team size
-max_team_size 1000000
+max_team_size 1
 
 # max teams per graph
-max_teams_per_graph 1000000
+max_teams_per_graph 1
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 0.99
+p_atomic 1.0
 
 # team mutation: probability of deleting program from team
 pmd 0.7
@@ -92,7 +92,7 @@ n_input 1
 max_initial_prog_size 100
 
 # max program size
-max_prog_size 1000
+max_prog_size 1000000
 
 # program variation: probability of changing the program
 p_bid_mutate 1.0
@@ -107,7 +107,7 @@ p_bid_delete 0.7
 p_bid_add 0.35
 
 # program variation: probability of linear crossover with another team
-p_bid_xover 0.0
+p_bid_xover 0.5
 
 # program variation: probability of adding noise to constants
 p_bid_mu_const 1.0
