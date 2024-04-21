@@ -222,7 +222,7 @@ bool linearM::muBid(std::unordered_map<std::string, std::any> &params,
 
     changed = true;
   }
- 
+
   /* Flip single bit of random instruction. */
   if (disR(rng) < std::any_cast<double>(params["p_bid_mutate"])) {
     uniform_int_distribution<int> disBid(0, bid_.size() - 1);
@@ -232,9 +232,11 @@ bool linearM::muBid(std::unordered_map<std::string, std::any> &params,
   }
 
   /* Add noise to constants */
-  if (params.find("p_bid_mu_const") != params.end() && disR(rng) < std::any_cast<double>(params["p_bid_mu_const"])) {
+  if (params.find("p_bid_mu_const") != params.end() &&
+      disR(rng) < std::any_cast<double>(params["p_bid_mu_const"])) {
     for (auto m : privateMemoryPointers_)
-      m->NoiseToConst(rng, std::any_cast<double>(params["bid_mu_const_stddev"]));
+      m->NoiseToConst(rng,
+                      std::any_cast<double>(params["bid_mu_const_stddev"]));
   }
 
   /* Swap positions of two instructions. */
@@ -261,28 +263,36 @@ bool linearM::muBid(std::unordered_map<std::string, std::any> &params,
 }
 
 /******************************************************************************/
-double linearM::run(state *s, int timeStep, int graphDepth, mt19937 &rng) {
+double linearM::run(state *obs, int timeStep, int graphDepth, mt19937 &rng) {
   (void)rng;
   bool dbg = false;
-  if (dbg) {
-    cerr << endl << "MEMin ";
-    for (int i = 0; i < 8; i++)
-      cerr << " "
-           << privateMemoryPointers_[memoryEigen::SCALAR_TYPE]->working_memory_[0](0, 0);
-    cerr << " |";
-    for (int i = 0; i < 8; i++)
-      cerr << " "
-           << sharedMemoryPointers_[memoryEigen::SCALAR_TYPE]->working_memory_[0](0, 0);
-    cerr << endl;
+  // if (dbg) {
+  //   cerr << endl << "MEMin ";
+  //   for (int i = 0; i < 8; i++)
+  //     cerr << " "
+  //          << privateMemoryPointers_[memoryEigen::SCALAR_TYPE]
+  //                 ->working_memory_[0](0, 0);
+  //   cerr << " |";
+  //   for (int i = 0; i < 8; i++)
+  //     cerr << " "
+  //          << sharedMemoryPointers_[memoryEigen::SCALAR_TYPE]
+  //                 ->working_memory_[0](0, 0);
+  //   cerr << endl;
+  // }
+
+
+
+  if (!stateful_) {
+    for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++) {
+      sharedMemoryPointers_[memType]->CopyConstToWorking();
+    }
+    CopySharedConstToWorking();
   }
-  // feature = s->getStatePointerDouble();
 
-  for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++)
-    privateMemoryPointers_[memType]->ClearWorking();
-
-  if (!stateful_)
-    for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++)
-      sharedMemoryPointers_[memType]->ClearWorking();
+  for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++) {
+    cout << "dbg runa p:" << privateMemoryPointers_[memType]->PrintWorking() << endl;
+    cout << "dbg runa s:" << sharedMemoryPointers_[memType]->PrintWorking() << endl;
+  }
 
   for (auto initer = bidEffective_.begin(); initer != bidEffective_.end();
        initer++) {
@@ -293,20 +303,22 @@ double linearM::run(state *s, int timeStep, int graphDepth, mt19937 &rng) {
           memoryEigen::NA_TYPE) {  // this input is actually used for this op
         if ((*initer)->isInput(in)) {  // this input is a feature ref
           if ((*initer)->inType(in) == memoryEigen::SCALAR_TYPE)
-            (*initer)->inMem(in)->working_memory_[idx](0, 0) = s->stateValueAtIndex(
-                (*initer)->inIdx(in));  //(*feature)[(*initer)->inIdx(in)];
+            (*initer)->inMem(in)->working_memory_[idx](0, 0) =
+                obs->stateValueAtIndex(
+                    (*initer)->inIdx(in));
           else if ((*initer)->inType(in) == memoryEigen::VECTOR_TYPE)
             for (size_t f = (*initer)->inIdx(in), row = 0;
                  row < (*initer)->inMem(in)->memoryRows(); row++)
-              (*initer)->inMem(in)->working_memory_[idx](row, 0) = s->stateValueAtIndex(
-                  f++ % num_input_);  //(*feature)[f++ % num_input_];
+              (*initer)->inMem(in)->working_memory_[idx](row, 0) =
+                  obs->stateValueAtIndex(
+                      f++ % num_input_);  //(*feature)[f++ % num_input_];
           else if ((*initer)->inType(in) == memoryEigen::MATRIX_TYPE)
             for (size_t f = (*initer)->inIdx(in), row = 0;
                  row < (*initer)->inMem(in)->memoryRows(); row++)
               for (size_t col = 0; col < (*initer)->inMem(in)->memoryCols();
                    col++)
                 (*initer)->inMem(in)->working_memory_[idx](row, col) =
-                    s->stateValueAtIndex(
+                    obs->stateValueAtIndex(
                         f++ % num_input_);  //(*feature)[f++ % num_input_];
           // if (dbg){
           //    cerr << "state " << (*feature)[0] << " " << (*feature)[1] << " |
@@ -329,26 +341,27 @@ double linearM::run(state *s, int timeStep, int graphDepth, mt19937 &rng) {
 
     (*initer)->exec(dbg);
 
-    if (dbg) {
-      cerr << "MEMprog";
-      for (int i = 0; i < 8; i++)
-        cerr << " "
-             << privateMemoryPointers_[memoryEigen::SCALAR_TYPE]->working_memory_[0](0, 0);
-      cerr << " |";
-      for (int i = 0; i < 8; i++)
-        cerr << " "
-             << sharedMemoryPointers_[memoryEigen::SCALAR_TYPE]->working_memory_[0](0, 0);
-      cerr << endl;
-    }
+    // if (dbg) {
+    //   cerr << "MEMprog";
+    //   for (int i = 0; i < 8; i++)
+    //     cerr << " "
+    //          << privateMemoryPointers_[memoryEigen::SCALAR_TYPE]
+    //                 ->working_memory_[0](0, 0);
+    //   cerr << " |";
+    //   for (int i = 0; i < 8; i++)
+    //     cerr << " "
+    //          << sharedMemoryPointers_[memoryEigen::SCALAR_TYPE]
+    //                 ->working_memory_[0](0, 0);
+    //   cerr << endl;
+    // }
   }
-  return privateMemoryPointers_[memoryEigen::SCALAR_TYPE]->working_memory_[0](0, 0);
+  return privateMemoryPointers_[memoryEigen::SCALAR_TYPE]->working_memory_[0](
+      0, 0);
 }
 
 /******************************************************************************/
 void linearM::setupMemory(size_t memoryIndices, size_t memoryRows,
                           size_t memoryCols) {
-                              
-
   tmpMemoryPointers_.resize(2);  // for in1 and in2
   for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++) {
     privateMemoryPointers_.push_back(

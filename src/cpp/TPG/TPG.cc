@@ -231,8 +231,9 @@ void TPG::markEffectiveCode(team *tm) {
   for (auto leiter = programs.begin(); leiter != programs.end(); leiter++) {
     (*leiter)->skipIntrons(GetParam<int>("skip_introns"));
     (*leiter)->markIntrons(GetParam<int>("continuous_output"));
-    for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++)
+    for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++){
       ((*leiter)->memGet(memType))->refsPolicyInc();
+    }
   }
 
   // update active programs
@@ -1200,6 +1201,7 @@ void TPG::initTeams() {
            memType++) {
         auto *m =
             new memoryEigen(state_["memory_eigen_count"]++, memType, params_);
+        if (HaveParam("p_bid_mu_const")) m->RandomizeConst();    
         addMemory(m);
         l->memSet(memType, m);
         l->memGet(memType)->refInc();

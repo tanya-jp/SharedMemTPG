@@ -63,26 +63,23 @@ string team::checkpoint(bool fitnessBins, long id) const {
 }
 
 /******************************************************************************/
-void team::clearMemory(map<long, team *> &teamMap) {
+void team::InitMemory(map<long, team *> &teamMap, bool use_evolved_const) {
   set<team *, teamIdComp> teams;
+  set<program *, programIdComp> programs;
   set<memoryEigen *, memoryEigenIdComp> memories;
-  getAllMemories(teamMap, teams, memories, false);
-  for (auto it = memories.begin(); it != memories.end(); it++) {
-    (*it)->ClearWorking();
-    (*it)->ClearReadTime();   // needed?
-    (*it)->ClearWriteTime();  // needed?
+  getAllNodes(teamMap, teams, programs, memories, false);
+  for (auto m : memories) {
+    m->ClearWorking();
+    if (use_evolved_const) {
+      m->CopyConstToWorking();
+    }
+    m->ClearReadTime();   // needed?
+    m->ClearWriteTime();  // needed?
   }
-}
-
-/******************************************************************************/
-void team::InitMemory(map<long, team *> &teamMap) {
-  set<team *, teamIdComp> teams;
-  set<memoryEigen *, memoryEigenIdComp> memories;
-  getAllMemories(teamMap, teams, memories, false);
-  for (auto it = memories.begin(); it != memories.end(); it++) {
-    (*it)->CopyConstToWorking();
-    (*it)->ClearReadTime();   // needed?
-    (*it)->ClearWriteTime();  // needed?
+  if (use_evolved_const) {
+    for (auto p : programs) {
+      p->CopySharedConstToWorking();
+    }
   }
 }
 

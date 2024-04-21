@@ -84,6 +84,13 @@ class program {
     return sharedMemoryPointers_[type];
   }
 
+  inline void CopySharedConstToWorking() {
+    for (size_t i = 0; i < sharedMemoryPointers_.size(); i++) {
+      privateMemoryPointers_[i]->working_memory_ =
+          sharedMemoryPointers_[i]->const_memory_;
+    }
+  }
+
   // Mutate action, return true if the action was actually changed
   inline bool muAction(long action) {
     long a = action_;

@@ -30,8 +30,7 @@ class team {
   inline void addAncestorId(long aid) { ancestorIds_.push_back(aid); }
   inline void addEvalSeed(int s) { evalSeeds_.push_back(s); }
   inline void clearEvalSeeds() { evalSeeds_.clear(); }
-  void clearMemory(map<long, team *> &);
-  void InitMemory(map<long, team *> &);
+  void InitMemory(map<long, team *> &, bool);
   inline void getAncestorIds(vector<long> &a) { a = ancestorIds_; }
   inline void setAncestorIds(vector<long> &a) { ancestorIds_ = a; }
   inline int numAncestorIds() { return ancestorIds_.size(); }
