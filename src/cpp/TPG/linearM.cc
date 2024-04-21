@@ -289,10 +289,10 @@ double linearM::run(state *obs, int timeStep, int graphDepth, mt19937 &rng) {
     CopySharedConstToWorking();
   }
 
-  for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++) {
-    cout << "dbg runa p:" << privateMemoryPointers_[memType]->PrintWorking() << endl;
-    cout << "dbg runa s:" << sharedMemoryPointers_[memType]->PrintWorking() << endl;
-  }
+  // for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++) {
+  //   cout << "dbg runa p:" << privateMemoryPointers_[memType]->PrintWorking() << endl;
+  //   cout << "dbg runa s:" << sharedMemoryPointers_[memType]->PrintWorking() << endl;
+  // }
 
   for (auto initer = bidEffective_.begin(); initer != bidEffective_.end();
        initer++) {
