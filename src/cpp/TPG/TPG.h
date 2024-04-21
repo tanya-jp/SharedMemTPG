@@ -159,7 +159,8 @@ class TPG {
  public:
   std::unordered_map<std::string, std::any> params_;
   template <typename T>
-  T GetParam(string p) {return std::any_cast<T>(params_[p]);}
+  T GetParam(string p) { return std::any_cast<T>(params_[p]); }
+  bool HaveParam(string p) { return params_.find(p) != params_.end(); }
   std::unordered_map<std::string, int> state_;
   int GetState(string p) { return state_[p]; }
 };

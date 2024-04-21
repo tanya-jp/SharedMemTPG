@@ -56,10 +56,10 @@ initial_team_size 5
 max_team_size 1000000
 
 # max teams per graph
-max_teams_per_graph 1000000
+max_teams_per_graph 10
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 1.0
+p_atomic 0.99
 
 # team mutation: probability of deleting program from team
 pmd 0.7
@@ -110,7 +110,7 @@ p_bid_add 0.35
 p_bid_xover 0.0
 
 # program variation: probability of adding noise to constants
-p_bid_mu_const 0.5
+p_bid_mu_const 1.0
 
 # program variation: stddev of normal noise added to each const
 bid_mu_const_stddev 0.05

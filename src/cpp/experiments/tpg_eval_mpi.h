@@ -328,10 +328,11 @@ void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
         for (eval.episode = 0; eval.episode < eval.tm->_n_eval;
              eval.episode++) {
           tpg._rngs[AUX_SEED_INDEX].seed(eval.episode);
-          if (tpg.GetParam<double>("p_bid_mu_const") == 0.0)
-            eval.tm->clearMemory(tpg._teamMap);
-          else
+          if (tpg.HaveParam("p_bid_mu_const")) {
             eval.tm->InitMemory(tpg._teamMap);
+          } else {
+            eval.tm->clearMemory(tpg._teamMap);
+          }
           evaluator_map[eval.game->eval_type_](tpg, eval);
           FinalizeStepStats(tpg, eval);
         }
@@ -355,10 +356,11 @@ void replayer(TPG &tpg, vector<TaskEnv *> &tasks) {
     tpg.markEffectiveCode(eval.tm);
     for (eval.episode = 0; eval.episode < eval.tm->_n_eval; eval.episode++) {
       tpg._rngs[AUX_SEED_INDEX].seed(eval.episode);
-      if (tpg.GetParam<double>("p_bid_mu_const") == 0.0)
-        eval.tm->clearMemory(tpg._teamMap);
-      else
+      if (tpg.HaveParam("p_bid_mu_const")) {
         eval.tm->InitMemory(tpg._teamMap);
+      } else {
+        eval.tm->clearMemory(tpg._teamMap);
+      }
       EvalControl(tpg, eval);
       FinalizeStepStats(tpg, eval);
     }
