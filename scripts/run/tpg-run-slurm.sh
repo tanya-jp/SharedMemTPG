@@ -3,7 +3,7 @@
 
 # single node
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=40
+#SBATCH --ntasks-per-node=63
 #SBATCH --mem=0
 #SBATCH --time=0-3:00  # time (DD-HH:MM)
 
