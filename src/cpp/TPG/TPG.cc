@@ -535,6 +535,79 @@ void TPG::genTeams() {
   oss << " nNTms " << n_new_teams << endl;
 }
 
+void TPG::TeamMutator_ProgramOrder(team* team_to_mu) {
+  if ((team_to_mu)->size() > 1 &&
+      real_distribution_(_rngs[TPG_SEED_INDEX]) < GetParam<double>("pmw")) {
+    int i, j;
+    uniform_int_distribution<int> disMemberList(0, (team_to_mu)->size() - 1);
+    do {
+      i = disMemberList(_rngs[TPG_SEED_INDEX]);
+      j = disMemberList(_rngs[TPG_SEED_INDEX]);
+    } while (i == j);
+    (team_to_mu)->muProgramOrder(i, j);
+  }
+}
+
+void TPG::TeamMutator_AddPrograms(team* team_to_mu) {
+  uniform_int_distribution<int> disL(0, _L.size() - 1);
+  program* p;
+  for (double b = 1.0; real_distribution_(_rngs[TPG_SEED_INDEX]) < b &&
+                (int)team_to_mu->size() < GetParam<int>("max_team_size");
+       b = b * GetParam<double>("pma")) {
+    // TODO(skelly) fix rng bug
+    // uniform_int_distribution<int> disTmSize(0, team_to_mu->size() - 1);
+    do {
+      p = _L[_Lids[disL(_rngs[TPG_SEED_INDEX])]];
+    } while (!(team_to_mu->addProgram(p, -1))); //, disTmSize(_rngs[TPG_SEED_INDEX]))));
+  }
+}
+
+void TPG::TeamMutator_RemovePrograms(team* team_to_mu) {
+  vector<program *> programs;
+  team_to_mu->members(programs);
+  program *p;
+  uniform_int_distribution<int> disPrograms(0, programs.size() - 1);
+  for (double b = 1.0;
+       real_distribution_(_rngs[TPG_SEED_INDEX]) < b && (team_to_mu->size() > 1);
+       b = b * GetParam<double>("pmd")) {
+    do {
+      p = programs[disPrograms(_rngs[TPG_SEED_INDEX])];
+    } while ((p->action() < 0 &&
+              team_to_mu->numAtomic_ <
+                  2) ||  // keep at least one program with an atomic action
+             !(team_to_mu->removeProgram(p)));
+  }
+}
+
+program* TPG::CloneProgram(program *prog) {
+  program *prog_clone =
+      new linearM(GetState("t_current"), *(dynamic_cast<linearM *>(prog)),
+                  params_, state_["program_count"]++);
+  if (prog_clone->action() >= 0)
+    _teamMap[prog_clone->action()]->addIncomingProgram(prog_clone->id_);
+  for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++) {
+    prog_clone->memSet(memType, prog->memGet(memType));
+    prog_clone->memGet(memType)->refInc();
+  }
+  return prog_clone;
+}
+
+void TPG::ProgramMutator_MemoryPointer(program *prog_to_mu) {
+  // change memory pointer
+  if (real_distribution_(_rngs[TPG_SEED_INDEX]) < GetParam<double>("pms")) {
+    uniform_int_distribution<int> disMemory(0, _Memory.size() - 1);
+    memoryEigen *memNew;
+    do {
+      memNew = _Memory[memoryEigen::SCALAR_TYPE]
+                      [_Memids[memoryEigen::SCALAR_TYPE]
+                              [disMemory(_rngs[TPG_SEED_INDEX])]];
+    } while (prog_to_mu->memGet(memoryEigen::SCALAR_TYPE)->id_ == memNew->id_);
+    prog_to_mu->memGet(memoryEigen::SCALAR_TYPE)->refDec();
+    prog_to_mu->memSet(memoryEigen::SCALAR_TYPE, memNew);
+    prog_to_mu->memGet(memoryEigen::SCALAR_TYPE)->refInc();
+  }
+}
+
 /******************************************************************************/
 void TPG::genTeams(team *pm1, team *pm2, bool crossover, team **cm,
                    size_t &numNewTeams) {
@@ -544,7 +617,7 @@ void TPG::genTeams(team *pm1, team *pm2, bool crossover, team **cm,
 
   double b;
 
-  program *lr;
+  // program *lr;
 
   bool changedL;
   bool changedM;
@@ -559,127 +632,96 @@ void TPG::genTeams(team *pm1, team *pm2, bool crossover, team **cm,
   (*cm)->addAncestorId(pm1->id_);
 
   bool linearCrossover = false;
-  team *cm2 = (*cm);
+  // team *cm2 = (*cm);
 
-  // linear crossover with two parent programs (i.e. two teams with one program
-  // each)
-  if (crossover && GetParam<double>("p_atomic") == 1.0 && pm1->size() == 1 &&
-      pm2->size() == 1 &&
-      real_distribution_(_rngs[TPG_SEED_INDEX]) <
-          GetParam<double>("p_bid_xover")) {
-    _phyloGraph[(*cm)->id_].ancestorIds.insert(pm2->id_);
-    (*cm)->addAncestorId(pm2->id_);
+  /****************************************************************************/
+  // // linear crossover with two parent programs (i.e. two teams with one program
+  // // each)
+  // if (crossover && GetParam<double>("p_atomic") == 1.0 && pm1->size() == 1 &&
+  //     pm2->size() == 1 &&
+  //     real_distribution_(_rngs[TPG_SEED_INDEX]) <
+  //         GetParam<double>("p_bid_xover")) {
+  //   _phyloGraph[(*cm)->id_].ancestorIds.insert(pm2->id_);
+  //   (*cm)->addAncestorId(pm2->id_);
 
-    linearCrossover = true;
-    vector<program *> pm1Programs;
-    pm1->members(pm1Programs);
-    vector<program *> pm2Programs;
-    pm1->members(pm2Programs);
-    linearM *c1;  // = NULL;
-    linearM *c2;  // = NULL;
-    programCrossover(dynamic_cast<linearM *>(pm1Programs[0]),
-                     dynamic_cast<linearM *>(pm2Programs[0]), &c1, &c2,
-                     _rngs[TPG_SEED_INDEX]);
+  //   linearCrossover = true;
+  //   vector<program *> pm1Programs;
+  //   pm1->members(pm1Programs);
+  //   vector<program *> pm2Programs;
+  //   pm1->members(pm2Programs);
+  //   linearM *c1;  // = NULL;
+  //   linearM *c2;  // = NULL;
+  //   programCrossover(dynamic_cast<linearM *>(pm1Programs[0]),
+  //                    dynamic_cast<linearM *>(pm2Programs[0]), &c1, &c2,
+  //                    _rngs[TPG_SEED_INDEX]);
 
-    cm2 = new team(GetState("t_current"), state_["team_count"]++);
-    numNewTeams++;
+  //   cm2 = new team(GetState("t_current"), state_["team_count"]++);
+  //   numNewTeams++;
 
-    _phyloGraph[(cm2)->id_].ancestorIds.insert(pm1->id_);
-    (cm2)->addAncestorId(pm1->id_);
-    _phyloGraph[(cm2)->id_].ancestorIds.insert(pm2->id_);
-    (cm2)->addAncestorId(pm2->id_);
+  //   _phyloGraph[(cm2)->id_].ancestorIds.insert(pm1->id_);
+  //   (cm2)->addAncestorId(pm1->id_);
+  //   _phyloGraph[(cm2)->id_].ancestorIds.insert(pm2->id_);
+  //   (cm2)->addAncestorId(pm2->id_);
 
-    if (real_distribution_(_rngs[TPG_SEED_INDEX]) < 0.5) {
-      (*cm)->addProgram(c1);
-      (cm2)->addProgram(c2);
-    } else {
-      (*cm)->addProgram(c2);
-      (cm2)->addProgram(c1);
-    }
+  //   if (real_distribution_(_rngs[TPG_SEED_INDEX]) < 0.5) {
+  //     (*cm)->addProgram(c1);
+  //     (cm2)->addProgram(c2);
+  //   } else {
+  //     (*cm)->addProgram(c2);
+  //     (cm2)->addProgram(c1);
+  //   }
 
-    addTeam(cm2);
-    _Mroot.insert(cm2);
-    _phyloGraph.insert(pair<long, phyloRecord>(cm2->id_, phyloRecord()));
-    _phyloGraph[cm2->id_].gtime = GetState("t_current");
-    _phyloGraph[cm2->id_].root = true;
-  }
+  //   addTeam(cm2);
+  //   _Mroot.insert(cm2);
+  //   _phyloGraph.insert(pair<long, phyloRecord>(cm2->id_, phyloRecord()));
+  //   _phyloGraph[cm2->id_].gtime = GetState("t_current");
+  //   _phyloGraph[cm2->id_].root = true;
+  // }
+  /****************************************************************************/
 
-  // team crossover
-  else if (crossover && (pm1->size() > 1 || pm2->size() > 1)) {
-    _phyloGraph[(*cm)->id_].ancestorIds.insert(pm2->id_);
-    (*cm)->addAncestorId(pm2->id_);
+  /****************************************************************************/
+  // // team crossover
+  // if (crossover && (pm1->size() > 1 || pm2->size() > 1)) {
+  //   _phyloGraph[(*cm)->id_].ancestorIds.insert(pm2->id_);
+  //   (*cm)->addAncestorId(pm2->id_);
 
-    pm2->getMembersRef(p2programs);
-    auto p2liter = p2programs->begin();
-    while (p1liter != p1programs->end() || p2liter != p2programs->end()) {
-      if (p1liter != p1programs->end() &&
-          (int)(*cm)->size() < GetParam<int>("max_team_size") &&
-          (((*p1liter)->action() < 0 && (*cm)->numAtomic_ < 1) ||
-           find(p2programs->begin(), p2programs->end(), *p1liter) !=
-               p2programs->end()))
-        (*cm)->addProgram(*p1liter);
-      else if ((int)(*cm)->size() < GetParam<int>("max_team_size") &&
-               p1liter != p1programs->end() &&
-               real_distribution_(_rngs[TPG_SEED_INDEX]) < 0.5)
-        (*cm)->addProgram(*p1liter);
-      if ((int)(*cm)->size() < GetParam<int>("max_team_size") &&
-          p2liter != p2programs->end() &&
-          real_distribution_(_rngs[TPG_SEED_INDEX]) < 0.5)
-        (*cm)->addProgram(*p2liter);
-      if (p1liter != p1programs->end()) p1liter++;
-      if (p2liter != p2programs->end()) p2liter++;
-    }
-    if ((*cm)->numAtomic_ < 1)
-      die(__FILE__, __FUNCTION__, __LINE__,
-          "Crossover must leave the fail-safe atomic program!");
-  } else
-    for (p1liter = p1programs->begin(); p1liter != p1programs->end(); p1liter++)
-      (*cm)->addProgram(*p1liter);
-
-  (*cm)->members(cprograms);
-
+  //   pm2->getMembersRef(p2programs);
+  //   auto p2liter = p2programs->begin();
+  //   while (p1liter != p1programs->end() || p2liter != p2programs->end()) {
+  //     if (p1liter != p1programs->end() &&
+  //         (int)(*cm)->size() < GetParam<int>("max_team_size") &&
+  //         (((*p1liter)->action() < 0 && (*cm)->numAtomic_ < 1) ||
+  //          find(p2programs->begin(), p2programs->end(), *p1liter) !=
+  //              p2programs->end()))
+  //       (*cm)->addProgram(*p1liter);
+  //     else if ((int)(*cm)->size() < GetParam<int>("max_team_size") &&
+  //              p1liter != p1programs->end() &&
+  //              real_distribution_(_rngs[TPG_SEED_INDEX]) < 0.5)
+  //       (*cm)->addProgram(*p1liter);
+  //     if ((int)(*cm)->size() < GetParam<int>("max_team_size") &&
+  //         p2liter != p2programs->end() &&
+  //         real_distribution_(_rngs[TPG_SEED_INDEX]) < 0.5)
+  //       (*cm)->addProgram(*p2liter);
+  //     if (p1liter != p1programs->end()) p1liter++;
+  //     if (p2liter != p2programs->end()) p2liter++;
+  //   }
+  //   if ((*cm)->numAtomic_ < 1)
+  //     die(__FILE__, __FUNCTION__, __LINE__,
+  //         "Crossover must leave the fail-safe atomic program!");
+  // } else
+  //   for (p1liter = p1programs->begin(); p1liter != p1programs->end(); p1liter++)
+  //     (*cm)->addProgram(*p1liter);
+  /****************************************************************************/
   uniform_int_distribution<int> disM(0, _M.size() - 1);
 
-  // Remove programs.
-  program *p;
-  uniform_int_distribution<int> disCprograms(0, cprograms.size() - 1);
-  for (b = 1.0;
-       real_distribution_(_rngs[TPG_SEED_INDEX]) < b && ((*cm)->size() > 1);
-       b = b * GetParam<double>("pmd")) {
-    do {
-      p = cprograms[disCprograms(_rngs[TPG_SEED_INDEX])];
-    } while ((p->action() < 0 &&
-              (*cm)->numAtomic_ <
-                  2) ||  // keep at least one program with an atomic action
-             !((*cm)->removeProgram(p)));
-  }
-
-  // Add programs.
-  for (b = 1.0; real_distribution_(_rngs[TPG_SEED_INDEX]) < b &&
-                (int)(*cm)->size() < GetParam<int>("max_team_size");
-       b = b * GetParam<double>("pma")) {
-    uniform_int_distribution<int> disTmSize(0, (*cm)->size() - 1);
-    do {
-      p = _L[_Lids[disL(_rngs[TPG_SEED_INDEX])]];
-    } while (!((*cm)->addProgram(p, disTmSize(_rngs[TPG_SEED_INDEX]))));
-  }
-
-  // Change program order.
-  if ((*cm)->size() > 1 &&
-      real_distribution_(_rngs[TPG_SEED_INDEX]) < GetParam<double>("pmw")) {
-    int i, j;
-    uniform_int_distribution<int> disMemberList(0, (*cm)->size() - 1);
-    do {
-      i = disMemberList(_rngs[TPG_SEED_INDEX]);
-      j = disMemberList(_rngs[TPG_SEED_INDEX]);
-    } while (i == j);
-    (*cm)->muProgramOrder(i, j);
-  }
+  TeamMutator_RemovePrograms(*cm);
+  TeamMutator_AddPrograms(*cm);
+  TeamMutator_ProgramOrder(*cm);
 
   // Mutate programs.
   deque<program *> programsWithNoRefs;
-  for (size_t tm = 0; tm < (linearCrossover ? 2 : 1); tm++) {
-    team *teamToMutate = tm == 0 ? (*cm) : cm2;
+  // for (size_t tm = 0; tm < (linearCrossover ? 2 : 1); tm++) {
+    team *teamToMutate = *cm; //tm == 0 ? (*cm) : cm2;
 
     changedM = false;
 
@@ -694,38 +736,16 @@ void TPG::genTeams(team *pm1, team *pm2, bool crossover, team **cm,
           changedM = true;
           teamToMutate->removeProgram(*ccliter);
 
-          // clone program
-          lr = new linearM(GetState("t_current"),
-                           *(dynamic_cast<linearM *>(*ccliter)), params_,
-                           state_["program_count"]++);
-          if (lr->action() >= 0)
-            _teamMap[lr->action()]->addIncomingProgram(lr->id_);
-          for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES;
-               memType++) {
-            lr->memSet(memType, (*ccliter)->memGet(
-                                    memType));  // copy memoryEigen reference
-            lr->memGet(memType)->refInc();
-          }
-          if (linearCrossover) delete *ccliter;
+          program* lr = CloneProgram(*ccliter);
+
           // modify program
           do {
             changedL = lr->muBid(params_, _rngs[TPG_SEED_INDEX],
                                  real_distribution_, _ops);
           } while (changedL == false);
-          // change memory pointer
-          if (real_distribution_(_rngs[TPG_SEED_INDEX]) <
-              GetParam<double>("pms")) {
-            uniform_int_distribution<int> disMemory(0, _Memory.size() - 1);
-            memoryEigen *memNew;
-            do {
-              memNew = _Memory[memoryEigen::SCALAR_TYPE]
-                              [_Memids[memoryEigen::SCALAR_TYPE]
-                                      [disMemory(_rngs[TPG_SEED_INDEX])]];
-            } while (lr->memGet(memoryEigen::SCALAR_TYPE)->id_ == memNew->id_);
-            lr->memGet(memoryEigen::SCALAR_TYPE)->refDec();
-            lr->memSet(memoryEigen::SCALAR_TYPE, memNew);
-            lr->memGet(memoryEigen::SCALAR_TYPE)->refInc();
-          }
+          
+          ProgramMutator_MemoryPointer(lr);
+       
           // change action pointer
           uniform_int_distribution<int> disAct(
               0, GetParam<int>("n_discrete_action") - 1);
@@ -786,15 +806,15 @@ void TPG::genTeams(team *pm1, team *pm2, bool crossover, team **cm,
           addProgram(lr);
         }
     }
-  }
+  // }
 
-  for (size_t tm = 0; tm < (linearCrossover ? 2 : 1); tm++) {
-    team *teamToMutate = tm == 0 ? (*cm) : cm2;
+  // for (size_t tm = 0; tm < (linearCrossover ? 2 : 1); tm++) {
+    // team *teamToMutate = *cm; //tm == 0 ? (*cm) : cm2;
     list<program *> *cp;
     teamToMutate->getMembersRef(cp);
     for (auto cliter = cp->begin(); cliter != cp->end(); cliter++)
       (*cliter)->refInc();
-  }
+  // }
   cleanupProgramsWithNoRefs(GetState("t_current"), programsWithNoRefs, true);
 }
 

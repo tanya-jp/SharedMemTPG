@@ -42,6 +42,12 @@ class TPG {
   void finalize();
   void genSampleSets(size_t);
   void genTeams();
+  void TeamMutator_ProgramOrder(team* team_to_mu);
+  void TeamMutator_AddPrograms(team* team_to_mu);
+  void TeamMutator_RemovePrograms(team* team_to_mu);
+  program* CloneProgram(program *prog);
+  void ProgramMutator_MemoryPointer(program *prog_to_mu);
+  
   void genTeams(team *, team *, bool, team **, size_t &);
   team* genTeamsInternal(long, mt19937 &, set<team *, teamIdComp> &,
                          map<long, team *> &);
