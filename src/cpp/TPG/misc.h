@@ -126,14 +126,14 @@ inline double sas(double s1,double s2, double a){
 std::vector<string> &splitString(const string &s, char delim, std::vector<string> &elems);
 std::vector<string> splitString(const string &s, char delim);
 
-template < class ptype > struct lessThan : public binary_function < ptype *, ptype *, bool >
-{
-   bool operator() (ptype *lhs, ptype *rhs) { return lhs->key() < rhs->key(); }
-};
-template < class ptype > struct greaterThan : public binary_function < ptype *, ptype *, bool >
-{
-   bool operator() (ptype *lhs, ptype *rhs) { return lhs->key() > rhs->key(); }
-};
+// template < class ptype > struct lessThan : public binary_function < ptype *, ptype *, bool >
+// {
+//    bool operator() (ptype *lhs, ptype *rhs) { return lhs->key() < rhs->key(); }
+// };
+// template < class ptype > struct greaterThan : public binary_function < ptype *, ptype *, bool >
+// {
+//    bool operator() (ptype *lhs, ptype *rhs) { return lhs->key() > rhs->key(); }
+// };
 template < class vtype > string vecToStr(std::vector < vtype > &v)
 { ostringstream oss; //oss.precision(numeric_limits<double>::digits10+1);
    for(size_t i = 0; i < v.size(); i++) {
