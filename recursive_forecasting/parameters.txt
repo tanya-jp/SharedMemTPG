@@ -126,7 +126,7 @@ memory_rows 4
 memory_cols 4
 
 # number of elite teams
-n_elite 630
+n_elite 315
 
 # number of training outcomes to store
 # for recursive time series, this should match the number of t_starts[TRAIN_PHASE]
