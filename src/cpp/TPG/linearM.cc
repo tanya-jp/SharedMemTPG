@@ -190,76 +190,60 @@ void linearM::markIntrons(bool continuousOutput) {
 }
 
 /******************************************************************************/
-bool linearM::muBid(std::unordered_map<std::string, std::any> &params,
+void linearM::MuBid(std::unordered_map<std::string, std::any> &params,
                     mt19937 &rng, uniform_real_distribution<> &disR,
                     vector<bool> &legalOps) {
   bool changed = false;
 
-  /* Remove random instruction. */
-  if (bid_.size() > 1 &&
-      disR(rng) < std::any_cast<double>(params["p_bid_delete"])) {
-    uniform_int_distribution<int> disBid(0, bid_.size() - 1);
-    int i = disBid(rng);
+  while (!changed) {
+    /* Remove random instruction. */
+    if (bid_.size() > 1 &&
+        disR(rng) < std::any_cast<double>(params["p_bid_delete"])) {
+      uniform_int_distribution<int> disBid(0, bid_.size() - 1);
+      int i = disBid(rng);
+      delete *(bid_.begin() + i);
+      bid_.erase(bid_.begin() + i);
+      changed = true;
+    }
 
-    delete *(bid_.begin() + i);
-    bid_.erase(bid_.begin() + i);
+    /* Insert random instruction. */
+    if ((int)bid_.size() < std::any_cast<int>(params["max_prog_size"]) &&
+        disR(rng) < std::any_cast<double>(params["p_bid_add"])) {
+      instruction *instr = new instruction(params, rng);
+      instr->mutate(true, legalOps, rng);
+      uniform_int_distribution<int> disBid(0, bid_.size());
+      int i = disBid(rng);
+      bid_.insert(bid_.begin() + i, instr);
+      changed = true;
+    }
 
-    changed = true;
+    /* Flip single bit of random instruction. */
+    if (disR(rng) < std::any_cast<double>(params["p_bid_mutate"])) {
+      uniform_int_distribution<int> disBid(0, bid_.size() - 1);
+      int i = disBid(rng);
+      bid_[i]->mutate(false, legalOps, rng);
+      changed = true;
+    }
+
+    /* Add noise to constants */
+    if (params.find("p_bid_mu_const") != params.end() &&
+        disR(rng) < std::any_cast<double>(params["p_bid_mu_const"])) {
+      for (auto m : privateMemoryPointers_)
+        m->NoiseToConst(rng,
+                        std::any_cast<double>(params["bid_mu_const_stddev"]));
+    }
+
+    /* Swap positions of two instructions. */
+    if (bid_.size() > 1 &&
+        disR(rng) < std::any_cast<double>(params["p_bid_swap"])) {
+      uniform_int_distribution<int> disBid(0, bid_.size() - 1);
+      int i = disBid(rng);
+      int j;
+      do { j = disBid(rng); } while (i == j);
+      std::swap(bid_[i], bid_[j]);
+      changed = true;
+    }
   }
-
-  /* Insert random instruction. */
-  if ((int)bid_.size() < std::any_cast<int>(params["max_prog_size"]) &&
-      disR(rng) < std::any_cast<double>(params["p_bid_add"])) {
-    // instruction *instr = new
-    // instruction(std::any_cast<double>(params["n_input"]),
-    // bid_[0]->_memIndices, bid_[0]->memoryRows_, bid_[0]->memoryCols_, rng);
-    instruction *instr = new instruction(params, rng);
-    instr->mutate(true, legalOps, rng);
-    uniform_int_distribution<int> disBid(0, bid_.size());
-    int i = disBid(rng);
-
-    bid_.insert(bid_.begin() + i, instr);
-
-    changed = true;
-  }
-
-  /* Flip single bit of random instruction. */
-  if (disR(rng) < std::any_cast<double>(params["p_bid_mutate"])) {
-    uniform_int_distribution<int> disBid(0, bid_.size() - 1);
-    int i = disBid(rng);
-    bid_[i]->mutate(false, legalOps, rng);
-    changed = true;
-  }
-
-  /* Add noise to constants */
-  if (params.find("p_bid_mu_const") != params.end() &&
-      disR(rng) < std::any_cast<double>(params["p_bid_mu_const"])) {
-    for (auto m : privateMemoryPointers_)
-      m->NoiseToConst(rng,
-                      std::any_cast<double>(params["bid_mu_const_stddev"]));
-  }
-
-  /* Swap positions of two instructions. */
-  if (bid_.size() > 1 &&
-      disR(rng) < std::any_cast<double>(params["p_bid_swap"])) {
-    uniform_int_distribution<int> disBid(0, bid_.size() - 1);
-    int i = disBid(rng);
-
-    int j;
-
-    do {
-      j = disBid(rng);
-    } while (i == j);
-
-    instruction *tmp;
-
-    tmp = bid_[i];
-    bid_[i] = bid_[j];
-    bid_[j] = tmp;
-
-    changed = true;
-  }
-  return changed;
 }
 
 /******************************************************************************/
@@ -284,8 +268,7 @@ double linearM::run(state *obs, int timeStep, int graphDepth, mt19937 &rng) {
         if ((*initer)->isInput(in)) {  // this input is a feature ref
           if ((*initer)->inType(in) == memoryEigen::SCALAR_TYPE)
             (*initer)->inMem(in)->working_memory_[idx](0, 0) =
-                obs->stateValueAtIndex(
-                    (*initer)->inIdx(in));
+                obs->stateValueAtIndex((*initer)->inIdx(in));
           else if ((*initer)->inType(in) == memoryEigen::VECTOR_TYPE)
             for (size_t f = (*initer)->inIdx(in), row = 0;
                  row < (*initer)->inMem(in)->memoryRows(); row++)
@@ -298,8 +281,7 @@ double linearM::run(state *obs, int timeStep, int graphDepth, mt19937 &rng) {
               for (size_t col = 0; col < (*initer)->inMem(in)->memoryCols();
                    col++)
                 (*initer)->inMem(in)->working_memory_[idx](row, col) =
-                    obs->stateValueAtIndex(
-                        f++ % num_input_);  
+                    obs->stateValueAtIndex(f++ % num_input_);
           (*initer)->inIdxE(in, idx);  // reset inIdxE to zero for input ref
         } else {                       // this input is a memory ref
           // track read time for temporal memory

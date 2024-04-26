@@ -6,7 +6,6 @@ common_env=Environment(ENV=os.environ)
 
 acenet = ARGUMENTS.get('acenet', 0)
 ccanada = ARGUMENTS.get('ccanada', 0)
-hpcc = ARGUMENTS.get('hpcc', 0)
 think = ARGUMENTS.get('think', 0)
 
 common_env.Replace(CXX='mpic++')
@@ -18,16 +17,10 @@ if int(acenet):
 
 if int(ccanada):
     common_env.Append(CPPDEFINES=['CCANADA'])
-
-if int(hpcc):
-    common_env.Append(CPPDEFINES = ['HPCC'])
-    common_env.Append(CCFLAGS = ['-std=c++17', '-Wno-deprecated', '-Wall'])
 else:
-    common_env.Append(CCFLAGS = ['-std=c++17', '-Wno-deprecated', '-Wall', '-DARMA_DONT_USE_WRAPPER', '-DARMA_USE_BLAS', '-DARMA_USE_LAPACK', '-DARMA_USE_HDF5'])
+    common_env.Append(CCFLAGS = ['-std=c++17', '-Wno-deprecated', '-Wall', '-Werror', '-Wextra', '-DARMA_DONT_USE_WRAPPER', '-DARMA_USE_BLAS', '-DARMA_USE_LAPACK', '-DARMA_USE_HDF5'])
 
-#common_env.Append(CCFLAGS = ['-std=c++17', '-Wno-deprecated', '-Wall', '-Werror', '-Wextra', '-DARMA_DONT_USE_WRAPPER', '-DARMA_USE_BLAS', '-DARMA_USE_LAPACK', '-DARMA_USE_HDF5'])
 common_env.MergeFlags(GetOption('cflags'))
-
 common_env.Append(CPPDEFINES={'VERSION': 1})
 
 # Our release build is derived from the common build environment...

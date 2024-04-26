@@ -12,14 +12,14 @@ void tpg_arg_parse(TPG& tpg, int argc, char** argv) {
         tpg.params_["checkpoint_in_phase"] = atoi(optarg);
         break;
       case 'g':
-        tpg.seed(AUX_SEED_INDEX, atoi(optarg));
+        tpg.seed(AUX_SEED, atoi(optarg));
         break;
       case 'R':
         tpg.params_["replay"] = 1;
         tpg.params_["host_to_replay"] = atoi(optarg);
         break;
       case 's':
-        tpg.seed(TPG_SEED_INDEX, atoi(optarg));
+        tpg.seed(TPG_SEED, atoi(optarg));
         break;
       case 't':
         tpg.params_["active_task"] = atoi(optarg);

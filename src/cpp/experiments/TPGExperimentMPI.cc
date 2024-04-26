@@ -127,7 +127,7 @@ int main(int argc, char** argv) {
         /* replacement *******************************************************/
         if (tpg.GetState("t_current") > tpg.GetParam<int>("t_start")) {
           startGenTeams = chrono::system_clock::now();
-          tpg.genTeams();
+          tpg.GenerateNewTeams();
           endGenTeams = chrono::system_clock::now() - startGenTeams;
         }
         

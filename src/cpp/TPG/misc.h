@@ -164,7 +164,7 @@ double vecMean(std::vector<int>);
 //string decompressString(std::string& data);
 
 // Function to generate power set PS of given set S
-inline void findPowerSet(std::vector<int> const &S, std::vector<int> &set, std::vector < std::vector <int> > &PS, size_t n, size_t minSubsetSize)
+inline void FindPowerSet(std::vector<int> const &S, std::vector<int> &set, std::vector < std::vector <int> > &PS, size_t n, size_t minSubsetSize)
 {
    // if we have considered all elements
    if (n == 0)
@@ -175,18 +175,18 @@ inline void findPowerSet(std::vector<int> const &S, std::vector<int> &set, std::
    }
    // consider nth element
    set.push_back(S[n - 1]);
-   findPowerSet(S, set, PS, n - 1, minSubsetSize);
+   FindPowerSet(S, set, PS, n - 1, minSubsetSize);
    // or don't consider nth element
    set.pop_back();
-   findPowerSet(S, set, PS, n - 1, minSubsetSize);
+   FindPowerSet(S, set, PS, n - 1, minSubsetSize);
 }
 
-inline std::vector < std::vector < int > > powerSet(size_t n) {
+inline std::vector < std::vector < int > > PowerSet(size_t n) {
    std::vector <int> S(n);
    std::iota(S.begin(), S.end(), 0);
    std::vector <int> tmpSet;
    std::vector < std::vector < int > > PS;
-   findPowerSet(S, tmpSet, PS, n, 1);
+   FindPowerSet(S, tmpSet, PS, n, 1);
    return PS;
 }
 

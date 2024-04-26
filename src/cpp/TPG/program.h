@@ -98,7 +98,7 @@ class program {
     return a != action;
   } 
   // Mutate bid, return true if any changes occured
-  virtual bool muBid(
+  virtual void MuBid(
       std::unordered_map<std::string, std::any> &, mt19937 &,
       uniform_real_distribution<> &,
       vector<bool> &) = 0;  

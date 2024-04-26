@@ -84,7 +84,7 @@ vector<team *> GetTeamsToEval(TPG &tpg) {
     }
   } else {
     // only test the validation champions (set fitmode later)
-    auto PS = powerSet(tpg.GetParam<int>("n_task"));
+    auto PS = PowerSet(tpg.GetParam<int>("n_task"));
     for (auto &set : PS) {
       team *tm =
           tpg._eliteTeamPS[vecToStrNoSpace(set)][tpg.GetParam<int>("fit_mode")]
@@ -262,16 +262,16 @@ void evaluate_main(TPG &tpg, mpi::communicator &world, vector<int> &taskSet) {
 
 /******************************************************************************/
 void EvalControl(TPG &tpg, EvalStruct &eval) {
-  eval.game->reset(tpg._rngs[AUX_SEED_INDEX]);
+  eval.game->reset(tpg._rngs[AUX_SEED]);
   eval.obs->Set(eval.game->GetObsVec(eval.partially_observable));
   while (!eval.game->terminal()) {
     eval.leafProgram = tpg.getAction(
         eval.tm, eval.obs, true, eval.visitedTeams, eval.decisionInstructions,
-        eval.game->getStep(), eval.teamPath, tpg._rngs[AUX_SEED_INDEX]);
+        eval.game->getStep(), eval.teamPath, tpg._rngs[AUX_SEED]);
     MaybeAnimateStep(eval);
     TaskEnv::Results r =
         eval.game->update(WrapDiscreteAction(eval), WrapContinuousAction(eval),
-                          tpg._rngs[AUX_SEED_INDEX]);
+                          tpg._rngs[AUX_SEED]);
     eval.runTimeStats[REWARD1_IDX] += r.r1;
     AccumulateStepStats(eval);
     eval.obs->Set(eval.game->GetObsVec(eval.partially_observable));
@@ -281,14 +281,14 @@ void EvalControl(TPG &tpg, EvalStruct &eval) {
 /******************************************************************************/
 void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
   RecursiveUnivar *game = dynamic_cast<RecursiveUnivar *>(eval.game);
-  game->reset(tpg._rngs[AUX_SEED_INDEX]);
+  game->reset(tpg._rngs[AUX_SEED]);
   // prime
   int sample = game->t_start[tpg.GetState("phase")][eval.episode];
   for (int i = 0; i < game->num_samples_prime_ - 1; i++) {
     eval.obs->Set(game->data[sample++]);
     eval.leafProgram = tpg.getAction(
         eval.tm, eval.obs, true, eval.visitedTeams, eval.decisionInstructions,
-        eval.game->getStep(), eval.teamPath, tpg._rngs[AUX_SEED_INDEX]);
+        eval.game->getStep(), eval.teamPath, tpg._rngs[AUX_SEED]);
   }
   // predict
   for (int i = 0; i < game->num_samples_predict_[tpg.GetState("phase")]; i++) {
@@ -296,10 +296,10 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
     eval.obs->Set(prediction);
     eval.leafProgram = tpg.getAction(eval.tm, eval.obs, true, eval.visitedTeams,
                                      eval.decisionInstructions, game->getStep(),
-                                     eval.teamPath, tpg._rngs[AUX_SEED_INDEX]);
+                                     eval.teamPath, tpg._rngs[AUX_SEED]);
     prediction[0] = WrapContinuousAction(eval);
     TaskEnv::Results r =
-        game->update(sample++, prediction[0], tpg._rngs[AUX_SEED_INDEX]);
+        game->update(sample++, prediction[0], tpg._rngs[AUX_SEED]);
     eval.runTimeStats[REWARD2_IDX] += r.r2;  // MAE
     eval.runTimeStats[REWARD1_IDX] += r.r1;  // MSE
     AccumulateStepStats(eval);
@@ -327,7 +327,7 @@ void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
         tpg.markEffectiveCode(eval.tm);
         for (eval.episode = 0; eval.episode < eval.tm->_n_eval;
              eval.episode++) {
-          tpg._rngs[AUX_SEED_INDEX].seed(eval.episode);
+          tpg._rngs[AUX_SEED].seed(eval.episode);
           eval.tm->InitMemory(tpg._teamMap, tpg.HaveParam("p_bid_mu_const"));
           evaluator_map[eval.game->eval_type_](tpg, eval);
           FinalizeStepStats(tpg, eval);
@@ -351,7 +351,7 @@ void replayer(TPG &tpg, vector<TaskEnv *> &tasks) {
     if (eval.animate) eval.tm->_n_eval = 1;
     tpg.markEffectiveCode(eval.tm);
     for (eval.episode = 0; eval.episode < eval.tm->_n_eval; eval.episode++) {
-      tpg._rngs[AUX_SEED_INDEX].seed(eval.episode);
+      tpg._rngs[AUX_SEED].seed(eval.episode);
       eval.tm->InitMemory(tpg._teamMap, tpg.HaveParam("p_bid_mu_const"));
       EvalControl(tpg, eval);
       FinalizeStepStats(tpg, eval);

@@ -82,22 +82,24 @@ class team {
     return outcomes_[task][phase].find(seed) != outcomes_[task][phase].end();
   }
   inline int inDeg() const { return incomingPrograms_.size(); }
-  inline void addIncomingProgram(long id) { incomingPrograms_.insert(id); }
+  inline void AddIncomingProgram(long id) {
+    incomingPrograms_.insert(id);
+    root_ = false;
+  }
   inline void removeIncomingProgram(long id) { incomingPrograms_.erase(id); }
   inline void incomingPrograms(set<long> &icp) const {
     icp = incomingPrograms_;
   }
-  inline void members(set<program *, programIdComp> *m) const {
-    m->clear();
-    copy(members_.begin(), members_.end(), inserter(*m, m->end()));
+  set<program *, programIdComp> CopyMembers() {
+    set<program *, programIdComp> m;
+    copy(members_.begin(), members_.end(), inserter(m, m.end()));
+    return m;
   }
   inline void members(list<program *> *m) const {
     m->assign(members_.begin(), members_.end());
   }
-  inline void members(set<program *, programIdComp> &m) const {
-    m.clear();
-    copy(members_.begin(), members_.end(), inserter(m, m.end()));
-  }
+  inline void members(list<program *> &m) const { m = members_; }
+ 
   // double membersRunEntropy(){
   //    double e = 0;
   //    for ( auto it = membersRun_Tally.begin(); it != membersRun_Tally.end();
@@ -112,7 +114,12 @@ class team {
   inline void members(vector<program *> &m) const {
     m.assign(members_.begin(), members_.end());
   }
-  inline void getMembersRef(list<program *> *&m) { m = &members_; }
+  // inline void GetMembersRef(list<program *> &m) { m = &members_; }
+
+  inline void SetMembers(list<program *> &m) { 
+    members_.clear();
+    members_.assign(m.begin(), m.end());
+   }
   inline int numEffectiveInstructions() const {
     return numEffectiveInstructions_;
   }

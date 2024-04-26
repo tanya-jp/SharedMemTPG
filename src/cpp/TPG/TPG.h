@@ -12,8 +12,8 @@
 #include "team.h"
 
 #define NUM_RNG 2
-#define TPG_SEED_INDEX 0
-#define AUX_SEED_INDEX 1
+#define TPG_SEED 0
+#define AUX_SEED 1
 
 class TPG {
  public:
@@ -21,14 +21,14 @@ class TPG {
   TPG(const TPG &);
   ~TPG();
 
-  void addProgram(program *p); 
+  void addProgram(program *p);
   void removeProgram(program *p, bool updateLids);
-  void addTeam(team *tm);
+  void AddTeam(team *tm);
   void removeTeam(team *tm, bool updateMids);
   void addMemory(memoryEigen *m);
   void removeMemory(memoryEigen *m);
   void cloneProgramLinearM(linearM *p1, linearM **c1);
-  team* getTeamByID(long id);
+  team *getTeamByID(long id);
   bool haveEliteTeam(string taskset, int fitMode, int phase);
   void seed(size_t i, int s);
 
@@ -41,21 +41,23 @@ class TPG {
   void countRefs();
   void finalize();
   void genSampleSets(size_t);
-  void genTeams();
-  void TeamMutator_ProgramOrder(team* team_to_mu);
-  void TeamMutator_AddPrograms(team* team_to_mu);
-  void TeamMutator_RemovePrograms(team* team_to_mu);
-  program* CloneProgram(program *prog);
+  void GenerateNewTeams();
+  void TeamMutator_ProgramOrder(team *team_to_mu);
+  void TeamMutator_AddPrograms(team *team_to_mu);
+  void TeamMutator_RemovePrograms(team *team_to_mu);
+  program *CloneProgram(program *prog);
   void ProgramMutator_MemoryPointer(program *prog_to_mu);
-  
-  void genTeams(team *, team *, bool, team **, size_t &);
-  team* genTeamsInternal(long, mt19937 &, set<team *, teamIdComp> &,
+  void ProgramMutator_Instructions(program *prog_to_mu);
+  void ProgramMutator_ActionPointer(program *prog_to_mu, team* new_team, int &n_new_teams);
+  void AddTeamToPhylogeny(team* parent, team* new_team);
+  vector<team *> ApplyVariationOps(team *parent1, int &n_new_teams);
+  team *genTeamsInternal(long, mt19937 &, set<team *, teamIdComp> &,
                          map<long, team *> &);
   int genUniqueProgram(program *, set<program *, programIdComp>);
   program *getAction(team *tm, state *s, bool updateActive,
                      set<team *, teamIdComp> &visitedTeams,
                      long &decisionInstructions, int timeStep,
-                     vector<team *> &teamPath, mt19937 &rng); 
+                     vector<team *> &teamPath, mt19937 &rng);
 
   program *getAction(
       team *tm, state *s, bool updateActive,
@@ -63,21 +65,21 @@ class TPG {
       int timeStep, vector<program *> &allPrograms,
       vector<program *> &winningPrograms, vector<set<long>> &decisionFeatures,
       vector<set<memoryEigen *, memoryEigenIdComp>> &decisionMemories,
-      vector<team *> &teamPath, mt19937 &rng); 
+      vector<team *> &teamPath, mt19937 &rng);
   void getAllNodes(team *tm, set<team *, teamIdComp> &teams,
-                          set<program *, programIdComp> &programs);
+                   set<program *, programIdComp> &programs);
   void getAllNodes(team *tm, set<team *, teamIdComp> &teams,
-                          set<program *, programIdComp> &programs,
-                          set<memoryEigen *, memoryEigenIdComp> &memories);
-  team* getBestTeam();
+                   set<program *, programIdComp> &programs,
+                   set<memoryEigen *, memoryEigenIdComp> &memories);
+  team *getBestTeam();
   map<long, team *> GetTeams(bool) const;
-  void getTeams(vector<team *> &t, bool roots) const; // weed out
-  void getTeams(map<long, team *> &t, bool roots) const; // weed out
+  void getTeams(vector<team *> &t, bool roots) const;     // weed out
+  void getTeams(map<long, team *> &t, bool roots) const;  // weed out
   void initTeams();
   void internalReplacementPareto(int, int, int, team *, map<long, team *> &,
                                  set<team *, teamIdComp> &, mt19937 &);
-  bool isElitePS(team *tm, int phase); 
-  void markEffectiveCode(team *tm); 
+  bool isElitePS(team *tm, int phase);
+  void markEffectiveCode(team *tm);
   void policyFeatures(int, set<long> &, bool);
   void printGraphDot(
       team *, size_t frame, int episode, int step, size_t depth,
@@ -116,7 +118,9 @@ class TPG {
   void setOutcome(team *tm, string behav, vector<double> &rewards,
                   vector<int> &ints, long gtime);
   void setParams();
-  inline void teamMap(map<long, team *> &team_map) const {team_map = _teamMap;}
+  inline void teamMap(map<long, team *> &team_map) const {
+    team_map = _teamMap;
+  }
   void teamTaskRank(int, const vector<int> &);
   void updateMODESFilters(bool);
   void writeCheckpoint(long, bool);
@@ -131,9 +135,9 @@ class TPG {
   set<team *, teamIdComp> _M;      // Teams
   set<team *, teamIdComp> _Mroot;  // Root teams for fast lookup
   // Map team id -> team* for program graph traversal
-  map<long, team *> _teamMap;  
+  map<long, team *> _teamMap;
   // keep track of which teams are elites wrt each taskSet
-  map<string, vector<team *>> _taskSetMap;  
+  map<string, vector<team *>> _taskSetMap;
   map<long, program *> _L;
   vector<long> _Lids;
   vector<long> _Mids;
@@ -153,7 +157,7 @@ class TPG {
   vector<bool> _ops;  // legel program operations
   set<team *, teamIdComp> _eliteTeams;
   // keys: taskSet, fitMode, phase
-  map<string, map<int, map<int, team *>>> _eliteTeamPS;  
+  map<string, map<int, map<int, team *>>> _eliteTeamPS;
   map<string, deque<double>> _eliteTestScoresMQ;
   vector<mt19937> _rngs;
   vector<int> _seeds;
@@ -161,11 +165,13 @@ class TPG {
   ostringstream oss;  // logging, reporting
   vector<size_t> _numEliteTeamsCurrent;
 
-  uniform_real_distribution<> real_distribution_;  // random reals in [0,1]
+  uniform_real_distribution<> real_dist_;  // random reals in [0,1]
  public:
   std::unordered_map<std::string, std::any> params_;
   template <typename T>
-  T GetParam(string p) { return std::any_cast<T>(params_[p]); }
+  T GetParam(string p) {
+    return std::any_cast<T>(params_[p]);
+  }
   bool HaveParam(string p) { return params_.find(p) != params_.end(); }
   std::unordered_map<std::string, int> state_;
   int GetState(string p) { return state_[p]; }

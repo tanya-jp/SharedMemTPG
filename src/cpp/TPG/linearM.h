@@ -37,8 +37,8 @@ class linearM : public program {
       long, long, int, std::unordered_map<std::string, std::any> &, long, long,
       std::vector<instruction *>); 
   ~linearM();
-  // Mutate bid, return true if any changes occured
-  bool muBid(std::unordered_map<std::string, std::any> &, mt19937 &,
+  // Mutate bid
+  void MuBid(std::unordered_map<std::string, std::any> &, mt19937 &,
              uniform_real_distribution<> &,
              std::vector<bool>
                  &); 

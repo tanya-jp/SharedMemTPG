@@ -3,7 +3,7 @@
 /******************************************************************************/
 TPG::TPG() {
   instruction::setupOps();
-  real_distribution_ = uniform_real_distribution<>(0.0, 1.0);
+  real_dist_ = uniform_real_distribution<>(0.0, 1.0);
   _Memids.resize(memoryEigen::NUM_MEMORY_TYPES);
   _Memory.resize(memoryEigen::NUM_MEMORY_TYPES);
   for (size_t i = 0; i < _NUM_PHASE; i++) _numEliteTeamsCurrent.push_back(0);
@@ -36,8 +36,11 @@ void TPG::removeProgram(program *p, bool updateLids) {
 }
 
 /******************************************************************************/
-void TPG::addTeam(team *tm) {
+void TPG::AddTeam(team *tm) {
   _M.insert(tm);
+  if (tm->root_) {
+    _Mroot.insert(tm);
+  }
   _teamMap[tm->id_] = tm;
   _Mids.push_back(tm->id_);
 }
@@ -80,7 +83,7 @@ void TPG::cloneProgramLinearM(linearM *p1, linearM **c1) {
   *c1 = new linearM(GetState("t_current"), *(dynamic_cast<linearM *>(p1)),
                     params_, state_["program_count"]++);
   if ((*c1)->action() >= 0)
-    _teamMap[(*c1)->action()]->addIncomingProgram((*c1)->id_);
+    _teamMap[(*c1)->action()]->AddIncomingProgram((*c1)->id_);
   for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++) {
     (*c1)->memSet(memType, p1->memGet(memType));  // copy memoryEigen
                                                   // reference
@@ -231,7 +234,8 @@ void TPG::markEffectiveCode(team *tm) {
   for (auto leiter = programs.begin(); leiter != programs.end(); leiter++) {
     (*leiter)->skipIntrons(GetParam<int>("skip_introns"));
     (*leiter)->markIntrons(GetParam<int>("continuous_output"));
-    for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++){
+    for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES;
+         memType++) {
       ((*leiter)->memGet(memType))->refsPolicyInc();
     }
   }
@@ -411,11 +415,11 @@ void TPG::ReadParameters(string file_name,
       _ops[instruction::SCALAR_TANH_OP_] = true;
     if (outcome_fields[0] == "SCALAR_SQRT_OP")
       _ops[instruction::SCALAR_SQRT_OP_] = true;
-      
+
     if (outcome_fields[0] == "active_tasks")
       params[outcome_fields[0]] = outcome_fields[1];
     else if (outcome_fields[1].find('.') !=
-        std::string::npos)  // found double parameter
+             std::string::npos)  // found double parameter
       params[outcome_fields[0]] = stringToDouble(outcome_fields[1]);
     else  // found int parameter
       params[outcome_fields[0]] = stringToInt(outcome_fields[1]);
@@ -488,43 +492,163 @@ void TPG::finalize() {
   _phyloGraph.clear();
 }
 
-/******************************************************************************/
-void TPG::genTeams() {
-  team *pm2 = *_Mroot.begin();
-  team *cm;
+void TPG::TeamMutator_ProgramOrder(team *team_to_mu) {
+  if ((team_to_mu)->size() > 1 &&
+      real_dist_(_rngs[TPG_SEED]) < GetParam<double>("pmw")) {
+    int i, j;
+    uniform_int_distribution<int> disMemberList(0, (team_to_mu)->size() - 1);
+    do {
+      i = disMemberList(_rngs[TPG_SEED]);
+      j = disMemberList(_rngs[TPG_SEED]);
+    } while (i == j);
+    (team_to_mu)->muProgramOrder(i, j);
+  }
+}
 
-  size_t n_new_teams = 0;
+void TPG::TeamMutator_AddPrograms(team *team_to_mu) {
+  uniform_int_distribution<int> disL(0, _L.size() - 1);
+  program *p;
+  for (double b = 1.0; real_dist_(_rngs[TPG_SEED]) < b &&
+                       (int)team_to_mu->size() < GetParam<int>("max_team_size");
+       b = b * GetParam<double>("pma")) {
+    // TODO(skelly) fix rng bug
+    // uniform_int_distribution<int> disTmSize(0, team_to_mu->size() - 1);
+    do {
+      p = _L[_Lids[disL(_rngs[TPG_SEED])]];
+    } while (
+        !(team_to_mu->addProgram(p, -1)));  //, disTmSize(_rngs[TPG_SEED]))));
+  }
+}
 
-  int n_nonempty_sets = 0;
-  for (auto &set : powerSet(GetParam<int>("n_task")))
-    n_nonempty_sets += set.size() == 0 ? 0 : 1;
+void TPG::TeamMutator_RemovePrograms(team *team_to_mu) {
+  vector<program *> programs;
+  team_to_mu->members(programs);
+  program *p;
+  uniform_int_distribution<int> disPrograms(0, programs.size() - 1);
+  for (double b = 1.0;
+       real_dist_(_rngs[TPG_SEED]) < b && (team_to_mu->size() > 1);
+       b = b * GetParam<double>("pmd")) {
+    do {
+      p = programs[disPrograms(_rngs[TPG_SEED])];
+    } while ((p->action() < 0 &&
+              team_to_mu->numAtomic_ <
+                  2) ||  // keep at least one program with an atomic action
+             !(team_to_mu->removeProgram(p)));
+  }
+}
 
-  for (auto &set : powerSet(GetParam<int>("n_task"))) {
-    if (_taskSetMap[vecToStrNoSpace(set)].size() == 0) continue;
-    vector<team *> parent = _taskSetMap[vecToStrNoSpace(set)];
-    uniform_int_distribution<int> disP(0, parent.size() - 1);
+program *TPG::CloneProgram(program *prog) {
+  program *prog_clone =
+      new linearM(GetState("t_current"), *(dynamic_cast<linearM *>(prog)),
+                  params_, state_["program_count"]++);
+  if (prog_clone->action() >= 0)
+    _teamMap[prog_clone->action()]->AddIncomingProgram(prog_clone->id_);
+  for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++) {
+    prog_clone->memSet(memType, prog->memGet(memType));
+    prog_clone->memGet(memType)->refInc();
+  }
+  return prog_clone;
+}
 
-    for (int i = 0; i < GetParam<int>("n_elite") / n_nonempty_sets; i++) {
-      auto pm1 = parent[disP(_rngs[TPG_SEED_INDEX])];
-      bool crossover =
-          real_distribution_(_rngs[TPG_SEED_INDEX]) < GetParam<double>("pmx")
-              ? true
-              : false;
-      if (crossover) {
-        do {
-          pm2 = parent[disP(_rngs[TPG_SEED_INDEX])];
-        } while (pm1->id_ == pm2->id_);
-      }
-      genTeams(pm1, pm2, crossover, &cm, n_new_teams);
+void TPG::ProgramMutator_MemoryPointer(program *prog_to_mu) {
+  // change memory pointer
+  if (real_dist_(_rngs[TPG_SEED]) < GetParam<double>("pms")) {
+    uniform_int_distribution<int> disMemory(0, _Memory.size() - 1);
+    memoryEigen *memNew;
+    do {
+      memNew = _Memory[memoryEigen::SCALAR_TYPE]
+                      [_Memids[memoryEigen::SCALAR_TYPE]
+                              [disMemory(_rngs[TPG_SEED])]];
+    } while (prog_to_mu->memGet(memoryEigen::SCALAR_TYPE)->id_ == memNew->id_);
+    prog_to_mu->memGet(memoryEigen::SCALAR_TYPE)->refDec();
+    prog_to_mu->memSet(memoryEigen::SCALAR_TYPE, memNew);
+    prog_to_mu->memGet(memoryEigen::SCALAR_TYPE)->refInc();
+  }
+}
 
-      _phyloGraph[pm1->id_].adj.push_back(cm->id_);
-      if (crossover) _phyloGraph[pm2->id_].adj.push_back(cm->id_);
-      _phyloGraph.insert(pair<long, phyloRecord>(cm->id_, phyloRecord()));
-      _phyloGraph[cm->id_].gtime = GetState("t_current");
-      _phyloGraph[cm->id_].root = true;
-      addTeam(cm);
-      _Mroot.insert(cm);
+void TPG::ProgramMutator_Instructions(program *prog_to_mu) {
+  prog_to_mu->MuBid(params_, _rngs[TPG_SEED], real_dist_, _ops);
+}
+
+void TPG::ProgramMutator_ActionPointer(program *prog_to_mu, team *new_team,
+                                       int &n_new_teams) {
+  if (real_dist_(_rngs[TPG_SEED]) < GetParam<double>("pmn")) return;
+  uniform_int_distribution<int> disAct(0,
+                                       GetParam<int>("n_discrete_action") - 1);
+  // atomic
+  if (GetState("t_current") == 1 ||  // first generation is atomic
+      (prog_to_mu->action() < 0 &&
+       new_team->numAtomic_ < 2) ||  // always mutate the fail-safe
+                                     // atomic program to another atomic
+      real_dist_(_rngs[TPG_SEED]) < GetParam<double>("p_atomic")) {
+    if (GetParam<int>("n_discrete_action") > 1) {
+      long act;
+      do {
+        act = -1 - disAct(_rngs[TPG_SEED]);  // atomic actions are
+                                           // negatives: -1 down to
+                                           // -numAtomicActions()
+      } while (prog_to_mu->action() == act);
+      if (prog_to_mu->action() >= 0)
+        _teamMap[prog_to_mu->action()]->removeIncomingProgram(prog_to_mu->id_);
+      prog_to_mu->muAction(act);
+    }
+  } else {  // path
+    deque<program *> programsWithNoRefs;
+    uniform_int_distribution<int> disM(0, _M.size() - 1);
+    team *tm;
+    do {
+      tm = _teamMap[_Mids[disM(_rngs[TPG_SEED])]];
+    } while ((tm->gtime_ == GetState("t_current") || tm->clones_ > 0 ||
+              prog_to_mu->action() == tm->id_));
+
+    if (prog_to_mu->action() >= 0)
+      _teamMap[prog_to_mu->action()]->removeIncomingProgram(prog_to_mu->id_);
+    if (!tm->root()) {  // already subsumed, don't clone
+      prog_to_mu->muAction(tm->id_);
+      tm->AddIncomingProgram(prog_to_mu->id_);
+    } else {  // clone when subsumed
+      tm->prunePrograms(programsWithNoRefs);
+      team *sub = new team(GetState("t_current"), state_["team_count"]++);
+      tm->clone(_phyloGraph, &sub);
+      prog_to_mu->muAction(sub->id_);
+      sub->AddIncomingProgram(prog_to_mu->id_);
+      _phyloGraph[tm->id_].adj.push_back(sub->id_);
+      _phyloGraph.insert(pair<long, phyloRecord>(sub->id_, phyloRecord()));
+      _phyloGraph[sub->id_].gtime = GetState("t_current");
+      _phyloGraph[sub->id_].root = false;
+      AddTeam(sub);
       n_new_teams++;
+    }
+    cleanupProgramsWithNoRefs(GetState("t_current"), programsWithNoRefs, true);
+  }
+}
+
+void TPG::AddTeamToPhylogeny(team *parent, team *new_team) {
+  _phyloGraph[new_team->id_].ancestorIds.insert(parent->id_);
+  new_team->addAncestorId(parent->id_);
+  _phyloGraph[parent->id_].adj.push_back(new_team->id_);
+  _phyloGraph.insert(pair<long, phyloRecord>(new_team->id_, phyloRecord()));
+  _phyloGraph[new_team->id_].gtime = GetState("t_current");
+  _phyloGraph[new_team->id_].root = new_team->root_;
+}
+
+/******************************************************************************/
+void TPG::GenerateNewTeams() {
+  int n_new_teams = 0;
+  auto power_set = PowerSet(GetParam<int>("n_task"));
+  for (auto &set : power_set) {
+    if (_taskSetMap[vecToStrNoSpace(set)].size() == 0) continue;
+    //TODO(skelly): only roots?
+    vector<team *> parents = _taskSetMap[vecToStrNoSpace(set)];
+    uniform_int_distribution<int> disP(0, parents.size() - 1);
+    for (size_t i = 0; i < GetParam<int>("n_elite") / power_set.size() - 1; i++) {
+      auto parent = parents[disP(_rngs[TPG_SEED])];
+      auto new_teams = ApplyVariationOps(parent, n_new_teams);
+      for (auto new_team : new_teams) {
+        AddTeamToPhylogeny(parent, new_team);
+        AddTeam(new_team);
+        n_new_teams++;
+      }
     }
   }
   oss << "genTms t " << GetState("t_current") << " Msz " << _M.size() << " Lsz "
@@ -535,287 +659,39 @@ void TPG::genTeams() {
   oss << " nNTms " << n_new_teams << endl;
 }
 
-void TPG::TeamMutator_ProgramOrder(team* team_to_mu) {
-  if ((team_to_mu)->size() > 1 &&
-      real_distribution_(_rngs[TPG_SEED_INDEX]) < GetParam<double>("pmw")) {
-    int i, j;
-    uniform_int_distribution<int> disMemberList(0, (team_to_mu)->size() - 1);
-    do {
-      i = disMemberList(_rngs[TPG_SEED_INDEX]);
-      j = disMemberList(_rngs[TPG_SEED_INDEX]);
-    } while (i == j);
-    (team_to_mu)->muProgramOrder(i, j);
-  }
-}
-
-void TPG::TeamMutator_AddPrograms(team* team_to_mu) {
-  uniform_int_distribution<int> disL(0, _L.size() - 1);
-  program* p;
-  for (double b = 1.0; real_distribution_(_rngs[TPG_SEED_INDEX]) < b &&
-                (int)team_to_mu->size() < GetParam<int>("max_team_size");
-       b = b * GetParam<double>("pma")) {
-    // TODO(skelly) fix rng bug
-    // uniform_int_distribution<int> disTmSize(0, team_to_mu->size() - 1);
-    do {
-      p = _L[_Lids[disL(_rngs[TPG_SEED_INDEX])]];
-    } while (!(team_to_mu->addProgram(p, -1))); //, disTmSize(_rngs[TPG_SEED_INDEX]))));
-  }
-}
-
-void TPG::TeamMutator_RemovePrograms(team* team_to_mu) {
-  vector<program *> programs;
-  team_to_mu->members(programs);
-  program *p;
-  uniform_int_distribution<int> disPrograms(0, programs.size() - 1);
-  for (double b = 1.0;
-       real_distribution_(_rngs[TPG_SEED_INDEX]) < b && (team_to_mu->size() > 1);
-       b = b * GetParam<double>("pmd")) {
-    do {
-      p = programs[disPrograms(_rngs[TPG_SEED_INDEX])];
-    } while ((p->action() < 0 &&
-              team_to_mu->numAtomic_ <
-                  2) ||  // keep at least one program with an atomic action
-             !(team_to_mu->removeProgram(p)));
-  }
-}
-
-program* TPG::CloneProgram(program *prog) {
-  program *prog_clone =
-      new linearM(GetState("t_current"), *(dynamic_cast<linearM *>(prog)),
-                  params_, state_["program_count"]++);
-  if (prog_clone->action() >= 0)
-    _teamMap[prog_clone->action()]->addIncomingProgram(prog_clone->id_);
-  for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++) {
-    prog_clone->memSet(memType, prog->memGet(memType));
-    prog_clone->memGet(memType)->refInc();
-  }
-  return prog_clone;
-}
-
-void TPG::ProgramMutator_MemoryPointer(program *prog_to_mu) {
-  // change memory pointer
-  if (real_distribution_(_rngs[TPG_SEED_INDEX]) < GetParam<double>("pms")) {
-    uniform_int_distribution<int> disMemory(0, _Memory.size() - 1);
-    memoryEigen *memNew;
-    do {
-      memNew = _Memory[memoryEigen::SCALAR_TYPE]
-                      [_Memids[memoryEigen::SCALAR_TYPE]
-                              [disMemory(_rngs[TPG_SEED_INDEX])]];
-    } while (prog_to_mu->memGet(memoryEigen::SCALAR_TYPE)->id_ == memNew->id_);
-    prog_to_mu->memGet(memoryEigen::SCALAR_TYPE)->refDec();
-    prog_to_mu->memSet(memoryEigen::SCALAR_TYPE, memNew);
-    prog_to_mu->memGet(memoryEigen::SCALAR_TYPE)->refInc();
-  }
-}
-
 /******************************************************************************/
-void TPG::genTeams(team *pm1, team *pm2, bool crossover, team **cm,
-                   size_t &numNewTeams) {
-  list<program *> *p1programs;
-  list<program *> *p2programs;
-  vector<program *> cprograms;
-
-  double b;
-
-  // program *lr;
-
-  bool changedL;
-  bool changedM;
-
+vector<team *> TPG::ApplyVariationOps(team *pm1, int &n_new_teams) {
   uniform_int_distribution<int> disL(0, _L.size() - 1);
+  // clone parent team
+  team *new_team = new team(GetState("t_current"), state_["team_count"]++);
+  for (auto m : pm1->members_) {
+    new_team->addProgram(m);
+  }
 
-  pm1->getMembersRef(p1programs);
-  auto p1liter = p1programs->begin();
-  *cm = new team(GetState("t_current"), state_["team_count"]++);
+  // Mutate team
+  TeamMutator_RemovePrograms(new_team);
+  TeamMutator_AddPrograms(new_team);
+  TeamMutator_ProgramOrder(new_team);
 
-  _phyloGraph[(*cm)->id_].ancestorIds.insert(pm1->id_);
-  (*cm)->addAncestorId(pm1->id_);
+  // Mutate programs
 
-  bool linearCrossover = false;
-  // team *cm2 = (*cm);
-
-  /****************************************************************************/
-  // // linear crossover with two parent programs (i.e. two teams with one program
-  // // each)
-  // if (crossover && GetParam<double>("p_atomic") == 1.0 && pm1->size() == 1 &&
-  //     pm2->size() == 1 &&
-  //     real_distribution_(_rngs[TPG_SEED_INDEX]) <
-  //         GetParam<double>("p_bid_xover")) {
-  //   _phyloGraph[(*cm)->id_].ancestorIds.insert(pm2->id_);
-  //   (*cm)->addAncestorId(pm2->id_);
-
-  //   linearCrossover = true;
-  //   vector<program *> pm1Programs;
-  //   pm1->members(pm1Programs);
-  //   vector<program *> pm2Programs;
-  //   pm1->members(pm2Programs);
-  //   linearM *c1;  // = NULL;
-  //   linearM *c2;  // = NULL;
-  //   programCrossover(dynamic_cast<linearM *>(pm1Programs[0]),
-  //                    dynamic_cast<linearM *>(pm2Programs[0]), &c1, &c2,
-  //                    _rngs[TPG_SEED_INDEX]);
-
-  //   cm2 = new team(GetState("t_current"), state_["team_count"]++);
-  //   numNewTeams++;
-
-  //   _phyloGraph[(cm2)->id_].ancestorIds.insert(pm1->id_);
-  //   (cm2)->addAncestorId(pm1->id_);
-  //   _phyloGraph[(cm2)->id_].ancestorIds.insert(pm2->id_);
-  //   (cm2)->addAncestorId(pm2->id_);
-
-  //   if (real_distribution_(_rngs[TPG_SEED_INDEX]) < 0.5) {
-  //     (*cm)->addProgram(c1);
-  //     (cm2)->addProgram(c2);
-  //   } else {
-  //     (*cm)->addProgram(c2);
-  //     (cm2)->addProgram(c1);
-  //   }
-
-  //   addTeam(cm2);
-  //   _Mroot.insert(cm2);
-  //   _phyloGraph.insert(pair<long, phyloRecord>(cm2->id_, phyloRecord()));
-  //   _phyloGraph[cm2->id_].gtime = GetState("t_current");
-  //   _phyloGraph[cm2->id_].root = true;
-  // }
-  /****************************************************************************/
-
-  /****************************************************************************/
-  // // team crossover
-  // if (crossover && (pm1->size() > 1 || pm2->size() > 1)) {
-  //   _phyloGraph[(*cm)->id_].ancestorIds.insert(pm2->id_);
-  //   (*cm)->addAncestorId(pm2->id_);
-
-  //   pm2->getMembersRef(p2programs);
-  //   auto p2liter = p2programs->begin();
-  //   while (p1liter != p1programs->end() || p2liter != p2programs->end()) {
-  //     if (p1liter != p1programs->end() &&
-  //         (int)(*cm)->size() < GetParam<int>("max_team_size") &&
-  //         (((*p1liter)->action() < 0 && (*cm)->numAtomic_ < 1) ||
-  //          find(p2programs->begin(), p2programs->end(), *p1liter) !=
-  //              p2programs->end()))
-  //       (*cm)->addProgram(*p1liter);
-  //     else if ((int)(*cm)->size() < GetParam<int>("max_team_size") &&
-  //              p1liter != p1programs->end() &&
-  //              real_distribution_(_rngs[TPG_SEED_INDEX]) < 0.5)
-  //       (*cm)->addProgram(*p1liter);
-  //     if ((int)(*cm)->size() < GetParam<int>("max_team_size") &&
-  //         p2liter != p2programs->end() &&
-  //         real_distribution_(_rngs[TPG_SEED_INDEX]) < 0.5)
-  //       (*cm)->addProgram(*p2liter);
-  //     if (p1liter != p1programs->end()) p1liter++;
-  //     if (p2liter != p2programs->end()) p2liter++;
-  //   }
-  //   if ((*cm)->numAtomic_ < 1)
-  //     die(__FILE__, __FUNCTION__, __LINE__,
-  //         "Crossover must leave the fail-safe atomic program!");
-  // } else
-  //   for (p1liter = p1programs->begin(); p1liter != p1programs->end(); p1liter++)
-  //     (*cm)->addProgram(*p1liter);
-  /****************************************************************************/
-  uniform_int_distribution<int> disM(0, _M.size() - 1);
-
-  TeamMutator_RemovePrograms(*cm);
-  TeamMutator_AddPrograms(*cm);
-  TeamMutator_ProgramOrder(*cm);
-
-  // Mutate programs.
-  deque<program *> programsWithNoRefs;
-  // for (size_t tm = 0; tm < (linearCrossover ? 2 : 1); tm++) {
-    team *teamToMutate = *cm; //tm == 0 ? (*cm) : cm2;
-
-    changedM = false;
-
-    set<program *, programIdComp> cprogramsCopy;
-    teamToMutate->members(cprogramsCopy);  // need to copy for cloning/removing
-
-    while (GetParam<double>("pmm") > 0 && changedM == false) {
-      for (auto ccliter = cprogramsCopy.begin(); ccliter != cprogramsCopy.end();
-           ++ccliter)   
-        if (real_distribution_(_rngs[TPG_SEED_INDEX]) <
-            GetParam<double>("pmm")) {
-          changedM = true;
-          teamToMutate->removeProgram(*ccliter);
-
-          program* lr = CloneProgram(*ccliter);
-
-          // modify program
-          do {
-            changedL = lr->muBid(params_, _rngs[TPG_SEED_INDEX],
-                                 real_distribution_, _ops);
-          } while (changedL == false);
-          
-          ProgramMutator_MemoryPointer(lr);
-       
-          // change action pointer
-          uniform_int_distribution<int> disAct(
-              0, GetParam<int>("n_discrete_action") - 1);
-          if (real_distribution_(_rngs[TPG_SEED_INDEX]) <
-              GetParam<double>("pmn")) {
-            long a;
-            // atomic
-            if (GetState("t_current") == 1 ||  // first generation is atomic
-                (lr->action() < 0 &&
-                 teamToMutate->numAtomic_ <
-                     2) ||  // always mutate the fail-safe atomic program to
-                            // another atomic
-                real_distribution_(_rngs[TPG_SEED_INDEX]) <
-                    GetParam<double>("p_atomic")) {
-              if (GetParam<int>("n_discrete_action") > 1) {
-                do {
-                  a = -1 -
-                      disAct(_rngs[TPG_SEED_INDEX]);  // atomic actions are
-                                                      // negatives: -1 down to
-                                                      // -numAtomicActions()
-                } while (lr->action() == a);
-                if (lr->action() >= 0)
-                  _teamMap[lr->action()]->removeIncomingProgram(lr->id_);
-                lr->muAction(a);
-              }
-            }
-            // path
-            else {
-              team *tm;
-              do {
-                tm = _teamMap[_Mids[disM(_rngs[TPG_SEED_INDEX])]];
-              } while ((tm->gtime_ == GetState("t_current") ||
-                        tm->clones_ > 0 || lr->action() == tm->id_));
-
-              if (lr->action() >= 0)
-                _teamMap[lr->action()]->removeIncomingProgram(lr->id_);
-              if (!tm->root()) {  // already subsumed, don't clone
-                lr->muAction(tm->id_);
-                tm->addIncomingProgram(lr->id_);
-              } else {  // clone when subsumed
-                tm->prunePrograms(programsWithNoRefs);
-                team *sub =
-                    new team(GetState("t_current"), state_["team_count"]++);
-                tm->clone(_phyloGraph, &sub);
-                lr->muAction(sub->id_);
-                sub->addIncomingProgram(lr->id_);
-                _phyloGraph[tm->id_].adj.push_back(sub->id_);
-                _phyloGraph.insert(
-                    pair<long, phyloRecord>(sub->id_, phyloRecord()));
-                _phyloGraph[sub->id_].gtime = GetState("t_current");
-                _phyloGraph[sub->id_].root = false;
-                addTeam(sub);
-                numNewTeams++;
-              }
-            }
-          }
-          teamToMutate->addProgram(lr);
-          addProgram(lr);
-        }
+  // need to copy for cloning/removing TODO(spkelly) check this
+  set<program *, programIdComp> new_team_programs = new_team->CopyMembers();  
+    for (auto prog : new_team_programs) {
+      if (real_dist_(_rngs[TPG_SEED]) < GetParam<double>("pmm")) {
+        new_team->removeProgram(prog);
+        program *prog_clone = CloneProgram(prog);
+        ProgramMutator_Instructions(prog_clone);
+        ProgramMutator_MemoryPointer(prog_clone);
+        ProgramMutator_ActionPointer(prog_clone, new_team, n_new_teams);
+        new_team->addProgram(prog_clone);
+        addProgram(prog_clone);
+      }
     }
-  // }
-
-  // for (size_t tm = 0; tm < (linearCrossover ? 2 : 1); tm++) {
-    // team *teamToMutate = *cm; //tm == 0 ? (*cm) : cm2;
-    list<program *> *cp;
-    teamToMutate->getMembersRef(cp);
-    for (auto cliter = cp->begin(); cliter != cp->end(); cliter++)
-      (*cliter)->refInc();
-  // }
-  cleanupProgramsWithNoRefs(GetState("t_current"), programsWithNoRefs, true);
+  for (auto m : new_team->members_) {
+    m->refInc();
+  }
+  return vector<team *>{new_team};
 }
 
 /******************************************************************************/
@@ -875,7 +751,7 @@ void TPG::genTeams(team *pm1, team *pm2, bool crossover, team **cm,
 //    size_t numNewTeams = 0;
 //    size_t N2 = 10;
 //    while (numNewTeams < N2){
-//       bool crossover = real_distribution_(rng) < _pmx ? true : false;
+//       bool crossover = real_dist_(rng) < _pmx ? true : false;
 //       if (crossover){
 //          do { pm2 = _teamMap[_Mids[dis2(rng)]]; }
 //          while (pm1->id_ == pm2->id_);
@@ -922,7 +798,8 @@ void TPG::setEliteTeams(int t, int phase, int fitMode, bool verbose) {
     for (auto teiter = _Mroot.begin(); teiter != _Mroot.end(); teiter++) {
       (*teiter)->elite(phase, false);
       if ((phase == _TRAIN_PHASE && (*teiter)->numOutcomes(phase, o) > 0) ||
-          ((*teiter)->numOutcomes(phase, o) >= _numStoredOutcomesPerHost[phase])) {
+          ((*teiter)->numOutcomes(phase, o) >=
+           _numStoredOutcomesPerHost[phase])) {
         // if ((*teiter)->runTimeComplexityIns() == 0)
         //    (*teiter)->updateComplexityRecord(_teamMap, _numPointAuxDouble -
         //    2);
@@ -957,9 +834,9 @@ void TPG::setEliteTeams(int t, int phase, int fitMode, bool verbose) {
 
   // find multitask elites
   int n_nonempty_sets = 0;
-  for (auto &set : powerSet(GetParam<int>("n_task")))
+  for (auto &set : PowerSet(GetParam<int>("n_task")))
     n_nonempty_sets += set.size() == 0 ? 0 : 1;
-  auto PS = powerSet(GetParam<int>("n_task"));
+  auto PS = PowerSet(GetParam<int>("n_task"));
 
   for (auto &set : PS) {
     if (phase == _TRAIN_PHASE) _taskSetMap[vecToStrNoSpace(set)].clear();
@@ -972,7 +849,7 @@ void TPG::setEliteTeams(int t, int phase, int fitMode, bool verbose) {
         if (((phase == _TRAIN_PHASE &&
               (*teiter)->numOutcomes(phase, set[o]) > 0) ||
              ((*teiter)->numOutcomes(phase, set[o]) >=
-                                          _numStoredOutcomesPerHost[phase]))) {
+              _numStoredOutcomesPerHost[phase]))) {
           rawMeanScore = (*teiter)->getQuickMean(set[o], fitMode, phase);
           if (!isEqual(minScoresST[fitMode][set[o]],
                        maxScoresST[fitMode][set[o]]))
@@ -1211,17 +1088,15 @@ void TPG::initTeams() {
     auto m = new team(GetState("t_current"), state_["team_count"]++);
     for (int n = 0; n < GetParam<int>("initial_team_size"); n++) {
       long discrete_action =
-          -1 -
-          disA(_rngs[TPG_SEED_INDEX]);  // discrete atomic actions are negatives
-                                        // -1 to -numAtomicActions()
-      auto l =
-          new linearM(GetState("t_current"), discrete_action, params_,
-                      state_["program_count"]++, _rngs[TPG_SEED_INDEX], _ops);
+          -1 - disA(_rngs[TPG_SEED]);  // discrete atomic actions are negatives
+                                       // -1 to -numAtomicActions()
+      auto l = new linearM(GetState("t_current"), discrete_action, params_,
+                           state_["program_count"]++, _rngs[TPG_SEED], _ops);
       for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES;
            memType++) {
         auto *m =
             new memoryEigen(state_["memory_eigen_count"]++, memType, params_);
-        if (HaveParam("p_bid_mu_const")) m->RandomizeConst();    
+        if (HaveParam("p_bid_mu_const")) m->RandomizeConst();
         addMemory(m);
         l->memSet(memType, m);
         l->memGet(memType)->refInc();
@@ -1231,8 +1106,8 @@ void TPG::initTeams() {
       l->refInc();
       addProgram(l);
     }
-    addTeam(m);
-    _Mroot.insert(m);
+    AddTeam(m);
+    // _Mroot.insert(m);
 
     _phyloGraph.insert(pair<long, phyloRecord>(m->id_, phyloRecord()));
     _phyloGraph[m->id_].gtime = 0;
@@ -1296,8 +1171,7 @@ void TPG::printGraphDot(
   //(void)visitedTeamsAllTasks;
   for (auto it = visitedTeamsAllTasks.begin(); it != visitedTeamsAllTasks.end();
        it++) {
-    set<program *, programIdComp> p;
-    (*it)->members(p);
+    set<program *, programIdComp> p = (*it)->CopyMembers();
     programs.insert(p.begin(), p.end());
   }
   for (auto it = programs.begin(); it != programs.end(); it++) {
@@ -1495,8 +1369,7 @@ void TPG::printGraphDotGPEM(long rootTeamId, map<long, string> &teamColMap,
 
   for (auto it = visitedTeamsAllTasks.begin(); it != visitedTeamsAllTasks.end();
        it++) {
-    set<program *, programIdComp> p;
-    (*it)->members(p);
+    set<program *, programIdComp> p = (*it)->CopyMembers(); // no need o copy
     programs.insert(p.begin(), p.end());
   }
   for (auto it = programs.begin(); it != programs.end(); it++) {
@@ -1695,8 +1568,7 @@ void TPG::printGraphDotGPEMAnimate(
 
   for (auto it = visitedTeamsAllTasks.begin(); it != visitedTeamsAllTasks.end();
        it++) {
-    set<program *, programIdComp> p;
-    (*it)->members(p);
+    set<program *, programIdComp> p = (*it)->CopyMembers();  // no need to copy
     programs.insert(p.begin(), p.end());
   }
   for (auto it = programs.begin(); it != programs.end(); it++) {
@@ -1881,7 +1753,7 @@ void TPG::printPhyloGraphDot(team *tm) {
   ofstream ofs;
 
   sprintf(outputFilename, "phyloGraphs/phylo-t%05d-s%d%s",
-          (int)GetState("t_current"), _seeds[TPG_SEED_INDEX], ".dot");
+          (int)GetState("t_current"), _seeds[TPG_SEED], ".dot");
   ofs.open(outputFilename, ios::out);
   if (!ofs) die(__FILE__, __FUNCTION__, __LINE__, "Can't open file.");
 
@@ -2014,7 +1886,7 @@ void TPG::printTeamInfo(long t, int phase, bool singleBest, long teamId) {
       oss << setprecision(5) << fixed;
 
       oss << " mnOut";
-      for (int phs : {0,1,2}) {
+      for (int phs : {0, 1, 2}) {
         bool allPhase = false;
         bool allTask = false;  // for genomic, set to true
 
@@ -2168,7 +2040,7 @@ void TPG::programCrossover(linearM *p1, linearM *p2, linearM **c1, linearM **c2,
   if (p1->size() - (segLengths[1] - segLengths[0]) < 1 ||
       p2->size() + (segLengths[1] - segLengths[0]) >
           GetParam<int>("max_prog_size")) {
-    if (real_distribution_(rng) < 0.5)
+    if (real_dist_(rng) < 0.5)
       segLengths[1] = segLengths[0];
     else
       segLengths[0] = segLengths[1];
@@ -2226,7 +2098,7 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
   } else {
     char filename[80];
     sprintf(filename, "%s/%s.%ld.%d.%d.%d.rslt", "checkpoints", "cp", t, chkpID,
-            _seeds[TPG_SEED_INDEX], phase);
+            _seeds[TPG_SEED], phase);
     ifstream t(filename);
     t.seekg(0, ios::end);
     str.reserve(t.tellg());
@@ -2256,9 +2128,9 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       teamPair tp(_teamMap[id1], _teamMap[id2]);
       _teamPairsToCompair.push_back(tp);
     } else if (outcomeFields[0].compare("seed_tpg") == 0)
-      seed(TPG_SEED_INDEX, atoi(outcomeFields[1].c_str()));
+      seed(TPG_SEED, atoi(outcomeFields[1].c_str()));
     else if (outcomeFields[0].compare("seed_aux") == 0)
-      seed(AUX_SEED_INDEX, atoi(outcomeFields[1].c_str()));
+      seed(AUX_SEED, atoi(outcomeFields[1].c_str()));
     else if (outcomeFields[0].compare("t") == 0)
       state_["t_current"] = atoi(outcomeFields[1].c_str());
     else if (outcomeFields[0].compare("active_task") == 0)
@@ -2317,7 +2189,7 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       for (size_t ii = f; ii < outcomeFields.size(); ii++) {
         vector<string> instructionString;
         splitString(outcomeFields[ii], '_', instructionString);
-        instruction *in = new instruction(params_, _rngs[TPG_SEED_INDEX]);
+        instruction *in = new instruction(params_, _rngs[TPG_SEED]);
         in->in1Src_ = stringToInt(instructionString[0]);
         in->in2Src_ = stringToInt(instructionString[1]);
         in->outSrc_ = stringToInt(instructionString[2]);
@@ -2359,14 +2231,14 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
         if (m->addProgram(_L[memberId]) == false)
           m->addProgramActive(_L[memberId]);
       }
-      addTeam(m);
-      _Mroot.insert(m);
+      AddTeam(m);
+      // _Mroot.insert(m);
     } else if (outcomeFields[0].compare("teamIncoming") == 0) {
       f = 1;
       long id = atoi(outcomeFields[f++].c_str());
       for (size_t ii = f; ii < outcomeFields.size(); ii++) {
         long incomingId = atoi(outcomeFields[ii].c_str());
-        _teamMap[id]->addIncomingProgram(incomingId);
+        _teamMap[id]->AddIncomingProgram(incomingId);
       }
       _Mroot.erase(_teamMap[id]);
     } else if (outcomeFields[0].compare("fBin") == 0) {
@@ -2441,9 +2313,9 @@ void TPG::recalculateProgramRefs() {
   for (auto leiter = _L.begin(); leiter != _L.end(); leiter++)
     leiter->second->setNrefs(0);
 
-  set<program *, programIdComp> mem;
+  list<program *> mem;
   for (auto teiter = _M.begin(); teiter != _M.end(); teiter++) {
-    (*teiter)->members(&mem);
+    (*teiter)->members(mem);
     for (auto leiter = mem.begin(); leiter != mem.end(); leiter++)
       (*leiter)->refInc();
     mem.clear();
@@ -2745,7 +2617,7 @@ void TPG::writeCheckpoint(long t, bool elite) {
   ofstream ofs;
   char filename[80];
   sprintf(filename, "%s/%s.%ld.%d.%d.%d.rslt", "checkpoints", "cp", t,
-          GetParam<int>("id"), _seeds[TPG_SEED_INDEX], GetState("phase"));
+          GetParam<int>("id"), _seeds[TPG_SEED], GetState("phase"));
 
   if (fileExists(filename)) {
     if (remove(filename) != 0) cerr << "error deleting " << filename << endl;
@@ -2757,8 +2629,8 @@ void TPG::writeCheckpoint(long t, bool elite) {
     die(__FILE__, __FUNCTION__, __LINE__, "Can't open file.");
   }
 
-  ofs << "seed_tpg:" << _seeds[TPG_SEED_INDEX] << endl;
-  ofs << "seed_aux:" << _seeds[AUX_SEED_INDEX] << endl;
+  ofs << "seed_tpg:" << _seeds[TPG_SEED] << endl;
+  ofs << "seed_aux:" << _seeds[AUX_SEED] << endl;
   ofs << "t:" << GetState("t_current") << endl;
   ofs << "active_task:" << GetState("active_task") << endl;
   ofs << "fitMode:" << GetParam<int>("fit_mode") << endl;
@@ -2862,8 +2734,8 @@ void TPG::writeCheckpoint(string &s, vector<team *> &rootTeams) {
 
   stringstream ss;
 
-  ss << "seed_tpg:" << _seeds[TPG_SEED_INDEX] << endl;
-  ss << "seed_aux:" << _seeds[AUX_SEED_INDEX] << endl;
+  ss << "seed_tpg:" << _seeds[TPG_SEED] << endl;
+  ss << "seed_aux:" << _seeds[AUX_SEED] << endl;
   ss << "t:" << GetState("t_current") << endl;
   ss << "active_task:" << GetState("active_task") << endl;
   ss << "internalTestNodeId:-1" << endl;
@@ -2895,8 +2767,8 @@ void TPG::writeCheckpoint(string &s, vector<team *> &rootTeams,
 
   stringstream ss;
 
-  ss << "seed_tpg:" << _seeds[TPG_SEED_INDEX] << endl;
-  ss << "seed_aux:" << _seeds[AUX_SEED_INDEX] << endl;
+  ss << "seed_tpg:" << _seeds[TPG_SEED] << endl;
+  ss << "seed_aux:" << _seeds[AUX_SEED] << endl;
   ss << "t:" << GetState("t_current") << endl;
   ss << "active_task:" << GetState("active_task") << endl;
   ss << "internalTestNodeId:-1" << endl;
@@ -2934,8 +2806,8 @@ void TPG::writeCheckpoint(string &s, vector<team *> &rootTeams,
 
   stringstream ss;
 
-  ss << "seed_tpg:" << _seeds[TPG_SEED_INDEX] << endl;
-  ss << "seed_aux:" << _seeds[AUX_SEED_INDEX] << endl;
+  ss << "seed_tpg:" << _seeds[TPG_SEED] << endl;
+  ss << "seed_aux:" << _seeds[AUX_SEED] << endl;
   ss << "t:" << GetState("t_current") << endl;
   ss << "active_task:" << GetState("active_task") << endl;
   ss << "internalTestNodeId:" << state_["internal_test_node_id"] << endl;
