@@ -18,7 +18,7 @@ if int(acenet):
 if int(ccanada):
     common_env.Append(CPPDEFINES=['CCANADA'])
 else:
-    common_env.Append(CCFLAGS = ['-std=c++17', '-Wno-deprecated', '-Wall', '-Werror', '-Wextra', '-DARMA_DONT_USE_WRAPPER', '-DARMA_USE_BLAS', '-DARMA_USE_LAPACK', '-DARMA_USE_HDF5'])
+    common_env.Append(CCFLAGS = ['-std=c++17', '-Wno-deprecated', '-Wall', '-Werror', '-Wextra', '-Wno-unused-parameter', '-DARMA_DONT_USE_WRAPPER', '-DARMA_USE_BLAS', '-DARMA_USE_LAPACK', '-DARMA_USE_HDF5'])
 
 common_env.MergeFlags(GetOption('cflags'))
 common_env.Append(CPPDEFINES={'VERSION': 1})

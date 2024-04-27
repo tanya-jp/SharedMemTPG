@@ -48,7 +48,7 @@ class TPG {
   program *CloneProgram(program *prog);
   void ProgramMutator_MemoryPointer(program *prog_to_mu);
   void ProgramMutator_Instructions(program *prog_to_mu);
-  void ProgramMutator_ActionPointer(program *prog_to_mu, team* new_team, int &n_new_teams);
+  void ProgramMutator_ActionPointer(program *prog_to_mu, team* new_team, int &n_new_teams, deque<program *> &programsWithNoRefs);
   void AddTeamToPhylogeny(team* parent, team* new_team);
   vector<team *> ApplyVariationOps(team *parent1, int &n_new_teams);
   team *genTeamsInternal(long, mt19937 &, set<team *, teamIdComp> &,

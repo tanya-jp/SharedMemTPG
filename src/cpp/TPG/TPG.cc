@@ -538,6 +538,9 @@ void TPG::TeamMutator_RemovePrograms(team *team_to_mu) {
 }
 
 program *TPG::CloneProgram(program *prog) {
+  //cout << "dbg tm id-2 " << prog->id() << endl;
+  linearM* lm = dynamic_cast<linearM *>(prog);
+  //cout << "dbg tm id-2 " << lm->id() << endl;
   program *prog_clone =
       new linearM(GetState("t_current"), *(dynamic_cast<linearM *>(prog)),
                   params_, state_["program_count"]++);
@@ -571,7 +574,7 @@ void TPG::ProgramMutator_Instructions(program *prog_to_mu) {
 }
 
 void TPG::ProgramMutator_ActionPointer(program *prog_to_mu, team *new_team,
-                                       int &n_new_teams) {
+                                       int &n_new_teams, deque<program *> &programsWithNoRefs) {
   if (real_dist_(_rngs[TPG_SEED]) < GetParam<double>("pmn")) return;
   uniform_int_distribution<int> disAct(0,
                                        GetParam<int>("n_discrete_action") - 1);
@@ -593,7 +596,7 @@ void TPG::ProgramMutator_ActionPointer(program *prog_to_mu, team *new_team,
       prog_to_mu->muAction(act);
     }
   } else {  // path
-    deque<program *> programsWithNoRefs;
+    //deque<program *> programsWithNoRefs;
     uniform_int_distribution<int> disM(0, _M.size() - 1);
     team *tm;
     do {
@@ -619,7 +622,7 @@ void TPG::ProgramMutator_ActionPointer(program *prog_to_mu, team *new_team,
       AddTeam(sub);
       n_new_teams++;
     }
-    cleanupProgramsWithNoRefs(GetState("t_current"), programsWithNoRefs, true);
+    //cleanupProgramsWithNoRefs(GetState("t_current"), programsWithNoRefs, true);
   }
 }
 
@@ -674,16 +677,18 @@ vector<team *> TPG::ApplyVariationOps(team *pm1, int &n_new_teams) {
   TeamMutator_ProgramOrder(new_team);
 
   // Mutate programs
-
+  deque<program *> programsWithNoRefs;
   // need to copy for cloning/removing TODO(spkelly) check this
   set<program *, programIdComp> new_team_programs = new_team->CopyMembers();  
+    //cout << "dbg new_team_programs " << new_team_programs.size() << endl;
     for (auto prog : new_team_programs) {
       if (real_dist_(_rngs[TPG_SEED]) < GetParam<double>("pmm")) {
         new_team->removeProgram(prog);
+	//cout << "dbg tm id-1 " << prog->id() << endl;
         program *prog_clone = CloneProgram(prog);
         ProgramMutator_Instructions(prog_clone);
         ProgramMutator_MemoryPointer(prog_clone);
-        ProgramMutator_ActionPointer(prog_clone, new_team, n_new_teams);
+        ProgramMutator_ActionPointer(prog_clone, new_team, n_new_teams, programsWithNoRefs);
         new_team->addProgram(prog_clone);
         addProgram(prog_clone);
       }
@@ -691,6 +696,7 @@ vector<team *> TPG::ApplyVariationOps(team *pm1, int &n_new_teams) {
   for (auto m : new_team->members_) {
     m->refInc();
   }
+  cleanupProgramsWithNoRefs(GetState("t_current"), programsWithNoRefs, true);
   return vector<team *>{new_team};
 }
 
