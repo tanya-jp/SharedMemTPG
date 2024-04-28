@@ -107,7 +107,7 @@ int main(int argc, char** argv) {
                          "");
       string s = "";
     } else {
-      tpg.initTeams();
+      tpg.InitTeams();
     }
 
     // Main training loop.

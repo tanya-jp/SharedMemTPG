@@ -63,24 +63,19 @@ class program {
   inline int lastCompareFactor() { return lastCompareFactor_; }
   inline void lastCompareFactor(int c) { lastCompareFactor_ = c; }
   virtual ~program(){};
-  // inline void activeMemories(set < double > &memories){
-  //    double m = (double)sharedMemoryPointers_[SCALAR_TYPE]->id();
-  //    for (int i = 1; i <= MEMORY_COLUMNS; i++)
-  //       if (sharedMemoryPointers_[SCALAR_TYPE]->getActiveE()(0,i-1) == true)
-  //          memories.insert(m + (i * 0.1));
-  // }
 
   virtual void markIntrons(bool) = 0;
   
-  inline void memGet(size_t type, memoryEigen *&m) {
+  inline void MemGet(size_t type, memoryEigen *&m) {
     m = sharedMemoryPointers_[type];
   }
 
-  inline void memSet(size_t type, memoryEigen *m) {
+  inline void MemSet(size_t type, memoryEigen *m) {
     sharedMemoryPointers_[type] = m;
+    m->refInc();
   }
 
-  inline memoryEigen *memGet(size_t type) {
+  inline memoryEigen *MemGet(size_t type) {
     return sharedMemoryPointers_[type];
   }
 

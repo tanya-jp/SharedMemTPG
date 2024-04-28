@@ -21,13 +21,12 @@ class TPG {
   TPG(const TPG &);
   ~TPG();
 
-  void addProgram(program *p);
+  void AddProgram(program *p);
   void removeProgram(program *p, bool updateLids);
   void AddTeam(team *tm);
   void removeTeam(team *tm, bool updateMids);
-  void addMemory(memoryEigen *m);
+  void AddMemory(memoryEigen *m);
   void removeMemory(memoryEigen *m);
-  void cloneProgramLinearM(linearM *p1, linearM **c1);
   team *getTeamByID(long id);
   bool haveEliteTeam(string taskset, int fitMode, int phase);
   void seed(size_t i, int s);
@@ -45,6 +44,7 @@ class TPG {
   void TeamMutator_ProgramOrder(team *team_to_mu);
   void TeamMutator_AddPrograms(team *team_to_mu);
   void TeamMutator_RemovePrograms(team *team_to_mu);
+  team* CloneTeam(team* team_to_clone);
   program *CloneProgram(program *prog);
   void ProgramMutator_MemoryPointer(program *prog_to_mu);
   void ProgramMutator_Instructions(program *prog_to_mu);
@@ -77,7 +77,7 @@ class TPG {
   map<long, team *> GetTeams(bool) const;
   void getTeams(vector<team *> &t, bool roots) const;     // weed out
   void getTeams(map<long, team *> &t, bool roots) const;  // weed out
-  void initTeams();
+  void InitTeams();
   void internalReplacementPareto(int, int, int, team *, map<long, team *> &,
                                  set<team *, teamIdComp> &, mt19937 &);
   bool isElitePS(team *tm, int phase);

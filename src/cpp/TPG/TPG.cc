@@ -18,7 +18,7 @@ TPG::TPG() {
 TPG::~TPG() {}
 
 /******************************************************************************/
-void TPG::addProgram(program *p) {
+void TPG::AddProgram(program *p) {
   _L[p->id_] = p;
   _Lids.push_back(p->id_);
 }
@@ -59,7 +59,7 @@ void TPG::removeTeam(team *tm, bool updateMids) {
 }
 
 /******************************************************************************/
-void TPG::addMemory(memoryEigen *m) {
+void TPG::AddMemory(memoryEigen *m) {
   _Memory[m->type()][m->id_] = m;
   _Memids[m->type()].push_back(m->id_);
 }
@@ -73,22 +73,6 @@ void TPG::removeMemory(memoryEigen *m) {
        _Memids[m->type()].back());
   _Memids[m->type()].pop_back();
   _Memory[m->type()].erase(m->id_);
-}
-
-/******************************************************************************/
-void TPG::cloneProgramLinearM(linearM *p1, linearM **c1) {
-  // clone programs
-  //*c1 = new linearM(_tCurrent, *(dynamic_cast<linearM*>(p1)),
-  //_memoryIndices, _memoryRows, _memoryCols, _programCount++);
-  *c1 = new linearM(GetState("t_current"), *(dynamic_cast<linearM *>(p1)),
-                    params_, state_["program_count"]++);
-  if ((*c1)->action() >= 0)
-    _teamMap[(*c1)->action()]->AddIncomingProgram((*c1)->id_);
-  for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++) {
-    (*c1)->memSet(memType, p1->memGet(memType));  // copy memoryEigen
-                                                  // reference
-    (*c1)->memGet(memType)->refInc();
-  }
 }
 
 /******************************************************************************/
@@ -236,7 +220,7 @@ void TPG::markEffectiveCode(team *tm) {
     (*leiter)->markIntrons(GetParam<int>("continuous_output"));
     for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES;
          memType++) {
-      ((*leiter)->memGet(memType))->refsPolicyInc();
+      ((*leiter)->MemGet(memType))->refsPolicyInc();
     }
   }
 
@@ -247,7 +231,7 @@ void TPG::markEffectiveCode(team *tm) {
        leiter++) {
     bool active = false;
     for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++)
-      if (((*leiter)->memGet(memType))->refsPolicy() > 1) active = true;
+      if (((*leiter)->MemGet(memType))->refsPolicy() > 1) active = true;
     if ((*leiter)->esize() > 0 && active) tm->setActive(*leiter);
   }
 }
@@ -458,7 +442,7 @@ void TPG::finalize() {
   _Mids.clear();
   _Memids.clear();
   _Memids.resize(memoryEigen::NUM_MEMORY_TYPES);
-  state_["memory_eigen_count"] = 0;
+  state_["memory_count"] = 0;
   _numEliteTeamsCurrent.clear();
   for (size_t i = 0; i < _NUM_PHASE; i++) _numEliteTeamsCurrent.push_back(0);
   _persistenceFilterA.clear();
@@ -516,7 +500,7 @@ void TPG::TeamMutator_AddPrograms(team *team_to_mu) {
     do {
       p = _L[_Lids[disL(_rngs[TPG_SEED])]];
     } while (
-        !(team_to_mu->addProgram(p, -1)));  //, disTmSize(_rngs[TPG_SEED]))));
+        !(team_to_mu->AddProgram(p, -1)));  //, disTmSize(_rngs[TPG_SEED]))));
   }
 }
 
@@ -537,6 +521,14 @@ void TPG::TeamMutator_RemovePrograms(team *team_to_mu) {
   }
 }
 
+team* TPG::CloneTeam(team* team_to_clone) {
+  team* team_clone = new team(GetState("t_current"), state_["team_count"]++);
+  for (auto m : team_to_clone->members_) {
+    team_clone->AddProgram(m);
+  }
+  return team_clone;
+}
+
 program *TPG::CloneProgram(program *prog) {
   program *prog_clone =
       new linearM(GetState("t_current"), *(dynamic_cast<linearM *>(prog)),
@@ -544,8 +536,8 @@ program *TPG::CloneProgram(program *prog) {
   if (prog_clone->action() >= 0)
     _teamMap[prog_clone->action()]->AddIncomingProgram(prog_clone->id_);
   for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++) {
-    prog_clone->memSet(memType, prog->memGet(memType));
-    prog_clone->memGet(memType)->refInc();
+    prog_clone->MemSet(memType, prog->MemGet(memType));
+    prog_clone->MemGet(memType)->refInc();
   }
   return prog_clone;
 }
@@ -559,10 +551,10 @@ void TPG::ProgramMutator_MemoryPointer(program *prog_to_mu) {
       memNew = _Memory[memoryEigen::SCALAR_TYPE]
                       [_Memids[memoryEigen::SCALAR_TYPE]
                               [disMemory(_rngs[TPG_SEED])]];
-    } while (prog_to_mu->memGet(memoryEigen::SCALAR_TYPE)->id_ == memNew->id_);
-    prog_to_mu->memGet(memoryEigen::SCALAR_TYPE)->refDec();
-    prog_to_mu->memSet(memoryEigen::SCALAR_TYPE, memNew);
-    prog_to_mu->memGet(memoryEigen::SCALAR_TYPE)->refInc();
+    } while (prog_to_mu->MemGet(memoryEigen::SCALAR_TYPE)->id_ == memNew->id_);
+    prog_to_mu->MemGet(memoryEigen::SCALAR_TYPE)->refDec();
+    prog_to_mu->MemSet(memoryEigen::SCALAR_TYPE, memNew);
+    prog_to_mu->MemGet(memoryEigen::SCALAR_TYPE)->refInc();
   }
 }
 
@@ -662,20 +654,13 @@ void TPG::GenerateNewTeams() {
 /******************************************************************************/
 vector<team *> TPG::ApplyVariationOps(team *pm1, int &n_new_teams) {
   uniform_int_distribution<int> disL(0, _L.size() - 1);
-  // clone parent team
-  team *new_team = new team(GetState("t_current"), state_["team_count"]++);
-  for (auto m : pm1->members_) {
-    new_team->addProgram(m);
-  }
-
+  team* new_team = CloneTeam(pm1);
   // Mutate team
   TeamMutator_RemovePrograms(new_team);
   TeamMutator_AddPrograms(new_team);
   TeamMutator_ProgramOrder(new_team);
-
   // Mutate programs
   deque<program *> progs_without_refs;
-  // need to copy for cloning/removing TODO(spkelly) check this
   set<program *, programIdComp> new_team_programs = new_team->CopyMembers();
   for (auto prog : new_team_programs) {
     if (real_dist_(_rngs[TPG_SEED]) < GetParam<double>("pmm")) {
@@ -685,12 +670,9 @@ vector<team *> TPG::ApplyVariationOps(team *pm1, int &n_new_teams) {
       ProgramMutator_MemoryPointer(prog_clone);
       ProgramMutator_ActionPointer(prog_clone, new_team, n_new_teams,
                                    progs_without_refs);
-      new_team->addProgram(prog_clone);
-      addProgram(prog_clone);
+      new_team->AddProgram(prog_clone);  // add new program to team
+      AddProgram(prog_clone);  // add new program o program population
     }
-  }
-  for (auto m : new_team->members_) {
-    m->refInc();
   }
   cleanupProgramsWithNoRefs(GetState("t_current"), progs_without_refs, true);
   return vector<team *>{new_team};
@@ -1083,41 +1065,35 @@ bool compareByDistance(const distanceInstance &a, const distanceInstance &b) {
 }
 
 /******************************************************************************/
-void TPG::initTeams() {
-  auto n_init = GetParam<int>("n_elite");
+void TPG::InitTeams() {
   uniform_int_distribution<int> disA(0, GetParam<int>("n_discrete_action") - 1);
-  for (int tc = 0; tc < n_init; tc++) {
-    auto m = new team(GetState("t_current"), state_["team_count"]++);
-    for (int n = 0; n < GetParam<int>("initial_team_size"); n++) {
-      long discrete_action =
-          -1 - disA(_rngs[TPG_SEED]);  // discrete atomic actions are negatives
-                                       // -1 to -numAtomicActions()
-      auto l = new linearM(GetState("t_current"), discrete_action, params_,
+  for (int t = 0; t < GetParam<int>("n_elite"); t++) {
+    auto new_team = new team(GetState("t_current"), state_["team_count"]++);
+    for (int p = 0; p < GetParam<int>("initial_team_size"); p++) {
+      // discrete atomic actions are negatives -1 to -numAtomicActions()
+      long discrete_action = -1 - disA(_rngs[TPG_SEED]);
+      auto new_prog = new linearM(GetState("t_current"), discrete_action, params_,
                            state_["program_count"]++, _rngs[TPG_SEED], _ops);
-      for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES;
-           memType++) {
-        auto *m =
-            new memoryEigen(state_["memory_eigen_count"]++, memType, params_);
-        if (HaveParam("p_bid_mu_const")) m->RandomizeConst();
-        addMemory(m);
-        l->memSet(memType, m);
-        l->memGet(memType)->refInc();
+      // create one new memory of each type for this team
+      for (size_t mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+        auto *mem = new memoryEigen(state_["memory_count"]++, mem_t, params_);
+        if (HaveParam("p_bid_mu_const")) mem->RandomizeConst();
+        AddMemory(mem);  // add new memory to memory population
+        new_prog->MemSet(mem_t, mem);
       }
-      l->stateful(GetParam<int>("stateful"));
-      m->addProgram(l);
-      l->refInc();
-      addProgram(l);
+      new_team->AddProgram(new_prog);
+      AddProgram(new_prog);  // add program to program population
     }
-    AddTeam(m);
-    // _Mroot.insert(m);
-
-    _phyloGraph.insert(pair<long, phyloRecord>(m->id_, phyloRecord()));
-    _phyloGraph[m->id_].gtime = 0;
+    AddTeam(new_team);  // ad team to team population
+    _phyloGraph.insert(pair<long, phyloRecord>(new_team->id_, phyloRecord()));
+    _phyloGraph[new_team->id_].gtime = 0;
   }
+
   oss << "initTms Msz " << _M.size() << " Lsz " << _L.size() << " rSz "
       << _Mroot.size() << " mSz";
-  for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++)
-    oss << " " << _Memory[memType].size();
+  for (size_t mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+    oss << " " << _Memory[mem_t].size();
+  }
   oss << _Memory.size() << " eLSz " << _numEliteTeamsCurrent[GetState("phase")]
       << endl;
 }
@@ -1178,7 +1154,7 @@ void TPG::printGraphDot(
   }
   for (auto it = programs.begin(); it != programs.end(); it++) {
     for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++)
-      memories.insert((*it)->memGet(memType));
+      memories.insert((*it)->MemGet(memType));
   }
 
   sprintf(outputFilename, "replay/graphs/gv_%d_%05d_%03d_%05d_%05d%s",
@@ -1287,7 +1263,7 @@ void TPG::printGraphDot(
   //    edgeWidth_1 : edgeWidth_2; double as =
   //    find(winningProgramsDepth.begin(), winningProgramsDepth.end(), *leiter)
   //    == winningProgramsDepth.end() ? arrowSize_1 : arrowSize_2; ofs << " p_"
-  //    << (*leiter)->id_ << "->" << "m_"<< (*leiter)->memGet()->id_;
+  //    << (*leiter)->id_ << "->" << "m_"<< (*leiter)->MemGet()->id_;
   //       ofs << " [dir=both, arrowsize=" << as << ", penwidth=" << w << "];"
   //       << endl;
   // }
@@ -1376,7 +1352,7 @@ void TPG::printGraphDotGPEM(long rootTeamId, map<long, string> &teamColMap,
   }
   for (auto it = programs.begin(); it != programs.end(); it++) {
     for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++)
-      memories.insert((*it)->memGet(memType));
+      memories.insert((*it)->MemGet(memType));
   }
 
   sprintf(outputFilename,
@@ -1575,7 +1551,7 @@ void TPG::printGraphDotGPEMAnimate(
   }
   for (auto it = programs.begin(); it != programs.end(); it++) {
     for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++)
-      memories.insert((*it)->memGet(memType));
+      memories.insert((*it)->MemGet(memType));
   }
 
   sprintf(outputFilename, "replay/graphs/gv_%d_%05d_%03d_%05d_%05d%s",
@@ -2009,8 +1985,8 @@ void TPG::programCrossover(linearM *p1, linearM *p2, linearM **c1, linearM **c2,
   int dsMax = dcMax;
   int lsMax = dcMax;
 
-  cloneProgramLinearM(p1, c1);
-  cloneProgramLinearM(p2, c2);
+  *c1 = dynamic_cast<linearM *>(CloneProgram(p1));
+  *c2 = dynamic_cast<linearM *>(CloneProgram(p2));
 
   int pos1, pos2;
 
@@ -2167,7 +2143,7 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
               mem->const_memory_[idx](r, c) = stod(outcomeFields[i++].c_str());
         }
       }
-      addMemory(mem);
+      AddMemory(mem);
     }
 
     else if (outcomeFields[0].compare("linearM") == 0) {
@@ -2209,11 +2185,11 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
 
       for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES;
            memType++) {
-        l->memSet(memType, _Memory[memType][memTypeIds[memType]]);
-        l->memGet(memType)->refInc();
+        l->MemSet(memType, _Memory[memType][memTypeIds[memType]]);
+        l->MemGet(memType)->refInc();
       }
 
-      addProgram(l);
+      AddProgram(l);
     } else if (outcomeFields[0].compare("team") == 0) {
       team *m;
       f = 1;
@@ -2230,8 +2206,8 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       // add programs in order
       for (size_t ii = f; ii < outcomeFields.size(); ii++) {
         memberId = atoi(outcomeFields[ii].c_str());
-        if (m->addProgram(_L[memberId]) == false)
-          m->addProgramActive(_L[memberId]);
+        if (m->AddProgram(_L[memberId]) == false)
+          m->AddProgramActive(_L[memberId]);
       }
       AddTeam(m);
       // _Mroot.insert(m);
@@ -2380,8 +2356,8 @@ void TPG::selTeams(long t, bool verbose, int genTime) {
   memoryEigen *m;
   for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++) {
     while (_Memory[memType].size() < _M.size()) {
-      m = new memoryEigen(state_["memory_eigen_count"]++, memType, params_);
-      addMemory(m);
+      m = new memoryEigen(state_["memory_count"]++, memType, params_);
+      AddMemory(m);
     }
   }
 
@@ -2429,10 +2405,10 @@ void TPG::cleanupProgramsWithNoRefs(long t,
     }
     for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES;
          memType++) {
-      leiter->memGet(memType)->refDec();
-      if (leiter->memGet(memType)->refs() == 0) {
-        removeMemory(leiter->memGet(memType));
-        delete leiter->memGet(memType);
+      leiter->MemGet(memType)->refDec();
+      if (leiter->MemGet(memType)->refs() == 0) {
+        removeMemory(leiter->MemGet(memType));
+        delete leiter->MemGet(memType);
       }
     }
     removeProgram(leiter, updateLidsImmediately);

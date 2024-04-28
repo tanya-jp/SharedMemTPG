@@ -246,8 +246,8 @@ class team {
     else if (type == 2)
       distances_2_.insert(d);
   }
-  bool addProgram(program *, int i = -1);
-  bool addProgramActive(program *);
+  bool AddProgram(program *, int i = -1);
+  bool AddProgramActive(program *);
   string checkpoint(bool, long id = -1) const;
   void clone(map<long, phyloRecord> &, team **);
   inline void clearDistances() {

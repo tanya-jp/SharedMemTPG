@@ -28,6 +28,7 @@ linearM::linearM(long gtime, long action,
   num_input_ = std::any_cast<int>(params["n_input"]);
   memoryRows_ = std::any_cast<int>(params["memory_rows"]);
   memoryCols_ = std::any_cast<int>(params["memory_cols"]);
+  stateful_ = std::any_cast<int>(params["stateful"]);
   gtime_ = gtime;
   id_ = id;
   key_ = 0;
@@ -66,7 +67,7 @@ linearM::linearM(long gtime, linearM &plr,
   nrefs_ = 0;
 
   skipIntrons_ = false;
-  stateful_ = plr.stateful();
+  stateful_ = plr.stateful_;
 
   for (auto initer = plr.bid_.begin(); initer != plr.bid_.end(); initer++)
     bid_.push_back(new instruction(**initer));

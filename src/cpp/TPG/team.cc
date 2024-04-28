@@ -4,9 +4,9 @@
 #include <limits>
 
 /******************************************************************************/
-bool team::addProgram(program *lr, int i) {
+bool team::AddProgram(program *lr, int i) {
   if (find(members_.begin(), members_.end(), lr) ==
-      members_.end()) {  // could have duplicates since ordermaters
+      members_.end()) { 
     if (i < 0)
       members_.push_back(lr);
     else {
@@ -16,14 +16,14 @@ bool team::addProgram(program *lr, int i) {
     }
     if (lr->action() < 0) numAtomic_++;
     membersRun_.resize(members_.size());
-    // membersRun_Tally[lr->id_] = 0;
+    lr->refInc();
     return true;
   }
   return false;
 }
 
 /******************************************************************************/
-bool team::addProgramActive(program *lr) {
+bool team::AddProgramActive(program *lr) {
   if (find(active_.begin(), active_.end(), lr) == active_.end()) {
     active_.insert(lr);
     return true;
@@ -87,11 +87,11 @@ void team::InitMemory(map<long, team *> &teamMap, bool use_evolved_const) {
 void team::clone(map<long, phyloRecord> &phyloGraph, team **tm) {
   phyloGraph[(*tm)->id_].ancestorIds.insert(id_);
   for (auto leiter = members_.begin(); leiter != members_.end(); leiter++) {
-    (*tm)->addProgram(*leiter);
+    (*tm)->AddProgram(*leiter);
     (*leiter)->refInc();
   }
   for (auto leiter = active_.begin(); leiter != active_.end(); leiter++)
-    (*tm)->addProgramActive(*leiter);
+    (*tm)->AddProgramActive(*leiter);
   (*tm)->fitnessBins(fitnessBins_);
   (*tm)->cloneId_ = id_;
   clones_++;
@@ -104,11 +104,11 @@ void team::clone(map<long, phyloRecord> &phyloGraph, team **tm) {
 //    //team* tm = new team(t, id);
 //    (*tm)->addAncestorId(id_);
 //    for(auto leiter = members_.begin(); leiter != members_.end(); leiter++){
-//       (*tm)->addProgram(*leiter);
+//       (*tm)->AddProgram(*leiter);
 //       (*leiter)->refInc();
 //    }
 //    for(auto leiter = active_.begin(); leiter != active_.end(); leiter++)
-//       (*tm)->addProgramActive(*leiter);
+//       (*tm)->AddProgramActive(*leiter);
 //    (*tm)->fitnessBins(fitnessBins_);
 //    (*tm)->clone(true);
 // }
@@ -284,7 +284,7 @@ void team::getAllMemories(map<long, team *> &teamMap,
         (activePrograms && active_.find(*leiter) != active_.end())) {
       for (int memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES;
            memType++)
-        memories.insert((*leiter)->memGet(memType));
+        memories.insert((*leiter)->MemGet(memType));
       if ((*leiter)->action() >= 0 &&
           find(visitedTeams.begin(), visitedTeams.end(),
                teamMap[(*leiter)->action()]) == visitedTeams.end())
@@ -339,7 +339,7 @@ void team::getAllNodes(map<long, team *> &teamMap,
       programs.insert(*leiter);
       for (int memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES;
            memType++)
-        memories.insert((*leiter)->memGet(memType));
+        memories.insert((*leiter)->MemGet(memType));
       if ((*leiter)->action() >= 0 &&
           find(visitedTeams.begin(), visitedTeams.end(),
                teamMap[(*leiter)->action()]) == visitedTeams.end())
@@ -839,7 +839,7 @@ program *team::getAction(
     (*leiter)->features(featuresSingle);
     features.insert(featuresSingle.begin(), featuresSingle.end());
     for (int memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++)
-      memories.insert((*leiter)->memGet(memType));
+      memories.insert((*leiter)->MemGet(memType));
   }
   decisionFeatures.push_back(features);
   decisionMemories.push_back(memories);

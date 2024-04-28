@@ -64,7 +64,7 @@ int WrapDiscreteAction(EvalStruct &eval) {
 }
 
 double WrapContinuousAction(EvalStruct &eval) {
-  return (eval.leafProgram->memGet(memoryEigen::SCALAR_TYPE))
+  return (eval.leafProgram->MemGet(memoryEigen::SCALAR_TYPE))
       ->working_memory_[0](0, 0);
 }
 
