@@ -12,11 +12,13 @@ using namespace Eigen;
 typedef Matrix<bool, Dynamic, Dynamic> MatrixXb;
 class memoryEigen {
  public:
-  static const uint8_t NA_TYPE = -1;
-  static const uint8_t SCALAR_TYPE = 0;
-  static const uint8_t VECTOR_TYPE = 1;
-  static const uint8_t MATRIX_TYPE = 2;
-  static const uint8_t NUM_MEMORY_TYPES = 3;
+  static const size_t SCALAR_TYPE = 0;
+  static const size_t VECTOR_TYPE = 1;
+  static const size_t MATRIX_TYPE = 2;
+  static const size_t NA_TYPE = 3;
+  // static const inline vector<uint8_t> MEMORY_TYPES{SCALAR_TYPE, VECTOR_TYPE,
+  //                                                  MATRIX_TYPE};
+  static const int NUM_MEMORY_TYPES = 3;
 
   inline Ref<MatrixXb> getActiveE() { return active_; }
   inline Ref<MatrixXd> getReadTimeE() { return read_time_; }
@@ -85,9 +87,9 @@ class memoryEigen {
   inline void refs(int i) { nrefs_ = i; }
   inline int refDec() { return --nrefs_; }
   inline int refInc() { return ++nrefs_; }
-  inline int refsPolicy() { return nrefs_policy_; }
-  inline void refsPolicy(int i) { nrefs_policy_ = i; }
-  inline int refsPolicyInc() { return ++nrefs_policy_; }
+  inline int RefsPolicy() { return nrefs_policy_; }
+  inline void RefsPolicy(int i) { nrefs_policy_ = i; }
+  inline int RefsPolicyInc() { return ++nrefs_policy_; }
   void resizeMemory() {
     working_memory_.resize(memoryIndices_);
     const_memory_.resize(memoryIndices_);

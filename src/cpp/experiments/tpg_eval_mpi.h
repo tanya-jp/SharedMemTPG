@@ -65,7 +65,7 @@ int WrapDiscreteAction(EvalStruct &eval) {
 
 double WrapContinuousAction(EvalStruct &eval) {
   return (eval.leafProgram->MemGet(memoryEigen::SCALAR_TYPE))
-      ->working_memory_[0](0, 0);
+      ->working_memory_[1](0, 0);
 }
 
 vector<team *> GetTeamsToEval(TPG &tpg) {
@@ -324,7 +324,7 @@ void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
       eval.evalResult = "";
       for (auto tm : eval.teams) {
         eval.tm = tm;
-        tpg.markEffectiveCode(eval.tm);
+        tpg.MarkEffectiveCode(eval.tm);
         for (eval.episode = 0; eval.episode < eval.tm->_n_eval;
              eval.episode++) {
           tpg._rngs[AUX_SEED].seed(eval.episode);
@@ -349,7 +349,7 @@ void replayer(TPG &tpg, vector<TaskEnv *> &tasks) {
   for (auto tm : eval.teams) {
     eval.tm = tm;
     if (eval.animate) eval.tm->_n_eval = 1;
-    tpg.markEffectiveCode(eval.tm);
+    tpg.MarkEffectiveCode(eval.tm);
     for (eval.episode = 0; eval.episode < eval.tm->_n_eval; eval.episode++) {
       tpg._rngs[AUX_SEED].seed(eval.episode);
       eval.tm->InitMemory(tpg._teamMap, tpg.HaveParam("p_bid_mu_const"));

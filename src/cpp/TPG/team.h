@@ -66,13 +66,13 @@ class team {
     fitnessBins_.insert(fb.begin(), fb.end());
   }
   inline map<long, string> fitnessBins() { return fitnessBins_; }
-  void getAllMemories(map<long, team *> &, set<team *, teamIdComp> &,
+  void GetAllMemories(map<long, team *> &, set<team *, teamIdComp> &,
                       set<memoryEigen *, memoryEigenIdComp> &, bool) const;
-  void getAllNodes(map<long, team *> &teamMap, set<team *, teamIdComp> &, long,
+  void GetAllNodes(map<long, team *> &teamMap, set<team *, teamIdComp> &, long,
                    bool) const;
-  void getAllNodes(map<long, team *> &teamMap, set<team *, teamIdComp> &,
+  void GetAllNodes(map<long, team *> &teamMap, set<team *, teamIdComp> &,
                    set<program *, programIdComp> &) const;
-  void getAllNodes(map<long, team *> &teamMap, set<team *, teamIdComp> &,
+  void GetAllNodes(map<long, team *> &teamMap, set<team *, teamIdComp> &,
                    set<program *, programIdComp> &,
                    set<memoryEigen *, memoryEigenIdComp> &, bool) const;
   void getBehaviourSequence(vector<int> &, int);
@@ -169,7 +169,7 @@ class team {
   inline void runTimeComplexityIns(double rtc) { runTimeComplexityIns_ = rtc; }
   inline double runTimeComplexityTms() const { return runTimeComplexityTms_; }
   inline void runTimeComplexityTms(double rtc) { runTimeComplexityTms_ = rtc; }
-  inline void setActive(program *l) { active_.insert(l); }
+  inline void SetActive(program *p) { active_.insert(p); }
   inline bool hasQuickMean(int task, int fitMode, int phase) {
     return quickMeans_.count(task) > 0 &&
            quickMeans_[task].count(fitMode) > 0 &&

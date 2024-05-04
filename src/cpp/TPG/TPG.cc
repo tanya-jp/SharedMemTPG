@@ -2,7 +2,7 @@
 
 /******************************************************************************/
 TPG::TPG() {
-  instruction::setupOps();
+  instruction::SetupOps();
   real_dist_ = uniform_real_distribution<>(0.0, 1.0);
   _Memids.resize(memoryEigen::NUM_MEMORY_TYPES);
   _Memory.resize(memoryEigen::NUM_MEMORY_TYPES);
@@ -96,13 +96,14 @@ void TPG::seed(size_t i, int s) {
 
 /******************************************************************************/
 void TPG::clearMemory() {
-  for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++)
-    for (auto meiter = _Memory[memType].begin();
-         meiter != _Memory[memType].end(); meiter++) {
+  for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+    for (auto meiter = _Memory[mem_t].begin(); meiter != _Memory[mem_t].end();
+         meiter++) {
       meiter->second->ClearWorking();
       meiter->second->ClearReadTime();
       meiter->second->ClearWriteTime();
     }
+  }
 }
 
 /******************************************************************************/
@@ -139,21 +140,21 @@ program *TPG::getAction(
 }
 
 /******************************************************************************/
-void TPG::getAllNodes(team *tm, set<team *, teamIdComp> &teams,
+void TPG::GetAllNodes(team *tm, set<team *, teamIdComp> &teams,
                       set<program *, programIdComp> &programs) {
   teams.clear();
   programs.clear();
-  tm->getAllNodes(_teamMap, teams, programs);
+  tm->GetAllNodes(_teamMap, teams, programs);
 }
 
 /******************************************************************************/
-void TPG::getAllNodes(team *tm, set<team *, teamIdComp> &teams,
+void TPG::GetAllNodes(team *tm, set<team *, teamIdComp> &teams,
                       set<program *, programIdComp> &programs,
                       set<memoryEigen *, memoryEigenIdComp> &memories) {
   teams.clear();
   programs.clear();
   memories.clear();
-  tm->getAllNodes(_teamMap, teams, programs, memories, false);
+  tm->GetAllNodes(_teamMap, teams, programs, memories, false);
 }
 
 /******************************************************************************/
@@ -204,35 +205,33 @@ bool TPG::isElitePS(team *tm, int phase) {
 }
 
 /******************************************************************************/
-void TPG::markEffectiveCode(team *tm) {
+void TPG::MarkEffectiveCode(team *tm) {
   set<team *, teamIdComp> teams;
   set<program *, programIdComp> programs;
   set<memoryEigen *, memoryEigenIdComp> memories;
-  tm->getAllNodes(_teamMap, teams, programs, memories, false);
+  tm->GetAllNodes(_teamMap, teams, programs, memories, false);
 
-  for (auto meiter = memories.begin(); meiter != memories.end(); meiter++) {
-    (*meiter)->ClearActive();
-    (*meiter)->refsPolicy(0);
+  for (auto mem : memories) {
+    mem->ClearActive();
+    mem->RefsPolicy(0);
   }
-
-  for (auto leiter = programs.begin(); leiter != programs.end(); leiter++) {
-    (*leiter)->skipIntrons(GetParam<int>("skip_introns"));
-    (*leiter)->markIntrons(GetParam<int>("continuous_output"));
-    for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES;
-         memType++) {
-      ((*leiter)->MemGet(memType))->refsPolicyInc();
+  for (auto prog : programs) {
+    prog->skipIntrons_ = GetParam<int>("skip_introns");
+    prog->stateful_ = GetParam<int>("stateful");
+    prog->MarkIntrons(params_);
+    for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+      (prog->MemGet(mem_t))->RefsPolicyInc();  // TODO(skelly) ???
     }
   }
-
-  // update active programs
+  // update active programs TODO spkelly (this required?)
   list<program *> rootMembers;
   tm->members(&rootMembers);
-  for (auto leiter = rootMembers.begin(); leiter != rootMembers.end();
-       leiter++) {
+  for (auto prog : rootMembers) {
     bool active = false;
-    for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++)
-      if (((*leiter)->MemGet(memType))->refsPolicy() > 1) active = true;
-    if ((*leiter)->esize() > 0 && active) tm->setActive(*leiter);
+    for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+      if ((prog->MemGet(mem_t))->RefsPolicy() > 1) active = true;
+    }
+    if (prog->esize() > 0 && active) tm->SetActive(prog);
   }
 }
 
@@ -464,11 +463,11 @@ void TPG::finalize() {
     delete leiter->second;
   _L.clear();
 
-  for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++) {
-    for (auto meiter = _Memory[memType].begin();
-         meiter != _Memory[memType].end(); meiter++)
+  for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+    for (auto meiter = _Memory[mem_t].begin(); meiter != _Memory[mem_t].end();
+         meiter++)
       delete meiter->second;
-    _Memory[memType].clear();
+    _Memory[mem_t].clear();
   }
   _Memory.clear();
   _Memory.resize(memoryEigen::NUM_MEMORY_TYPES);
@@ -521,8 +520,8 @@ void TPG::TeamMutator_RemovePrograms(team *team_to_mu) {
   }
 }
 
-team* TPG::CloneTeam(team* team_to_clone) {
-  team* team_clone = new team(GetState("t_current"), state_["team_count"]++);
+team *TPG::CloneTeam(team *team_to_clone) {
+  team *team_clone = new team(GetState("t_current"), state_["team_count"]++);
   for (auto m : team_to_clone->members_) {
     team_clone->AddProgram(m);
   }
@@ -535,9 +534,9 @@ program *TPG::CloneProgram(program *prog) {
                   params_, state_["program_count"]++);
   if (prog_clone->action() >= 0)
     _teamMap[prog_clone->action()]->AddIncomingProgram(prog_clone->id_);
-  for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++) {
-    prog_clone->MemSet(memType, prog->MemGet(memType));
-    prog_clone->MemGet(memType)->refInc();
+  for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+    prog_clone->MemSet(mem_t, prog->MemGet(mem_t));
+    prog_clone->MemGet(mem_t)->refInc();
   }
   return prog_clone;
 }
@@ -645,8 +644,9 @@ void TPG::GenerateNewTeams() {
   }
   oss << "genTms t " << GetState("t_current") << " Msz " << _M.size() << " Lsz "
       << _L.size() << " rSz " << _Mroot.size() << " mSz";
-  for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++)
-    oss << " " << _Memory[memType].size();
+  for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+    oss << " " << _Memory[mem_t].size();
+  }
   oss << _Memory.size() << " eLSz " << _numEliteTeamsCurrent[GetState("phase")];
   oss << " nNTms " << n_new_teams << endl;
 }
@@ -654,7 +654,7 @@ void TPG::GenerateNewTeams() {
 /******************************************************************************/
 vector<team *> TPG::ApplyVariationOps(team *pm1, int &n_new_teams) {
   uniform_int_distribution<int> disL(0, _L.size() - 1);
-  team* new_team = CloneTeam(pm1);
+  team *new_team = CloneTeam(pm1);
   // Mutate team
   TeamMutator_RemovePrograms(new_team);
   TeamMutator_AddPrograms(new_team);
@@ -671,7 +671,7 @@ vector<team *> TPG::ApplyVariationOps(team *pm1, int &n_new_teams) {
       ProgramMutator_ActionPointer(prog_clone, new_team, n_new_teams,
                                    progs_without_refs);
       new_team->AddProgram(prog_clone);  // add new program to team
-      AddProgram(prog_clone);  // add new program o program population
+      AddProgram(prog_clone);            // add new program o program population
     }
   }
   cleanupProgramsWithNoRefs(GetState("t_current"), progs_without_refs, true);
@@ -790,7 +790,7 @@ void TPG::setEliteTeams(int t, int phase, int fitMode, bool verbose) {
         (*teiter)->fit_ = (*teiter)->getQuickMean(o, fitMode, phase);
         teamsRankedVec.push_back(*teiter);
         if (phase == _TEST_PHASE) {
-          markEffectiveCode(*teiter);
+          MarkEffectiveCode(*teiter);
           if ((*teiter)->runTimeComplexityIns() == 0)
             (*teiter)->updateComplexityRecord(
                 _teamMap, GetParam<int>("n_point_aux_double") - 2);
@@ -1072,10 +1072,11 @@ void TPG::InitTeams() {
     for (int p = 0; p < GetParam<int>("initial_team_size"); p++) {
       // discrete atomic actions are negatives -1 to -numAtomicActions()
       long discrete_action = -1 - disA(_rngs[TPG_SEED]);
-      auto new_prog = new linearM(GetState("t_current"), discrete_action, params_,
-                           state_["program_count"]++, _rngs[TPG_SEED], _ops);
+      auto new_prog =
+          new linearM(GetState("t_current"), discrete_action, params_,
+                      state_["program_count"]++, _rngs[TPG_SEED], _ops);
       // create one new memory of each type for this team
-      for (size_t mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+      for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
         auto *mem = new memoryEigen(state_["memory_count"]++, mem_t, params_);
         if (HaveParam("p_bid_mu_const")) mem->RandomizeConst();
         AddMemory(mem);  // add new memory to memory population
@@ -1091,7 +1092,7 @@ void TPG::InitTeams() {
 
   oss << "initTms Msz " << _M.size() << " Lsz " << _L.size() << " rSz "
       << _Mroot.size() << " mSz";
-  for (size_t mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+  for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
     oss << " " << _Memory[mem_t].size();
   }
   oss << _Memory.size() << " eLSz " << _numEliteTeamsCurrent[GetState("phase")]
@@ -1145,7 +1146,7 @@ void TPG::printGraphDot(
   set<program *, programIdComp> programs;
   set<memoryEigen *, memoryEigenIdComp> memories;
 
-  // rootTeam->getAllNodes(_teamMap, teams, programs, memories, false);
+  // rootTeam->GetAllNodes(_teamMap, teams, programs, memories, false);
   //(void)visitedTeamsAllTasks;
   for (auto it = visitedTeamsAllTasks.begin(); it != visitedTeamsAllTasks.end();
        it++) {
@@ -1153,8 +1154,9 @@ void TPG::printGraphDot(
     programs.insert(p.begin(), p.end());
   }
   for (auto it = programs.begin(); it != programs.end(); it++) {
-    for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++)
-      memories.insert((*it)->MemGet(memType));
+    for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+      memories.insert((*it)->MemGet(mem_t));
+    }
   }
 
   sprintf(outputFilename, "replay/graphs/gv_%d_%05d_%03d_%05d_%05d%s",
@@ -1351,8 +1353,9 @@ void TPG::printGraphDotGPEM(long rootTeamId, map<long, string> &teamColMap,
     programs.insert(p.begin(), p.end());
   }
   for (auto it = programs.begin(); it != programs.end(); it++) {
-    for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++)
-      memories.insert((*it)->MemGet(memType));
+    for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+      memories.insert((*it)->MemGet(mem_t));
+    }
   }
 
   sprintf(outputFilename,
@@ -1550,8 +1553,9 @@ void TPG::printGraphDotGPEMAnimate(
     programs.insert(p.begin(), p.end());
   }
   for (auto it = programs.begin(); it != programs.end(); it++) {
-    for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++)
-      memories.insert((*it)->MemGet(memType));
+    for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+      memories.insert((*it)->MemGet(mem_t));
+    }
   }
 
   sprintf(outputFilename, "replay/graphs/gv_%d_%05d_%03d_%05d_%05d%s",
@@ -1902,7 +1906,7 @@ void TPG::printTeamInfo(long t, int phase, bool singleBest, long teamId) {
       set<program *, programIdComp> programs;
       set<memoryEigen *, memoryEigenIdComp> memories;
       set<team *, teamIdComp> visitedTeams2;
-      (*teiter)->getAllNodes(_teamMap, visitedTeams2, programs, memories,
+      (*teiter)->GetAllNodes(_teamMap, visitedTeams2, programs, memories,
                              false);
       oss << " nP " << programs.size();
       oss << " nT " << visitedTeams2.size();
@@ -2159,9 +2163,9 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       long dim = atoi(outcomeFields[f++].c_str());
       (void)dim;
       int nrefs = atoi(outcomeFields[f++].c_str());
-      for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES;
-           memType++)
-        memTypeIds[memType] = atoi(outcomeFields[f++].c_str());
+      for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+        memTypeIds[mem_t] = atoi(outcomeFields[f++].c_str());
+      }
 
       vector<instruction *> bid;
       for (size_t ii = f; ii < outcomeFields.size(); ii++) {
@@ -2183,10 +2187,8 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       // _memoryRows, _memoryCols, id, nrefs, bid);
       l = new linearM(gtime, action, stateful, params_, id, nrefs, bid);
 
-      for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES;
-           memType++) {
-        l->MemSet(memType, _Memory[memType][memTypeIds[memType]]);
-        l->MemGet(memType)->refInc();
+      for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+        l->MemSet(mem_t, _Memory[mem_t][memTypeIds[mem_t]]);
       }
 
       AddProgram(l);
@@ -2354,17 +2356,18 @@ void TPG::selTeams(long t, bool verbose, int genTime) {
   cleanupProgramsWithNoRefs(t, programsWithNoRefs, false);
 
   memoryEigen *m;
-  for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++) {
-    while (_Memory[memType].size() < _M.size()) {
-      m = new memoryEigen(state_["memory_count"]++, memType, params_);
+  for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+    while (_Memory[mem_t].size() < _M.size()) {
+      m = new memoryEigen(state_["memory_count"]++, mem_t, params_);
       AddMemory(m);
     }
   }
 
   oss << "selTms t " << t << " Msz " << _M.size() << " Lsz " << _L.size()
       << " mrSz " << _Mroot.size() << " mSz";
-  for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++)
-    oss << " " << _Memory[memType].size();
+  for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+    oss << " " << _Memory[mem_t].size();
+  }
   oss << " eLSz " << _numEliteTeamsCurrent[GetState("phase")] << " nDel "
       << numDeleted << " nOldDel " << numOldDeleted << " nOldDelPr "
       << (double)numOldDeleted / numDeleted;
@@ -2403,12 +2406,11 @@ void TPG::cleanupProgramsWithNoRefs(long t,
         delete tm;
       }
     }
-    for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES;
-         memType++) {
-      leiter->MemGet(memType)->refDec();
-      if (leiter->MemGet(memType)->refs() == 0) {
-        removeMemory(leiter->MemGet(memType));
-        delete leiter->MemGet(memType);
+    for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+      leiter->MemGet(mem_t)->refDec();
+      if (leiter->MemGet(mem_t)->refs() == 0) {
+        removeMemory(leiter->MemGet(mem_t));
+        delete leiter->MemGet(mem_t);
       }
     }
     removeProgram(leiter, updateLidsImmediately);
@@ -2489,7 +2491,7 @@ void TPG::updateMODESFilters(bool roots) {
           set<team *, teamIdComp> teams;
           set<program *, programIdComp> programs;
           set<memoryEigen *, memoryEigenIdComp> memories;
-          (*teiter)->getAllNodes(_teamMap, teams, programs, memories, true);
+          (*teiter)->GetAllNodes(_teamMap, teams, programs, memories, true);
           for (auto leiter = programs.begin(); leiter != programs.end();
                leiter++) {
             _persistenceFilterA[(*teiter)->id_].activeProgramIds.insert(
@@ -2627,9 +2629,9 @@ void TPG::writeCheckpoint(long t, bool elite) {
       {
         auto tm = itr2->second[2];
         teams.clear();
-        // itr3->second->getAllNodes(_teamMap, teams, programs, memories,
+        // itr3->second->GetAllNodes(_teamMap, teams, programs, memories,
         // false);
-        tm->getAllNodes(_teamMap, teams, programs, memories, false);
+        tm->GetAllNodes(_teamMap, teams, programs, memories, false);
         teamsAll.insert(teams.begin(), teams.end());
       }
 
@@ -2642,9 +2644,9 @@ void TPG::writeCheckpoint(long t, bool elite) {
     for (auto teiter = teamsAll.begin(); teiter != teamsAll.end(); teiter++)
       ofs << (*teiter)->checkpoint(true);
   } else {
-    for (size_t memType = 0; memType < memoryEigen::NUM_MEMORY_TYPES; memType++)
-      for (auto meiter = _Memory[memType].begin();
-           meiter != _Memory[memType].end(); meiter++)
+    for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++)
+      for (auto meiter = _Memory[mem_t].begin(); meiter != _Memory[mem_t].end();
+           meiter++)
         ofs << meiter->second->checkpoint();
     for (auto leiter = _L.begin(); leiter != _L.end(); leiter++)
       ofs << leiter->second->checkpoint(true);  // all instructions
@@ -2708,7 +2710,7 @@ void TPG::writeCheckpoint(string &s, vector<team *> &rootTeams) {
   set<memoryEigen *, memoryEigenIdComp> memories;
 
   for (auto teiter = rootTeams.begin(); teiter != rootTeams.end(); teiter++)
-    (*teiter)->getAllNodes(_teamMap, teams, programs, memories, false);
+    (*teiter)->GetAllNodes(_teamMap, teams, programs, memories, false);
 
   stringstream ss;
 
@@ -2741,7 +2743,7 @@ void TPG::writeCheckpoint(string &s, vector<team *> &rootTeams,
   set<memoryEigen *, memoryEigenIdComp> memories;
 
   for (auto teiter = rootTeams.begin(); teiter != rootTeams.end(); teiter++)
-    (*teiter)->getAllNodes(_teamMap, teams, programs, memories, false);
+    (*teiter)->GetAllNodes(_teamMap, teams, programs, memories, false);
 
   stringstream ss;
 
@@ -2778,9 +2780,9 @@ void TPG::writeCheckpoint(string &s, vector<team *> &rootTeams,
   set<memoryEigen *, memoryEigenIdComp> memories;
 
   for (auto teiter = rootTeams.begin(); teiter != rootTeams.end(); teiter++)
-    (*teiter)->getAllNodes(_teamMap, teams, programs, memories, false);
-  originalTeam->getAllNodes(_teamMap, teams, programs, memories, false);
-  replacementTeam->getAllNodes(_teamMap, teams, programs, memories, false);
+    (*teiter)->GetAllNodes(_teamMap, teams, programs, memories, false);
+  originalTeam->GetAllNodes(_teamMap, teams, programs, memories, false);
+  replacementTeam->GetAllNodes(_teamMap, teams, programs, memories, false);
 
   stringstream ss;
 

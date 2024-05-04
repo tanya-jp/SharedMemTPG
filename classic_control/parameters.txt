@@ -8,14 +8,14 @@ write_checkpoints 1
 replay 0
 
 # use the partially-observable version of a task, if available
-partially_observable 0
+partially_observable 1
 
 # re-evaluate an individual from a checkpoint file and animate behaviour, if available
 animate 0
 
 # use stateful programs
-# if set to 0, memory regiters are set to 0 prior to each program execution
-# if set to 1, memory registers are only set to 0 prir to each evaluation
+# if set to 0, memories are set to 0 prior to each program execution
+# if set to 1, memories are only set to 0 prior to each evaluation
 stateful 1
 
 # how frequently to run test procedure
@@ -50,7 +50,7 @@ mu_internal 0
 n_discrete_action 3
 
 # initial team size
-initial_team_size 5
+initial_team_size 3
 
 # max team size
 max_team_size 1000000
@@ -59,7 +59,7 @@ max_team_size 1000000
 max_teams_per_graph 1000000
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 0.9
+p_atomic 1.0
 
 # team mutation: probability of deleting program from team
 pmd 0.6
@@ -74,7 +74,7 @@ pmm 1.0
 pmn 0.1
 
 # team mutation: probability of mutating a program's memory pointer
-pms 0.1
+pms 0.0
 
 # team mutation: probability of mutating program execution order
 pmw 0.1
@@ -89,10 +89,10 @@ continuous_output 1
 n_input 2
 
 # max initial program size
-max_initial_prog_size 100
+max_initial_prog_size 5
 
 # max program size
-max_prog_size 1000000
+max_prog_size 100
 
 # program variation: probability of changing the program
 p_bid_mutate 1.0
@@ -109,9 +109,15 @@ p_bid_add 0.3
 # program variation: probability of linear crossover with another team
 p_bid_xover 0.0
 
+# program variation: probability of adding noise to constants
+p_bid_mu_const 1.0
+
+# program variation: stddev of normal noise added to each const
+bid_mu_const_stddev 0.05
+
 # memory size: number of memory indices
 # each memory index points to a data structure with some number of rows and columns
-memory_indices 4
+memory_indices 3
 
 # memory size: number of rows
 memory_rows 2
@@ -138,22 +144,36 @@ fit_prop_select 0
 diversity_mode 0
 
 # operations, uncomment to activate
+
+#scalar
 SCALAR_SUM_OP
-SCALAR_DIFF_OP
-SCALAR_PRODUCT_OP
-SCALAR_DIVISION_OP
-SCALAR_ABS_OP
-SCALAR_RECIPROCAL_OP
-SCALAR_SIN_OP
-SCALAR_COS_OP
-SCALAR_TAN_OP
-SCALAR_ARCSIN_OP
-SCALAR_ARCCOS_OP
-SCALAR_ARCTAN_OP
-SCALAR_EXP_OP
-SCALAR_LOG_OP
-SCALAR_HEAVYSIDE_OP
-VECTOR_HEAVYSIDE_OP
+#SCALAR_DIFF_OP
+#SCALAR_PRODUCT_OP
+#SCALAR_DIVISION_OP
+#SCALAR_ABS_OP
+#SCALAR_RECIPROCAL_OP
+#SCALAR_SIN_OP
+#SCALAR_COS_OP
+#SCALAR_TAN_OP
+#SCALAR_ARCSIN_OP
+#SCALAR_ARCCOS_OP
+#SCALAR_ARCTAN_OP
+#SCALAR_EXP_OP
+#SCALAR_LOG_OP
+#SCALAR_HEAVYSIDE_OP
+#SCALAR_COND_A_OP
+#SCALAR_COND_B_OP
+#SCALAR_POW_OP
+#SCALAR_SQR_OP
+#SCALAR_CUBE_OP
+#SCALAR_TANH_OP
+#SCALAR_SQRT_OP
+#SCALAR_CONST_SET_OP
+#SCALAR_MIN_OP
+#SCALAR_MAX_OP
+
+#vector 
+#VECTOR_HEAVYSIDE_OP
 #MATRIX_HEAVYSIDE_OP
 #SCALAR_VECTOR_PRODUCT_OP
 #SCALAR_BROADCAST_OP
@@ -181,10 +201,8 @@ VECTOR_HEAVYSIDE_OP
 #MATRIX_PRODUCT_OP
 #MATRIX_DIVISION_OP
 #MATRIX_MATRIX_PRODUCT_OP
-SCALAR_MIN_OP
 #VECTOR_MIN_OP
 #MATRIX_MIN_OP
-SCALAR_MAX_OP
 #VECTOR_MAX_OP
 #MATRIX_MAX_OP
 #VECTOR_MEAN_OP
@@ -193,7 +211,6 @@ SCALAR_MAX_OP
 #MATRIX_ROW_ST_DEV_OP
 #VECTOR_ST_DEV_OP
 #MATRIX_ST_DEV_OP
-SCALAR_CONST_SET_OP
 #VECTOR_CONST_SET_OP
 #MATRIX_CONST_SET_OP
 #SCALAR_UNIFORM_SET_OP
@@ -202,10 +219,3 @@ SCALAR_CONST_SET_OP
 #SCALAR_GAUSSIAN_SET_OP
 #VECTOR_GAUSSIAN_SET_OP
 #MATRIX_GAUSSIAN_SET_OP
-SCALAR_COND_A_OP
-SCALAR_COND_B_OP
-SCALAR_POW_OP
-SCALAR_SQR_OP
-SCALAR_CUBE_OP
-SCALAR_TANH_OP
-SCALAR_SQRT_OP

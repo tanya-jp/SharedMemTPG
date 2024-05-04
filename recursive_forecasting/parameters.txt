@@ -15,8 +15,8 @@ animate 0
 
 # use stateful programs
 # if set to 0, memory regiters are set to 0 prior to each program execution
-# if set to 1, memory registers are only set to 0 prir to each evaluation
-stateful 1
+# if set to 1, memory registers are only set to 0 prior to each evaluation
+stateful 0
 
 # how frequently to run test procedure
 test_mod 1000
@@ -35,7 +35,7 @@ fit_mode 0
 dist_mode 0
 
 # skip introns during evaluation
-skip_introns 1
+skip_introns 0
 
 # auxilliary seed, e.g. for simulators
 seed_aux -1
@@ -126,7 +126,7 @@ memory_rows 4
 memory_cols 4
 
 # number of elite teams
-n_elite 1000
+n_elite 300
 
 # number of training outcomes to store
 # for recursive time series, this should match the number of t_starts[TRAIN_PHASE]

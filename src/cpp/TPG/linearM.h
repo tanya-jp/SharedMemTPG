@@ -22,7 +22,7 @@ class linearM : public program {
   std::vector<instruction *> bid_;  
   std::vector<instruction *> bidEffective_;
 
-  void markIntrons(bool);
+  void MarkIntrons(std::unordered_map<std::string, std::any> &params_);
   double run(state *, int, int, mt19937 &rng);
   std::string checkpoint(bool);
   inline void getBid(std::vector<instruction *> &b) { b = bid_; }

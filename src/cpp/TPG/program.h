@@ -19,10 +19,10 @@ class program {
   // vector<double>* feature;
 
   // Features indexed by non-introns in this program, determined in
-  // markIntrons().
+  // MarkIntrons().
   set<long> features_;
   // Features indexed by non-introns that write to memoryEigen, determined in
-  // markIntrons().
+  // MarkIntrons().
   set<long> featuresMem_;
   long gtime_;
   long id_;
@@ -32,16 +32,15 @@ class program {
   vector<memoryEigen *> sharedMemoryPointers_;
   vector<memoryEigen *> privateMemoryPointers_;
 
-  vector<memoryEigen *> tmpIn1MemoryPointers_;
-  // read inputs into these a runtime
-  vector<vector<memoryEigen *> > tmpMemoryPointers_;
+  // read inputs into these at runtime
+  vector<vector<memoryEigen *> > inputMemoryPointers_;
 
   int nrefs_;               //  Number of references by teams
   vector<int> op_counts_;   // count for each operator over _bidEffective
   vector<double> profile_;  // Bid profile
   bool skipIntrons_;
   bool stateful_;
-  // Set to true in markIntrons if this program writes to stateful memoryEigen.
+  // Set to true in MarkIntrons if this program writes to stateful memoryEigen.
   bool targetMem_;
 
   inline int action() { return action_; }
@@ -64,18 +63,18 @@ class program {
   inline void lastCompareFactor(int c) { lastCompareFactor_ = c; }
   virtual ~program(){};
 
-  virtual void markIntrons(bool) = 0;
+  virtual void MarkIntrons(std::unordered_map<std::string, std::any> &) = 0;
   
   inline void MemGet(size_t type, memoryEigen *&m) {
     m = sharedMemoryPointers_[type];
   }
 
-  inline void MemSet(size_t type, memoryEigen *m) {
+  inline void MemSet(uint8_t type, memoryEigen *m) {
     sharedMemoryPointers_[type] = m;
     m->refInc();
   }
 
-  inline memoryEigen *MemGet(size_t type) {
+  inline memoryEigen *MemGet(uint8_t type) {
     return sharedMemoryPointers_[type];
   }
 
@@ -83,6 +82,12 @@ class program {
     for (size_t i = 0; i < sharedMemoryPointers_.size(); i++) {
       privateMemoryPointers_[i]->working_memory_ =
           sharedMemoryPointers_[i]->const_memory_;
+    }
+  }
+
+  inline void ClearWorking() {
+    for (size_t i = 0; i < sharedMemoryPointers_.size(); i++) {
+      privateMemoryPointers_[i]->ClearWorking();
     }
   }
 
@@ -107,8 +112,6 @@ class program {
   inline void setProfile(vector<double> &p) { profile_ = p; }
   virtual int size() = 0;
   virtual int esize() = 0;
-  inline bool skipIntrons() { return skipIntrons_; }
-  inline void skipIntrons(bool b) { skipIntrons_ = b; }
   inline bool stateful() { return stateful_; }
   inline void stateful(bool s) { stateful_ = s; }
   inline bool targetMem() { return targetMem_; }
@@ -137,7 +140,7 @@ struct ProgramBidLexicalCompare {
       // l2->lastCompareFactor(0);
       return l1->bidVal() > l2->bidVal();
     }
-    ////program size post intron removal, smaller is better (assumes markIntrons
+    ////program size post intron removal, smaller is better (assumes MarkIntrons
     ///is up to date)
     // else if (l1->esize() != l2->esize()) {
     //    l1->lastCompareFactor(1);

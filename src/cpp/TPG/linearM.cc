@@ -6,8 +6,9 @@ string linearM::checkpoint(bool all) {
 
   oss << "linearM:" << id_ << ":" << gtime_ << ":" << action_ << ":"
       << stateful_ << ":" << num_input_ << ":" << nrefs_;
-  for (size_t mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++)
+  for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
     oss << ":" << sharedMemoryPointers_[mem_t]->id();
+  }
 
   if (all)
     for (size_t i = 0; i < bid_.size(); i++)
@@ -109,81 +110,138 @@ linearM::~linearM() {
        meiter != privateMemoryPointers_.end(); meiter++)
     delete *meiter;
   privateMemoryPointers_.clear();
-  for (size_t mp = 0; mp < tmpMemoryPointers_.size(); mp++) {
-    for (auto meiter = tmpMemoryPointers_[mp].begin();
-         meiter != tmpMemoryPointers_[mp].end(); meiter++)
+  for (size_t mp = 0; mp < inputMemoryPointers_.size(); mp++) {
+    for (auto meiter = inputMemoryPointers_[mp].begin();
+         meiter != inputMemoryPointers_[mp].end(); meiter++)
       delete *meiter;
-    tmpMemoryPointers_[mp].clear();
+    inputMemoryPointers_[mp].clear();
   }
-  tmpMemoryPointers_.clear();
+  inputMemoryPointers_.clear();
 }
 
-/******************************************************************************/
-void linearM::markIntrons(bool continuousOutput) {
-  fill(op_counts_.begin(), op_counts_.end(), 0);
+// /******************************************************************************
+//  * Markus F. Brameier and Wolfgang Banzhaf. 2010.
+//  * Linear Genetic Programming (1st. ed.). Springer Publishing Company, Inc.
+//  * Algorithm 3.1 (detection of structural introns)
+//  */
+// void linearM::MarkIntrons(std::unordered_map<std::string, std::any> &params)
+// {
+//   fill(op_counts_.begin(), op_counts_.end(), 0);  // count occurance of each
+//   op
 
-  map<int, vector<bool> > targets;  //[memory type][index]->true/false
-  for (size_t mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++)
-    targets[mem_t] = vector<bool>(
-        privateMemoryPointers_[memoryEigen::SCALAR_TYPE]->indexSize(), false);
+//   // keep track of which memories are effective with a map
+//   map<int, vector<bool> > Reff;  // maps [memory type][index]->true/false
+
+//   for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++)
+//     Reff[mem_t] =
+//         vector<bool>(std::any_cast<int>(params["memory_indices"]), false);
+
+//   Reff[memoryEigen::SCALAR_TYPE][0] = true;  // mark bid output memory
+
+//   if (std::any_cast<int>(params["continuous_output"]))
+//     Reff[memoryEigen::SCALAR_TYPE][1] = true;  // mark continuous output
+//     memory
+
+//   features_.clear();
+//   bidEffective_.clear();
+
+//   // From last to first instruction.
+//   // vector<instruction *>::reverse_iterator riter;
+//   for (auto riter = bid_.rbegin(); riter != bid_.rend(); riter++) {
+//     if (!skipIntrons_ || Reff[(*riter)->outType()][(*riter)->outIdx_]) {
+//       bidEffective_.insert(bidEffective_.begin(), *riter);
+//       op_counts_[(*riter)->op_]++;
+//       // output TODO(spkelly) this is always true now
+//       (*riter)->out_ = privateMemoryPointers_[(*riter)->outType()];
+//       // inputs
+//       for (int in = 0; in < 2; in++) {
+//         // if this input is actually used for this op
+//         if ((*riter)->inType(in) != memoryEigen::NA_TYPE) {
+//           if ((*riter)->isInput(in)) {  // this input is a feature ref
+//             (*riter)->inMem(in,
+//             inputMemoryPointers_[in][(*riter)->inType(in)]);
+//             // mark features (accounting, should have no effect behaviour)
+//             if ((*riter)->inType(in) == memoryEigen::SCALAR_TYPE) {
+//               features_.insert((*riter)->inIdx(in));
+//             } else if ((*riter)->inType(in) == memoryEigen::VECTOR_TYPE) {
+//               for (size_t f = (*riter)->inIdx(in), row = 0;
+//                    row < (*riter)->inMem(in)->memoryRows(); row++) {
+//                 features_.insert(f++ % num_input_);  // toroidal
+//               }
+//             } else if ((*riter)->inType(in) == memoryEigen::MATRIX_TYPE) {
+//               for (size_t f = (*riter)->inIdx(in), row = 0;
+//                    row < (*riter)->inMem(in)->memoryRows(); row++) {
+//                 for (size_t col = 0; col < (*riter)->inMem(in)->memoryCols();
+//                      col++) {
+//                   features_.insert(f++ % num_input_);  // toroidal
+//                 }
+//               }
+//             }
+//           } else {  // this input is a memory ref
+//             (*riter)->inMem(in,
+//             privateMemoryPointers_[(*riter)->inType(in)]);
+//             Reff[(*riter)->inType(in)][(*riter)->inIdx(in)] = true;
+//           }
+//         }
+//       }
+//     }
+//   }
+// }
+
+/******************************************************************************/
+void linearM::MarkIntrons(std::unordered_map<std::string, std::any> &params) {
+  fill(op_counts_.begin(), op_counts_.end(), 0);  // count occurance of each op
+
+  map<int, vector<bool> > Meff;  // maps [memory type][index]->true/false
+  Meff[memoryEigen::SCALAR_TYPE] =
+      vector<bool>(std::any_cast<int>(params["memory_indices"]), false);
+  Meff[memoryEigen::VECTOR_TYPE] =
+      vector<bool>(std::any_cast<int>(params["memory_indices"]), false);
+  Meff[memoryEigen::MATRIX_TYPE] =
+      vector<bool>(std::any_cast<int>(params["memory_indices"]), false);
+
+  Meff[memoryEigen::SCALAR_TYPE][0] = true;  // mark bid output memory
+
+  if (std::any_cast<int>(params["continuous_output"])) {
+    Meff[memoryEigen::SCALAR_TYPE][1] = true;  // mark continuous output memory
+  }
+  for (auto ins : bid_)
+    for (int in = 0; in < 2; in++)
+      if (!(ins->isInput(in)) && ins->inType(in) != memoryEigen::NA_TYPE) Meff[ins->inType(in)][ins->inIdx(in)] = true;
 
   features_.clear();
   bidEffective_.clear();
 
-  targets[memoryEigen::SCALAR_TYPE][0] = true;  // mark the bid output register
-  if (continuousOutput)
-    sharedMemoryPointers_[memoryEigen::SCALAR_TYPE]->getActiveE()(0, 0) =
-        true;  // return value for continuous output environments
-
-  // From last to first instruction.
-  vector<instruction *>::reverse_iterator riter;
-  for (riter = bid_.rbegin(); riter != bid_.rend(); riter++) {
-    // Intruction is effective if:
-    if (!skipIntrons_ ||  // not skipping introns
-        targets[(*riter)->outType()]
-               [(*riter)->outIdx_] ||  // destination is a memory index used
-                                       // later in this program
-        (*riter)
-            ->outShared())  // destination is an index to shared stateful memory
-    {
-      bidEffective_.insert(bidEffective_.begin(), *riter);
-
-      op_counts_[(*riter)->op_]++;
-
-      // output
-      (*riter)->out_ = (*riter)->outShared()
-                           ? sharedMemoryPointers_[(*riter)->outType()]
-                           : privateMemoryPointers_[(*riter)->outType()];
-
+  for (auto riter : bid_) {
+    if (!skipIntrons_ || Meff[riter->outType()][riter->outIdx_]) {
+      bidEffective_.push_back(riter);
+      op_counts_[riter->op_]++;
+      // output TODO(spkelly) this is always true now
+      riter->out_ = privateMemoryPointers_[riter->outType()];
       // inputs
-      for (int in = 0; in < 2; in++) {
-        if ((*riter)->inType(in) !=
-            memoryEigen::NA_TYPE) {  // this input is actually used for this op
-          if ((*riter)->isInput(in)) {  // this input is a feature ref
-            // set memory pointer
-            (*riter)->inMem(in, tmpMemoryPointers_[in][(*riter)->inType(in)]);
-            // mark features
-            if ((*riter)->inType(in) == memoryEigen::SCALAR_TYPE)
-              features_.insert((*riter)->inIdx(in));
-            else if ((*riter)->inType(in) == memoryEigen::VECTOR_TYPE)
-              for (size_t f = (*riter)->inIdx(in), row = 0;
-                   row < (*riter)->inMem(in)->memoryRows(); row++)
-                features_.insert(f++ % num_input_);  // toroidal
-            else if ((*riter)->inType(in) == memoryEigen::MATRIX_TYPE)
-              for (size_t f = (*riter)->inIdx(in), row = 0;
-                   row < (*riter)->inMem(in)->memoryRows(); row++)
-                for (size_t col = 0; col < (*riter)->inMem(in)->memoryCols();
-                     col++)
-                  features_.insert(f++ % num_input_);  // toroidal
-          } else if ((*riter)->inShared(
-                         in)) {  // this input is a shared memory ref
-            (*riter)->inMem(in, sharedMemoryPointers_[(*riter)->inType(in)]);
-            (*riter)->inMem(in)->getActiveE()((*riter)->inIdx(in), 0) = true;
-            targets[(*riter)->inType(in)][(*riter)->inIdx(in)] = true;
-          } else {  // this input is an internal memory ref
-            (*riter)->inMem(in, privateMemoryPointers_[(*riter)->inType(in)]);
-            targets[(*riter)->inType(in)][(*riter)->inIdx(in)] = true;
-          }
+      for (int in = 0; in < 2; in++) {  // add in arity?
+        if (riter->isInput(in)) {       // this input is a feature ref
+          riter->inMem(in, inputMemoryPointers_[in][riter->inType(in)]);
+          // // mark features (accounting, should have no effect behaviour)
+          // if ((*riter)->inType(in) == memoryEigen::SCALAR_TYPE) {
+          //   features_.insert((*riter)->inIdx(in));
+          // } else if ((*riter)->inType(in) == memoryEigen::VECTOR_TYPE) {
+          //   for (size_t f = (*riter)->inIdx(in), row = 0;
+          //        row < (*riter)->inMem(in)->memoryRows(); row++) {
+          //     features_.insert(f++ % num_input_);  // toroidal
+          //   }
+          // } else if (riter->inType(in) == memoryEigen::MATRIX_TYPE) {
+          //   for (size_t f = (*riter)->inIdx(in), row = 0;
+          //        row < (*riter)->inMem(in)->memoryRows(); row++) {
+          //     for (size_t col = 0; col < (*riter)->inMem(in)->memoryCols();
+          //          col++) {
+          //       features_.insert(f++ % num_input_);  // toroidal
+          //     }
+          //   }
+          // }
+        } else if (riter->inType(in) !=
+                   memoryEigen::NA_TYPE) {  // this input is a memory ref
+          riter->inMem(in, privateMemoryPointers_[riter->inType(in)]);
         }
       }
     }
@@ -240,7 +298,9 @@ void linearM::MuBid(std::unordered_map<std::string, std::any> &params,
       uniform_int_distribution<int> disBid(0, bid_.size() - 1);
       int i = disBid(rng);
       int j;
-      do { j = disBid(rng); } while (i == j);
+      do {
+        j = disBid(rng);
+      } while (i == j);
       std::swap(bid_[i], bid_[j]);
       changed = true;
     }
@@ -251,52 +311,75 @@ void linearM::MuBid(std::unordered_map<std::string, std::any> &params,
 double linearM::run(state *obs, int timeStep, int graphDepth, mt19937 &rng) {
   (void)rng;
   bool dbg = false;
+  if (dbg) cerr << "id: " << id_ << " run:" << endl;
 
-  if (!stateful_) {
-    for (size_t mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-      sharedMemoryPointers_[mem_t]->CopyConstToWorking();
-    }
-    CopySharedConstToWorking();
-  }
+  // reset memory, intron removal is only consistent if we set memory here
+  if (!stateful_) CopySharedConstToWorking();
 
-  for (auto initer = bidEffective_.begin(); initer != bidEffective_.end();
-       initer++) {
+  inputMemoryPointers_[0][memoryEigen::SCALAR_TYPE]->ClearWorking();
+  inputMemoryPointers_[0][memoryEigen::VECTOR_TYPE]->ClearWorking();
+  inputMemoryPointers_[0][memoryEigen::MATRIX_TYPE]->ClearWorking();
+  inputMemoryPointers_[1][memoryEigen::SCALAR_TYPE]->ClearWorking();
+  inputMemoryPointers_[1][memoryEigen::VECTOR_TYPE]->ClearWorking();
+  inputMemoryPointers_[1][memoryEigen::MATRIX_TYPE]->ClearWorking();
+
+  privateMemoryPointers_[memoryEigen::SCALAR_TYPE]
+      ->working_memory_[0]
+      .setZero();
+  privateMemoryPointers_[memoryEigen::SCALAR_TYPE]
+      ->working_memory_[1]
+      .setZero();
+  // privateMemoryPointers_[memoryEigen::SCALAR_TYPE]->ClearWorking();
+
+  for (auto i : bidEffective_) {
     // read inputs
     size_t idx = 0;
-    for (size_t in = 0; in < 2; in++)
-      if ((*initer)->inType(in) !=
-          memoryEigen::NA_TYPE) {  // this input is actually used for this op
-        if ((*initer)->isInput(in)) {  // this input is a feature ref
-          if ((*initer)->inType(in) == memoryEigen::SCALAR_TYPE)
-            (*initer)->inMem(in)->working_memory_[idx](0, 0) =
-                obs->stateValueAtIndex((*initer)->inIdx(in));
-          else if ((*initer)->inType(in) == memoryEigen::VECTOR_TYPE)
-            for (size_t f = (*initer)->inIdx(in), row = 0;
-                 row < (*initer)->inMem(in)->memoryRows(); row++)
-              (*initer)->inMem(in)->working_memory_[idx](row, 0) =
+    for (size_t in = 0; in < 2; in++) {
+      if (i->inType(in) != memoryEigen::NA_TYPE) {
+        if (i->isInput(in)) {  // this input is a feature ref
+          if (dbg) cerr << "in" << in << " fRef ";
+          // in this case inMem(in) will be inputMemory_ and we use index 0
+          if (i->inType(in) == memoryEigen::SCALAR_TYPE)
+            i->inMem(in)->working_memory_[idx](0, 0) =
+                obs->stateValueAtIndex(i->inIdx(in));
+          else if (i->inType(in) == memoryEigen::VECTOR_TYPE)
+            for (size_t f = i->inIdx(in), row = 0;
+                 row < i->inMem(in)->memoryRows(); row++)
+              i->inMem(in)->working_memory_[idx](row, 0) =
                   obs->stateValueAtIndex(
                       f++ % num_input_);  //(*feature)[f++ % num_input_];
-          else if ((*initer)->inType(in) == memoryEigen::MATRIX_TYPE)
-            for (size_t f = (*initer)->inIdx(in), row = 0;
-                 row < (*initer)->inMem(in)->memoryRows(); row++)
-              for (size_t col = 0; col < (*initer)->inMem(in)->memoryCols();
-                   col++)
-                (*initer)->inMem(in)->working_memory_[idx](row, col) =
+          else if (i->inType(in) == memoryEigen::MATRIX_TYPE)
+            for (size_t f = i->inIdx(in), row = 0;
+                 row < i->inMem(in)->memoryRows(); row++)
+              for (size_t col = 0; col < i->inMem(in)->memoryCols(); col++)
+                i->inMem(in)->working_memory_[idx](row, col) =
                     obs->stateValueAtIndex(f++ % num_input_);
-          (*initer)->inIdxE(in, idx);  // reset inIdxE to zero for input ref
-        } else {                       // this input is a memory ref
-          // track read time for temporal memory
-          if ((*initer)->inShared(in))
-            (*initer)->inMem(in)->getReadTimeE()((*initer)->inIdx(in), 0) =
-                timeStep + (graphDepth / MAX_GRAPH_DEPTH);
+          i->inIdxE(in, idx);  // reset inIdxE to zero for input ref
+        } else {               // this input is a memory ref
+          if (dbg) cerr << "in" << in << " mRef ";
+          // // track read time for temporal memory
+          // if ((*initer)->inShared(in))
+          //   (*initer)->inMem(in)->getReadTimeE()((*initer)->inIdx(in), 0) =
+          //       timeStep + (graphDepth / MAX_GRAPH_DEPTH);
         }
       }
-    // track write times for temporal memory
-    if ((*initer)->outShared())
-      (*initer)->out_->getWriteTimeE()((*initer)->outIdx_, 0) =
-          timeStep + (graphDepth / MAX_GRAPH_DEPTH);
+    }
+    if (dbg) cerr << endl;
+    // // track write times for temporal memory
+    // if ((*initer)->outShared())
+    //   (*initer)->out_->getWriteTimeE()((*initer)->outIdx_, 0) =
+    //       timeStep + (graphDepth / MAX_GRAPH_DEPTH);
 
-    (*initer)->exec(dbg);
+    i->exec(dbg);
+  }
+  if (dbg) {
+    cerr << "id: " << id_ << " outs ";
+    cerr << privateMemoryPointers_[memoryEigen::SCALAR_TYPE]
+                ->working_memory_[0](0, 0);
+    cerr << " ";
+    cerr << privateMemoryPointers_[memoryEigen::SCALAR_TYPE]
+                ->working_memory_[1](0, 0);
+    cerr << endl;
   }
   return privateMemoryPointers_[memoryEigen::SCALAR_TYPE]->working_memory_[0](
       0, 0);
@@ -305,13 +388,13 @@ double linearM::run(state *obs, int timeStep, int graphDepth, mt19937 &rng) {
 /******************************************************************************/
 void linearM::setupMemory(size_t memoryIndices, size_t memoryRows,
                           size_t memoryCols) {
-  tmpMemoryPointers_.resize(2);  // for in1 and in2
-  for (size_t mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+  inputMemoryPointers_.resize(2);  // for in1 and in2
+  for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
     privateMemoryPointers_.push_back(
         new memoryEigen(-1, mem_t, memoryIndices, memoryRows, memoryCols));
-    tmpMemoryPointers_[0].push_back(
+    inputMemoryPointers_[0].push_back(
         new memoryEigen(-1, mem_t, memoryIndices, memoryRows, memoryCols));
-    tmpMemoryPointers_[1].push_back(
+    inputMemoryPointers_[1].push_back(
         new memoryEigen(-1, mem_t, memoryIndices, memoryRows, memoryCols));
   }
   sharedMemoryPointers_.resize(memoryEigen::NUM_MEMORY_TYPES);

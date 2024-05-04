@@ -68,9 +68,9 @@ class TPG {
       vector<program *> &winningPrograms, vector<set<long>> &decisionFeatures,
       vector<set<memoryEigen *, memoryEigenIdComp>> &decisionMemories,
       vector<team *> &teamPath, mt19937 &rng);
-  void getAllNodes(team *tm, set<team *, teamIdComp> &teams,
+  void GetAllNodes(team *tm, set<team *, teamIdComp> &teams,
                    set<program *, programIdComp> &programs);
-  void getAllNodes(team *tm, set<team *, teamIdComp> &teams,
+  void GetAllNodes(team *tm, set<team *, teamIdComp> &teams,
                    set<program *, programIdComp> &programs,
                    set<memoryEigen *, memoryEigenIdComp> &memories);
   team *getBestTeam();
@@ -81,7 +81,7 @@ class TPG {
   void internalReplacementPareto(int, int, int, team *, map<long, team *> &,
                                  set<team *, teamIdComp> &, mt19937 &);
   bool isElitePS(team *tm, int phase);
-  void markEffectiveCode(team *tm);
+  void MarkEffectiveCode(team *tm);
   void policyFeatures(int, set<long> &, bool);
   void printGraphDot(
       team *, size_t frame, int episode, int step, size_t depth,

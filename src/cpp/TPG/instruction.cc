@@ -4,7 +4,7 @@ const std::vector<double> instruction::constants_ = {
     -0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1,
     0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9};
 
-vector<vector<int> > instruction::op_mem_types_(NUM_OP);
+vector<vector<size_t> > instruction::op_mem_types_(NUM_OP);
 vector<instruction::operation> instruction::op_list_(NUM_OP);
 
 string instruction::checkpoint() {
@@ -21,7 +21,7 @@ string instruction::checkpoint() {
   return oss.str();
 }
 
-void instruction::setupOps() {
+void instruction::SetupOps() {
   op_mem_types_[SCALAR_SUM_OP_] = {memoryEigen::SCALAR_TYPE,
                                    memoryEigen::SCALAR_TYPE,
                                    memoryEigen::SCALAR_TYPE};
@@ -398,11 +398,12 @@ void instruction::mutate(bool uniform, vector<bool> &legal_ops, mt19937 &rng) {
   auto nOp = std::count(legal_ops.begin(), legal_ops.end(), true);
 
   if (uniform) {  // randomly set each part of this instruction
-    std::uniform_int_distribution<> dis(0, 2);
-    in1Src_ = dis(rng);
-    in2Src_ = dis(rng);
-    dis = std::uniform_int_distribution<>(0, 1);
-    outSrc_ = dis(rng);
+    //std::uniform_int_distribution<> dis(0, 2);
+    std::uniform_int_distribution<> dis(0, 1);
+    in1Src_ = dis(rng) == 0 ? 0 : 2; // private memory or input
+    in2Src_ = dis(rng) == 0 ? 0 : 2; //private memory or input
+    // dis = std::uniform_int_distribution<>(0, 1);
+    outSrc_ = 0; //dis(rng);  // only write to private
     dis = std::uniform_int_distribution<>(0, memIndices_ - 1);
     outIdx_ = dis(rng);
     dis = std::uniform_int_distribution<>(0, legal_ops.size() - 1);
@@ -418,49 +419,52 @@ void instruction::mutate(bool uniform, vector<bool> &legal_ops, mt19937 &rng) {
   } else {  // randomly change one part of this instruction
     int prev;
     // select which part to change
-    std::uniform_int_distribution<> dis(0, 6);
+    // std::uniform_int_distribution<> dis(0, 6);
+    std::uniform_int_distribution<> dis(0, 5);
     int i = dis(rng);
     switch (i) {
       case 0:  // change in1 src to one of: private memory, shared memory, input
         prev = in1Src_;
-        dis = std::uniform_int_distribution<>(0, 2);
+        // dis = std::uniform_int_distribution<>(0, 2);
+        dis = std::uniform_int_distribution<>(0, 1);
         do {
-          in1Src_ = dis(rng);
+          in1Src_ = dis(rng) == 0 ? 0 : 2;  // private memory or input
         } while (in1Src_ == prev);
         // switching from input to memory ref
         if (prev == 2) in1Idx_ = in1IdxE_ = in1Idx_ % memIndices_;
         break;
       case 1:  // change in2 src to one of: private memory, shared memory, input
         prev = in2Src_;
-        dis = std::uniform_int_distribution<>(0, 2);
+        // dis = std::uniform_int_distribution<>(0, 2);
+        dis = std::uniform_int_distribution<>(0, 1);
         do {
-          in2Src_ = dis(rng);
+          in2Src_ = dis(rng) == 0 ? 0 : 2;  // private memory or input
         } while (in2Src_ == prev);
         // switching from input to memory ref
         if (prev == 2) in2Idx_ = in2IdxE_ = in2Idx_ % memIndices_;
         break;
-      case 2:  // change out src to one of: priate memory or shared memory
-        prev = outSrc_;
-        dis = std::uniform_int_distribution<>(0, 1);
-        do {
-          outSrc_ = dis(rng);
-        } while (outSrc_ == prev);
-        break;
-      case 3:  // change out index
+    //   case 2:  // change out src to one of: priate memory or shared memory
+    //     prev = outSrc_;
+    //     dis = std::uniform_int_distribution<>(0, 1);
+    //     do {
+    //       outSrc_ = dis(rng);
+    //     } while (outSrc_ == prev);
+    //     break;
+      case 2:  // change out index
         prev = outIdx_;
         dis = std::uniform_int_distribution<>(0, memIndices_ - 1);
         do {
           outIdx_ = dis(rng);
         } while (outIdx_ == prev);
         break;
-      case 4:  // change op
+      case 3:  // change op
         prev = op_;
         dis = std::uniform_int_distribution<>(0, legal_ops.size() - 1);
         do {
           op_ = dis(rng);
         } while ((nOp > 1 && op_ == prev) || !legal_ops[op_]);
         break;
-      case 5:  // change in1 index
+      case 4:  // change in1 index
         if (num_input_ < 2) break;
         prev = in1Idx_;
         dis = std::uniform_int_distribution<>(
@@ -469,7 +473,7 @@ void instruction::mutate(bool uniform, vector<bool> &legal_ops, mt19937 &rng) {
           in1Idx_ = in1IdxE_ = dis(rng);
         } while (in1Idx_ == prev);
         break;
-      case 6:  // change in 2 index
+      case 5:  // change in2 index
         if (num_input_ < 2) break;
         prev = in2Idx_;
         dis = std::uniform_int_distribution<>(
