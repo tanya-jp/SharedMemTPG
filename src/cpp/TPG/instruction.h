@@ -121,24 +121,24 @@ class instruction {
   inline void exec(bool dbg) {
     (this->*op_list_[op_])(dbg);
     // // protect output
-    // out_->working_memory_[outIdx_].array() =
-    //     (out_->working_memory_[outIdx_].array().isFinite()).select(out_->working_memory_[outIdx_],
-    //     0);
+    out_->working_memory_[outIdx_].array() =
+        (out_->working_memory_[outIdx_].array().isFinite()).select(out_->working_memory_[outIdx_],
+        0);
   }
 
   inline int inIdx(int i) const { return i == 0 ? in1Idx_ : in2Idx_; }
   inline void inIdx(int i, int idx) { (i == 0 ? in1Idx_ : in2Idx_) = idx; }
   inline int inIdxE(int i) const { return i == 0 ? in1IdxE_ : in2IdxE_; }
   inline void inIdxE(int i, int idx) { (i == 0 ? in1IdxE_ : in2IdxE_) = idx; }
-  // inline bool inShared(int i) const {
-  //   return i == 0 ? in1Src_ == 1 : in2Src_ == 1;
-  // }
   inline memoryEigen* inMem(int i) const { return i == 0 ? in1_ : in2_; }
   inline void inMem(int i, memoryEigen* m) { (i == 0 ? in1_ : in2_) = m; }
   inline size_t inType(int i) const { return op_mem_types_[op_][i + 1]; }
-  inline bool isInput(int i) const {
+  inline bool IsInput(int i) const {
     return (i == 0 ? in1Src_ == 2 : in2Src_ == 2) &&
            inType(i) != memoryEigen::NA_TYPE;
+  }
+  inline bool IsMemoryRef(int i) const {
+    return !IsInput(i) && inType(i) != memoryEigen::NA_TYPE;
   }
   inline int memIndices() const { return memIndices_; }
   inline void memIndices(int i) { memIndices_ = i; }

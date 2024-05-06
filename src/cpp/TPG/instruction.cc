@@ -413,8 +413,8 @@ void instruction::mutate(bool uniform, vector<bool> &legal_ops, mt19937 &rng) {
     dis = std::uniform_int_distribution<>(
         0, (in1Src_ > 1 ? num_input_ - 1 : memIndices_ - 1));
     in1Idx_ = in1IdxE_ = dis(rng);
-    dis = std::uniform_int_distribution<>(
-        0, (in2Src_ > 1 ? num_input_ - 1 : memIndices_ - 1));
+    // dis = std::uniform_int_distribution<>(
+        // 0, (in2Src_ > 1 ? num_input_ - 1 : memIndices_ - 1));
     in2Idx_ = in2IdxE_ = dis(rng);
   } else {  // randomly change one part of this instruction
     int prev;
@@ -443,13 +443,6 @@ void instruction::mutate(bool uniform, vector<bool> &legal_ops, mt19937 &rng) {
         // switching from input to memory ref
         if (prev == 2) in2Idx_ = in2IdxE_ = in2Idx_ % memIndices_;
         break;
-    //   case 2:  // change out src to one of: priate memory or shared memory
-    //     prev = outSrc_;
-    //     dis = std::uniform_int_distribution<>(0, 1);
-    //     do {
-    //       outSrc_ = dis(rng);
-    //     } while (outSrc_ == prev);
-    //     break;
       case 2:  // change out index
         prev = outIdx_;
         dis = std::uniform_int_distribution<>(0, memIndices_ - 1);

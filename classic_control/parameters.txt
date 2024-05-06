@@ -23,10 +23,10 @@ test_mod 50
 
 # in multitask settings, which tasks are active
 # rhs should be a comma-separated list like Cartpole,Acrobot
-active_tasks Cartpole
+active_tasks CartCentering
 
 # number of fitness functions available
-n_fit_mode 1
+n_fit_mode 0
 
 # which fitness function to use, if multiple available
 fit_mode 0
@@ -35,13 +35,13 @@ fit_mode 0
 dist_mode 0
 
 # skip introns during evaluation
-skip_introns 1
+skip_introns 0
 
 # auxilliary seed, e.g. for simulators
-seed_aux -1
+seed_aux 42
 
 # max number of generations
-n_generations 1000000
+n_generations 1000
 
 # allow mutation of internal teams (i.e. non-root teams (in-progress)
 mu_internal 0
@@ -92,7 +92,7 @@ n_input 2
 max_initial_prog_size 5
 
 # max program size
-max_prog_size 100
+max_prog_size 1000000
 
 # program variation: probability of changing the program
 p_bid_mutate 1.0
@@ -117,7 +117,8 @@ bid_mu_const_stddev 0.05
 
 # memory size: number of memory indices
 # each memory index points to a data structure with some number of rows and columns
-memory_indices 3
+# more the 4 indicies breaks introns removal for continus output???
+memory_indices 8
 
 # memory size: number of rows
 memory_rows 2
@@ -126,16 +127,16 @@ memory_rows 2
 memory_cols 2
 
 # number of elite teams
-n_elite 100
+n_elite 400
 
 # number of training outcome to store
-n_stored_outcomes_TRAIN 20
+n_stored_outcomes_TRAIN 5
 
 # number of test outcomes to store
 n_stored_outcomes_VALIDATION 1
 
 # number of validation outcomes to store
-n_stored_outcomes_TEST 100
+n_stored_outcomes_TEST 10
 
 # fitness proportional selection
 fit_prop_select 0
@@ -145,11 +146,11 @@ diversity_mode 0
 
 # operations, uncomment to activate
 
-#scalar
+# scalar ops
 SCALAR_SUM_OP
-#SCALAR_DIFF_OP
-#SCALAR_PRODUCT_OP
-#SCALAR_DIVISION_OP
+SCALAR_DIFF_OP
+SCALAR_PRODUCT_OP
+SCALAR_DIVISION_OP
 #SCALAR_ABS_OP
 #SCALAR_RECIPROCAL_OP
 #SCALAR_SIN_OP
@@ -172,7 +173,7 @@ SCALAR_SUM_OP
 #SCALAR_MIN_OP
 #SCALAR_MAX_OP
 
-#vector 
+## vector & matrix ops
 #VECTOR_HEAVYSIDE_OP
 #MATRIX_HEAVYSIDE_OP
 #SCALAR_VECTOR_PRODUCT_OP
@@ -213,9 +214,11 @@ SCALAR_SUM_OP
 #MATRIX_ST_DEV_OP
 #VECTOR_CONST_SET_OP
 #MATRIX_CONST_SET_OP
+
+# noise
 #SCALAR_UNIFORM_SET_OP
-#VECTOR_UNIFORM_SET_OP
-#MATRIX_UNIFORM_SET_OP
 #SCALAR_GAUSSIAN_SET_OP
+#VECTOR_UNIFORM_SET_OP
 #VECTOR_GAUSSIAN_SET_OP
+#MATRIX_UNIFORM_SET_OP
 #MATRIX_GAUSSIAN_SET_OP

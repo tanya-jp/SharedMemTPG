@@ -245,7 +245,7 @@ void team::updateComplexityRecord(map<long, team *> &teamMap, int rtcIndex) {
   // programs _numActiveTeams = teams.size(); _numActivePrograms =
   //programs.size(); _numEffectiveInstructions = 0; _numActiveFeatures = 0; for
   // (auto leiter = programs.begin(); leiter != programs.end(); leiter++){
-  //    _numEffectiveInstructions += (*leiter)->esize();
+  //    _numEffectiveInstructions += (*leiter)->SizeEffective();
   //    _numActiveFeatures += (*leiter)->numFeatures();
   // }
   runTimeComplexityIns_ =
@@ -265,7 +265,7 @@ void team::updateComplexityRecord(map<long, team *> &teamMap, int rtcIndex,
   // programs _numActiveTeams = teams.size(); _numActivePrograms =
   //programs.size(); _numEffectiveInstructions = 0; _numActiveFeatures = 0; for
   // (auto leiter = programs.begin(); leiter != programs.end(); leiter++){
-  //    _numEffectiveInstructions += (*leiter)->esize();
+  //    _numEffectiveInstructions += (*leiter)->SizeEffective();
   //    _numActiveFeatures += (*leiter)->numFeatures();
   // }
   runTimeComplexityIns_ =
@@ -397,8 +397,8 @@ void team::policyInstructions(
   visitedTeams.insert(teamMap[id_]);
 
   for (auto leiter = members_.begin(); leiter != members_.end(); leiter++) {
-    programInstructionCounts.push_back((*leiter)->size());
-    effectiveProgramInstructionCounts.push_back((*leiter)->esize());
+    programInstructionCounts.push_back((*leiter)->Size());
+    effectiveProgramInstructionCounts.push_back((*leiter)->SizeEffective());
 
     if ((*leiter)->action() >= 0 &&
         find(visitedTeams.begin(), visitedTeams.end(),
@@ -789,9 +789,9 @@ program *team::getAction(state *s, map<long, team *> &teamMap,
 
   int l = 0;
   for (auto leiter = members_.begin(); leiter != members_.end(); leiter++) {
-    (*leiter)->bidVal((*leiter)->run(s, timeStep, visitedTeams.size(), rng));
+    (*leiter)->bidVal((*leiter)->Run(s, timeStep, visitedTeams.size()));
     membersRun_[l++] = *leiter;
-    decisionInstructions += (*leiter)->esize();
+    decisionInstructions += (*leiter)->SizeEffective();
   }
 
   sort(membersRun_.begin(), membersRun_.end(), ProgramBidLexicalCompare());
@@ -833,10 +833,10 @@ program *team::getAction(
 
   int l = 0;
   for (auto leiter = members_.begin(); leiter != members_.end(); leiter++) {
-    (*leiter)->bidVal((*leiter)->run(s, timeStep, visitedTeams.size(), rng));
+    (*leiter)->bidVal((*leiter)->Run(s, timeStep, visitedTeams.size()));
     allPrograms.push_back(*leiter);
     membersRun_[l++] = *leiter;
-    decisionInstructions += (*leiter)->esize();
+    decisionInstructions += (*leiter)->SizeEffective();
 
     (*leiter)->features(featuresSingle);
     features.insert(featuresSingle.begin(), featuresSingle.end());

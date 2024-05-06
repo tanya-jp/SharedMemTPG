@@ -328,5 +328,5 @@ fi
 
 pdfunite 0*.pdf ${wd}_p${phs}.pdf
 rm 0*.pdf
-#rm *rslt
+rm *rslt
 

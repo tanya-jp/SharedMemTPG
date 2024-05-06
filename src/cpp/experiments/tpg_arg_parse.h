@@ -23,6 +23,7 @@ void tpg_arg_parse(TPG& tpg, int argc, char** argv) {
       }
       case 's': {
         tpg.seed(TPG_SEED, atoi(optarg));
+        tpg.seed(AUX_SEED, atoi(optarg));
         break;
       }
       case 't': {

@@ -16,15 +16,12 @@ class memoryEigen {
   static const size_t VECTOR_TYPE = 1;
   static const size_t MATRIX_TYPE = 2;
   static const size_t NA_TYPE = 3;
-  // static const inline vector<uint8_t> MEMORY_TYPES{SCALAR_TYPE, VECTOR_TYPE,
-  //                                                  MATRIX_TYPE};
   static const int NUM_MEMORY_TYPES = 3;
 
   inline Ref<MatrixXb> getActiveE() { return active_; }
   inline Ref<MatrixXd> getReadTimeE() { return read_time_; }
   inline Ref<MatrixXd> getWriteTimeE() { return write_time_; }
 
-  std::vector<Matrix<double, Dynamic, Dynamic> > const_memory_;
   inline string checkpoint() {
     ostringstream oss;
     const static IOFormat CPFormat(StreamPrecision, DontAlignCols, ":", ":");
@@ -185,7 +182,7 @@ class memoryEigen {
   size_t memoryRows_;
   size_t memoryCols_;
   std::vector<Matrix<double, Dynamic, Dynamic> > working_memory_;
-  // std::vector<Matrix<double, Dynamic, Dynamic> > const_memory_;
+  std::vector<Matrix<double, Dynamic, Dynamic> > const_memory_;
   Matrix<bool, Dynamic, 1> active_;
   Matrix<double, Dynamic, 1> read_time_;
   Matrix<double, Dynamic, 1> write_time_;

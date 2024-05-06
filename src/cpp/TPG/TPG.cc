@@ -231,7 +231,7 @@ void TPG::MarkEffectiveCode(team *tm) {
     for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
       if ((prog->MemGet(mem_t))->RefsPolicy() > 1) active = true;
     }
-    if (prog->esize() > 0 && active) tm->SetActive(prog);
+    if (prog->SizeEffective() > 0 && active) tm->SetActive(prog);
   }
 }
 
@@ -530,7 +530,7 @@ team *TPG::CloneTeam(team *team_to_clone) {
 
 program *TPG::CloneProgram(program *prog) {
   program *prog_clone =
-      new linearM(GetState("t_current"), *(dynamic_cast<linearM *>(prog)),
+      new RegisterMachine(GetState("t_current"), *(dynamic_cast<RegisterMachine *>(prog)),
                   params_, state_["program_count"]++);
   if (prog_clone->action() >= 0)
     _teamMap[prog_clone->action()]->AddIncomingProgram(prog_clone->id_);
@@ -1073,7 +1073,7 @@ void TPG::InitTeams() {
       // discrete atomic actions are negatives -1 to -numAtomicActions()
       long discrete_action = -1 - disA(_rngs[TPG_SEED]);
       auto new_prog =
-          new linearM(GetState("t_current"), discrete_action, params_,
+          new RegisterMachine(GetState("t_current"), discrete_action, params_,
                       state_["program_count"]++, _rngs[TPG_SEED], _ops);
       // create one new memory of each type for this team
       for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
@@ -1983,34 +1983,34 @@ void TPG::printTeamInfo(long t, int phase, bool singleBest, long teamId) {
 
 /******************************************************************************/
 // Algorithm 5.1 (linear crossover)
-void TPG::programCrossover(linearM *p1, linearM *p2, linearM **c1, linearM **c2,
+void TPG::programCrossover(RegisterMachine *p1, RegisterMachine *p2, RegisterMachine **c1, RegisterMachine **c2,
                            mt19937 &rng) {
-  int dcMax = min(p1->size(), p2->size());
+  int dcMax = min(p1->Size(), p2->Size());
   int dsMax = dcMax;
   int lsMax = dcMax;
 
-  *c1 = dynamic_cast<linearM *>(CloneProgram(p1));
-  *c2 = dynamic_cast<linearM *>(CloneProgram(p2));
+  *c1 = dynamic_cast<RegisterMachine *>(CloneProgram(p1));
+  *c2 = dynamic_cast<RegisterMachine *>(CloneProgram(p2));
 
   int pos1, pos2;
 
   vector<program *> parents{p1, p2};
   vector<int> segLengths{1, 1};
 
-  if (p1->size() > p2->size()) swap(parents[0], parents[1]);
+  if (p1->Size() > p2->Size()) swap(parents[0], parents[1]);
 
   // 1
-  uniform_int_distribution<> dis1(0, parents[0]->size() - 1);
+  uniform_int_distribution<> dis1(0, parents[0]->Size() - 1);
   pos1 = dis1(rng);
-  uniform_int_distribution<> dis2(0, parents[1]->size() - 1);
+  uniform_int_distribution<> dis2(0, parents[1]->Size() - 1);
   do {
     pos2 = dis2(rng);
-  } while (abs(pos1 - pos2) > min(parents[0]->size() - 1, dcMax));
+  } while (abs(pos1 - pos2) > min(parents[0]->Size() - 1, dcMax));
 
   // 2,3
-  uniform_int_distribution<> dis3(1, min(parents[0]->size() - pos1, lsMax));
+  uniform_int_distribution<> dis3(1, min(parents[0]->Size() - pos1, lsMax));
   segLengths[0] = dis3(rng);
-  uniform_int_distribution<> dis4(1, min(parents[1]->size() - pos2, lsMax));
+  uniform_int_distribution<> dis4(1, min(parents[1]->Size() - pos2, lsMax));
   do {
     segLengths[1] = dis4(rng);
   } while (abs(segLengths[0] - segLengths[1]) > dsMax);
@@ -2019,27 +2019,23 @@ void TPG::programCrossover(linearM *p1, linearM *p2, linearM **c1, linearM **c2,
   if (segLengths[0] > segLengths[1]) swap(segLengths[0], segLengths[1]);
 
   // 5
-  if (p1->size() - (segLengths[1] - segLengths[0]) < 1 ||
-      p2->size() + (segLengths[1] - segLengths[0]) >
+  if (p1->Size() - (segLengths[1] - segLengths[0]) < 1 ||
+      p2->Size() + (segLengths[1] - segLengths[0]) >
           GetParam<int>("max_prog_size")) {
     if (real_dist_(rng) < 0.5)
       segLengths[1] = segLengths[0];
     else
       segLengths[0] = segLengths[1];
 
-    if (pos1 + segLengths[0] > p1->size())
-      segLengths[0] = segLengths[1] = p1->size() - pos1;
+    if (pos1 + segLengths[0] > p1->Size())
+      segLengths[0] = segLengths[1] = p1->Size() - pos1;
   }
 
-  vector<instruction *> parentProg1;
-  p1->getBid(parentProg1);
-  vector<instruction *> parentProg2;
-  p2->getBid(parentProg2);
+  vector<instruction *> parentProg1 = p1->bid_;
+  vector<instruction *> parentProg2 = p2->bid_;
 
-  vector<instruction *> childProg1;
-  p1->getBid(childProg1);
-  vector<instruction *> childProg2;
-  p2->getBid(childProg2);
+  vector<instruction *> childProg1 = p1->bid_;
+  vector<instruction *> childProg2 = p2->bid_;
 
   // exchange seg1 in p1 by seg2 in p2
   childProg1.clear();
@@ -2109,10 +2105,12 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       long id2 = atoi(outcomeFields[2].c_str());
       teamPair tp(_teamMap[id1], _teamMap[id2]);
       _teamPairsToCompair.push_back(tp);
-    } else if (outcomeFields[0].compare("seed_tpg") == 0)
-      seed(TPG_SEED, atoi(outcomeFields[1].c_str()));
-    else if (outcomeFields[0].compare("seed_aux") == 0)
-      seed(AUX_SEED, atoi(outcomeFields[1].c_str()));
+    }
+    // TODO(skelly) would we ever want to re-seed here? 
+    // else if (outcomeFields[0].compare("seed_tpg") == 0)
+    //   seed(TPG_SEED, atoi(outcomeFields[1].c_str()));
+    // else if (outcomeFields[0].compare("seed_aux") == 0)
+    //   seed(AUX_SEED, atoi(outcomeFields[1].c_str()));
     else if (outcomeFields[0].compare("t") == 0)
       state_["t_current"] = atoi(outcomeFields[1].c_str());
     else if (outcomeFields[0].compare("active_task") == 0)
@@ -2150,7 +2148,7 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       AddMemory(mem);
     }
 
-    else if (outcomeFields[0].compare("linearM") == 0) {
+    else if (outcomeFields[0].compare("RegisterMachine") == 0) {
       vector<int> memTypeIds;
       memTypeIds.resize(memoryEigen::NUM_MEMORY_TYPES);
       program *l;
@@ -2183,9 +2181,9 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
         in->in2IdxE_ = stringToInt(instructionString[8]);
         bid.push_back(in);
       }
-      // l = new linearM(gtime, action, stateful, dim, _memoryIndices,
+      // l = new RegisterMachine(gtime, action, stateful, dim, _memoryIndices,
       // _memoryRows, _memoryCols, id, nrefs, bid);
-      l = new linearM(gtime, action, stateful, params_, id, nrefs, bid);
+      l = new RegisterMachine(gtime, action, stateful, params_, id, nrefs, bid);
 
       for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
         l->MemSet(mem_t, _Memory[mem_t][memTypeIds[mem_t]]);
@@ -2497,7 +2495,7 @@ void TPG::updateMODESFilters(bool roots) {
             _persistenceFilterA[(*teiter)->id_].activeProgramIds.insert(
                 (*leiter)->id_);
             _persistenceFilterA[(*teiter)->id_].effectiveInstructionsTotal +=
-                (*leiter)->esize();
+                (*leiter)->SizeEffective();
           }
           for (auto teiter2 = teams.begin(); teiter2 != teams.end(); teiter2++)
             _persistenceFilterA[(*teiter)->id_].activeTeamIds.insert(

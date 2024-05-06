@@ -64,7 +64,7 @@ int WrapDiscreteAction(EvalStruct &eval) {
 }
 
 double WrapContinuousAction(EvalStruct &eval) {
-  return (eval.leafProgram->MemGet(memoryEigen::SCALAR_TYPE))
+  return eval.leafProgram->privateMemory_[memoryEigen::SCALAR_TYPE]
       ->working_memory_[1](0, 0);
 }
 
@@ -173,8 +173,8 @@ void AccumulateStepStats(EvalStruct &eval) {
 
 void FinalizeStepStats(TPG &tpg, EvalStruct &eval) {
   if (eval.game->eval_type_ == "RecursiveForecast") {
-    eval.runTimeStats[REWARD1_IDX] /= eval.game->getStep();
-    eval.runTimeStats[REWARD2_IDX] /= eval.game->getStep();
+    eval.runTimeStats[REWARD1_IDX] = eval.game->getStep();
+    eval.runTimeStats[REWARD2_IDX] = eval.game->getStep();
   }
   eval.runTimeStats[VISITED_TEAMS_IDX] /= eval.game->getStep();
   eval.runTimeStats[INSTRUCTIONS_IDX] /= eval.game->getStep();

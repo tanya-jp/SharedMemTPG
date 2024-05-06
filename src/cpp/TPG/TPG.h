@@ -4,8 +4,8 @@
 #include <iomanip>
 #include <random>
 
+#include "RegisterMachine.h"
 #include "instruction.h"
-#include "linearM.h"
 #include "memoryEigen.h"
 #include "point.h"
 #include "state.h"
@@ -44,7 +44,7 @@ class TPG {
   void TeamMutator_ProgramOrder(team *team_to_mu);
   void TeamMutator_AddPrograms(team *team_to_mu);
   void TeamMutator_RemovePrograms(team *team_to_mu);
-  team* CloneTeam(team* team_to_clone);
+  team *CloneTeam(team *team_to_clone);
   program *CloneProgram(program *prog);
   void ProgramMutator_MemoryPointer(program *prog_to_mu);
   void ProgramMutator_Instructions(program *prog_to_mu);
@@ -107,8 +107,8 @@ class TPG {
   void printOss();
   void printOss(ostringstream &o);
   void printTeamInfo(long, int, bool, long teamId = -1);
-  void programCrossover(linearM *p1, linearM *p2, linearM **c1, linearM **c2,
-                        mt19937 &);
+  void programCrossover(RegisterMachine *p1, RegisterMachine *p2,
+                        RegisterMachine **c1, RegisterMachine **c2, mt19937 &);
   void readCheckpoint(long, int, int, bool, const string &);
 
   void ReadParameters(string file_name,

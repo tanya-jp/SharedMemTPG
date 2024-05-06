@@ -14,7 +14,7 @@
 
 #define STATE_SIZE 4
 
-/**********************************************************************************************/
+/******************************************************************************/
 class CartCentering : public TaskEnv {
  protected:
   /*** Parameters for simulation ***/
@@ -38,7 +38,7 @@ class CartCentering : public TaskEnv {
   uniform_real_distribution<> disReset;
 
  public:
-  /**********************************************************************************************/
+  /****************************************************************************/
   CartCentering() {
     disReset = uniform_real_distribution<>(MIN_VAR_INI, MAX_VAR_INI);
     actionsDiscrete.push_back(-FORCE_MAG);
@@ -52,10 +52,10 @@ class CartCentering : public TaskEnv {
     state_po.resize(STATE_SIZE);
   }
 
-  /**********************************************************************************************/
+  /****************************************************************************/
   ~CartCentering() {}
 
-  /**********************************************************************************************/
+  /****************************************************************************/
   void normalizeState(bool po) {
     if (po) {
       state_po[X] /= MAX_X;
@@ -63,7 +63,7 @@ class CartCentering : public TaskEnv {
     }
   }
 
-  /**********************************************************************************************/
+  /****************************************************************************/
   void reset(mt19937 &rng) {
     step = 0;
 
@@ -83,7 +83,7 @@ class CartCentering : public TaskEnv {
     normalizeState(true);
   }
 
-  /**********************************************************************************************/
+  /****************************************************************************/
   bool terminal() {
     terminalState = step >= max_step ||
                             (abs(state[X]) <= NEAR_ORIGIN &&
@@ -94,7 +94,7 @@ class CartCentering : public TaskEnv {
     return terminalState;
   }
 
-  /**********************************************************************************************/
+  /****************************************************************************/
   Results update(int actionD, double actionC, mt19937 &rng) {
     (void)actionC;
     double force;
@@ -134,7 +134,7 @@ class CartCentering : public TaskEnv {
     return {reward, 0.0};
   }
 
-  /**********************************************************************************************/
+  /****************************************************************************/
   // opengl
   void display_function(int episode, int actionD, double actionC) {
     (void)episode;

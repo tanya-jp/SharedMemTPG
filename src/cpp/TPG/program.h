@@ -29,8 +29,8 @@ class program {
   double key_;
   int lastCompareFactor_;
 
-  vector<memoryEigen *> sharedMemoryPointers_;
-  vector<memoryEigen *> privateMemoryPointers_;
+  vector<memoryEigen *> sharedMemory_;
+  vector<memoryEigen *> privateMemory_;
 
   // read inputs into these at runtime
   vector<vector<memoryEigen *> > inputMemoryPointers_;
@@ -45,7 +45,7 @@ class program {
 
   inline int action() { return action_; }
   inline void action(int a) { action_ = a; }
-  virtual double run(state *s, int timeStep, int graphDepth, mt19937 &rng) = 0;
+  virtual double Run(state *s, int& time_step, const size_t& graph_depth) = 0;
   inline double bidVal() { return bid_val_; }
   inline void bidVal(double b) { bid_val_ = b; }
   virtual string checkpoint(bool) = 0;
@@ -66,28 +66,28 @@ class program {
   virtual void MarkIntrons(std::unordered_map<std::string, std::any> &) = 0;
   
   inline void MemGet(size_t type, memoryEigen *&m) {
-    m = sharedMemoryPointers_[type];
+    m = sharedMemory_[type];
   }
 
   inline void MemSet(uint8_t type, memoryEigen *m) {
-    sharedMemoryPointers_[type] = m;
+    sharedMemory_[type] = m;
     m->refInc();
   }
 
   inline memoryEigen *MemGet(uint8_t type) {
-    return sharedMemoryPointers_[type];
+    return sharedMemory_[type];
   }
 
   inline void CopySharedConstToWorking() {
-    for (size_t i = 0; i < sharedMemoryPointers_.size(); i++) {
-      privateMemoryPointers_[i]->working_memory_ =
-          sharedMemoryPointers_[i]->const_memory_;
+    for (size_t i = 0; i < sharedMemory_.size(); i++) {
+      privateMemory_[i]->working_memory_ =
+          sharedMemory_[i]->const_memory_;
     }
   }
 
   inline void ClearWorking() {
-    for (size_t i = 0; i < sharedMemoryPointers_.size(); i++) {
-      privateMemoryPointers_[i]->ClearWorking();
+    for (size_t i = 0; i < sharedMemory_.size(); i++) {
+      privateMemory_[i]->ClearWorking();
     }
   }
 
@@ -110,8 +110,8 @@ class program {
   inline void setId(long id) { id_ = id; }
   inline void setNrefs(int nrefs) { nrefs_ = nrefs; }
   inline void setProfile(vector<double> &p) { profile_ = p; }
-  virtual int size() = 0;
-  virtual int esize() = 0;
+  virtual int Size() = 0;
+  virtual int SizeEffective() = 0;
   inline bool stateful() { return stateful_; }
   inline void stateful(bool s) { stateful_ = s; }
   inline bool targetMem() { return targetMem_; }
