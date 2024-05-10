@@ -1722,15 +1722,6 @@ void TPG::printGraphDotGPEMAnimate(
 
 /******************************************************************************/
 void TPG::printPhyloGraphDot(team *tm) {
-  vector<long> teamIds;
-  tm->getAncestorIds(teamIds);
-
-  double nodeWidth = 10.0;
-  double edgeWidth_1 = 20.0;  // 5;
-                              // double edgeWidth_2 = 30;
-                              // double arrowSize_1 = 2;//0.1;
-                              // double arrowSize_2 = 1;//0.2;
-
   char outputFilename[80];
   ofstream ofs;
 
@@ -1743,42 +1734,61 @@ void TPG::printPhyloGraphDot(team *tm) {
   ofs << "ratio=0.5" << endl;
   ofs << "rankdir=\"LR\"" << endl;
 
-  for (auto it = teamIds.begin(); it != teamIds.end(); it++) {
-    ofs << "subgraph {" << endl;
+  // Basic breadth-first search
 
-    string col = "";
-    if (_phyloGraph[*it].fitnessBin.compare("012") == 0)
-      col = "1";
-    else if (_phyloGraph[*it].fitnessBin.compare("12") == 0)
-      col = "2";
-    else if (_phyloGraph[*it].fitnessBin.compare("02") == 0)
-      col = "3";
-    else if (_phyloGraph[*it].fitnessBin.compare("2") == 0)
-      col = "4";
-    else if (_phyloGraph[*it].fitnessBin.compare("01") == 0)
-      col = "5";
-    else if (_phyloGraph[*it].fitnessBin.compare("1") == 0)
-      col = "6";
-    else if (_phyloGraph[*it].fitnessBin.compare("0") == 0)
-      col = "8";
+  std::unordered_set<long> visited = {tm->id_};
+  list<long> queue = {tm->id_};
 
-    ofs << " t_" << *it
-        << " [shape=circle, style=filled, colorscheme=set18, color="
-        << col.c_str()
-        << ", label=\"\", fontsize=84, regular=1, width=" << nodeWidth << "]"
-        << endl;
+  while (!queue.empty()) {
+    long currId = queue.front();
+    queue.pop_front();
 
-    if (_phyloGraph[*it].adj.size() > 0)
-      for (size_t i = 0; i < _phyloGraph[*it].adj.size(); i++)
-        if (find(teamIds.begin(), teamIds.end(), _phyloGraph[*it].adj[i]) !=
-            teamIds.end())
-          ofs << " t_" << *it << "->"
-              << "t_" << _phyloGraph[*it].adj[i] << " [penwidth=" << edgeWidth_1
-              << " color="
-              << "black"
-              << "];" << endl;
-    ofs << "}" << endl;
+    for (long ancId : _phyloGraph[currId].ancestorIds) {
+      ofs << ancId << " -> " << currId << endl;
+      if (visited.find(ancId) == visited.end()) {
+        visited.insert(ancId);
+        queue.push_back(ancId);
+      }
+    }
   }
+
+
+  // for (auto it = teamIds.begin(); it != teamIds.end(); it++) {
+  //   ofs << "subgraph {" << endl;
+
+  //   string col = "";
+  //   if (_phyloGraph[*it].fitnessBin.compare("012") == 0)
+  //     col = "1";
+  //   else if (_phyloGraph[*it].fitnessBin.compare("12") == 0)
+  //     col = "2";
+  //   else if (_phyloGraph[*it].fitnessBin.compare("02") == 0)
+  //     col = "3";
+  //   else if (_phyloGraph[*it].fitnessBin.compare("2") == 0)
+  //     col = "4";
+  //   else if (_phyloGraph[*it].fitnessBin.compare("01") == 0)
+  //     col = "5";
+  //   else if (_phyloGraph[*it].fitnessBin.compare("1") == 0)
+  //     col = "6";
+  //   else if (_phyloGraph[*it].fitnessBin.compare("0") == 0)
+  //     col = "8";
+
+  //   ofs << " t_" << *it
+  //       << " [shape=circle, style=filled, colorscheme=set18, color="
+  //       << col.c_str()
+  //       << ", label=\"\", fontsize=84, regular=1, width=" << nodeWidth << "]"
+  //       << endl;
+
+  //   if (_phyloGraph[*it].adj.size() > 0)
+  //     for (size_t i = 0; i < _phyloGraph[*it].adj.size(); i++)
+  //       if (find(teamIds.begin(), teamIds.end(), _phyloGraph[*it].adj[i]) !=
+  //           teamIds.end())
+  //         ofs << " t_" << *it << "->"
+  //             << "t_" << _phyloGraph[*it].adj[i] << " [penwidth=" << edgeWidth_1
+  //             << " color="
+  //             << "black"
+  //             << "];" << endl;
+  //   ofs << "}" << endl;
+  // }
 
   ////legend
   // vector <int> S;

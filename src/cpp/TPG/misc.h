@@ -91,7 +91,7 @@ struct noveltyDescriptor {
 } ;
 
 struct phyloRecord{
-   std::vector < long > adj;
+   std::vector < long > adj; // children
    set < long > ancestorIds;
    string behaviourString;
    long gtime;
