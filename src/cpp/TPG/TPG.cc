@@ -667,7 +667,7 @@ vector<team *> TPG::ApplyVariationOps(team *pm1, int &n_new_teams) {
       new_team->RemoveProgram(prog);
       program *prog_clone = CloneProgram(prog);
       ProgramMutator_Instructions(prog_clone);
-      ProgramMutator_MemoryPointer(prog_clone);
+      // ProgramMutator_MemoryPointer(prog_clone);
       ProgramMutator_ActionPointer(prog_clone, new_team, n_new_teams,
                                    progs_without_refs);
       new_team->AddProgram(prog_clone);  // add new program to team
@@ -1078,10 +1078,14 @@ void TPG::InitTeams() {
       // create one new memory of each type for this team
       for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
         auto *mem = new memoryEigen(state_["memory_count"]++, mem_t, params_);
-        if (HaveParam("p_bid_mu_const")) mem->RandomizeConst();
+        if (HaveParam("p_bid_mu_const")) {
+          // new_prog->privateMemory_[mem_t]->RandomizeConst();
+          mem->RandomizeConst();
+        } 
         AddMemory(mem);  // add new memory to memory population
         new_prog->MemSet(mem_t, mem);
       }
+      
       new_team->AddProgram(new_prog);
       AddProgram(new_prog);  // add program to program population
     }
@@ -2327,16 +2331,6 @@ void TPG::selTeams(long t, bool verbose, int genTime) {
   int numOldDeleted = 0;
   int numDeleted = 0;
 
-  oss << "selTmsA t " << t << " Msz " << _M.size() << " Lsz " << _L.size()
-      << " mrSz " << _Mroot.size() << " mSz";
-  for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-    oss << " " << _Memory[mem_t].size();
-  }
-  oss << " eLSz " << _numEliteTeamsCurrent[GetState("phase")] << " nDel "
-      << numDeleted << " nOldDel " << numOldDeleted << " nOldDelPr "
-      << (double)numOldDeleted / numDeleted;
-  oss << endl;
-
   deque<program *> programsWithNoRefs;
 
   vector<long> deletedIds;
@@ -2364,15 +2358,17 @@ void TPG::selTeams(long t, bool verbose, int genTime) {
 
   cleanupProgramsWithNoRefs(t, programsWithNoRefs, false);
 
-  memoryEigen *m;
   for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
     while (_Memory[mem_t].size() < _M.size()) {
-      m = new memoryEigen(state_["memory_count"]++, mem_t, params_);
-      AddMemory(m);
+      auto mem = new memoryEigen(state_["memory_count"]++, mem_t, params_);
+      if (HaveParam("p_bid_mu_const")) {
+          mem->RandomizeConst();
+        }
+      AddMemory(mem);
     }
   }
 
-  oss << "selTmsB t " << t << " Msz " << _M.size() << " Lsz " << _L.size()
+  oss << "selTms t " << t << " Msz " << _M.size() << " Lsz " << _L.size()
       << " mrSz " << _Mroot.size() << " mSz";
   for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
     oss << " " << _Memory[mem_t].size();
@@ -2445,8 +2441,6 @@ void TPG::setParams() {
       GetParam<int>("n_stored_outcomes_VALIDATION");
   _numStoredOutcomesPerHost[_TEST_PHASE] =
       GetParam<int>("n_stored_outcomes_TEST");
-  auto task_string = GetParam<string>("active_tasks");
-  params_["n_task"] = 1 + (int)count(task_string.begin(),task_string.end(),',');
 }
 
 /******************************************************************************/
