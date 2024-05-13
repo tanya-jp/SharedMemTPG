@@ -60,8 +60,8 @@ void team::InitMemory(map<long, team *> &teamMap, bool use_evolved_const) {
   // this resets private memory to evolved constants
   if (use_evolved_const) {
     for (auto p : programs) {
-      // p->CopySharedConstToWorking();
-      p->ClearWorking();
+      p->CopySharedConstToWorking();
+      // p->ClearWorking();
     }
   }
 }
