@@ -1736,7 +1736,7 @@ void TPG::printPhyloGraphDot(team *tm) {
 
   // Basic breadth-first search
 
-  std::unordered_set<long> visited = {tm->id_};
+  std::vector<long> visited = {tm->id_};
   list<long> queue = {tm->id_};
 
   while (!queue.empty()) {
@@ -1745,103 +1745,35 @@ void TPG::printPhyloGraphDot(team *tm) {
 
     for (long ancId : _phyloGraph[currId].ancestorIds) {
       ofs << ancId << " -> " << currId << endl;
-      if (visited.find(ancId) == visited.end()) {
-        visited.insert(ancId);
+      if (std::find(visited.begin(), visited.end(), ancId) == visited.end()) {
+        visited.push_back(ancId);
         queue.push_back(ancId);
       }
     }
   }
 
+  // Color nodes based on fitness
+  if (visited.size() > 1) {
 
-  // for (auto it = teamIds.begin(); it != teamIds.end(); it++) {
-  //   ofs << "subgraph {" << endl;
+    // Fitness of best team is too large, remove
+    visited.erase(visited.begin());
 
-  //   string col = "";
-  //   if (_phyloGraph[*it].fitnessBin.compare("012") == 0)
-  //     col = "1";
-  //   else if (_phyloGraph[*it].fitnessBin.compare("12") == 0)
-  //     col = "2";
-  //   else if (_phyloGraph[*it].fitnessBin.compare("02") == 0)
-  //     col = "3";
-  //   else if (_phyloGraph[*it].fitnessBin.compare("2") == 0)
-  //     col = "4";
-  //   else if (_phyloGraph[*it].fitnessBin.compare("01") == 0)
-  //     col = "5";
-  //   else if (_phyloGraph[*it].fitnessBin.compare("1") == 0)
-  //     col = "6";
-  //   else if (_phyloGraph[*it].fitnessBin.compare("0") == 0)
-  //     col = "8";
+    std::vector<double> fitnesses;
+    for (long id : visited) {
+      fitnesses.push_back(_phyloGraph[id].fitness);
+    }
+    std::vector<double> normFit = MinMaxNorm(fitnesses);
 
-  //   ofs << " t_" << *it
-  //       << " [shape=circle, style=filled, colorscheme=set18, color="
-  //       << col.c_str()
-  //       << ", label=\"\", fontsize=84, regular=1, width=" << nodeWidth << "]"
-  //       << endl;
+    for (size_t i = 0; i < visited.size(); i++) {
+      int r = 255;
+      int g = static_cast<int>(normFit[i] * 255);
+      int b = 0;
 
-  //   if (_phyloGraph[*it].adj.size() > 0)
-  //     for (size_t i = 0; i < _phyloGraph[*it].adj.size(); i++)
-  //       if (find(teamIds.begin(), teamIds.end(), _phyloGraph[*it].adj[i]) !=
-  //           teamIds.end())
-  //         ofs << " t_" << *it << "->"
-  //             << "t_" << _phyloGraph[*it].adj[i] << " [penwidth=" << edgeWidth_1
-  //             << " color="
-  //             << "black"
-  //             << "];" << endl;
-  //   ofs << "}" << endl;
-  // }
+      ofs << visited[i] << " [style=filled, fillcolor=\""
+          << RGBToHex(r, g, b) << "\"]" << endl;
+    }
+  }
 
-  ////legend
-  // vector <int> S;
-  // for (int tsk = 0; tsk < (int)GetParam<int>("n_task"); tsk++)
-  //    S.push_back(tsk);
-  // vector <int> tmpSet;
-  // vector < vector < int > > PS;
-  // findPowerSet(S, tmpSet, PS, GetParam<int>("n_task"), 1);
-  // for (size_t ss = 0; ss < PS.size(); ss++)
-  //    sort(PS[ss].begin(), PS[ss].end());
-  // string col = "";
-  // ofs << "subgraph {" << endl;
-  // ofs << "ratio=1" << endl;
-  // ofs << "node [shape=plaintext]" << endl;
-  // ofs << "legend [colorscheme=set18," << endl;
-  // ofs << "label=<" << endl;
-  // ofs << "<table border=\"0\" cellborder=\"1\" cellspacing=\"0\">" << endl;
-  // string taskSetString = "";
-  // for (size_t ss = 0; ss < PS.size(); ss++){
-  //    if (vecToStrNoSpace(PS[ss]) == "012"){
-  //       col = "1";
-  //       taskSetString = "Acrobot + Cart Centering + Mountain Car Continuous";
-  //    }
-  //    else if (vecToStrNoSpace(PS[ss]) == "12"){
-  //       col = "2";
-  //       taskSetString = "Cart Centering + Mountain Car Continuous";
-  //    }
-  //    else if (vecToStrNoSpace(PS[ss]) == "02"){
-  //       col = "3";
-  //       taskSetString = "Acrobot + Mountain Car Continuous";
-  //    }
-  //    else if (vecToStrNoSpace(PS[ss]) == "2"){
-  //       col = "4";
-  //       taskSetString = "Mountain Car Continuous";
-  //    }
-  //    else if (vecToStrNoSpace(PS[ss]) == "01"){
-  //       col = "5";
-  //       taskSetString = "Acrobot + Cart Centering";
-  //    }
-  //    else if (vecToStrNoSpace(PS[ss]) == "1"){
-  //       col = "6";
-  //       taskSetString = "Cart Centering";
-  //    }
-  //    else if (vecToStrNoSpace(PS[ss]) == "0"){
-  //       col = "8";
-  //       taskSetString = "Acrobot";
-  //    }
-  //    ofs << "<tr><td bgcolor=\"" << col << "\">" << taskSetString <<
-  //    "</td></tr>" << endl;
-  // }
-  // ofs << "</table>>" << endl;
-  // ofs << ", fontsize=84, regular=1];" << endl;
-  // ofs << "}" << endl;
   ofs << "}" << endl;
   ofs.close();
 }

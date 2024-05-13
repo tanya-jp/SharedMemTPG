@@ -19,6 +19,7 @@
 // #include <boost/iostreams/filtering_streambuf.hpp>
 // #include <boost/iostreams/copy.hpp>
 // #include <boost/iostreams/filter/gzip.hpp>
+#include <iomanip>
 
 using namespace std;
 using std::numeric_limits;
@@ -237,11 +238,27 @@ inline std::vector<double> MinMaxNorm(std::vector<double> v)
    double max = *std::max_element(v.begin(), v.end());
    double range = max - min;
 
-   for (size_t i = 0; i < v.size(); i++)
-      v[i] = (v[i] - min) / range;
+
+   for (size_t i = 0; i < v.size(); i++) {
+      if (range == 0)
+         v[i] = 0;
+      else
+         v[i] = (v[i] - min) / range;
+   }
 
    return v;
 }
+
+inline std::string RGBToHex(int r, int g, int b)
+{
+    std::stringstream ss;
+    ss << "#" << std::hex << std::setfill('0') 
+       << std::setw(2) << r 
+       << std::setw(2) << g 
+       << std::setw(2) << b;
+    return ss.str();
+}
+
 
 // class CSVReader
 // {
