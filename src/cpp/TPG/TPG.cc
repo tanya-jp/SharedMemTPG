@@ -10,8 +10,8 @@ TPG::TPG() {
   _numStoredOutcomesPerHost.resize(_NUM_PHASE);
   _ops.resize(instruction::NUM_OP);
   fill(_ops.begin(), _ops.end(), false);
-  _rngs.resize(NUM_RNG);
-  _seeds.resize(NUM_RNG);
+  rngs_.resize(NUM_RNG);
+  seeds_.resize(NUM_RNG);
 }
 
 /******************************************************************************/
@@ -89,9 +89,9 @@ bool TPG::haveEliteTeam(string taskset, int fitMode, int phase) {
 }
 
 /******************************************************************************/
-void TPG::seed(size_t i, int s) {
-  _seeds[i] = s;
-  _rngs[i].seed(s);
+void TPG::Seed(size_t i, uint_fast32_t s) {
+  seeds_[i] = s;
+  rngs_[i].seed(seeds_[i]);
 }
 
 /******************************************************************************/
@@ -110,12 +110,12 @@ void TPG::clearMemory() {
 program *TPG::getAction(team *tm, state *s, bool updateActive,
                         set<team *, teamIdComp> &visitedTeams,
                         long &decisionInstructions, int timeStep,
-                        vector<team *> &teamPath, mt19937 &rng) {
+                        vector<team *> &teamPath, mt19937 &rng, bool& verbose) {
   visitedTeams.clear();
   decisionInstructions = 0;
   teamPath.clear();
   return tm->getAction(s, _teamMap, updateActive, visitedTeams,
-                       decisionInstructions, timeStep, teamPath, rng);
+                       decisionInstructions, timeStep, teamPath, rng, verbose);
 }
 
 /******************************************************************************/
@@ -125,7 +125,7 @@ program *TPG::getAction(
     int timeStep, vector<program *> &allPrograms,
     vector<program *> &winningPrograms, vector<set<long>> &decisionFeatures,
     vector<set<memoryEigen *, memoryEigenIdComp>> &decisionMemories,
-    vector<team *> &teamPath, mt19937 &rng) {
+    vector<team *> &teamPath, mt19937 &rng, bool& verbose) {
   allPrograms.clear();
   winningPrograms.clear();
   decisionInstructions = 0;
@@ -136,7 +136,7 @@ program *TPG::getAction(
   return tm->getAction(s, _teamMap, updateActive, visitedTeams,
                        decisionInstructions, timeStep, allPrograms,
                        winningPrograms, decisionFeatures, decisionMemories,
-                       teamPath, rng);
+                       teamPath, rng, verbose);
 }
 
 /******************************************************************************/
@@ -154,7 +154,7 @@ void TPG::GetAllNodes(team *tm, set<team *, teamIdComp> &teams,
   teams.clear();
   programs.clear();
   memories.clear();
-  tm->GetAllNodes(_teamMap, teams, programs, memories, false);
+  tm->GetAllNodes(_teamMap, teams, programs, memories);
 }
 
 /******************************************************************************/
@@ -165,19 +165,19 @@ void TPG::getTeams(vector<team *> &t, bool roots) const {
     t.assign(_M.begin(), _M.end());
 }
 
-/******************************************************************************/
-void TPG::getTeams(map<long, team *> &t, bool roots) const {
-  t.clear();
-  if (roots)
-    for (auto teiter = _Mroot.begin(); teiter != _Mroot.end(); teiter++)
-      t[(*teiter)->id_] = *teiter;
-  else
-    for (auto teiter = _M.begin(); teiter != _M.end(); teiter++)
-      t[(*teiter)->id_] = *teiter;
-}
+// /******************************************************************************/
+// void TPG::getTeams(map<long, team *> &t, bool roots) const {
+//   t.clear();
+//   if (roots)
+//     for (auto teiter = _Mroot.begin(); teiter != _Mroot.end(); teiter++)
+//       t[(*teiter)->id_] = *teiter;
+//   else
+//     for (auto teiter = _M.begin(); teiter != _M.end(); teiter++)
+//       t[(*teiter)->id_] = *teiter;
+// }
 
 /******************************************************************************/
-map<long, team *> TPG::GetTeams(bool roots) const {
+map<long, team *> TPG::GetTeamsInMap(bool roots) const {
   map<long, team *> t;
   if (roots)
     for (auto teiter = _Mroot.begin(); teiter != _Mroot.end(); teiter++)
@@ -186,6 +186,18 @@ map<long, team *> TPG::GetTeams(bool roots) const {
     for (auto teiter = _M.begin(); teiter != _M.end(); teiter++)
       t[(*teiter)->id_] = *teiter;
   return t;
+}
+
+/******************************************************************************/
+vector<team *> TPG::GetTeamsInVec(bool roots) const {
+  vector<team *> teams;
+  if (roots)
+    for (auto teiter = _Mroot.begin(); teiter != _Mroot.end(); teiter++)
+      teams.push_back(*teiter);
+  else
+    for (auto teiter = _M.begin(); teiter != _M.end(); teiter++)
+      teams.push_back(*teiter);
+  return teams;
 }
 
 /******************************************************************************/
@@ -209,7 +221,7 @@ void TPG::MarkEffectiveCode(team *tm) {
   set<team *, teamIdComp> teams;
   set<program *, programIdComp> programs;
   set<memoryEigen *, memoryEigenIdComp> memories;
-  tm->GetAllNodes(_teamMap, teams, programs, memories, false);
+  tm->GetAllNodes(_teamMap, teams, programs, memories);
 
   for (auto mem : memories) {
     mem->ClearActive();
@@ -222,16 +234,6 @@ void TPG::MarkEffectiveCode(team *tm) {
     for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
       (prog->MemGet(mem_t))->RefsPolicyInc();  // TODO(skelly) ???
     }
-  }
-  // update active programs TODO spkelly (this required?)
-  list<program *> rootMembers;
-  tm->members(&rootMembers);
-  for (auto prog : rootMembers) {
-    bool active = false;
-    for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-      if ((prog->MemGet(mem_t))->RefsPolicy() > 1) active = true;
-    }
-    if (prog->SizeEffective() > 0 && active) tm->SetActive(prog);
   }
 }
 
@@ -477,46 +479,44 @@ void TPG::finalize() {
 
 void TPG::TeamMutator_ProgramOrder(team *team_to_mu) {
   if ((team_to_mu)->size() > 1 &&
-      real_dist_(_rngs[TPG_SEED]) < GetParam<double>("pmw")) {
+      real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmw")) {
     int i, j;
-    uniform_int_distribution<int> disMemberList(0, (team_to_mu)->size() - 1);
+    uniform_int_distribution<int> dis_team_size(0, (team_to_mu)->size() - 1);
+    i = dis_team_size(rngs_[TPG_SEED]);
     do {
-      i = disMemberList(_rngs[TPG_SEED]);
-      j = disMemberList(_rngs[TPG_SEED]);
+      j = dis_team_size(rngs_[TPG_SEED]);
     } while (i == j);
-    (team_to_mu)->muProgramOrder(i, j);
+    (team_to_mu)->MuProgramOrder(i, j);
   }
 }
 
 void TPG::TeamMutator_AddPrograms(team *team_to_mu) {
-  uniform_int_distribution<int> disL(0, _L.size() - 1);
-  program *p;
-  for (double b = 1.0; real_dist_(_rngs[TPG_SEED]) < b &&
-                       (int)team_to_mu->size() < GetParam<int>("max_team_size");
-       b = b * GetParam<double>("pma")) {
-    // TODO(skelly) fix rng bug
-    // uniform_int_distribution<int> disTmSize(0, team_to_mu->size() - 1);
-    do {
-      p = _L[_Lids[disL(_rngs[TPG_SEED])]];
-    } while (
-        !(team_to_mu->AddProgram(p, -1)));  //, disTmSize(_rngs[TPG_SEED]))));
+  double rd = real_dist_(rngs_[TPG_SEED]);
+  if ((int)team_to_mu->size() < GetParam<int>("max_team_size") &&
+      rd < GetParam<double>("pma")) {
+    uniform_int_distribution<int> dis_programs(0, _L.size() - 1);
+    uniform_int_distribution<int> dis_team_size(0, team_to_mu->size() - 1);
+    int rand_p = dis_programs(rngs_[TPG_SEED]);
+    int rand_ts = dis_team_size(rngs_[TPG_SEED]);
+    program *p = _L[_Lids[rand_p]];
+    (void)p;
+    team_to_mu->AddProgram(p, rand_ts);
   }
 }
 
 void TPG::TeamMutator_RemovePrograms(team *team_to_mu) {
-  vector<program *> programs;
-  team_to_mu->members(programs);
-  program *p;
-  uniform_int_distribution<int> disPrograms(0, programs.size() - 1);
-  for (double b = 1.0;
-       real_dist_(_rngs[TPG_SEED]) < b && (team_to_mu->size() > 1);
-       b = b * GetParam<double>("pmd")) {
-    do {
-      p = programs[disPrograms(_rngs[TPG_SEED])];
-    } while ((p->action() < 0 &&
-              team_to_mu->numAtomic_ <
-                  2) ||  // keep at least one program with an atomic action
-             !(team_to_mu->removeProgram(p)));
+  auto rd = real_dist_(rngs_[TPG_SEED]);
+  uniform_int_distribution<int> dis_programs(0, team_to_mu->size() - 1);
+  auto ri = dis_programs(rngs_[TPG_SEED]);
+
+  if (team_to_mu->size() > 1 && rd < GetParam<double>("pmd")) {
+    auto it = team_to_mu->members_.begin();
+    advance(it, ri);
+    // Don't remove the only atomic
+    if (!((*it)->action() < 0 && team_to_mu->n_atomic_ < 2)) {
+      if ((*it)->action_ < 0) team_to_mu->n_atomic_--;
+      team_to_mu->members_.erase(it);
+    }
   }
 }
 
@@ -529,9 +529,9 @@ team *TPG::CloneTeam(team *team_to_clone) {
 }
 
 program *TPG::CloneProgram(program *prog) {
-  program *prog_clone =
-      new RegisterMachine(GetState("t_current"), *(dynamic_cast<RegisterMachine *>(prog)),
-                  params_, state_["program_count"]++);
+  program *prog_clone = new RegisterMachine(
+      GetState("t_current"), *(dynamic_cast<RegisterMachine *>(prog)), params_,
+      state_["program_count"]++);
   if (prog_clone->action() >= 0)
     _teamMap[prog_clone->action()]->AddIncomingProgram(prog_clone->id_);
   for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
@@ -543,13 +543,13 @@ program *TPG::CloneProgram(program *prog) {
 
 void TPG::ProgramMutator_MemoryPointer(program *prog_to_mu) {
   // change memory pointer
-  if (real_dist_(_rngs[TPG_SEED]) < GetParam<double>("pms")) {
+  if (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pms")) {
     uniform_int_distribution<int> disMemory(0, _Memory.size() - 1);
     memoryEigen *memNew;
     do {
       memNew = _Memory[memoryEigen::SCALAR_TYPE]
                       [_Memids[memoryEigen::SCALAR_TYPE]
-                              [disMemory(_rngs[TPG_SEED])]];
+                              [disMemory(rngs_[TPG_SEED])]];
     } while (prog_to_mu->MemGet(memoryEigen::SCALAR_TYPE)->id_ == memNew->id_);
     prog_to_mu->MemGet(memoryEigen::SCALAR_TYPE)->refDec();
     prog_to_mu->MemSet(memoryEigen::SCALAR_TYPE, memNew);
@@ -558,25 +558,25 @@ void TPG::ProgramMutator_MemoryPointer(program *prog_to_mu) {
 }
 
 void TPG::ProgramMutator_Instructions(program *prog_to_mu) {
-  prog_to_mu->MuBid(params_, _rngs[TPG_SEED], real_dist_, _ops);
+  prog_to_mu->MuBid(params_, rngs_[TPG_SEED], real_dist_, _ops);
 }
 
 void TPG::ProgramMutator_ActionPointer(program *prog_to_mu, team *new_team,
                                        int &n_new_teams,
                                        deque<program *> &progs_without_refs) {
-  if (real_dist_(_rngs[TPG_SEED]) < GetParam<double>("pmn")) return;
+  if (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmn")) return;
   uniform_int_distribution<int> disAct(0,
                                        GetParam<int>("n_discrete_action") - 1);
   // atomic
   if (GetState("t_current") == 1 ||  // first generation is atomic
       (prog_to_mu->action() < 0 &&
-       new_team->numAtomic_ < 2) ||  // always mutate the fail-safe
-                                     // atomic program to another atomic
-      real_dist_(_rngs[TPG_SEED]) < GetParam<double>("p_atomic")) {
+       new_team->n_atomic_ < 2) ||  // always mutate the fail-safe
+                                    // atomic program to another atomic
+      real_dist_(rngs_[TPG_SEED]) < GetParam<double>("p_atomic")) {
     if (GetParam<int>("n_discrete_action") > 1) {
       long act;
       do {
-        act = -1 - disAct(_rngs[TPG_SEED]);  // atomic actions are
+        act = -1 - disAct(rngs_[TPG_SEED]);  // atomic actions are
                                              // negatives: -1 down to
                                              // -numAtomicActions()
       } while (prog_to_mu->action() == act);
@@ -588,7 +588,7 @@ void TPG::ProgramMutator_ActionPointer(program *prog_to_mu, team *new_team,
     uniform_int_distribution<int> disM(0, _M.size() - 1);
     team *tm;
     do {
-      tm = _teamMap[_Mids[disM(_rngs[TPG_SEED])]];
+      tm = _teamMap[_Mids[disM(rngs_[TPG_SEED])]];
     } while ((tm->gtime_ == GetState("t_current") || tm->clones_ > 0 ||
               prog_to_mu->action() == tm->id_));
 
@@ -598,7 +598,6 @@ void TPG::ProgramMutator_ActionPointer(program *prog_to_mu, team *new_team,
       prog_to_mu->muAction(tm->id_);
       tm->AddIncomingProgram(prog_to_mu->id_);
     } else {  // clone when subsumed
-      tm->prunePrograms(progs_without_refs);
       team *sub = new team(GetState("t_current"), state_["team_count"]++);
       tm->clone(_phyloGraph, &sub);
       prog_to_mu->muAction(sub->id_);
@@ -633,7 +632,8 @@ void TPG::GenerateNewTeams() {
     uniform_int_distribution<int> disP(0, parents.size() - 1);
     for (size_t i = 0; i < GetParam<int>("n_elite") / power_set.size() - 1;
          i++) {
-      auto parent = parents[disP(_rngs[TPG_SEED])];
+          int rp = disP(rngs_[TPG_SEED]);
+      auto parent = parents[rp];
       auto new_teams = ApplyVariationOps(parent, n_new_teams);
       for (auto new_team : new_teams) {
         AddTeamToPhylogeny(parent, new_team);
@@ -663,15 +663,15 @@ vector<team *> TPG::ApplyVariationOps(team *pm1, int &n_new_teams) {
   deque<program *> progs_without_refs;
   set<program *, programIdComp> new_team_programs = new_team->CopyMembers();
   for (auto prog : new_team_programs) {
-    if (real_dist_(_rngs[TPG_SEED]) < GetParam<double>("pmm")) {
-      new_team->removeProgram(prog);
+    if (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmm")) {
+      new_team->RemoveProgram(prog);
       program *prog_clone = CloneProgram(prog);
       ProgramMutator_Instructions(prog_clone);
       ProgramMutator_MemoryPointer(prog_clone);
       ProgramMutator_ActionPointer(prog_clone, new_team, n_new_teams,
                                    progs_without_refs);
       new_team->AddProgram(prog_clone);  // add new program to team
-      AddProgram(prog_clone);            // add new program o program population
+      AddProgram(prog_clone);            // add new program o program pop
     }
   }
   cleanupProgramsWithNoRefs(GetState("t_current"), progs_without_refs, true);
@@ -853,7 +853,7 @@ void TPG::setEliteTeams(int t, int phase, int fitMode, bool verbose) {
         teamsRankedVec.push_back(*teiter);
       }
     }
-    if (teamsRankedVec.size() > 0) {
+    if (teamsRankedVec.size() > 0) {      
       sort(teamsRankedVec.begin(), teamsRankedVec.end(),
            teamFitnessLexicalCompare());
       size_t ne = GetParam<int>("n_elite") / n_nonempty_sets;
@@ -1071,10 +1071,10 @@ void TPG::InitTeams() {
     auto new_team = new team(GetState("t_current"), state_["team_count"]++);
     for (int p = 0; p < GetParam<int>("initial_team_size"); p++) {
       // discrete atomic actions are negatives -1 to -numAtomicActions()
-      long discrete_action = -1 - disA(_rngs[TPG_SEED]);
+      long discrete_action = -1 - disA(rngs_[TPG_SEED]);
       auto new_prog =
           new RegisterMachine(GetState("t_current"), discrete_action, params_,
-                      state_["program_count"]++, _rngs[TPG_SEED], _ops);
+                              state_["program_count"]++, rngs_[TPG_SEED], _ops);
       // create one new memory of each type for this team
       for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
         auto *mem = new memoryEigen(state_["memory_count"]++, mem_t, params_);
@@ -1112,613 +1112,644 @@ void TPG::policyFeatures(int hostId, set<long> &features, bool active) {
     _teamMap[hostId]->policyFeatures(_teamMap, visitedTeams, features, active);
 }
 
-/******************************************************************************/
-// Print graph defined by <rootTeam> in DOT format for GraphViz
-void TPG::printGraphDot(
-    team *rootTeam, size_t frame, int episode, int step, size_t depth,
-    vector<program *> allPrograms, vector<program *> winningPrograms,
-    vector<set<long>> decisionFeatures,
-    vector<set<memoryEigen *, memoryEigenIdComp>> decisionMemories,
-    vector<team *> teamPath, bool drawPath,
-    set<team *, teamIdComp> visitedTeamsAllTasks) {
-  // unused arguments
-  (void)decisionFeatures;
-  (void)decisionMemories;
-  (void)allPrograms;
+// /******************************************************************************/
+// // Print graph defined by <rootTeam> in DOT format for GraphViz
+// void TPG::printGraphDot(
+//     team *rootTeam, size_t frame, int episode, int step, size_t depth,
+//     vector<program *> allPrograms, vector<program *> winningPrograms,
+//     vector<set<long>> decisionFeatures,
+//     vector<set<memoryEigen *, memoryEigenIdComp>> decisionMemories,
+//     vector<team *> teamPath, bool drawPath,
+//     set<team *, teamIdComp> visitedTeamsAllTasks) {
+//   // unused arguments
+//   (void)decisionFeatures;
+//   (void)decisionMemories;
+//   (void)allPrograms;
 
-  // just use winning programs up to a specific graph depth
-  // vector<program*> winningProgramsDepth(winningPrograms.begin(),
-  // winningPrograms.begin()+depth);
+//   // just use winning programs up to a specific graph depth
+//   // vector<program*> winningProgramsDepth(winningPrograms.begin(),
+//   // winningPrograms.begin()+depth);
 
-  vector<program *> winningProgramsDepth(winningPrograms.begin(),
-                                         winningPrograms.end());
+//   vector<program *> winningProgramsDepth(winningPrograms.begin(),
+//                                          winningPrograms.end());
 
-  double nodeWidth = 2.0;
-  double edgeWidth_1 = 1;  // 5;
-  double edgeWidth_2 = 30;
-  double arrowSize_1 = 1;  // 0.1;
-  double arrowSize_2 = 1;  // 0.2;
+//   double nodeWidth = 2.0;
+//   double edgeWidth_1 = 1;  // 5;
+//   double edgeWidth_2 = 30;
+//   double arrowSize_1 = 1;  // 0.1;
+//   double arrowSize_2 = 1;  // 0.2;
 
-  char outputFilename[80];
-  ofstream ofs;
+//   char outputFilename[80];
+//   ofstream ofs;
 
-  set<team *, teamIdComp> teams;
-  set<program *, programIdComp> programs;
-  set<memoryEigen *, memoryEigenIdComp> memories;
+//   set<team *, teamIdComp> teams;
+//   set<program *, programIdComp> programs;
+//   set<memoryEigen *, memoryEigenIdComp> memories;
 
-  // rootTeam->GetAllNodes(_teamMap, teams, programs, memories, false);
-  //(void)visitedTeamsAllTasks;
-  for (auto it = visitedTeamsAllTasks.begin(); it != visitedTeamsAllTasks.end();
-       it++) {
-    set<program *, programIdComp> p = (*it)->CopyMembers();
-    programs.insert(p.begin(), p.end());
-  }
-  for (auto it = programs.begin(); it != programs.end(); it++) {
-    for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-      memories.insert((*it)->MemGet(mem_t));
-    }
-  }
+//   //(void)visitedTeamsAllTasks;
+//   for (auto it = visitedTeamsAllTasks.begin(); it !=
+//   visitedTeamsAllTasks.end();
+//        it++) {
+//     set<program *, programIdComp> p = (*it)->CopyMembers();
+//     programs.insert(p.begin(), p.end());
+//   }
+//   for (auto it = programs.begin(); it != programs.end(); it++) {
+//     for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+//       memories.insert((*it)->MemGet(mem_t));
+//     }
+//   }
 
-  sprintf(outputFilename, "replay/graphs/gv_%d_%05d_%03d_%05d_%05d%s",
-          (int)rootTeam->id_, (int)frame, episode, step, (int)depth, ".dot");
-  ofs.open(outputFilename, ios::out);
-  if (!ofs) die(__FILE__, __FUNCTION__, __LINE__, "Can't open file.");
+//   sprintf(outputFilename, "replay/graphs/gv_%d_%05d_%03d_%05d_%05d%s",
+//           (int)rootTeam->id_, (int)frame, episode, step, (int)depth, ".dot");
+//   ofs.open(outputFilename, ios::out);
+//   if (!ofs) die(__FILE__, __FUNCTION__, __LINE__, "Can't open file.");
 
-  ofs << "digraph G {" << endl;
-  ofs << "ratio=1" << endl;
-  ofs << "root=t_" << rootTeam->id_ << endl;
+//   ofs << "digraph G {" << endl;
+//   ofs << "ratio=1" << endl;
+//   ofs << "root=t_" << rootTeam->id_ << endl;
 
-  ////atomic actions
-  // for(auto leiter = programs.begin(); leiter != programs.end(); leiter++)
-  //    if ((*leiter)->action() < 0)
-  //       ofs << " a_" << ((*leiter)->action()*-1)-1 << "_" << (*leiter)->id_
-  //       << " [shape=point, label=\"\", regular=1, width=0.1]" << endl;
+//   ////atomic actions
+//   // for(auto leiter = programs.begin(); leiter != programs.end(); leiter++)
+//   //    if ((*leiter)->action() < 0)
+//   //       ofs << " a_" << ((*leiter)->action()*-1)-1 << "_" <<
+//   (*leiter)->id_
+//   //       << " [shape=point, label=\"\", regular=1, width=0.1]" << endl;
 
-  // programs
-  for (auto leiter = programs.begin(); leiter != programs.end(); leiter++) {
-    if (step > 0 &&
-        find(winningProgramsDepth.begin(), winningProgramsDepth.end(),
-             *leiter) != winningProgramsDepth.end()) {
-      // ofs << " p_" << (*leiter)->id_ << " [shape=box, style=filled,
-      // color=black, label=\"\", fontsize=200, regular=1, width=" << nodeWidth
-      // << "]" << endl;
-      ofs << " p_" << (*leiter)->id_
-          << " [shape=box, style=filled, color=green, label=\"\", "
-             "fontsize=200, regular=1, width="
-          << nodeWidth << "]" << endl;
-    } else if (step > 0 && find(allPrograms.begin(), allPrograms.end(),
-                                *leiter) != allPrograms.end())
-      ofs << " p_" << (*leiter)->id_
-          << " [shape=box, style=filled, color=black, label=\"\", "
-             "fontsize=200, regular=1, width="
-          << nodeWidth << "]" << endl;
-    else if (teamPath.size() > 0)
-      ofs << " p_" << (*leiter)->id_
-          << " [shape=box, style=filled, color=grey90, label=\"\", "
-             "fontsize=200, regular=1, width="
-          << nodeWidth << "]" << endl;
-    else
-      ofs << " p_" << (*leiter)->id_
-          << " [shape=box, style=filled, color=grey70, label=\"\", "
-             "fontsize=200, regular=1, width="
-          << nodeWidth << "]" << endl;
-  }
+//   // programs
+//   for (auto leiter = programs.begin(); leiter != programs.end(); leiter++) {
+//     if (step > 0 &&
+//         find(winningProgramsDepth.begin(), winningProgramsDepth.end(),
+//              *leiter) != winningProgramsDepth.end()) {
+//       // ofs << " p_" << (*leiter)->id_ << " [shape=box, style=filled,
+//       // color=black, label=\"\", fontsize=200, regular=1, width=" <<
+//       nodeWidth
+//       // << "]" << endl;
+//       ofs << " p_" << (*leiter)->id_
+//           << " [shape=box, style=filled, color=green, label=\"\", "
+//              "fontsize=200, regular=1, width="
+//           << nodeWidth << "]" << endl;
+//     } else if (step > 0 && find(allPrograms.begin(), allPrograms.end(),
+//                                 *leiter) != allPrograms.end())
+//       ofs << " p_" << (*leiter)->id_
+//           << " [shape=box, style=filled, color=black, label=\"\", "
+//              "fontsize=200, regular=1, width="
+//           << nodeWidth << "]" << endl;
+//     else if (teamPath.size() > 0)
+//       ofs << " p_" << (*leiter)->id_
+//           << " [shape=box, style=filled, color=grey90, label=\"\", "
+//              "fontsize=200, regular=1, width="
+//           << nodeWidth << "]" << endl;
+//     else
+//       ofs << " p_" << (*leiter)->id_
+//           << " [shape=box, style=filled, color=grey70, label=\"\", "
+//              "fontsize=200, regular=1, width="
+//           << nodeWidth << "]" << endl;
+//   }
 
-  // teams
-  int label = 0;
-  // for(auto teiter = teams.begin(); teiter != teams.end(); teiter++)
-  for (auto teiter = visitedTeamsAllTasks.begin();
-       teiter != visitedTeamsAllTasks.end(); teiter++)
-    if ((*teiter)->id_ == rootTeam->id_ ||
-        (step > 0 &&
-         find(teamPath.begin(), teamPath.end(), *teiter) != teamPath.end()))
-      ofs << " t_" << (*teiter)->id_
-          << " [shape=circle, style=filled, fillcolor=black, label=\"t"
-          << label++ << "\", fontsize=84, regular=1, width=" << nodeWidth * 2
-          << "]" << endl;
-    else
-      // ofs << " t_" << (*teiter)->id_ << " [shape=circle, style=filled,
-      // fillcolor=grey90, label=\"\", fontsize=84, regular=1, width=" <<
-      // nodeWidth*2 << "]" << endl;
-      ofs << " t_" << (*teiter)->id_
-          << " [shape=circle, style=filled, fillcolor=deepskyblue, label=\"\", "
-             "fontsize=84, regular=1, width="
-          << nodeWidth * 2 << "]" << endl;
+//   // teams
+//   int label = 0;
+//   // for(auto teiter = teams.begin(); teiter != teams.end(); teiter++)
+//   for (auto teiter = visitedTeamsAllTasks.begin();
+//        teiter != visitedTeamsAllTasks.end(); teiter++)
+//     if ((*teiter)->id_ == rootTeam->id_ ||
+//         (step > 0 &&
+//          find(teamPath.begin(), teamPath.end(), *teiter) != teamPath.end()))
+//       ofs << " t_" << (*teiter)->id_
+//           << " [shape=circle, style=filled, fillcolor=black, label=\"t"
+//           << label++ << "\", fontsize=84, regular=1, width=" << nodeWidth * 2
+//           << "]" << endl;
+//     else
+//       // ofs << " t_" << (*teiter)->id_ << " [shape=circle, style=filled,
+//       // fillcolor=grey90, label=\"\", fontsize=84, regular=1, width=" <<
+//       // nodeWidth*2 << "]" << endl;
+//       ofs << " t_" << (*teiter)->id_
+//           << " [shape=circle, style=filled, fillcolor=deepskyblue,
+//           label=\"\", "
+//              "fontsize=84, regular=1, width="
+//           << nodeWidth * 2 << "]" << endl;
 
-  ////memoryEigen registers
-  // for(auto meiter = memories.begin(); meiter != memories.end(); meiter++)
-  //    ofs << " m_" << (*meiter)->id_ << " [shape=invhouse, style=filled,
-  //    fillcolor=grey, label=\"\", regular=1, width=" << nodeWidth << "]" <<
-  //    endl;
+//   ////memoryEigen registers
+//   // for(auto meiter = memories.begin(); meiter != memories.end(); meiter++)
+//   //    ofs << " m_" << (*meiter)->id_ << " [shape=invhouse, style=filled,
+//   //    fillcolor=grey, label=\"\", regular=1, width=" << nodeWidth << "]" <<
+//   //    endl;
 
-  // program -> team edges
-  for (auto leiter = programs.begin(); leiter != programs.end(); leiter++) {
-    if ((*leiter)->action() >= 0 &&
-        find(visitedTeamsAllTasks.begin(), visitedTeamsAllTasks.end(),
-             _teamMap[(*leiter)->action()]) != visitedTeamsAllTasks.end()) {
-      double w = find(winningProgramsDepth.begin(), winningProgramsDepth.end(),
-                      *leiter) == winningProgramsDepth.end() ||
-                         !drawPath
-                     ? edgeWidth_1
-                     : edgeWidth_2;
-      if (teamPath.size() < 1) w = 5;
-      double as = find(winningProgramsDepth.begin(), winningProgramsDepth.end(),
-                       *leiter) == winningProgramsDepth.end() ||
-                          !drawPath
-                      ? arrowSize_1
-                      : arrowSize_2;
-      string col =
-          find(winningProgramsDepth.begin(), winningProgramsDepth.end(),
-               *leiter) == winningProgramsDepth.end()
-              ? "black"
-              : "green";
-      ofs << " p_" << (*leiter)->id_ << "->"
-          << "t_" << (*leiter)->action() << " [arrowsize=" << as
-          << ", penwidth=" << w << " color=" << col.c_str() << "];" << endl;
-    }
-  }
+//   // program -> team edges
+//   for (auto leiter = programs.begin(); leiter != programs.end(); leiter++) {
+//     if ((*leiter)->action() >= 0 &&
+//         find(visitedTeamsAllTasks.begin(), visitedTeamsAllTasks.end(),
+//              _teamMap[(*leiter)->action()]) != visitedTeamsAllTasks.end()) {
+//       double w = find(winningProgramsDepth.begin(),
+//       winningProgramsDepth.end(),
+//                       *leiter) == winningProgramsDepth.end() ||
+//                          !drawPath
+//                      ? edgeWidth_1
+//                      : edgeWidth_2;
+//       if (teamPath.size() < 1) w = 5;
+//       double as = find(winningProgramsDepth.begin(),
+//       winningProgramsDepth.end(),
+//                        *leiter) == winningProgramsDepth.end() ||
+//                           !drawPath
+//                       ? arrowSize_1
+//                       : arrowSize_2;
+//       string col =
+//           find(winningProgramsDepth.begin(), winningProgramsDepth.end(),
+//                *leiter) == winningProgramsDepth.end()
+//               ? "black"
+//               : "green";
+//       ofs << " p_" << (*leiter)->id_ << "->"
+//           << "t_" << (*leiter)->action() << " [arrowsize=" << as
+//           << ", penwidth=" << w << " color=" << col.c_str() << "];" << endl;
+//     }
+//   }
 
-  ////program -> memoryEigen edges
-  // for(auto leiter = programs.begin(); leiter != programs.end(); leiter++){
-  //    double w = find(winningProgramsDepth.begin(),
-  //    winningProgramsDepth.end(), *leiter) == winningProgramsDepth.end() ?
-  //    edgeWidth_1 : edgeWidth_2; double as =
-  //    find(winningProgramsDepth.begin(), winningProgramsDepth.end(), *leiter)
-  //    == winningProgramsDepth.end() ? arrowSize_1 : arrowSize_2; ofs << " p_"
-  //    << (*leiter)->id_ << "->" << "m_"<< (*leiter)->MemGet()->id_;
-  //       ofs << " [dir=both, arrowsize=" << as << ", penwidth=" << w << "];"
-  //       << endl;
-  // }
+//   ////program -> memoryEigen edges
+//   // for(auto leiter = programs.begin(); leiter != programs.end(); leiter++){
+//   //    double w = find(winningProgramsDepth.begin(),
+//   //    winningProgramsDepth.end(), *leiter) == winningProgramsDepth.end() ?
+//   //    edgeWidth_1 : edgeWidth_2; double as =
+//   //    find(winningProgramsDepth.begin(), winningProgramsDepth.end(),
+//   *leiter)
+//   //    == winningProgramsDepth.end() ? arrowSize_1 : arrowSize_2; ofs << "
+//   p_"
+//   //    << (*leiter)->id_ << "->" << "m_"<< (*leiter)->MemGet()->id_;
+//   //       ofs << " [dir=both, arrowsize=" << as << ", penwidth=" << w <<
+//   "];"
+//   //       << endl;
+//   // }
 
-  // team -> program edges
-  // for(auto teiter = teams.begin(); teiter != teams.end(); teiter++){
-  for (auto teiter = visitedTeamsAllTasks.begin();
-       teiter != visitedTeamsAllTasks.end(); teiter++) {
-    list<program *> mem;
-    (*teiter)->members(&mem);
-    for (auto leiter = mem.begin(); leiter != mem.end(); leiter++) {
-      double w =
-          find(teamPath.begin(), teamPath.end(), *teiter) == teamPath.end() ||
-                  !drawPath
-              ? edgeWidth_1
-              : edgeWidth_2;
-      if (teamPath.size() < 1) w = 5;
-      double as =
-          find(teamPath.begin(), teamPath.end(), *teiter) == teamPath.end() ||
-                  !drawPath
-              ? arrowSize_1
-              : arrowSize_2;
-      string col =
-          find(winningProgramsDepth.begin(), winningProgramsDepth.end(),
-               *leiter) == winningProgramsDepth.end()
-              ? "black"
-              : "green";
-      ofs << " t_" << (*teiter)->id_ << "->p_" << (*leiter)->id_
-          << " [arrowsize=" << as << ", penwidth=" << w
-          << " color=" << col.c_str() << "];" << endl;
-    }
-  }
-  ofs << "}" << endl;
-  ofs.close();
-}
+//   // team -> program edges
+//   // for(auto teiter = teams.begin(); teiter != teams.end(); teiter++){
+//   for (auto teiter = visitedTeamsAllTasks.begin();
+//        teiter != visitedTeamsAllTasks.end(); teiter++) {
+//     list<program *> mem;
+//     (*teiter)->members(&mem);
+//     for (auto leiter = mem.begin(); leiter != mem.end(); leiter++) {
+//       double w =
+//           find(teamPath.begin(), teamPath.end(), *teiter) == teamPath.end()
+//           ||
+//                   !drawPath
+//               ? edgeWidth_1
+//               : edgeWidth_2;
+//       if (teamPath.size() < 1) w = 5;
+//       double as =
+//           find(teamPath.begin(), teamPath.end(), *teiter) == teamPath.end()
+//           ||
+//                   !drawPath
+//               ? arrowSize_1
+//               : arrowSize_2;
+//       string col =
+//           find(winningProgramsDepth.begin(), winningProgramsDepth.end(),
+//                *leiter) == winningProgramsDepth.end()
+//               ? "black"
+//               : "green";
+//       ofs << " t_" << (*teiter)->id_ << "->p_" << (*leiter)->id_
+//           << " [arrowsize=" << as << ", penwidth=" << w
+//           << " color=" << col.c_str() << "];" << endl;
+//     }
+//   }
+//   ofs << "}" << endl;
+//   ofs.close();
+// }
 
-/******************************************************************************/
-void TPG::printGraphDotGPEM(long rootTeamId, map<long, string> &teamColMap,
-                            set<team *, teamIdComp> &visitedTeamsAllTasks,
-                            vector<map<long, double>> &teamUseMapPerTask) {
-  team *rootTeam = _teamMap[rootTeamId];
+// /******************************************************************************/
+// void TPG::printGraphDotGPEM(long rootTeamId, map<long, string> &teamColMap,
+//                             set<team *, teamIdComp> &visitedTeamsAllTasks,
+//                             vector<map<long, double>> &teamUseMapPerTask) {
+//   team *rootTeam = _teamMap[rootTeamId];
 
-  (void)teamColMap;
-  vector<string> taskCol;
-  taskCol.push_back("#7fc97f");
-  taskCol.push_back("#beaed4");
-  taskCol.push_back("#fdc086");
-  taskCol.push_back("#ffff99");
-  taskCol.push_back("#386cb0");
-  taskCol.push_back("#f0027f");
-  map<long, string> nodeLabMap;
+//   (void)teamColMap;
+//   vector<string> taskCol;
+//   taskCol.push_back("#7fc97f");
+//   taskCol.push_back("#beaed4");
+//   taskCol.push_back("#fdc086");
+//   taskCol.push_back("#ffff99");
+//   taskCol.push_back("#386cb0");
+//   taskCol.push_back("#f0027f");
+//   map<long, string> nodeLabMap;
 
-  nodeLabMap[1594815] = "1";  //   29000"
-  nodeLabMap[624659] = "2";   //  149"
-  nodeLabMap[1302870] = "3";  //   28373"
-  nodeLabMap[623346] = "4";   //  580"
-  nodeLabMap[493990] = "5";   //  149"
-  nodeLabMap[836830] = "6";   //  28019"
-  nodeLabMap[548151] = "7";   //  832"
-  nodeLabMap[126871] = "8";   //  1373"
-  nodeLabMap[425177] = "9";   //  774"
-  nodeLabMap[602173] = "10";  //   1826"
-  nodeLabMap[42314] = "11";   //  9"
-  nodeLabMap[26879] = "12";   //  7"
-  nodeLabMap[200127] = "13";  //   4"
-  nodeLabMap[470578] = "14";  //   1826"
-  nodeLabMap[5964] = "15";    // 7"
-  nodeLabMap[23266] = "16";   //  2"
-  nodeLabMap[226807] = "17";  //   394"
-  nodeLabMap[180005] = "18";  //   953"
+//   nodeLabMap[1594815] = "1";  //   29000"
+//   nodeLabMap[624659] = "2";   //  149"
+//   nodeLabMap[1302870] = "3";  //   28373"
+//   nodeLabMap[623346] = "4";   //  580"
+//   nodeLabMap[493990] = "5";   //  149"
+//   nodeLabMap[836830] = "6";   //  28019"
+//   nodeLabMap[548151] = "7";   //  832"
+//   nodeLabMap[126871] = "8";   //  1373"
+//   nodeLabMap[425177] = "9";   //  774"
+//   nodeLabMap[602173] = "10";  //   1826"
+//   nodeLabMap[42314] = "11";   //  9"
+//   nodeLabMap[26879] = "12";   //  7"
+//   nodeLabMap[200127] = "13";  //   4"
+//   nodeLabMap[470578] = "14";  //   1826"
+//   nodeLabMap[5964] = "15";    // 7"
+//   nodeLabMap[23266] = "16";   //  2"
+//   nodeLabMap[226807] = "17";  //   394"
+//   nodeLabMap[180005] = "18";  //   953"
 
-  double nodeWidth = 2.0;
-  double arrowSize_1 = 3;  // 0.1;
+//   double nodeWidth = 2.0;
+//   double arrowSize_1 = 3;  // 0.1;
 
-  char outputFilename[80];
-  ofstream ofs;
+//   char outputFilename[80];
+//   ofstream ofs;
 
-  set<team *, teamIdComp> teams;
-  set<program *, programIdComp> programs;
-  set<memoryEigen *, memoryEigenIdComp> memories;
+//   set<team *, teamIdComp> teams;
+//   set<program *, programIdComp> programs;
+//   set<memoryEigen *, memoryEigenIdComp> memories;
 
-  for (auto it = visitedTeamsAllTasks.begin(); it != visitedTeamsAllTasks.end();
-       it++) {
-    set<program *, programIdComp> p = (*it)->CopyMembers();  // no need o copy
-    programs.insert(p.begin(), p.end());
-  }
-  for (auto it = programs.begin(); it != programs.end(); it++) {
-    for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-      memories.insert((*it)->MemGet(mem_t));
-    }
-  }
+//   for (auto it = visitedTeamsAllTasks.begin(); it !=
+//   visitedTeamsAllTasks.end();
+//        it++) {
+//     set<program *, programIdComp> p = (*it)->CopyMembers();  // no need o
+//     copy programs.insert(p.begin(), p.end());
+//   }
+//   for (auto it = programs.begin(); it != programs.end(); it++) {
+//     for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+//       memories.insert((*it)->MemGet(mem_t));
+//     }
+//   }
 
-  sprintf(outputFilename,
-          "replay/gv_taskDecomposition_%d_%05d_%03d_%05d_%05d%s",
-          (int)rootTeam->id_, 0, 0, 0, 0, ".dot");
-  ofs.open(outputFilename, ios::out);
-  if (!ofs) die(__FILE__, __FUNCTION__, __LINE__, "Can't open file.");
+//   sprintf(outputFilename,
+//           "replay/gv_taskDecomposition_%d_%05d_%03d_%05d_%05d%s",
+//           (int)rootTeam->id_, 0, 0, 0, 0, ".dot");
+//   ofs.open(outputFilename, ios::out);
+//   if (!ofs) die(__FILE__, __FUNCTION__, __LINE__, "Can't open file.");
 
-  ofs << "strict digraph G {" << endl;
-  ofs << "ratio=0.7" << endl;
-  ofs << "root=t_" << rootTeam->id_ << endl;
+//   ofs << "strict digraph G {" << endl;
+//   ofs << "ratio=0.7" << endl;
+//   ofs << "root=t_" << rootTeam->id_ << endl;
 
-  ////programs
-  // for(auto leiter = programs.begin(); leiter != programs.end(); leiter++){
-  //    ofs << " p_" << (*leiter)->id_ << " [shape=box, style=filled,
-  //    color=grey70, label=\"\", fontsize=200, regular=1, width=" << nodeWidth
-  //    << "]" << endl;
-  // }
+//   ////programs
+//   // for(auto leiter = programs.begin(); leiter != programs.end(); leiter++){
+//   //    ofs << " p_" << (*leiter)->id_ << " [shape=box, style=filled,
+//   //    color=grey70, label=\"\", fontsize=200, regular=1, width=" <<
+//   nodeWidth
+//   //    << "]" << endl;
+//   // }
 
-  // teams
-  for (auto teiter = visitedTeamsAllTasks.begin();
-       teiter != visitedTeamsAllTasks.end(); teiter++) {
-    string col = "";
-    // if (teamColMap.find((*teiter)->id_) != teamColMap.end())
-    //    col = teamColMap[(*teiter)->id_];
-    // else
-    //    col = "white";
+//   // teams
+//   for (auto teiter = visitedTeamsAllTasks.begin();
+//        teiter != visitedTeamsAllTasks.end(); teiter++) {
+//     string col = "";
+//     // if (teamColMap.find((*teiter)->id_) != teamColMap.end())
+//     //    col = teamColMap[(*teiter)->id_];
+//     // else
+//     //    col = "white";
 
-    ofs << " t_" << (*teiter)->id_
-        << " [shape=circle, style=wedged, fillcolor=\"";
-    double sumUse = 0;
-    for (int tsk = 0; tsk < 6; tsk++)
-      sumUse += teamUseMapPerTask[tsk][(*teiter)->id_];
-    for (int tsk = 0; tsk < 6; tsk++) {
-      ofs << taskCol[tsk] << ";"
-          << (teamUseMapPerTask[tsk].find((*teiter)->id_) !=
-                      teamUseMapPerTask[tsk].end()
-                  ? teamUseMapPerTask[tsk][(*teiter)->id_] / sumUse
-                  : 0);
-      if (tsk < 5) ofs << ":";
-    }
-    // ofs << ":" << taskCol[1] << ";"<<
-    // teamUseMapPerTask[0].find((*teiter)->id_) != teamUseMapPerTask[0].end()
-    // ? teamUseMapPerTask[0][(*teiter)->id_]/6: "0"; ofs << ":" << taskCol[2]
-    // << ";"<< teamUseMapPerTask[0].find((*teiter)->id_) !=
-    // teamUseMapPerTask[0].end() ? teamUseMapPerTask[0][(*teiter)->id_]/6:
-    // "0"; ofs << ":" << taskCol[3] << ";"<<
-    // teamUseMapPerTask[0].find((*teiter)->id_) != teamUseMapPerTask[0].end()
-    // ? teamUseMapPerTask[0][(*teiter)->id_]/6: "0"; ofs << ":" << taskCol[4]
-    // << ";"<< teamUseMapPerTask[0].find((*teiter)->id_) !=
-    // teamUseMapPerTask[0].end() ? teamUseMapPerTask[0][(*teiter)->id_]/6:
-    // "0"; ofs << ":" << taskCol[5] << ";"<<
-    // teamUseMapPerTask[0].find((*teiter)->id_) != teamUseMapPerTask[0].end()
-    // ? teamUseMapPerTask[0][(*teiter)->id_]/6: "0";
-    ofs << "\"";
+//     ofs << " t_" << (*teiter)->id_
+//         << " [shape=circle, style=wedged, fillcolor=\"";
+//     double sumUse = 0;
+//     for (int tsk = 0; tsk < 6; tsk++)
+//       sumUse += teamUseMapPerTask[tsk][(*teiter)->id_];
+//     for (int tsk = 0; tsk < 6; tsk++) {
+//       ofs << taskCol[tsk] << ";"
+//           << (teamUseMapPerTask[tsk].find((*teiter)->id_) !=
+//                       teamUseMapPerTask[tsk].end()
+//                   ? teamUseMapPerTask[tsk][(*teiter)->id_] / sumUse
+//                   : 0);
+//       if (tsk < 5) ofs << ":";
+//     }
+//     // ofs << ":" << taskCol[1] << ";"<<
+//     // teamUseMapPerTask[0].find((*teiter)->id_) !=
+//     teamUseMapPerTask[0].end()
+//     // ? teamUseMapPerTask[0][(*teiter)->id_]/6: "0"; ofs << ":" <<
+//     taskCol[2]
+//     // << ";"<< teamUseMapPerTask[0].find((*teiter)->id_) !=
+//     // teamUseMapPerTask[0].end() ? teamUseMapPerTask[0][(*teiter)->id_]/6:
+//     // "0"; ofs << ":" << taskCol[3] << ";"<<
+//     // teamUseMapPerTask[0].find((*teiter)->id_) !=
+//     teamUseMapPerTask[0].end()
+//     // ? teamUseMapPerTask[0][(*teiter)->id_]/6: "0"; ofs << ":" <<
+//     taskCol[4]
+//     // << ";"<< teamUseMapPerTask[0].find((*teiter)->id_) !=
+//     // teamUseMapPerTask[0].end() ? teamUseMapPerTask[0][(*teiter)->id_]/6:
+//     // "0"; ofs << ":" << taskCol[5] << ";"<<
+//     // teamUseMapPerTask[0].find((*teiter)->id_) !=
+//     teamUseMapPerTask[0].end()
+//     // ? teamUseMapPerTask[0][(*teiter)->id_]/6: "0";
+//     ofs << "\"";
 
-    ofs << ", label=\""
-        << (nodeLabMap.find((*teiter)->id_) == nodeLabMap.end()
-                ? ""
-                : nodeLabMap[(*teiter)->id_])
-        << "\", fontsize=84, regular=1, width=" << nodeWidth * 2
-        << ",penwidth=0]" << endl;
-    // ofs << " t_" << (*teiter)->id_ << " [shape=circle, style=wedged,
-    // fillcolor=\"" << col << "\", label=\"\", fontsize=84, regular=1, width="
-    // << nodeWidth*2 << "]" << endl;
-  }
+//     ofs << ", label=\""
+//         << (nodeLabMap.find((*teiter)->id_) == nodeLabMap.end()
+//                 ? ""
+//                 : nodeLabMap[(*teiter)->id_])
+//         << "\", fontsize=84, regular=1, width=" << nodeWidth * 2
+//         << ",penwidth=0]" << endl;
+//     // ofs << " t_" << (*teiter)->id_ << " [shape=circle, style=wedged,
+//     // fillcolor=\"" << col << "\", label=\"\", fontsize=84, regular=1,
+//     width="
+//     // << nodeWidth*2 << "]" << endl;
+//   }
 
-  ////program -> team edges
-  // for(auto leiter = programs.begin(); leiter != programs.end(); leiter++){
-  //    if ((*leiter)->action() >= 0 && find(visitedTeamsAllTasks.begin(),
-  //    visitedTeamsAllTasks.end(), _teamMap[(*leiter)->action()]) !=
-  //    visitedTeamsAllTasks.end()){
-  //       ofs << " p_" << (*leiter)->id_ << "->" << "t_"<< (*leiter)->action()
-  //       << " [arrowsize=" << arrowSize_1 << ", penwidth=" << "1" << " color="
-  //       << "black" << "];" << endl;
-  //    }
-  // }
+//   ////program -> team edges
+//   // for(auto leiter = programs.begin(); leiter != programs.end(); leiter++){
+//   //    if ((*leiter)->action() >= 0 && find(visitedTeamsAllTasks.begin(),
+//   //    visitedTeamsAllTasks.end(), _teamMap[(*leiter)->action()]) !=
+//   //    visitedTeamsAllTasks.end()){
+//   //       ofs << " p_" << (*leiter)->id_ << "->" << "t_"<<
+//   (*leiter)->action()
+//   //       << " [arrowsize=" << arrowSize_1 << ", penwidth=" << "1" << "
+//   color="
+//   //       << "black" << "];" << endl;
+//   //    }
+//   // }
 
-  ////team -> program edges
-  // for(auto teiter = visitedTeamsAllTasks.begin(); teiter !=
-  // visitedTeamsAllTasks.end(); teiter++){
-  //    list < program * > mem;
-  //    (*teiter)->members(&mem);
-  //    for(auto leiter = mem.begin(); leiter != mem.end(); leiter++){
-  //       ofs << " t_" << (*teiter)->id_ << "->p_" << (*leiter)->id_ << "
-  //       [arrowsize=" << arrowSize_1  << ", penwidth=" << "1" << " color=" <<
-  //       "black" << "];" << endl;
-  //    }
-  // }
+//   ////team -> program edges
+//   // for(auto teiter = visitedTeamsAllTasks.begin(); teiter !=
+//   // visitedTeamsAllTasks.end(); teiter++){
+//   //    list < program * > mem;
+//   //    (*teiter)->members(&mem);
+//   //    for(auto leiter = mem.begin(); leiter != mem.end(); leiter++){
+//   //       ofs << " t_" << (*teiter)->id_ << "->p_" << (*leiter)->id_ << "
+//   //       [arrowsize=" << arrowSize_1  << ", penwidth=" << "1" << " color="
+//   <<
+//   //       "black" << "];" << endl;
+//   //    }
+//   // }
 
-  // team -> team edges
-  for (auto teiter = visitedTeamsAllTasks.begin();
-       teiter != visitedTeamsAllTasks.end(); teiter++) {
-    list<program *> mem;
-    (*teiter)->members(&mem);
-    for (auto leiter = mem.begin(); leiter != mem.end(); leiter++) {
-      // ofs << " t_" << (*teiter)->id_ << "->p_" << (*leiter)->id_ << "
-      // [arrowsize=" << arrowSize_1  << ", penwidth=" << "1" << " color=" <<
-      // "black" << "];" << endl;
-      if ((*leiter)->action() >= 0 &&
-          find(visitedTeamsAllTasks.begin(), visitedTeamsAllTasks.end(),
-               _teamMap[(*leiter)->action()]) != visitedTeamsAllTasks.end()) {
-        ofs << " t_" << (*teiter)->id_ << "->t_" << (*leiter)->action()
-            << " [arrowsize=" << arrowSize_1 << ", penwidth="
-            << "1"
-            << " color="
-            << "black"
-            << "];" << endl;
-      }
-    }
-  }
+//   // team -> team edges
+//   for (auto teiter = visitedTeamsAllTasks.begin();
+//        teiter != visitedTeamsAllTasks.end(); teiter++) {
+//     list<program *> mem;
+//     (*teiter)->members(&mem);
+//     for (auto leiter = mem.begin(); leiter != mem.end(); leiter++) {
+//       // ofs << " t_" << (*teiter)->id_ << "->p_" << (*leiter)->id_ << "
+//       // [arrowsize=" << arrowSize_1  << ", penwidth=" << "1" << " color=" <<
+//       // "black" << "];" << endl;
+//       if ((*leiter)->action() >= 0 &&
+//           find(visitedTeamsAllTasks.begin(), visitedTeamsAllTasks.end(),
+//                _teamMap[(*leiter)->action()]) != visitedTeamsAllTasks.end())
+//                {
+//         ofs << " t_" << (*teiter)->id_ << "->t_" << (*leiter)->action()
+//             << " [arrowsize=" << arrowSize_1 << ", penwidth="
+//             << "1"
+//             << " color="
+//             << "black"
+//             << "];" << endl;
+//       }
+//     }
+//   }
 
-  ////legend
-  // ofs << "subgraph {" << endl;
-  // ofs << "ratio=1" << endl;
-  // ofs << "rank=sink" << endl;
-  // ofs << "node [shape=plaintext]" << endl;
-  // ofs << "legend [colorscheme=set18," << endl;
-  // ofs << "label=<" << endl;
-  //
-  // ofs << "<table border=\"0\" cellborder=\"1\" cellspacing=\"0\">" << endl;
-  // ofs << "<tr><td bgcolor=\"" << taskCol[0] << "\">" << "CartPole" <<
-  // "</td></tr>" << endl; ofs << "<tr><td bgcolor=\"" << taskCol[1] << "\">" <<
-  // "Acrobot" << "</td></tr>" << endl; ofs << "<tr><td bgcolor=\"" <<
-  // taskCol[2] << "\">" << "CartCentering" << "</td></tr>" << endl; ofs <<
-  // "<tr><td bgcolor=\"" << taskCol[3] << "\">" << "Pendulum" << "</td></tr>"
-  // << endl; ofs << "<tr><td bgcolor=\"" << taskCol[4] << "\">" <<
-  // "MountainCar" << "</td></tr>" << endl; ofs << "<tr><td bgcolor=\"" <<
-  // taskCol[5] << "\">" << "MountainCarC." << "</td></tr>" << endl;
-  //
-  // ofs << "</table>>" << endl;
-  // ofs << ", fontsize=84, regular=1];" << endl;
-  // ofs << "}" << endl;
-  ///////////////////////////////////////////////////////////
+//   ////legend
+//   // ofs << "subgraph {" << endl;
+//   // ofs << "ratio=1" << endl;
+//   // ofs << "rank=sink" << endl;
+//   // ofs << "node [shape=plaintext]" << endl;
+//   // ofs << "legend [colorscheme=set18," << endl;
+//   // ofs << "label=<" << endl;
+//   //
+//   // ofs << "<table border=\"0\" cellborder=\"1\" cellspacing=\"0\">" <<
+//   endl;
+//   // ofs << "<tr><td bgcolor=\"" << taskCol[0] << "\">" << "CartPole" <<
+//   // "</td></tr>" << endl; ofs << "<tr><td bgcolor=\"" << taskCol[1] << "\">"
+//   <<
+//   // "Acrobot" << "</td></tr>" << endl; ofs << "<tr><td bgcolor=\"" <<
+//   // taskCol[2] << "\">" << "CartCentering" << "</td></tr>" << endl; ofs <<
+//   // "<tr><td bgcolor=\"" << taskCol[3] << "\">" << "Pendulum" <<
+//   "</td></tr>"
+//   // << endl; ofs << "<tr><td bgcolor=\"" << taskCol[4] << "\">" <<
+//   // "MountainCar" << "</td></tr>" << endl; ofs << "<tr><td bgcolor=\"" <<
+//   // taskCol[5] << "\">" << "MountainCarC." << "</td></tr>" << endl;
+//   //
+//   // ofs << "</table>>" << endl;
+//   // ofs << ", fontsize=84, regular=1];" << endl;
+//   // ofs << "}" << endl;
+//   ///////////////////////////////////////////////////////////
 
-  ofs << "}" << endl;
-  ofs.close();
-}
+//   ofs << "}" << endl;
+//   ofs.close();
+// }
 
-/******************************************************************************/
-void TPG::printGraphDotGPEMAnimate(
-    long rootTeamId, size_t frame, int episode, int step, size_t depth,
-    vector<program *> allPrograms, vector<program *> winningPrograms,
-    set<team *, teamIdComp> &visitedTeamsAllTasks,
-    vector<map<long, double>> &teamUseMapPerTask, vector<team *> teamPath) {
-  team *rootTeam = _teamMap[rootTeamId];
+// /******************************************************************************/
+// void TPG::printGraphDotGPEMAnimate(
+//     long rootTeamId, size_t frame, int episode, int step, size_t depth,
+//     vector<program *> allPrograms, vector<program *> winningPrograms,
+//     set<team *, teamIdComp> &visitedTeamsAllTasks,
+//     vector<map<long, double>> &teamUseMapPerTask, vector<team *> teamPath) {
+//   team *rootTeam = _teamMap[rootTeamId];
 
-  vector<string> taskCol;
-  taskCol.push_back("#7fc97f");
-  taskCol.push_back("#beaed4");
-  taskCol.push_back("#fdc086");
-  taskCol.push_back("#ffff99");
-  taskCol.push_back("#386cb0");
-  taskCol.push_back("#f0027f");
-  map<long, string> nodeLabMap;
+//   vector<string> taskCol;
+//   taskCol.push_back("#7fc97f");
+//   taskCol.push_back("#beaed4");
+//   taskCol.push_back("#fdc086");
+//   taskCol.push_back("#ffff99");
+//   taskCol.push_back("#386cb0");
+//   taskCol.push_back("#f0027f");
+//   map<long, string> nodeLabMap;
 
-  nodeLabMap[1594815] = "1";  //   29000"
-  nodeLabMap[624659] = "2";   //  149"
-  nodeLabMap[1302870] = "3";  //   28373"
-  nodeLabMap[623346] = "4";   //  580"
-  nodeLabMap[493990] = "5";   //  149"
-  nodeLabMap[836830] = "6";   //  28019"
-  nodeLabMap[548151] = "7";   //  832"
-  nodeLabMap[126871] = "8";   //  1373"
-  nodeLabMap[425177] = "9";   //  774"
-  nodeLabMap[602173] = "10";  //   1826"
-  nodeLabMap[42314] = "11";   //  9"
-  nodeLabMap[26879] = "12";   //  7"
-  nodeLabMap[200127] = "13";  //   4"
-  nodeLabMap[470578] = "14";  //   1826"
-  nodeLabMap[5964] = "15";    // 7"
-  nodeLabMap[23266] = "16";   //  2"
-  nodeLabMap[226807] = "17";  //   394"
-  nodeLabMap[180005] = "18";  //   953"
+//   nodeLabMap[1594815] = "1";  //   29000"
+//   nodeLabMap[624659] = "2";   //  149"
+//   nodeLabMap[1302870] = "3";  //   28373"
+//   nodeLabMap[623346] = "4";   //  580"
+//   nodeLabMap[493990] = "5";   //  149"
+//   nodeLabMap[836830] = "6";   //  28019"
+//   nodeLabMap[548151] = "7";   //  832"
+//   nodeLabMap[126871] = "8";   //  1373"
+//   nodeLabMap[425177] = "9";   //  774"
+//   nodeLabMap[602173] = "10";  //   1826"
+//   nodeLabMap[42314] = "11";   //  9"
+//   nodeLabMap[26879] = "12";   //  7"
+//   nodeLabMap[200127] = "13";  //   4"
+//   nodeLabMap[470578] = "14";  //   1826"
+//   nodeLabMap[5964] = "15";    // 7"
+//   nodeLabMap[23266] = "16";   //  2"
+//   nodeLabMap[226807] = "17";  //   394"
+//   nodeLabMap[180005] = "18";  //   953"
 
-  bool drawPath = true;
-  double nodeWidth = 2.0;
-  double arrowSize_1 = 3;
-  double arrowSize_2 = 3;
-  double edgeWidth_2 = 10;
-  double edgeWidth_1 = 1;
+//   bool drawPath = true;
+//   double nodeWidth = 2.0;
+//   double arrowSize_1 = 3;
+//   double arrowSize_2 = 3;
+//   double edgeWidth_2 = 10;
+//   double edgeWidth_1 = 1;
 
-  char outputFilename[80];
-  ofstream ofs;
+//   char outputFilename[80];
+//   ofstream ofs;
 
-  set<team *, teamIdComp> teams;
-  set<program *, programIdComp> programs;
-  set<memoryEigen *, memoryEigenIdComp> memories;
-  vector<program *> winningProgramsDepth(winningPrograms.begin(),
-                                         winningPrograms.end());
+//   set<team *, teamIdComp> teams;
+//   set<program *, programIdComp> programs;
+//   set<memoryEigen *, memoryEigenIdComp> memories;
+//   vector<program *> winningProgramsDepth(winningPrograms.begin(),
+//                                          winningPrograms.end());
 
-  for (auto it = visitedTeamsAllTasks.begin(); it != visitedTeamsAllTasks.end();
-       it++) {
-    set<program *, programIdComp> p = (*it)->CopyMembers();  // no need to copy
-    programs.insert(p.begin(), p.end());
-  }
-  for (auto it = programs.begin(); it != programs.end(); it++) {
-    for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-      memories.insert((*it)->MemGet(mem_t));
-    }
-  }
+//   for (auto it = visitedTeamsAllTasks.begin(); it !=
+//   visitedTeamsAllTasks.end();
+//        it++) {
+//     set<program *, programIdComp> p = (*it)->CopyMembers();  // no need to
+//     copy programs.insert(p.begin(), p.end());
+//   }
+//   for (auto it = programs.begin(); it != programs.end(); it++) {
+//     for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+//       memories.insert((*it)->MemGet(mem_t));
+//     }
+//   }
 
-  sprintf(outputFilename, "replay/graphs/gv_%d_%05d_%03d_%05d_%05d%s",
-          (int)rootTeam->id_, (int)frame, episode, step, (int)depth, ".dot");
-  ofs.open(outputFilename, ios::out);
-  if (!ofs) die(__FILE__, __FUNCTION__, __LINE__, "Can't open file.");
+//   sprintf(outputFilename, "replay/graphs/gv_%d_%05d_%03d_%05d_%05d%s",
+//           (int)rootTeam->id_, (int)frame, episode, step, (int)depth, ".dot");
+//   ofs.open(outputFilename, ios::out);
+//   if (!ofs) die(__FILE__, __FUNCTION__, __LINE__, "Can't open file.");
 
-  ofs << "strict digraph G {" << endl;
-  ofs << "ratio=0.7" << endl;
-  ofs << "root=t_" << rootTeam->id_ << endl;
+//   ofs << "strict digraph G {" << endl;
+//   ofs << "ratio=0.7" << endl;
+//   ofs << "root=t_" << rootTeam->id_ << endl;
 
-  // programs
-  for (auto leiter = programs.begin(); leiter != programs.end(); leiter++) {
-    if (step > 0 &&
-        find(winningProgramsDepth.begin(), winningProgramsDepth.end(),
-             *leiter) != winningProgramsDepth.end()) {
-      // ofs << " p_" << (*leiter)->id_ << " [shape=box, style=filled,
-      // color=black, label=\"\", fontsize=200, regular=1, width=" << nodeWidth
-      // << "]" << endl;
-      ofs << " p_" << (*leiter)->id_
-          << " [shape=box, style=filled, color=green, label=\"\", "
-             "fontsize=200, regular=1, width="
-          << nodeWidth << "]" << endl;
-    } else if (step > 0 && find(allPrograms.begin(), allPrograms.end(),
-                                *leiter) != allPrograms.end())
-      ofs << " p_" << (*leiter)->id_
-          << " [shape=box, style=filled, color=black, label=\"\", "
-             "fontsize=200, regular=1, width="
-          << nodeWidth << "]" << endl;
-    else if (teamPath.size() > 0)
-      ofs << " p_" << (*leiter)->id_
-          << " [shape=box, style=filled, color=grey90, label=\"\", "
-             "fontsize=200, regular=1, width="
-          << nodeWidth << "]" << endl;
-    else
-      ofs << " p_" << (*leiter)->id_
-          << " [shape=box, style=filled, color=grey70, label=\"\", "
-             "fontsize=200, regular=1, width="
-          << nodeWidth << "]" << endl;
-  }
+//   // programs
+//   for (auto leiter = programs.begin(); leiter != programs.end(); leiter++) {
+//     if (step > 0 &&
+//         find(winningProgramsDepth.begin(), winningProgramsDepth.end(),
+//              *leiter) != winningProgramsDepth.end()) {
+//       // ofs << " p_" << (*leiter)->id_ << " [shape=box, style=filled,
+//       // color=black, label=\"\", fontsize=200, regular=1, width=" <<
+//       nodeWidth
+//       // << "]" << endl;
+//       ofs << " p_" << (*leiter)->id_
+//           << " [shape=box, style=filled, color=green, label=\"\", "
+//              "fontsize=200, regular=1, width="
+//           << nodeWidth << "]" << endl;
+//     } else if (step > 0 && find(allPrograms.begin(), allPrograms.end(),
+//                                 *leiter) != allPrograms.end())
+//       ofs << " p_" << (*leiter)->id_
+//           << " [shape=box, style=filled, color=black, label=\"\", "
+//              "fontsize=200, regular=1, width="
+//           << nodeWidth << "]" << endl;
+//     else if (teamPath.size() > 0)
+//       ofs << " p_" << (*leiter)->id_
+//           << " [shape=box, style=filled, color=grey90, label=\"\", "
+//              "fontsize=200, regular=1, width="
+//           << nodeWidth << "]" << endl;
+//     else
+//       ofs << " p_" << (*leiter)->id_
+//           << " [shape=box, style=filled, color=grey70, label=\"\", "
+//              "fontsize=200, regular=1, width="
+//           << nodeWidth << "]" << endl;
+//   }
 
-  // teams
-  for (auto teiter = visitedTeamsAllTasks.begin();
-       teiter != visitedTeamsAllTasks.end(); teiter++) {
-    string col = "";
+//   // teams
+//   for (auto teiter = visitedTeamsAllTasks.begin();
+//        teiter != visitedTeamsAllTasks.end(); teiter++) {
+//     string col = "";
 
-    ofs << " t_" << (*teiter)->id_
-        << " [shape=circle, style=wedged, fillcolor=\"";
-    double sumUse = 0;
-    for (int tsk = 0; tsk < 6; tsk++) {
-      if (teamUseMapPerTask[tsk].find((*teiter)->id_) !=
-          teamUseMapPerTask[tsk].end())
-        sumUse += teamUseMapPerTask[tsk][(*teiter)->id_];
-    }
-    for (int tsk = 0; tsk < 6; tsk++) {
-      ofs << taskCol[tsk] << ";"
-          << (teamUseMapPerTask[tsk].find((*teiter)->id_) !=
-                      teamUseMapPerTask[tsk].end()
-                  ? teamUseMapPerTask[tsk][(*teiter)->id_] / sumUse
-                  : 0);
-      if (tsk < 5) ofs << ":";
-    }
-    ofs << "\"";
+//     ofs << " t_" << (*teiter)->id_
+//         << " [shape=circle, style=wedged, fillcolor=\"";
+//     double sumUse = 0;
+//     for (int tsk = 0; tsk < 6; tsk++) {
+//       if (teamUseMapPerTask[tsk].find((*teiter)->id_) !=
+//           teamUseMapPerTask[tsk].end())
+//         sumUse += teamUseMapPerTask[tsk][(*teiter)->id_];
+//     }
+//     for (int tsk = 0; tsk < 6; tsk++) {
+//       ofs << taskCol[tsk] << ";"
+//           << (teamUseMapPerTask[tsk].find((*teiter)->id_) !=
+//                       teamUseMapPerTask[tsk].end()
+//                   ? teamUseMapPerTask[tsk][(*teiter)->id_] / sumUse
+//                   : 0);
+//       if (tsk < 5) ofs << ":";
+//     }
+//     ofs << "\"";
 
-    ofs << ", label=\""
-        << (nodeLabMap.find((*teiter)->id_) == nodeLabMap.end()
-                ? ""
-                : nodeLabMap[(*teiter)->id_])
-        << "\", fontsize=84, regular=1, width=" << nodeWidth * 2
-        << ",penwidth=0]" << endl;
-  }
+//     ofs << ", label=\""
+//         << (nodeLabMap.find((*teiter)->id_) == nodeLabMap.end()
+//                 ? ""
+//                 : nodeLabMap[(*teiter)->id_])
+//         << "\", fontsize=84, regular=1, width=" << nodeWidth * 2
+//         << ",penwidth=0]" << endl;
+//   }
 
-  ////team -> team edges
-  // for(auto teiter = visitedTeamsAllTasks.begin(); teiter !=
-  // visitedTeamsAllTasks.end(); teiter++){
-  //    list < program * > mem;
-  //    (*teiter)->members(&mem);
-  //    for(auto leiter = mem.begin(); leiter != mem.end(); leiter++){
-  //       if ((*leiter)->action() >= 0 && find(visitedTeamsAllTasks.begin(),
-  //       visitedTeamsAllTasks.end(), _teamMap[(*leiter)->action()]) !=
-  //       visitedTeamsAllTasks.end()){
-  //          ofs << " t_" << (*teiter)->id_ << "->t_" << (*leiter)->action()
-  //          << " [arrowsize=" << arrowSize_1  << ", penwidth=" << "1" << "
-  //          color=" << "black" << "];" << endl;
-  //       }
-  //    }
-  // }
+//   ////team -> team edges
+//   // for(auto teiter = visitedTeamsAllTasks.begin(); teiter !=
+//   // visitedTeamsAllTasks.end(); teiter++){
+//   //    list < program * > mem;
+//   //    (*teiter)->members(&mem);
+//   //    for(auto leiter = mem.begin(); leiter != mem.end(); leiter++){
+//   //       if ((*leiter)->action() >= 0 && find(visitedTeamsAllTasks.begin(),
+//   //       visitedTeamsAllTasks.end(), _teamMap[(*leiter)->action()]) !=
+//   //       visitedTeamsAllTasks.end()){
+//   //          ofs << " t_" << (*teiter)->id_ << "->t_" << (*leiter)->action()
+//   //          << " [arrowsize=" << arrowSize_1  << ", penwidth=" << "1" << "
+//   //          color=" << "black" << "];" << endl;
+//   //       }
+//   //    }
+//   // }
 
-  ////team -> team edges path
-  // if (step > 0){
-  //    for(size_t t = 0; t < teamPath.size()-1; t++){
-  //       list < program * > mem;
-  //       teamPath[t]->members(&mem);
-  //       for(auto leiter = mem.begin(); leiter != mem.end(); leiter++){
-  //          if ((*leiter)->action() >= 0 && teamPath[t+1]->id_ ==
-  //          _teamMap[(*leiter)->action()]->id_){
-  //             ofs << " t_" << teamPath[t]->id_ << "->t_" <<
-  //             (*leiter)->action() << " [arrowsize=" << arrowSize_2  << ",
-  //             penwidth=" << edgeWidth_2 << " color=" << "black" << "];" <<
-  //             endl;
-  //          }
-  //       }
-  //    }
-  // }
+//   ////team -> team edges path
+//   // if (step > 0){
+//   //    for(size_t t = 0; t < teamPath.size()-1; t++){
+//   //       list < program * > mem;
+//   //       teamPath[t]->members(&mem);
+//   //       for(auto leiter = mem.begin(); leiter != mem.end(); leiter++){
+//   //          if ((*leiter)->action() >= 0 && teamPath[t+1]->id_ ==
+//   //          _teamMap[(*leiter)->action()]->id_){
+//   //             ofs << " t_" << teamPath[t]->id_ << "->t_" <<
+//   //             (*leiter)->action() << " [arrowsize=" << arrowSize_2  << ",
+//   //             penwidth=" << edgeWidth_2 << " color=" << "black" << "];" <<
+//   //             endl;
+//   //          }
+//   //       }
+//   //    }
+//   // }
 
-  // program -> team edges
-  for (auto leiter = programs.begin(); leiter != programs.end(); leiter++) {
-    if ((*leiter)->action() >= 0 &&
-        find(visitedTeamsAllTasks.begin(), visitedTeamsAllTasks.end(),
-             _teamMap[(*leiter)->action()]) != visitedTeamsAllTasks.end()) {
-      double w = find(winningProgramsDepth.begin(), winningProgramsDepth.end(),
-                      *leiter) == winningProgramsDepth.end() ||
-                         !drawPath
-                     ? edgeWidth_1
-                     : edgeWidth_2;
-      if (teamPath.size() < 1) w = 5;
-      double as = find(winningProgramsDepth.begin(), winningProgramsDepth.end(),
-                       *leiter) == winningProgramsDepth.end() ||
-                          !drawPath
-                      ? arrowSize_1
-                      : arrowSize_2;
-      string col =
-          find(winningProgramsDepth.begin(), winningProgramsDepth.end(),
-               *leiter) == winningProgramsDepth.end()
-              ? "black"
-              : "green";
-      ofs << " p_" << (*leiter)->id_ << "->"
-          << "t_" << (*leiter)->action() << " [arrowsize=" << as
-          << ", penwidth=" << w << " color=" << col.c_str() << "];" << endl;
-    }
-  }
+//   // program -> team edges
+//   for (auto leiter = programs.begin(); leiter != programs.end(); leiter++) {
+//     if ((*leiter)->action() >= 0 &&
+//         find(visitedTeamsAllTasks.begin(), visitedTeamsAllTasks.end(),
+//              _teamMap[(*leiter)->action()]) != visitedTeamsAllTasks.end()) {
+//       double w = find(winningProgramsDepth.begin(),
+//       winningProgramsDepth.end(),
+//                       *leiter) == winningProgramsDepth.end() ||
+//                          !drawPath
+//                      ? edgeWidth_1
+//                      : edgeWidth_2;
+//       if (teamPath.size() < 1) w = 5;
+//       double as = find(winningProgramsDepth.begin(),
+//       winningProgramsDepth.end(),
+//                        *leiter) == winningProgramsDepth.end() ||
+//                           !drawPath
+//                       ? arrowSize_1
+//                       : arrowSize_2;
+//       string col =
+//           find(winningProgramsDepth.begin(), winningProgramsDepth.end(),
+//                *leiter) == winningProgramsDepth.end()
+//               ? "black"
+//               : "green";
+//       ofs << " p_" << (*leiter)->id_ << "->"
+//           << "t_" << (*leiter)->action() << " [arrowsize=" << as
+//           << ", penwidth=" << w << " color=" << col.c_str() << "];" << endl;
+//     }
+//   }
 
-  // team -> program edges
-  for (auto teiter = visitedTeamsAllTasks.begin();
-       teiter != visitedTeamsAllTasks.end(); teiter++) {
-    list<program *> mem;
-    (*teiter)->members(&mem);
-    for (auto leiter = mem.begin(); leiter != mem.end(); leiter++) {
-      double w =
-          find(teamPath.begin(), teamPath.end(), *teiter) == teamPath.end() ||
-                  !drawPath
-              ? edgeWidth_1
-              : edgeWidth_2;
-      if (teamPath.size() < 1) w = 5;
-      double as =
-          find(teamPath.begin(), teamPath.end(), *teiter) == teamPath.end() ||
-                  !drawPath
-              ? arrowSize_1
-              : arrowSize_2;
-      string col =
-          find(winningProgramsDepth.begin(), winningProgramsDepth.end(),
-               *leiter) == winningProgramsDepth.end()
-              ? "black"
-              : "green";
-      ofs << " t_" << (*teiter)->id_ << "->p_" << (*leiter)->id_
-          << " [arrowsize=" << as << ", penwidth=" << w
-          << " color=" << col.c_str() << "];" << endl;
-    }
-  }
+//   // team -> program edges
+//   for (auto teiter = visitedTeamsAllTasks.begin();
+//        teiter != visitedTeamsAllTasks.end(); teiter++) {
+//     list<program *> mem;
+//     (*teiter)->members(&mem);
+//     for (auto leiter = mem.begin(); leiter != mem.end(); leiter++) {
+//       double w =
+//           find(teamPath.begin(), teamPath.end(), *teiter) == teamPath.end()
+//           ||
+//                   !drawPath
+//               ? edgeWidth_1
+//               : edgeWidth_2;
+//       if (teamPath.size() < 1) w = 5;
+//       double as =
+//           find(teamPath.begin(), teamPath.end(), *teiter) == teamPath.end()
+//           ||
+//                   !drawPath
+//               ? arrowSize_1
+//               : arrowSize_2;
+//       string col =
+//           find(winningProgramsDepth.begin(), winningProgramsDepth.end(),
+//                *leiter) == winningProgramsDepth.end()
+//               ? "black"
+//               : "green";
+//       ofs << " t_" << (*teiter)->id_ << "->p_" << (*leiter)->id_
+//           << " [arrowsize=" << as << ", penwidth=" << w
+//           << " color=" << col.c_str() << "];" << endl;
+//     }
+//   }
 
-  ofs << "}" << endl;
-  ofs.close();
-}
+//   ofs << "}" << endl;
+//   ofs.close();
+// }
 
 /******************************************************************************/
 void TPG::printPhyloGraphDot(team *tm) {
@@ -1734,8 +1765,8 @@ void TPG::printPhyloGraphDot(team *tm) {
   char outputFilename[80];
   ofstream ofs;
 
-  sprintf(outputFilename, "phyloGraphs/phylo-t%05d-s%d%s",
-          (int)GetState("t_current"), _seeds[TPG_SEED], ".dot");
+  sprintf(outputFilename, "phyloGraphs/phylo-t%05d-s%lu%s",
+          (int)GetState("t_current"), seeds_[TPG_SEED], ".dot");
   ofs.open(outputFilename, ios::out);
   if (!ofs) die(__FILE__, __FUNCTION__, __LINE__, "Can't open file.");
 
@@ -1772,11 +1803,9 @@ void TPG::printPhyloGraphDot(team *tm) {
       for (size_t i = 0; i < _phyloGraph[*it].adj.size(); i++)
         if (find(teamIds.begin(), teamIds.end(), _phyloGraph[*it].adj[i]) !=
             teamIds.end())
-          ofs << " t_" << *it << "->"
-              << "t_" << _phyloGraph[*it].adj[i] << " [penwidth=" << edgeWidth_1
-              << " color="
-              << "black"
-              << "];" << endl;
+          ofs << " t_" << *it << "->" << "t_" << _phyloGraph[*it].adj[i]
+              << " [penwidth=" << edgeWidth_1 << " color=" << "black" << "];"
+              << endl;
     ofs << "}" << endl;
   }
 
@@ -1855,7 +1884,6 @@ void TPG::printTeamInfo(long t, int phase, bool singleBest, long teamId) {
           << (*teiter)->gtime_ << " phs " << phase;
       oss << " root " << ((*teiter)->root() ? 1 : 0);
       oss << " sz " << (*teiter)->size();
-      oss << " asz " << (*teiter)->asize();
       oss << " age " << t - (*teiter)->gtime_;
       // oss << " compl";
       // oss << " " << (*teiter)->numActiveTeams_;
@@ -1906,8 +1934,7 @@ void TPG::printTeamInfo(long t, int phase, bool singleBest, long teamId) {
       set<program *, programIdComp> programs;
       set<memoryEigen *, memoryEigenIdComp> memories;
       set<team *, teamIdComp> visitedTeams2;
-      (*teiter)->GetAllNodes(_teamMap, visitedTeams2, programs, memories,
-                             false);
+      (*teiter)->GetAllNodes(_teamMap, visitedTeams2, programs, memories);
       oss << " nP " << programs.size();
       oss << " nT " << visitedTeams2.size();
       oss << " nM " << memories.size();
@@ -1983,7 +2010,8 @@ void TPG::printTeamInfo(long t, int phase, bool singleBest, long teamId) {
 
 /******************************************************************************/
 // Algorithm 5.1 (linear crossover)
-void TPG::programCrossover(RegisterMachine *p1, RegisterMachine *p2, RegisterMachine **c1, RegisterMachine **c2,
+void TPG::programCrossover(RegisterMachine *p1, RegisterMachine *p2,
+                           RegisterMachine **c1, RegisterMachine **c2,
                            mt19937 &rng) {
   int dcMax = min(p1->Size(), p2->Size());
   int dsMax = dcMax;
@@ -2075,8 +2103,8 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
     str = inString;
   } else {
     char filename[80];
-    sprintf(filename, "%s/%s.%ld.%d.%d.%d.rslt", "checkpoints", "cp", t, chkpID,
-            _seeds[TPG_SEED], phase);
+    sprintf(filename, "%s/%s.%ld.%d.%lu.%d.rslt", "checkpoints", "cp", t,
+            chkpID, seeds_[TPG_SEED], phase);
     ifstream t(filename);
     t.seekg(0, ios::end);
     str.reserve(t.tellg());
@@ -2106,7 +2134,7 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       teamPair tp(_teamMap[id1], _teamMap[id2]);
       _teamPairsToCompair.push_back(tp);
     }
-    // TODO(skelly) would we ever want to re-seed here? 
+    // TODO(skelly) would we ever want to re-seed here?
     // else if (outcomeFields[0].compare("seed_tpg") == 0)
     //   seed(TPG_SEED, atoi(outcomeFields[1].c_str()));
     // else if (outcomeFields[0].compare("seed_aux") == 0)
@@ -2169,7 +2197,7 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       for (size_t ii = f; ii < outcomeFields.size(); ii++) {
         vector<string> instructionString;
         splitString(outcomeFields[ii], '_', instructionString);
-        instruction *in = new instruction(params_, _rngs[TPG_SEED]);
+        instruction *in = new instruction(params_, rngs_[TPG_SEED]);
         in->in1Src_ = stringToInt(instructionString[0]);
         in->in2Src_ = stringToInt(instructionString[1]);
         in->outSrc_ = stringToInt(instructionString[2]);
@@ -2181,8 +2209,6 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
         in->in2IdxE_ = stringToInt(instructionString[8]);
         bid.push_back(in);
       }
-      // l = new RegisterMachine(gtime, action, stateful, dim, _memoryIndices,
-      // _memoryRows, _memoryCols, id, nrefs, bid);
       l = new RegisterMachine(gtime, action, stateful, params_, id, nrefs, bid);
 
       for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
@@ -2197,7 +2223,6 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       if (id > max_teamCount) max_teamCount = id;
       long gtime = atoi(outcomeFields[f++].c_str());
       m = new team(gtime, id);
-      // cerr << "new0 " << id << endl;
       m->_n_eval = atoi(outcomeFields[f++].c_str());
       // m->clearEvalSeeds();
       // for (size_t es = 0; es < m->numEval(); es++)
@@ -2206,8 +2231,9 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       // add programs in order
       for (size_t ii = f; ii < outcomeFields.size(); ii++) {
         memberId = atoi(outcomeFields[ii].c_str());
-        if (m->AddProgram(_L[memberId]) == false)
-          m->AddProgramActive(_L[memberId]);
+        m->AddProgram(_L[memberId]);
+        // if (m->AddProgram(_L[memberId]) == false)
+        //   m->AddProgramActive(_L[memberId]);
       }
       AddTeam(m);
       // _Mroot.insert(m);
@@ -2263,9 +2289,8 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
   int sumNumOutcomes = 0;
 
   if (!fromString)
-    oss << "TPG::readCheckpoint "
-        << " Msize " << _M.size() << " Lsize " << _L.size() << " MrooSize "
-        << _Mroot.size();
+    oss << "TPG::readCheckpoint " << " Msize " << _M.size() << " Lsize "
+        << _L.size() << " MrooSize " << _Mroot.size();
 
   for (auto teiter = _M.begin(); teiter != _M.end(); teiter++) {
     sumTeamSizes += (*teiter)->size();
@@ -2288,34 +2313,11 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
 
 /******************************************************************************/
 void TPG::recalculateProgramRefs() {
-  for (auto leiter = _L.begin(); leiter != _L.end(); leiter++)
-    leiter->second->setNrefs(0);
-
-  list<program *> mem;
-  for (auto teiter = _M.begin(); teiter != _M.end(); teiter++) {
-    (*teiter)->members(mem);
-    for (auto leiter = mem.begin(); leiter != mem.end(); leiter++)
-      (*leiter)->refInc();
-    mem.clear();
-  }
+  for (auto p : _L) p.second->setNrefs(0);
+  for (auto tm : _M)
+    for (auto p : tm->members_) p->refInc();
 }
 
-///****************************************************************************/
-// void TPG::selSampleSets()
-//{
-//    size_t numDeleted = 0;
-//    auto ss = _samplesets.begin();
-//    while(ss != _samplesets.end()) {
-//       if(!(*ss)->_elite) {
-//          delete *ss;
-//          ss = _samplesets.erase(ss);
-//          numDeleted++;
-//       }
-//       else ss++;
-//    }
-//    oss << "selSmp t " << GetState("t_current") << " nD " << numDeleted << "
-//    ssSz " << _samplesets.size() << endl;
-// }
 /******************************************************************************/
 void TPG::selTeams(long t, bool verbose, int genTime) {
   (void)verbose;
@@ -2324,6 +2326,16 @@ void TPG::selTeams(long t, bool verbose, int genTime) {
   set<team *, teamFitnessLexicalCompare> teams;
   int numOldDeleted = 0;
   int numDeleted = 0;
+
+  oss << "selTmsA t " << t << " Msz " << _M.size() << " Lsz " << _L.size()
+      << " mrSz " << _Mroot.size() << " mSz";
+  for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+    oss << " " << _Memory[mem_t].size();
+  }
+  oss << " eLSz " << _numEliteTeamsCurrent[GetState("phase")] << " nDel "
+      << numDeleted << " nOldDel " << numOldDeleted << " nOldDelPr "
+      << (double)numOldDeleted / numDeleted;
+  oss << endl;
 
   deque<program *> programsWithNoRefs;
 
@@ -2336,7 +2348,6 @@ void TPG::selTeams(long t, bool verbose, int genTime) {
       (*teiter)->cleanup(_teamMap, programsWithNoRefs);
       removeTeam(*teiter, false);
       deletedIds.push_back((*teiter)->id_);
-      // cerr << "del " << (*teiter)->id_ << endl;
       delete *teiter;
       teiter = _Mroot.erase(teiter);
       numDeleted++;
@@ -2361,7 +2372,7 @@ void TPG::selTeams(long t, bool verbose, int genTime) {
     }
   }
 
-  oss << "selTms t " << t << " Msz " << _M.size() << " Lsz " << _L.size()
+  oss << "selTmsB t " << t << " Msz " << _M.size() << " Lsz " << _L.size()
       << " mrSz " << _Mroot.size() << " mSz";
   for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
     oss << " " << _Memory[mem_t].size();
@@ -2400,7 +2411,6 @@ void TPG::cleanupProgramsWithNoRefs(long t,
         _Mroot.erase(tm);
         removeTeam(tm, true);
         tm->cleanup(_teamMap, programsWithNoRefs);
-        // cerr << "del " << tm->id_ << endl;
         delete tm;
       }
     }
@@ -2435,7 +2445,8 @@ void TPG::setParams() {
       GetParam<int>("n_stored_outcomes_VALIDATION");
   _numStoredOutcomesPerHost[_TEST_PHASE] =
       GetParam<int>("n_stored_outcomes_TEST");
-  params_["n_task"] = to_string(GetState("active_task")).length();
+  auto task_string = GetParam<string>("active_tasks");
+  params_["n_task"] = 1 + (int)count(task_string.begin(),task_string.end(),',');
 }
 
 /******************************************************************************/
@@ -2489,7 +2500,7 @@ void TPG::updateMODESFilters(bool roots) {
           set<team *, teamIdComp> teams;
           set<program *, programIdComp> programs;
           set<memoryEigen *, memoryEigenIdComp> memories;
-          (*teiter)->GetAllNodes(_teamMap, teams, programs, memories, true);
+          (*teiter)->GetAllNodes(_teamMap, teams, programs, memories);
           for (auto leiter = programs.begin(); leiter != programs.end();
                leiter++) {
             _persistenceFilterA[(*teiter)->id_].activeProgramIds.insert(
@@ -2594,8 +2605,8 @@ void TPG::updateMODESFilters(bool roots) {
 void TPG::writeCheckpoint(long t, bool elite) {
   ofstream ofs;
   char filename[80];
-  sprintf(filename, "%s/%s.%ld.%d.%d.%d.rslt", "checkpoints", "cp", t,
-          GetParam<int>("id"), _seeds[TPG_SEED], GetState("phase"));
+  sprintf(filename, "%s/%s.%ld.%d.%lu.%d.rslt", "checkpoints", "cp", t,
+          GetParam<int>("id"), seeds_[TPG_SEED], GetState("phase"));
 
   if (fileExists(filename)) {
     if (remove(filename) != 0) cerr << "error deleting " << filename << endl;
@@ -2607,8 +2618,8 @@ void TPG::writeCheckpoint(long t, bool elite) {
     die(__FILE__, __FUNCTION__, __LINE__, "Can't open file.");
   }
 
-  ofs << "seed_tpg:" << _seeds[TPG_SEED] << endl;
-  ofs << "seed_aux:" << _seeds[AUX_SEED] << endl;
+  ofs << "seed_tpg:" << seeds_[TPG_SEED] << endl;
+  ofs << "seed_aux:" << seeds_[AUX_SEED] << endl;
   ofs << "t:" << GetState("t_current") << endl;
   ofs << "active_task:" << GetState("active_task") << endl;
   ofs << "fitMode:" << GetParam<int>("fit_mode") << endl;
@@ -2627,9 +2638,7 @@ void TPG::writeCheckpoint(long t, bool elite) {
       {
         auto tm = itr2->second[2];
         teams.clear();
-        // itr3->second->GetAllNodes(_teamMap, teams, programs, memories,
-        // false);
-        tm->GetAllNodes(_teamMap, teams, programs, memories, false);
+        tm->GetAllNodes(_teamMap, teams, programs, memories);
         teamsAll.insert(teams.begin(), teams.end());
       }
 
@@ -2696,9 +2705,8 @@ void TPG::writeCheckpoint(long t, bool elite) {
   //          cerr << "error deleting " << filename << endl;
   // }
 
-  oss << "TPG::writeCheckpoint "
-      << " Msize " << _M.size() << " Lsize " << _L.size() << " MrooSize "
-      << _Mroot.size() << endl;
+  oss << "TPG::writeCheckpoint " << " Msize " << _M.size() << " Lsize "
+      << _L.size() << " MrooSize " << _Mroot.size() << endl;
 }
 
 /******************************************************************************/
@@ -2708,12 +2716,12 @@ void TPG::writeCheckpoint(string &s, vector<team *> &rootTeams) {
   set<memoryEigen *, memoryEigenIdComp> memories;
 
   for (auto teiter = rootTeams.begin(); teiter != rootTeams.end(); teiter++)
-    (*teiter)->GetAllNodes(_teamMap, teams, programs, memories, false);
+    (*teiter)->GetAllNodes(_teamMap, teams, programs, memories);
 
   stringstream ss;
 
-  ss << "seed_tpg:" << _seeds[TPG_SEED] << endl;
-  ss << "seed_aux:" << _seeds[AUX_SEED] << endl;
+  ss << "seed_tpg:" << seeds_[TPG_SEED] << endl;
+  ss << "seed_aux:" << seeds_[AUX_SEED] << endl;
   ss << "t:" << GetState("t_current") << endl;
   ss << "active_task:" << GetState("active_task") << endl;
   ss << "internalTestNodeId:-1" << endl;
@@ -2741,12 +2749,12 @@ void TPG::writeCheckpoint(string &s, vector<team *> &rootTeams,
   set<memoryEigen *, memoryEigenIdComp> memories;
 
   for (auto teiter = rootTeams.begin(); teiter != rootTeams.end(); teiter++)
-    (*teiter)->GetAllNodes(_teamMap, teams, programs, memories, false);
+    (*teiter)->GetAllNodes(_teamMap, teams, programs, memories);
 
   stringstream ss;
 
-  ss << "seed_tpg:" << _seeds[TPG_SEED] << endl;
-  ss << "seed_aux:" << _seeds[AUX_SEED] << endl;
+  ss << "seed_tpg:" << seeds_[TPG_SEED] << endl;
+  ss << "seed_aux:" << seeds_[AUX_SEED] << endl;
   ss << "t:" << GetState("t_current") << endl;
   ss << "active_task:" << GetState("active_task") << endl;
   ss << "internalTestNodeId:-1" << endl;
@@ -2778,14 +2786,14 @@ void TPG::writeCheckpoint(string &s, vector<team *> &rootTeams,
   set<memoryEigen *, memoryEigenIdComp> memories;
 
   for (auto teiter = rootTeams.begin(); teiter != rootTeams.end(); teiter++)
-    (*teiter)->GetAllNodes(_teamMap, teams, programs, memories, false);
-  originalTeam->GetAllNodes(_teamMap, teams, programs, memories, false);
-  replacementTeam->GetAllNodes(_teamMap, teams, programs, memories, false);
+    (*teiter)->GetAllNodes(_teamMap, teams, programs, memories);
+  originalTeam->GetAllNodes(_teamMap, teams, programs, memories);
+  replacementTeam->GetAllNodes(_teamMap, teams, programs, memories);
 
   stringstream ss;
 
-  ss << "seed_tpg:" << _seeds[TPG_SEED] << endl;
-  ss << "seed_aux:" << _seeds[AUX_SEED] << endl;
+  ss << "seed_tpg:" << seeds_[TPG_SEED] << endl;
+  ss << "seed_aux:" << seeds_[AUX_SEED] << endl;
   ss << "t:" << GetState("t_current") << endl;
   ss << "active_task:" << GetState("active_task") << endl;
   ss << "internalTestNodeId:" << state_["internal_test_node_id"] << endl;

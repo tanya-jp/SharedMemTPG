@@ -23,7 +23,7 @@ test_mod 50
 
 # in multitask settings, which tasks are active
 # rhs should be a comma-separated list like Cartpole,Acrobot
-active_tasks CartCentering
+active_tasks Cartpole
 
 # number of fitness functions available
 n_fit_mode 0
@@ -41,7 +41,7 @@ skip_introns 0
 seed_aux 42
 
 # max number of generations
-n_generations 1000
+n_generations 1000000
 
 # allow mutation of internal teams (i.e. non-root teams (in-progress)
 mu_internal 0
@@ -50,7 +50,7 @@ mu_internal 0
 n_discrete_action 3
 
 # initial team size
-initial_team_size 3
+initial_team_size 5
 
 # max team size
 max_team_size 1000000
@@ -59,13 +59,13 @@ max_team_size 1000000
 max_teams_per_graph 1000000
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 1.0
+p_atomic 0.9
 
 # team mutation: probability of deleting program from team
 pmd 0.6
 
 # team mtation: probability of adding program to team
-pma 0.3
+pma 0.5
 
 # team mutation: probability of mutating a program
 pmm 1.0
@@ -74,7 +74,7 @@ pmm 1.0
 pmn 0.1
 
 # team mutation: probability of mutating a program's memory pointer
-pms 0.0
+pms 0.1
 
 # team mutation: probability of mutating program execution order
 pmw 0.1
@@ -89,7 +89,7 @@ continuous_output 1
 n_input 2
 
 # max initial program size
-max_initial_prog_size 5
+max_initial_prog_size 10
 
 # max program size
 max_prog_size 1000000
@@ -104,7 +104,7 @@ p_bid_swap 0.5
 p_bid_delete 0.6
 
 # program variation: probability of adding an instruction
-p_bid_add 0.3
+p_bid_add 0.5
 
 # program variation: probability of linear crossover with another team
 p_bid_xover 0.0
@@ -127,16 +127,16 @@ memory_rows 2
 memory_cols 2
 
 # number of elite teams
-n_elite 400
+n_elite 300
 
 # number of training outcome to store
-n_stored_outcomes_TRAIN 5
+n_stored_outcomes_TRAIN 20
 
 # number of test outcomes to store
-n_stored_outcomes_VALIDATION 1
+n_stored_outcomes_VALIDATION 20
 
 # number of validation outcomes to store
-n_stored_outcomes_TEST 10
+n_stored_outcomes_TEST 100
 
 # fitness proportional selection
 fit_prop_select 0
@@ -151,27 +151,27 @@ SCALAR_SUM_OP
 SCALAR_DIFF_OP
 SCALAR_PRODUCT_OP
 SCALAR_DIVISION_OP
-#SCALAR_ABS_OP
-#SCALAR_RECIPROCAL_OP
-#SCALAR_SIN_OP
-#SCALAR_COS_OP
-#SCALAR_TAN_OP
-#SCALAR_ARCSIN_OP
-#SCALAR_ARCCOS_OP
-#SCALAR_ARCTAN_OP
-#SCALAR_EXP_OP
-#SCALAR_LOG_OP
-#SCALAR_HEAVYSIDE_OP
-#SCALAR_COND_A_OP
-#SCALAR_COND_B_OP
-#SCALAR_POW_OP
-#SCALAR_SQR_OP
-#SCALAR_CUBE_OP
-#SCALAR_TANH_OP
-#SCALAR_SQRT_OP
-#SCALAR_CONST_SET_OP
-#SCALAR_MIN_OP
-#SCALAR_MAX_OP
+SCALAR_ABS_OP
+SCALAR_RECIPROCAL_OP
+SCALAR_SIN_OP
+SCALAR_COS_OP
+SCALAR_TAN_OP
+SCALAR_ARCSIN_OP
+SCALAR_ARCCOS_OP
+SCALAR_ARCTAN_OP
+SCALAR_EXP_OP
+SCALAR_LOG_OP
+SCALAR_HEAVYSIDE_OP
+SCALAR_COND_A_OP
+SCALAR_COND_B_OP
+SCALAR_POW_OP
+SCALAR_SQR_OP
+SCALAR_CUBE_OP
+SCALAR_TANH_OP
+SCALAR_SQRT_OP
+SCALAR_CONST_SET_OP
+SCALAR_MIN_OP
+SCALAR_MAX_OP
 
 ## vector & matrix ops
 #VECTOR_HEAVYSIDE_OP

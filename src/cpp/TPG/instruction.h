@@ -4,7 +4,7 @@
 #include <bitset>
 #include <random>
 #include <vector>
-
+#include <iomanip>
 #include "memoryEigen.h"
 
 class instruction {
@@ -121,9 +121,19 @@ class instruction {
   inline void exec(bool dbg) {
     (this->*op_list_[op_])(dbg);
     // // protect output
+    // out_->working_memory_[outIdx_].array() =
+    //     (out_->working_memory_[outIdx_].array().isFinite()).select(out_->working_memory_[outIdx_],
+    //     0);
+    // will get a lot ofnan without this
     out_->working_memory_[outIdx_].array() =
-        (out_->working_memory_[outIdx_].array().isFinite()).select(out_->working_memory_[outIdx_],
-        0);
+        out_->working_memory_[outIdx_].array().unaryExpr(
+            [](double v) { return std::isfinite(v) ? v : 0.0; });
+
+    // out_->working_memory_[outIdx_].array() =
+    //     out_->working_memory_[outIdx_].array().unaryExpr(
+    //         [](double v) { return isEqual(v,0.0) ? abs(v) : v; });     
+    if (dbg)
+       cerr << out_->working_memory_[outIdx_](0, 0) << endl;   
   }
 
   inline int inIdx(int i) const { return i == 0 ? in1Idx_ : in2Idx_; }
@@ -150,18 +160,17 @@ class instruction {
   /* op implementations *******************************************************/
 
   inline void ExecuteScalarSumOp(bool dbg) {
-    if (dbg) {
-      double i1 = in1_->working_memory_[in1IdxE_](0, 0);
-      double i2 = in2_->working_memory_[in2IdxE_](0, 0);
-      cerr << "s" << outIdx_ << " = s" << in1IdxE_ << " + "
-           << "s" << in2IdxE_ << " | ";
-      cerr << i1 << " + " << i2 << " = " << i1 + i2;
-    }
     out_->working_memory_[outIdx_](0, 0) =
         (in1_->working_memory_[in1IdxE_](0, 0) +
          in2_->working_memory_[in2IdxE_](0, 0));
-    if (dbg)
-      cerr << " (" << out_->working_memory_[outIdx_](0, 0) << ")" << endl;
+    if (dbg) {
+      cerr << std::setprecision(std::numeric_limits<double>::digits10 + 1)
+           << std::fixed << "s" << outIdx_ << " = s" << in1IdxE_ << " + " << "s"
+           << in2IdxE_ << " | ";
+      cerr << std::fixed << in1_->working_memory_[in1IdxE_](0, 0) << " + "
+           << in2_->working_memory_[in2IdxE_](0, 0) << " = "
+           << out_->working_memory_[outIdx_](0, 0) << endl;
+    }
   }
 
   inline void ExecuteScalarDiffOp(bool dbg) {
@@ -169,9 +178,10 @@ class instruction {
         in1_->working_memory_[in1IdxE_](0, 0) -
         in2_->working_memory_[in2IdxE_](0, 0);
     if (dbg) {
-      cerr << "s" << outIdx_ << " = s" << in1IdxE_ << " - "
+      cerr << std::setprecision (std::numeric_limits<double>::digits10 + 1)
+       << std::fixed << "s" << outIdx_ << " = s" << in1IdxE_ << " - "
            << "s" << in2IdxE_ << " | ";
-      cerr << in1_->working_memory_[in1IdxE_](0, 0) << " - "
+      cerr << std::fixed << in1_->working_memory_[in1IdxE_](0, 0) << " - "
            << in2_->working_memory_[in2IdxE_](0, 0) << " = "
            << out_->working_memory_[outIdx_](0, 0) << endl;
     }
@@ -182,22 +192,29 @@ class instruction {
         in1_->working_memory_[in1IdxE_](0, 0) *
         in2_->working_memory_[in2IdxE_](0, 0);
     if (dbg) {
-      cerr << "s" << outIdx_ << " = s" << in1IdxE_ << " * "
+      cerr << std::setprecision (std::numeric_limits<double>::digits10 + 1)
+      << std::fixed << "s" << outIdx_ << " = s" << in1IdxE_ << " * "
            << "s" << in2IdxE_ << " | ";
-      cerr << in1_->working_memory_[in1IdxE_](0, 0) << " * "
+      cerr << std::fixed << in1_->working_memory_[in1IdxE_](0, 0) << " * "
            << in2_->working_memory_[in2IdxE_](0, 0) << " = "
            << out_->working_memory_[outIdx_](0, 0) << endl;
     }
   }
 
   inline void ExecuteScalarDivisionOp(bool dbg) {
+    // Protected division
+    if (isEqual(in2_->working_memory_[in2IdxE_](0, 0), 0.0)) {
+      out_->working_memory_[outIdx_](0, 0) = 0;
+    } else {
     out_->working_memory_[outIdx_](0, 0) =
         in1_->working_memory_[in1IdxE_](0, 0) /
         in2_->working_memory_[in2IdxE_](0, 0);
+    }
     if (dbg) {
-      cerr << "s" << outIdx_ << " = s" << in1IdxE_ << " / "
+      cerr << std::setprecision (std::numeric_limits<double>::digits10 + 1)
+      << std::fixed  << "s" << outIdx_ << " = s" << in1IdxE_ << " / "
            << "s" << in2IdxE_ << " | ";
-      cerr << in1_->working_memory_[in1IdxE_](0, 0) << " / "
+      cerr << std::fixed << in1_->working_memory_[in1IdxE_](0, 0) << " / "
            << in2_->working_memory_[in2IdxE_](0, 0) << " = "
            << out_->working_memory_[outIdx_](0, 0) << endl;
     }
@@ -225,7 +242,7 @@ class instruction {
         std::sin(in1_->working_memory_[in1IdxE_](0, 0));
     if (dbg) {
       cerr << "s" << outIdx_ << " = sin(s" << in1IdxE_ << ") | ";
-      cerr << "abs(" << in1_->working_memory_[in1IdxE_](0, 0)
+      cerr << "sin(" << in1_->working_memory_[in1IdxE_](0, 0)
            << ") = " << out_->working_memory_[outIdx_](0, 0) << endl;
     }
   }

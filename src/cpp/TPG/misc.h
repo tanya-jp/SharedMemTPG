@@ -190,6 +190,11 @@ inline std::vector < std::vector < int > > PowerSet(size_t n) {
    return PS;
 }
 
+inline double RoundTo(double value, double precision = 1.0)
+{
+    return std::round(value / precision) * precision;
+}
+
 // class CSVReader
 // {
 //    string fileName;

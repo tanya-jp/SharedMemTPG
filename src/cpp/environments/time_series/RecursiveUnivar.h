@@ -77,8 +77,7 @@ class RecursiveUnivar : public TaskEnv {
 
     // train
     t_start[0].insert(t_start[0].begin(),
-                      {0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550,
-                       600, 650, 700, 750, 800, 850, 900});
+                      {0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900});
     // validate
     t_start[1].insert(t_start[1].begin(),
                       {50, 150, 250, 350, 450, 550, 650, 750, 850});
@@ -93,6 +92,7 @@ class RecursiveUnivar : public TaskEnv {
     prediction = 1 / (1 + exp(-prediction));  // sigmoid
     double se = pow(prediction - data[sample + 1][0], 2);
     double ae = abs(prediction - data[sample + 1][0]);
+    // cerr << "env s " << sample << " pred " << prediction << " target " << data[sample + 1][0] << " se " << se << " ae " << ae << endl;
     return {-se, -ae};
   }
 };

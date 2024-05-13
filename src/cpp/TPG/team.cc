@@ -3,32 +3,14 @@
 #include <algorithm>
 #include <limits>
 
-/******************************************************************************/
-bool team::AddProgram(program *lr, int i) {
-  if (find(members_.begin(), members_.end(), lr) ==
-      members_.end()) { 
-    if (i < 0)
-      members_.push_back(lr);
-    else {
-      auto it = members_.begin();
-      advance(it, i);
-      members_.insert(it, lr);
-    }
-    if (lr->action() < 0) numAtomic_++;
-    membersRun_.resize(members_.size());
-    lr->refInc();
-    return true;
-  }
-  return false;
-}
-
-/******************************************************************************/
-bool team::AddProgramActive(program *lr) {
-  if (find(active_.begin(), active_.end(), lr) == active_.end()) {
-    active_.insert(lr);
-    return true;
-  }
-  return false;
+// Allow duplicates
+void team::AddProgram(program *prog, int position) {
+  auto it = members_.begin();
+  advance(it, position);
+  members_.insert(it, prog);
+  if (prog->action() < 0) n_atomic_++;
+  members_run_.resize(members_.size());  //put in mark introns
+  prog->refInc();
 }
 
 /******************************************************************************/
@@ -45,10 +27,8 @@ string team::checkpoint(bool fitnessBins, long id) const {
     //      for (int s = 0; s < _evalSeeds.size(); s++)
     //	     oss << ":" << _evalSeeds[s];
     // oss << ":" << task_code_;
-    for (auto leiter = members_.begin(); leiter != members_.end(); leiter++)
-      oss << ":" << (*leiter)->id_;
-    for (auto leiter = active_.begin(); leiter != active_.end(); leiter++)
-      oss << ":" << (*leiter)->id_;
+    for (auto prog : members_)
+      oss << ":" << prog->id_;
     oss << endl;
     if (incomingPrograms_.size() > 0 && id == -1) {
       oss << "teamIncoming:" << idToWrite;
@@ -67,7 +47,7 @@ void team::InitMemory(map<long, team *> &teamMap, bool use_evolved_const) {
   set<team *, teamIdComp> teams;
   set<program *, programIdComp> programs;
   set<memoryEigen *, memoryEigenIdComp> memories;
-  GetAllNodes(teamMap, teams, programs, memories, false);
+  GetAllNodes(teamMap, teams, programs, memories);
   // // if shared memory is read-only, this becomes redundant
   // for (auto m : memories) {
   //   m->ClearWorking();
@@ -80,7 +60,8 @@ void team::InitMemory(map<long, team *> &teamMap, bool use_evolved_const) {
   // this resets private memory to evolved constants
   if (use_evolved_const) {
     for (auto p : programs) {
-      p->CopySharedConstToWorking();
+      // p->CopySharedConstToWorking();
+      p->ClearWorking();
     }
   }
 }
@@ -88,51 +69,22 @@ void team::InitMemory(map<long, team *> &teamMap, bool use_evolved_const) {
 /******************************************************************************/
 void team::clone(map<long, phyloRecord> &phyloGraph, team **tm) {
   phyloGraph[(*tm)->id_].ancestorIds.insert(id_);
-  for (auto leiter = members_.begin(); leiter != members_.end(); leiter++) {
-    (*tm)->AddProgram(*leiter);
-    (*leiter)->refInc();
+    for (auto prog : members_) {
+    (*tm)->AddProgram(prog);
+    prog->refInc();
   }
-  for (auto leiter = active_.begin(); leiter != active_.end(); leiter++)
-    (*tm)->AddProgramActive(*leiter);
   (*tm)->fitnessBins(fitnessBins_);
   (*tm)->cloneId_ = id_;
   clones_++;
 }
-
-///****************************************************************************/
-////this version creates all new teams anprograms with the same structure
-// void team::cloneNew(team **tm, vector <team*> &teamClones, vector<program*>
-// &programClones) {
-//    //team* tm = new team(t, id);
-//    (*tm)->addAncestorId(id_);
-//    for(auto leiter = members_.begin(); leiter != members_.end(); leiter++){
-//       (*tm)->AddProgram(*leiter);
-//       (*leiter)->refInc();
-//    }
-//    for(auto leiter = active_.begin(); leiter != active_.end(); leiter++)
-//       (*tm)->AddProgramActive(*leiter);
-//    (*tm)->fitnessBins(fitnessBins_);
-//    (*tm)->clone(true);
-// }
-
-///****************************************************************************/
-// void team::deleteOutcome(point *pt) {
-//    map < point *, double, pointLexicalLessThan > :: iterator ouiter;
-//
-//    if((ouiter = outcomes_.find(pt)) == outcomes_.end())
-//       die(__FILE__, __FUNCTION__, __LINE__, "should not delete outcome that
-//       is not set");
-//    delete ouiter->first;
-//    outcomes_.erase(ouiter);
-// }
 
 /******************************************************************************/
 void team::features(set<long> &F) const {
   if (F.empty() == false)
     die(__FILE__, __FUNCTION__, __LINE__, "feature set not empty");
 
-  for (auto leiter = members_.begin(); leiter != members_.end(); leiter++)
-    (*leiter)->features(F);
+  for (auto prog : members_)
+    prog->features(F);
 }
 
 /******************************************************************************/
@@ -160,82 +112,6 @@ double team::novelty(int type, int kNN) const {
 }
 
 /******************************************************************************/
-double team::symbiontUtilityDistance(team *t) const {
-  vector<int> symbiontIntersection;
-  vector<int> symbiontUnion;
-  vector<int>::iterator it;
-  int symIntersection;
-  int symUnion;
-  vector<long> team1Ids;
-  vector<long> team2Ids;
-  set<program *, programIdComp> activeMembers;
-  t->activeMembers(&activeMembers);
-  /* if either team has no active members then return 0 */
-  if (active_.size() < 1 || activeMembers.size() < 1) return 0.0;
-  for (auto leiter = active_.begin(); leiter != active_.end(); leiter++)
-    team1Ids.push_back((*leiter)->id_);
-  for (auto leiter = activeMembers.begin(); leiter != activeMembers.end();
-       leiter++)
-    team2Ids.push_back((*leiter)->id_);
-  sort(team1Ids.begin(), team1Ids.end());
-  sort(team2Ids.begin(), team2Ids.end());
-  set_intersection(team1Ids.begin(), team1Ids.end(), team2Ids.begin(),
-                   team2Ids.end(), back_inserter(symbiontIntersection));
-  symIntersection = symbiontIntersection.size();
-  set_union(team1Ids.begin(), team1Ids.end(), team2Ids.begin(), team2Ids.end(),
-            back_inserter(symbiontUnion));
-  symUnion = symbiontUnion.size();
-#ifdef MYDEBUG
-  cout << "genoDiffa t1Size " << active_.size() << " t1Ids "
-       << vecToStr(team1Ids);
-  cout << " allMembersSize " << members_.size();
-  cout << " t2Size " << t->asize() << " t2Ids ";
-  cout << vecToStr(team2Ids) << " symIntersection "
-       << vecToStr(symbiontIntersection) << " symIntersectionSize "
-       << symIntersection;
-  cout << " symUnion " << vecToStr(symbiontUnion) << " symUnionSize "
-       << symUnion << " diff "
-       << 1.0 - ((double)symIntersection / (double)symUnion) << endl;
-#endif
-  return 1.0 - ((double)symIntersection / (double)symUnion);
-}
-
-/******************************************************************************/
-// this version compares with a vector of Ids *assumed sorted*
-double team::symbiontUtilityDistance(vector<long> &compareWithThese) const {
-  vector<int> symbiontIntersection;
-  vector<int> symbiontUnion;
-  vector<int>::iterator it;
-  int symIntersection;
-  int symUnion;
-  vector<long> team1Ids;
-  /* if either team has no active members then return 0 */
-  if (active_.size() < 1 || compareWithThese.size() < 1) return 0.0;
-  for (auto leiter = active_.begin(); leiter != active_.end(); leiter++)
-    team1Ids.push_back((*leiter)->id_);
-  sort(team1Ids.begin(), team1Ids.end());
-  set_intersection(team1Ids.begin(), team1Ids.end(), compareWithThese.begin(),
-                   compareWithThese.end(), back_inserter(symbiontIntersection));
-  symIntersection = symbiontIntersection.size();
-  set_union(team1Ids.begin(), team1Ids.end(), compareWithThese.begin(),
-            compareWithThese.end(), back_inserter(symbiontUnion));
-  symUnion = symbiontUnion.size();
-#ifdef MYDEBUG
-  cout << "genoDiffb t1Size " << active_.size() << " t1Ids "
-       << vecToStr(team1Ids);
-  cout << " allMembersSize " << members_.size();
-  cout << " t2Size " << compareWithThese.size() << " t2Ids ";
-  cout << vecToStr(compareWithThese) << " symIntersection "
-       << vecToStr(symbiontIntersection) << " symIntersectionSize "
-       << symIntersection;
-  cout << " symUnion " << vecToStr(symbiontUnion) << " symUnionSize "
-       << symUnion << " diff "
-       << 1.0 - ((double)symIntersection / (double)symUnion) << endl;
-#endif
-  return 1.0 - ((double)symIntersection / (double)symUnion);
-}
-
-/******************************************************************************/
 void team::updateComplexityRecord(map<long, team *> &teamMap, int rtcIndex) {
   (void)teamMap;
   // set <team *, teamIdComp> teams;
@@ -243,7 +119,7 @@ void team::updateComplexityRecord(map<long, team *> &teamMap, int rtcIndex) {
   // set <memoryEigen *, memoryEigenIdComp> memories;
   // GetAllNodes(teamMap, teams, programs, memories, false);//not just active
   // programs _numActiveTeams = teams.size(); _numActivePrograms =
-  //programs.size(); _numEffectiveInstructions = 0; _numActiveFeatures = 0; for
+  // programs.size(); _numEffectiveInstructions = 0; _numActiveFeatures = 0; for
   // (auto leiter = programs.begin(); leiter != programs.end(); leiter++){
   //    _numEffectiveInstructions += (*leiter)->SizeEffective();
   //    _numActiveFeatures += (*leiter)->numFeatures();
@@ -263,7 +139,7 @@ void team::updateComplexityRecord(map<long, team *> &teamMap, int rtcIndex,
   // set <memoryEigen *, memoryEigenIdComp> memories;
   // GetAllNodes(teamMap, teams, programs, memories, false);//not just active
   // programs _numActiveTeams = teams.size(); _numActivePrograms =
-  //programs.size(); _numEffectiveInstructions = 0; _numActiveFeatures = 0; for
+  // programs.size(); _numEffectiveInstructions = 0; _numActiveFeatures = 0; for
   // (auto leiter = programs.begin(); leiter != programs.end(); leiter++){
   //    _numEffectiveInstructions += (*leiter)->SizeEffective();
   //    _numActiveFeatures += (*leiter)->numFeatures();
@@ -275,24 +151,20 @@ void team::updateComplexityRecord(map<long, team *> &teamMap, int rtcIndex,
 }
 
 /******************************************************************************/
-void team::GetAllMemories(map<long, team *> &teamMap,
-                          set<team *, teamIdComp> &visitedTeams,
-                          set<memoryEigen *, memoryEigenIdComp> &memories,
-                          bool activePrograms) const {
+void team::GetAllMemories(
+    map<long, team *> &teamMap, set<team *, teamIdComp> &visitedTeams,
+    set<memoryEigen *, memoryEigenIdComp> &memories) const {
   visitedTeams.insert(teamMap[id_]);
 
-  for (auto leiter = members_.begin(); leiter != members_.end(); leiter++)
-    if (!activePrograms ||
-        (activePrograms && active_.find(*leiter) != active_.end())) {
-      for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {     
-        memories.insert((*leiter)->MemGet(mem_t));
-      }
-      if ((*leiter)->action() >= 0 &&
-          find(visitedTeams.begin(), visitedTeams.end(),
-               teamMap[(*leiter)->action()]) == visitedTeams.end())
-        teamMap[(*leiter)->action()]->GetAllMemories(teamMap, visitedTeams,
-                                                     memories, activePrograms);
+  for (auto prog : members_) {
+    for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+      memories.insert(prog->MemGet(mem_t));
     }
+    if (prog->action() >= 0 &&
+        find(visitedTeams.begin(), visitedTeams.end(),
+             teamMap[prog->action()]) == visitedTeams.end())
+      teamMap[prog->action()]->GetAllMemories(teamMap, visitedTeams, memories);
+  }
 }
 
 /******************************************************************************/
@@ -301,14 +173,14 @@ void team::GetAllNodes(map<long, team *> &teamMap,
                        set<team *, teamIdComp> &visitedTeams, long stopId,
                        bool skipRoot) const {
   if (!skipRoot || !root_) visitedTeams.insert(teamMap[id_]);
-
-  for (auto leiter = members_.begin(); leiter != members_.end(); leiter++)
-    if ((*leiter)->action() >= 0 &&
+  for (auto prog : members_) {
+    if (prog->action() >= 0 &&
         find(visitedTeams.begin(), visitedTeams.end(),
-             teamMap[(*leiter)->action()]) == visitedTeams.end() &&
-        (*leiter)->action() != stopId)
-      teamMap[(*leiter)->action()]->GetAllNodes(teamMap, visitedTeams, stopId,
+             teamMap[prog->action()]) == visitedTeams.end() &&
+        prog->action() != stopId)
+      teamMap[prog->action()]->GetAllNodes(teamMap, visitedTeams, stopId,
                                                 skipRoot);
+  }
 }
 
 /******************************************************************************/
@@ -317,12 +189,12 @@ void team::GetAllNodes(map<long, team *> &teamMap,
                        set<program *, programIdComp> &programs) const {
   visitedTeams.insert(teamMap[id_]);
 
-  for (auto leiter = members_.begin(); leiter != members_.end(); leiter++) {
-    programs.insert(*leiter);
-    if ((*leiter)->action() >= 0 &&
+  for (auto prog : members_) {
+    programs.insert(prog);
+    if ((prog)->action() >= 0 &&
         find(visitedTeams.begin(), visitedTeams.end(),
-             teamMap[(*leiter)->action()]) == visitedTeams.end())
-      teamMap[(*leiter)->action()]->GetAllNodes(teamMap, visitedTeams,
+             teamMap[(prog)->action()]) == visitedTeams.end())
+      teamMap[(prog)->action()]->GetAllNodes(teamMap, visitedTeams,
                                                 programs);
   }
 }
@@ -331,23 +203,19 @@ void team::GetAllNodes(map<long, team *> &teamMap,
 void team::GetAllNodes(map<long, team *> &teamMap,
                        set<team *, teamIdComp> &visitedTeams,
                        set<program *, programIdComp> &programs,
-                       set<memoryEigen *, memoryEigenIdComp> &memories,
-                       bool activePrograms) const {
+                       set<memoryEigen *, memoryEigenIdComp> &memories) const {
   visitedTeams.insert(teamMap[id_]);
-
-  for (auto leiter = members_.begin(); leiter != members_.end(); leiter++)
-    if (!activePrograms ||
-        (activePrograms && active_.find(*leiter) != active_.end())) {
-      programs.insert(*leiter);
+  for (auto prog : members_) {
+      programs.insert(prog);
       for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-        memories.insert((*leiter)->MemGet(mem_t));
+        memories.insert(prog->MemGet(mem_t));
       }
-      if ((*leiter)->action() >= 0 &&
+      if (prog->action() >= 0 &&
           find(visitedTeams.begin(), visitedTeams.end(),
-               teamMap[(*leiter)->action()]) == visitedTeams.end())
-        teamMap[(*leiter)->action()]->GetAllNodes(
-            teamMap, visitedTeams, programs, memories, activePrograms);
-    }
+               teamMap[prog->action()]) == visitedTeams.end())
+        teamMap[prog->action()]->GetAllNodes(
+            teamMap, visitedTeams, programs, memories);
+  }
 }
 
 /******************************************************************************/
@@ -357,12 +225,13 @@ void team::updatePolicyRoot(map<long, team *> &teamMap,
   visitedTeams.insert(teamMap[id_]);
   addPolicyRootId(rootId);  // add even if this is the root
 
-  for (auto leiter = members_.begin(); leiter != members_.end(); leiter++)
-    if ((*leiter)->action() >= 0 &&
+  for (auto prog : members_) {
+    if (prog->action() >= 0 &&
         find(visitedTeams.begin(), visitedTeams.end(),
-             teamMap[(*leiter)->action()]) == visitedTeams.end())
-      teamMap[(*leiter)->action()]->updatePolicyRoot(teamMap, visitedTeams,
+             teamMap[prog->action()]) == visitedTeams.end())
+      teamMap[prog->action()]->updatePolicyRoot(teamMap, visitedTeams,
                                                      rootId);
+  }
 }
 
 /******************************************************************************/
@@ -376,14 +245,14 @@ int team::policyFeatures(map<long, team *> &teamMap,
 
   set<long> featuresSingle;
   int numProgramsInPolicy = 0;
-  for (auto leiter = members_.begin(); leiter != members_.end(); leiter++) {
+  for (auto prog : members_) {
     numProgramsInPolicy++;
-    (*leiter)->features(featuresSingle);
+    prog->features(featuresSingle);
     F.insert(featuresSingle.begin(), featuresSingle.end());
-    if ((*leiter)->action() >= 0 &&
+    if (prog->action() >= 0 &&
         find(visitedTeams.begin(), visitedTeams.end(),
-             teamMap[(*leiter)->action()]) == visitedTeams.end())
-      numProgramsInPolicy += teamMap[(*leiter)->action()]->policyFeatures(
+             teamMap[prog->action()]) == visitedTeams.end())
+      numProgramsInPolicy += teamMap[prog->action()]->policyFeatures(
           teamMap, visitedTeams, F, active);
   }
   return numProgramsInPolicy;
@@ -396,14 +265,14 @@ void team::policyInstructions(
     vector<int> &effectiveProgramInstructionCounts) const {
   visitedTeams.insert(teamMap[id_]);
 
-  for (auto leiter = members_.begin(); leiter != members_.end(); leiter++) {
-    programInstructionCounts.push_back((*leiter)->Size());
-    effectiveProgramInstructionCounts.push_back((*leiter)->SizeEffective());
+  for (auto prog : members_) {
+    programInstructionCounts.push_back(prog->Size());
+    effectiveProgramInstructionCounts.push_back(prog->SizeEffective());
 
-    if ((*leiter)->action() >= 0 &&
+    if (prog->action() >= 0 &&
         find(visitedTeams.begin(), visitedTeams.end(),
-             teamMap[(*leiter)->action()]) == visitedTeams.end())
-      teamMap[(*leiter)->action()]->policyInstructions(
+             teamMap[prog->action()]) == visitedTeams.end())
+      teamMap[prog->action()]->policyInstructions(
           teamMap, visitedTeams, programInstructionCounts,
           effectiveProgramInstructionCounts);
   }
@@ -454,9 +323,7 @@ double team::getMeanOutcome(int phase, int task, int auxDouble, bool allPhase,
   if (outcomes.size() == 0)
     die(__FILE__, __FUNCTION__, __LINE__,
         "trying to get meanOutcome with no outcomes");
-  return accumulate(outcomes.begin(), outcomes.end(), 0.0) /
-         outcomes
-             .size(); 
+  return accumulate(outcomes.begin(), outcomes.end(), 0.0) / outcomes.size();
 }
 
 /******************************************************************************/
@@ -599,78 +466,15 @@ int team::numOutcomes(int phase, int task) {
   return numOut;
 }
 
-///****************************************************************************/
-// void team::outcomes(int i, int phase, vector < double > &outcomes) {
-//    map < point *, double, pointLexicalLessThan > :: iterator ouiter;
-//    for(ouiter = outcomes_.begin(); ouiter != outcomes_.end(); ouiter++)
-//       if ((ouiter->first)->phase() == phase)
-//          outcomes.push_back((ouiter->first)->auxDouble(i));
-// }
-
-///****************************************************************************/
-// void team::outcomes(map < point*, double, pointLexicalLessThan >
-// &outcomes,int phase) {
-//    for(auto ouiter = outcomes_.begin(); ouiter != outcomes_.end(); ouiter++)
-//       if ((ouiter->first)->phase() == phase)
-//          outcomes.insert(*ouiter);
-// }
-
-/******************************************************************************/
-// must run markEffectiveCode first
-void team::prunePrograms(deque<program *> &programsWithNoRefs) {
-  // if (active_.size() == 0)
-  //    die(__FILE__, __FUNCTION__, __LINE__, "should not prune when no programs
-  //    are marked active");
-  if (active_.size() > 0) {
-    for (auto leiter = members_.begin(); leiter != members_.end();) {
-      if (((*leiter)->action() < 0 &&
-           numAtomic_ < 2) ||  // don't remove the only atomic
-          active_.find(*leiter) !=
-              active_.end())  // don't remove active programs
-        leiter++;
-      else {
-        (*leiter)->refDec();
-        if ((*leiter)->refs() == 0 &&
-            find(programsWithNoRefs.begin(), programsWithNoRefs.end(),
-                 *leiter) == programsWithNoRefs.end())
-          programsWithNoRefs.push_back(*leiter);
-        if ((*leiter)->action() < 0) numAtomic_--;
-        // membersRun_Tally.erase((*leiter)->id_);
-        members_.erase(leiter++);
-      }
-    }
-    membersRun_.resize(members_.size());
-  }
-}
-
-///****************************************************************************/
-// void team::cleanup(set <program *> &learnersWithNoRefs) {
-//    //decrement program refs
-//    for(auto leiter = members_.begin(); leiter != members_.end(); leiter++){
-//       (*leiter)->refDec();
-//       if ((*leiter)->refs() == 0)
-//          learnersWithNoRefs.insert(*leiter);
-//    }
-//    for (auto ouiter1 = outcomes_.begin(); ouiter1 != outcomes_.end();
-//    ouiter1++)
-//       for (auto ouiter2 = ouiter1->second.begin(); ouiter2 !=
-//       ouiter1->second.end(); ouiter2++)
-//          for (auto ouiter3 = ouiter2->second.begin(); ouiter3 !=
-//          ouiter2->second.end();){
-//             delete ouiter3->first;
-//             ouiter2->second.erase(ouiter3++);
-//          }
-// }
-
 /******************************************************************************/
 
 void team::cleanup(map<long, team *> &teamMap, deque<program *> &p) {
   // decrement program refs
-  for (auto leiter = members_.begin(); leiter != members_.end(); leiter++) {
-    (*leiter)->refDec();
-    if ((*leiter)->refs() == 0)  // && find(p.begin(), p.end(), *leiter) ==
+  for (auto prog : members_) {
+    prog->refDec();
+    if (prog->refs() == 0)  // && find(p.begin(), p.end(), *leiter) ==
                                  // p.end())//could prob skip the find/check
-      p.push_back(*leiter);
+      p.push_back(prog);
   }
   for (auto ouiter1 = outcomes_.begin(); ouiter1 != outcomes_.end(); ouiter1++)
     for (auto ouiter2 = ouiter1->second.begin();
@@ -683,23 +487,13 @@ void team::cleanup(map<long, team *> &teamMap, deque<program *> &p) {
   if (teamMap.find(cloneId_) != teamMap.end()) teamMap[cloneId_]->clones_--;
 }
 
-/******************************************************************************/
-bool team::removeProgram(program *lr) {
-  list<program *>::iterator leiter;
-  set<program *, programIdComp>::iterator aiter;
-
-  if ((leiter = find(members_.begin(), members_.end(), lr)) == members_.end())
-    return false;  // die(__FILE__, __FUNCTION__, __LINE__, "should not remove
-                   // program that is not there");
-
-  members_.erase(leiter);
-  membersRun_.resize(members_.size());
-  // membersRun_Tally.erase((*leiter)->id_);
-
-  if ((aiter = active_.find(lr)) != active_.end()) active_.erase(aiter);
-
-  if (lr->action() < 0) numAtomic_--;
-  return true;
+// Assumes the program is in the team
+// TODO(skelly): note that a prog* could point to different programs
+void team::RemoveProgram(program *prog) {
+  auto it = find(members_.begin(), members_.end(), prog);
+  members_.erase(it);
+  members_run_.resize(members_.size());  // put in mark introns
+  if (prog->action() < 0) n_atomic_--;
 }
 
 /******************************************************************************/
@@ -766,15 +560,8 @@ void team::setOutcome(point *pt) {
   quickMeans_[pt->task()][pt->key()][pt->phase()] =
       quickSums_[pt->task()][pt->key()][pt->phase()] /
       numOutcomes(pt->phase(), pt->task());
-}
 
-/******************************************************************************/
-void team::updateActiveMembersFromIds(vector<long> &activeMemberIds) {
-  sort(activeMemberIds.begin(), activeMemberIds.end());  // for binary search
-  for (auto leiter = members_.begin(); leiter != members_.end(); leiter++)
-    if (binary_search(activeMemberIds.begin(), activeMemberIds.end(),
-                      (*leiter)->id_))
-      active_.insert(*leiter);
+  // cerr << "set_out id " << id_ << " qm " << quickMeans_[pt->task()][pt->key()][pt->phase()] << endl;
 }
 
 /******************************************************************************/
@@ -782,36 +569,32 @@ program *team::getAction(state *s, map<long, team *> &teamMap,
                          bool updateActive,
                          set<team *, teamIdComp> &visitedTeams,
                          long &decisionInstructions, int timeStep,
-                         vector<team *> &teamPath, mt19937 &rng) {
+                         vector<team *> &teamPath, mt19937 &rng, bool& verbose) {
   //_depthSum += visitedTeams.size(); _visitedCount++;
   visitedTeams.insert(teamMap[id_]);
   teamPath.push_back(teamMap[id_]);
 
   int l = 0;
-  for (auto leiter = members_.begin(); leiter != members_.end(); leiter++) {
-    (*leiter)->bidVal((*leiter)->Run(s, timeStep, visitedTeams.size()));
-    membersRun_[l++] = *leiter;
-    decisionInstructions += (*leiter)->SizeEffective();
+    for (auto prog : members_) {
+    prog->bidVal(prog->Run(s, timeStep, visitedTeams.size(), verbose));
+    members_run_[l++] = prog;
+    decisionInstructions += prog->SizeEffective();
   }
 
-  sort(membersRun_.begin(), membersRun_.end(), ProgramBidLexicalCompare());
+  sort(members_run_.begin(), members_run_.end(), ProgramBidLexicalCompare());
   long teamIdToFollow = 0;
-  for (size_t i = 0; i < membersRun_.size(); i++) {
-    if (membersRun_[i]->action() < 0) {
-      if (root_ && updateActive) active_.insert(membersRun_[i]);
-      // membersRun_Tally[membersRun_[i]->id_]++;
-      return membersRun_[i];  //->action();
+  for (size_t i = 0; i < members_run_.size(); i++) {
+    if (members_run_[i]->action() < 0) {
+      return members_run_[i];
     } else if (find(visitedTeams.begin(), visitedTeams.end(),
-                    teamMap[membersRun_[i]->action()]) == visitedTeams.end()) {                 
-      teamIdToFollow = membersRun_[i]->action();
-      if (root_ && updateActive) active_.insert(membersRun_[i]);
-      // membersRun_Tally[membersRun_[i]->id_]++;
+                    teamMap[members_run_[i]->action()]) == visitedTeams.end()) {
+      teamIdToFollow = members_run_[i]->action();
       break;
     }
   }
   return teamMap[teamIdToFollow]->getAction(s, teamMap, updateActive,
                                             visitedTeams, decisionInstructions,
-                                            timeStep, teamPath, rng);
+                                            timeStep, teamPath, rng, verbose);
 }
 
 /******************************************************************************/
@@ -821,7 +604,7 @@ program *team::getAction(
     int timeStep, vector<program *> &allPrograms,
     vector<program *> &winningPrograms, vector<set<long> > &decisionFeatures,
     vector<set<memoryEigen *, memoryEigenIdComp> > &decisionMemories,
-    vector<team *> &teamPath, mt19937 &rng) {
+    vector<team *> &teamPath, mt19937 &rng, bool& verbose) {
   //_depthSum += visitedTeams.size(); _visitedCount++;
   visitedTeams.insert(teamMap[id_]);
   teamPath.push_back(teamMap[id_]);
@@ -832,44 +615,41 @@ program *team::getAction(
   set<memoryEigen *, memoryEigenIdComp> memoriesSingle;
 
   int l = 0;
-  for (auto leiter = members_.begin(); leiter != members_.end(); leiter++) {
-    (*leiter)->bidVal((*leiter)->Run(s, timeStep, visitedTeams.size()));
-    allPrograms.push_back(*leiter);
-    membersRun_[l++] = *leiter;
-    decisionInstructions += (*leiter)->SizeEffective();
+  for (auto prog : members_) {
+    prog->bidVal(prog->Run(s, timeStep, visitedTeams.size(), verbose));
+    allPrograms.push_back(prog);
+    members_run_[l++] = prog;
+    decisionInstructions += prog->SizeEffective();
 
-    (*leiter)->features(featuresSingle);
+    prog->features(featuresSingle);
     features.insert(featuresSingle.begin(), featuresSingle.end());
     for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-      memories.insert((*leiter)->MemGet(mem_t));
+      memories.insert(prog->MemGet(mem_t));
     }
   }
   decisionFeatures.push_back(features);
   decisionMemories.push_back(memories);
 
-  sort(membersRun_.begin(), membersRun_.end(), ProgramBidLexicalCompare());
+  sort(members_run_.begin(), members_run_.end(), ProgramBidLexicalCompare());
   long teamIdToFollow = 0;
-  for (size_t i = 0; i < membersRun_.size(); i++) {
-    if (membersRun_[i]->action() < 0) {  // atomic
-      if (root_ && updateActive) active_.insert(membersRun_[i]);
-      winningPrograms.push_back(membersRun_[i]);
-      membersRun_[i]->featuresMem(featuresSingle);
+  for (size_t i = 0; i < members_run_.size(); i++) {
+    if (members_run_[i]->action() < 0) {  // atomic
+      winningPrograms.push_back(members_run_[i]);
+      members_run_[i]->featuresMem(featuresSingle);
       decisionFeatures.push_back(featuresSingle);
-      // membersRun_Tally[membersRun_[i]->id_]++;
-      return membersRun_[i];
+      return members_run_[i];
     } else if (find(visitedTeams.begin(), visitedTeams.end(),
-                    teamMap[membersRun_[i]->action()]) == visitedTeams.end()) {
-      teamIdToFollow = membersRun_[i]->action();
-      if (root_ && updateActive) active_.insert(membersRun_[i]);
-      winningPrograms.push_back(membersRun_[i]);
-      membersRun_[i]->featuresMem(featuresSingle);
+                    teamMap[members_run_[i]->action()]) == visitedTeams.end()) {
+      teamIdToFollow = members_run_[i]->action();
+      winningPrograms.push_back(members_run_[i]);
+      members_run_[i]->featuresMem(featuresSingle);
       decisionFeatures.push_back(featuresSingle);
-      // membersRun_Tally[membersRun_[i]->id_]++;
+      // members_run_Tally[members_run_[i]->id_]++;
       break;
     }
   }
   return teamMap[teamIdToFollow]->getAction(
       s, teamMap, updateActive, visitedTeams, decisionInstructions, timeStep,
       allPrograms, winningPrograms, decisionFeatures, decisionMemories,
-      teamPath, rng);
+      teamPath, rng, verbose);
 }

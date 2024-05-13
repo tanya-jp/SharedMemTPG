@@ -23,10 +23,6 @@ struct teamIdComp;
 
 class team {
  public:
-  inline void activeMembers(set<program *, programIdComp> *m) const {
-    m->clear();
-    m->insert(active_.begin(), active_.end());
-  }
   inline void addAncestorId(long aid) { ancestorIds_.push_back(aid); }
   inline void addEvalSeed(int s) { evalSeeds_.push_back(s); }
   inline void clearEvalSeeds() { evalSeeds_.clear(); }
@@ -36,9 +32,6 @@ class team {
   inline int numAncestorIds() { return ancestorIds_.size(); }
   inline bool elite(int phase) const { return elite_[phase]; }
   inline void elite(int phase, bool e) { elite_[phase] = e; }
-  inline void getActiveMembersByRef(set<program *, programIdComp> &m) const {
-    m = active_;
-  }
   inline string getBehaviourString(int seed, int phase) {
     string s = "";
     for (size_t task = 0; task < outcomes_.size(); task++)
@@ -48,8 +41,6 @@ class team {
   }
   bool hasPointDesc(string, int, int);
   double getPointDescScore(string, int, int, int);
-  // The number of active programs in this team
-  inline int asize() const { return active_.size(); }
   void cleanup(map<long, team *> &, deque<program *> &);
   void features(set<long> &) const;
   inline string fitnessBin() const { return (fitnessBins_.rbegin())->second; }
@@ -67,14 +58,14 @@ class team {
   }
   inline map<long, string> fitnessBins() { return fitnessBins_; }
   void GetAllMemories(map<long, team *> &, set<team *, teamIdComp> &,
-                      set<memoryEigen *, memoryEigenIdComp> &, bool) const;
+                      set<memoryEigen *, memoryEigenIdComp> &) const;
   void GetAllNodes(map<long, team *> &teamMap, set<team *, teamIdComp> &, long,
                    bool) const;
   void GetAllNodes(map<long, team *> &teamMap, set<team *, teamIdComp> &,
                    set<program *, programIdComp> &) const;
   void GetAllNodes(map<long, team *> &teamMap, set<team *, teamIdComp> &,
                    set<program *, programIdComp> &,
-                   set<memoryEigen *, memoryEigenIdComp> &, bool) const;
+                   set<memoryEigen *, memoryEigenIdComp> &) const;
   void getBehaviourSequence(vector<int> &, int);
   double getMeanOutcome(int, int, int, bool, bool);
   double getMeanOutcome(int, int, int, int, long, bool, bool);
@@ -95,31 +86,10 @@ class team {
     copy(members_.begin(), members_.end(), inserter(m, m.end()));
     return m;
   }
-  inline void members(list<program *> *m) const {
-    m->assign(members_.begin(), members_.end());
-  }
-  inline void members(list<program *> &m) const { m = members_; }
- 
-  // double membersRunEntropy(){
-  //    double e = 0;
-  //    for ( auto it = membersRun_Tally.begin(); it != membersRun_Tally.end();
-  //    it++ ){
-  //       if (it->second > 0){
-  //          it->second /= _visitedCount;
-  //          e += it->second * log2(it->second);
-  //       }
-  //    }
-  //    return -e;
-  // }
-  inline void members(vector<program *> &m) const {
-    m.assign(members_.begin(), members_.end());
-  }
-  // inline void GetMembersRef(list<program *> &m) { m = &members_; }
-
-  inline void SetMembers(list<program *> &m) { 
-    members_.clear();
-    members_.assign(m.begin(), m.end());
-   }
+  // inline void SetMembers(list<program *> &m) { 
+  //   members_.clear();
+  //   members_.assign(m.begin(), m.end());
+  //  }
   inline int numEffectiveInstructions() const {
     return numEffectiveInstructions_;
   }
@@ -161,15 +131,13 @@ class team {
                     // nodes(programs) in policy
   void policyInstructions(map<long, team *> &, set<team *, teamIdComp> &,
                           vector<int> &, vector<int> &) const;
-  void prunePrograms(deque<program *> &);
-  bool removeProgram(program *);
+  void RemoveProgram(program *prog);
   void resetOutcomes(int); /* Delete all outcomes from phase. */
   inline bool root() const { return incomingPrograms_.size() == 0; }
   inline double runTimeComplexityIns() const { return runTimeComplexityIns_; }
   inline void runTimeComplexityIns(double rtc) { runTimeComplexityIns_ = rtc; }
   inline double runTimeComplexityTms() const { return runTimeComplexityTms_; }
   inline void runTimeComplexityTms(double rtc) { runTimeComplexityTms_ = rtc; }
-  inline void SetActive(program *p) { active_.insert(p); }
   inline bool hasQuickMean(int task, int fitMode, int phase) {
     return quickMeans_.count(task) > 0 &&
            quickMeans_[task].count(fitMode) > 0 &&
@@ -185,20 +153,12 @@ class team {
   inline double getQuickMean(int task, int fitMode, int phase) {
     return quickMeans_[task][fitMode][phase];
   }
-  inline void unSetActive(program *l) { active_.erase(l); }
   void setOutcome(point *);
   inline int size() const { return members_.size(); }
   double symbiontUtilityDistance(team *) const;
   double symbiontUtilityDistance(vector<long> &) const;
-  inline void swapProgramOrder(int i, int j) {
-    auto leiter_i = members_.begin();
-    auto leiter_j = members_.begin();
-    advance(leiter_i, i);
-    advance(leiter_j, j);
-    swap(*leiter_i, *leiter_j);
-  }
   void swapOutcomePhase(int, int, int, long);
-  inline void muProgramOrder(int source, int destination) {
+  inline void MuProgramOrder(int source, int destination) {
     auto leiter_source = members_.begin();
     auto leiter_destination = members_.begin();
     advance(leiter_source, source);
@@ -226,13 +186,12 @@ class team {
     id_ = id;
     key_ = 0;
     lastCompareFactor_ = -1;
-    numAtomic_ = 0;
+    n_atomic_ = 0;
     _n_eval = 0;
     numLinearM_ = 0;
     root_ = true;
     runTimeComplexityIns_ = 0;
     runTimeComplexityTms_ = 0;
-    // ancestorIds_.reserve(200);
   };
 
   // Affects program refs, unlike addProgram() and removeProgram()
@@ -246,8 +205,8 @@ class team {
     else if (type == 2)
       distances_2_.insert(d);
   }
-  bool AddProgram(program *, int i = -1);
-  bool AddProgramActive(program *);
+  void AddProgram(program *, int position = -1);
+  // bool AddProgramActive(program *);
   string checkpoint(bool, long id = -1) const;
   void clone(map<long, phyloRecord> &, team **);
   inline void clearDistances() {
@@ -258,15 +217,15 @@ class team {
   // void deleteOutcome(point *); /* Delete outcome. */
   program *getAction(state *, map<long, team *> &, bool,
                      set<team *, teamIdComp> &, long &, int, vector<team *> &,
-                     mt19937 &);
+                     mt19937 &, bool &);
   program *getAction(state *, map<long, team *> &, bool,
                      set<team *, teamIdComp> &, long &, int,
                      vector<program *> &, vector<program *> &,
                      vector<set<long>> &,
                      vector<set<memoryEigen *, memoryEigenIdComp>> &,
-                     vector<team *> &, mt19937 &);
+                     vector<team *> &, mt19937 &, bool &);
   // double ncdBehaviouralDistance(team*, int);
-  void shuff(mt19937 &rng) {
+  void Shuffle(mt19937 &rng) {
     vector<program *> vec(members_.begin(), members_.end());
     shuffle(vec.begin(), vec.end(), rng);
     list<program *> shuffled_list{vec.begin(), vec.end()};
@@ -275,10 +234,6 @@ class team {
   void updateActiveMembersFromIds(vector<long> &);
 
   // protected:
-
-  set<program *, programIdComp>
-      active_; /* Active member programs, a subset of members_, activated in
-                  getAction(). */
   vector<long> ancestorIds_;
   long cloneId_;
   long clones_;
@@ -299,10 +254,9 @@ class team {
   set<long> incomingPrograms_;
   double key_; /* For sorting. */
   int lastCompareFactor_;
-  list<program *> members_;
-  vector<program *> membersRun_;
-  // map <long, double > membersRun_Tally;//keep count of wins for each program
-  int numAtomic_;
+  std::list<program *> members_;  // team members for fast variation
+  vector<program *> members_run_;  // team members for fast direct access
+  int n_atomic_;
   int _n_eval;
   int numLinearM_;
   int numActiveTeams_;
