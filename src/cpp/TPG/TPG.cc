@@ -1814,7 +1814,7 @@ void TPG::printPhyloGraphDot(team *tm) {
 
     // Fill from red to green
     for (size_t i = 0; i < visited.size(); i++) {
-      ofs << visited[i] << " [style=filled, fillcolor=\""
+      ofs << visited[i] << " [label=\"id: " << visited[i] << "\\nfit: " << std::fixed << std::setprecision(2) << _phyloGraph[visited[i]].fitness << "\" style=filled, fillcolor=\""
           << normFit[i] / 3 << " 1.000 1.000" << "\"]" << endl;
     }
   }
