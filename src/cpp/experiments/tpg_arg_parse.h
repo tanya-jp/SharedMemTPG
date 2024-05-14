@@ -13,7 +13,8 @@ void tpg_arg_parse(TPG& tpg, int argc, char** argv) {
         break;
       }
       case 'g': {
-        tpg.seed(AUX_SEED, atoi(optarg));
+        uint_fast32_t s = uint_fast32_t(atoi(optarg));
+        tpg.Seed(AUX_SEED, s);
         break;
       }
       case 'R': {
@@ -22,8 +23,9 @@ void tpg_arg_parse(TPG& tpg, int argc, char** argv) {
         break;
       }
       case 's': {
-        tpg.seed(TPG_SEED, atoi(optarg));
-        tpg.seed(AUX_SEED, atoi(optarg));
+        uint_fast32_t s = uint_fast32_t(atoi(optarg));
+        tpg.Seed(TPG_SEED, s);
+        tpg.Seed(AUX_SEED, s);
         break;
       }
       case 't': {

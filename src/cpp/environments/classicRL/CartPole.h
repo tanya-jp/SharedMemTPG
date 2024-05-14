@@ -51,11 +51,11 @@ class CartPole : public TaskEnv {
     actionsDiscrete.push_back(0.0);
     actionsDiscrete.push_back(FORCE_MAG);
     eval_type_ = "Control";
-    max_step = 300;
+    max_step = 500;
     state.reserve(STATE_SIZE);
     state.resize(STATE_SIZE);
-    state_po.reserve(STATE_SIZE);
-    state_po.resize(STATE_SIZE);
+    state_po.reserve(STATE_SIZE - 2);
+    state_po.resize(STATE_SIZE - 2);
   }
 
   ~CartPole() {

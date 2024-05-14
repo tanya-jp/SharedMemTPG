@@ -248,6 +248,11 @@ inline std::vector<double> MinMaxNorm(std::vector<double> v)
    return v;
 }
 
+inline double RoundTo(double value, double precision = 1.0)
+{
+    return std::round(value / precision) * precision;
+}
+
 // class CSVReader
 // {
 //    string fileName;

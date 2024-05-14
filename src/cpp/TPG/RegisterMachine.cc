@@ -229,9 +229,10 @@ void RegisterMachine::MuBid(std::unordered_map<std::string, std::any> &params,
     /* Add noise to constants */
     if (params.find("p_bid_mu_const") != params.end() &&
         disR(rng) < std::any_cast<double>(params["p_bid_mu_const"])) {
-      for (auto m : privateMemory_)  // change to sharedMemory
+      for (auto m : sharedMemory_) {
         m->NoiseToConst(rng,
                         std::any_cast<double>(params["bid_mu_const_stddev"]));
+      }
     }
 
     /* Swap positions of two instructions. */
@@ -272,14 +273,16 @@ void RegisterMachine::CopyInputToMemory(instruction *istr, state *obs,
 
 /******************************************************************************/
 double RegisterMachine::Run(state *obs, int &time_step,
-                            const size_t &graph_depth) {
-  bool dbg = false;
+                            const size_t &graph_depth, bool& verbose) {
+  bool dbg = verbose;
   // reset memory
   if (!stateful_) CopySharedConstToWorking();
 
-  privateMemory_[memoryEigen::SCALAR_TYPE]->working_memory_[0].setZero();
-  privateMemory_[memoryEigen::SCALAR_TYPE]->working_memory_[1].setZero();
+  // Reset the output registers.
+  // privateMemory_[memoryEigen::SCALAR_TYPE]->working_memory_[0].setZero();
+  // privateMemory_[memoryEigen::SCALAR_TYPE]->working_memory_[1].setZero();
 
+  int i = 0;
   for (auto istr : bidEffective_) {
     // read inputs
     for (size_t in = 0; in < 2; in++) {
@@ -297,6 +300,9 @@ double RegisterMachine::Run(state *obs, int &time_step,
     istr->out_->getWriteTimeE()(istr->outIdx_, 0) =
         time_step + (graph_depth / MAX_GRAPH_DEPTH);
 
+    if (dbg) {
+      cerr << "dbg pid " << id_ << " i " << i++ << " ";
+    }
     istr->exec(dbg);
   }
   // return bid value

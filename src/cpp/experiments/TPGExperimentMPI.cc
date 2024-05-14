@@ -27,6 +27,7 @@ int main(int argc, char** argv) {
   tpg.params_["id"] = -1;  // remove later
   tpg.setParams();
   tpg_arg_parse(tpg, argc, argv);
+
   ostringstream os;  // logging
 
   /* task sets ***************************************************************/
@@ -130,13 +131,18 @@ int main(int argc, char** argv) {
           tpg.GenerateNewTeams();
           endGenTeams = chrono::system_clock::now() - startGenTeams;
         }
-        
+
+        // uniform_int_distribution<int> dis_dbg(0, 1000);
+        // for (int i = 0; i < 10000; i++) {
+        //   cerr << "dbg " << dis_dbg(tpg.rngs_[0]) << endl;
+        // }
+
         /* evaluation ********************************************************/
         startEval = chrono::system_clock::now();
         // evaluate on all tasks
         evaluate_main(tpg, world, taskSet);
         endEval = chrono::system_clock::now() - startEval;
-        
+
         /* selection *********************************************************/
         startSetEliteTeams = chrono::system_clock::now();
         tpg.setEliteTeams(tpg.GetState("t_current"), tpg.GetState("phase"), 0,
@@ -150,7 +156,7 @@ int main(int argc, char** argv) {
                             .count())
                 : 0);  // also does some reporting
         endSelTeams = chrono::system_clock::now() - startSelTeams;
-        
+
         /* accounting and reporting ******************************************/
         startReport = chrono::system_clock::now();
         if (tpg.GetState("t_current") % tpg.GetParam<int>("test_mod") == 0) {
@@ -159,8 +165,8 @@ int main(int argc, char** argv) {
           evaluate_main(tpg, world, S);
           tpg.setEliteTeams(tpg.GetState("t_current"), _VALIDATION_PHASE,
                             tpg.GetParam<int>("fit_mode"), true);
-          
-          //test
+
+          // test
           tpg.state_["phase"] = _TEST_PHASE;
           evaluate_main(tpg, world, S);
           tpg.setEliteTeams(tpg.GetState("t_current"), _TEST_PHASE,
@@ -183,7 +189,7 @@ int main(int argc, char** argv) {
             tpg.GetState("t_current") % MODES_T == 0)
           tpg.updateMODESFilters(true);
         endMODES = chrono::system_clock::now() - startMODES;
-        
+
         /* checkpoint ********************************************************/
         startChkp = chrono::system_clock::now();
         if (tpg.GetParam<int>("write_checkpoints") &&
@@ -193,7 +199,7 @@ int main(int argc, char** argv) {
         }
         endChkp = chrono::system_clock::now() - startChkp;
         endGen = chrono::system_clock::now() - startGen;
-        
+
         /* print generation timing *******************************************/
         os << setprecision(5) << fixed;
         os << "gTime t " << tpg.GetState("t_current");

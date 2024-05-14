@@ -69,8 +69,8 @@ class Pendulum : public TaskEnv {
     // max_costs_all = -(max_costs * max_step);
     state.reserve(STATE_SIZE);
     state.resize(STATE_SIZE);
-    state_po.reserve(STATE_SIZE);
-    state_po.resize(STATE_SIZE);
+    state_po.reserve(STATE_SIZE - 2);
+    state_po.resize(STATE_SIZE - 2);
   }
 
   ~Pendulum() {}

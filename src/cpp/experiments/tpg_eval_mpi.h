@@ -69,17 +69,17 @@ double WrapContinuousAction(EvalStruct &eval) {
 }
 
 vector<team *> GetTeamsToEval(TPG &tpg) {
-  auto root_teams = tpg.GetTeams(true);
-  vector<team *> teams;
+  auto root_teams = tpg.GetTeamsInVec(true);
+  vector<team *> teams_to_eval;
   // train and validate all teams
   if (tpg.GetState("phase") != _TEST_PHASE) {
-    for (auto it : root_teams) {
-      it.second->_n_eval =
+    for (auto tm : root_teams) {
+      tm->_n_eval =
           tpg._numStoredOutcomesPerHost[tpg.GetState("phase")] -
-          it.second->numOutcomes(tpg.GetState("phase"),
+          tm->numOutcomes(tpg.GetState("phase"),
                                  tpg.GetState("active_task"));
-      if (it.second->_n_eval > 0) {
-        teams.push_back(it.second);
+      if (tm->_n_eval > 0) {
+        teams_to_eval.push_back(tm);
       }
     }
   } else {
@@ -90,10 +90,10 @@ vector<team *> GetTeamsToEval(TPG &tpg) {
           tpg._eliteTeamPS[vecToStrNoSpace(set)][tpg.GetParam<int>("fit_mode")]
                           [_VALIDATION_PHASE];
       tm->_n_eval = tpg._numStoredOutcomesPerHost[tpg.GetState("phase")];
-      teams.push_back(tm);
+      teams_to_eval.push_back(tm);
     }
   }
-  return teams;
+  return teams_to_eval;
 }
 
 void AssignTeamsToEvaluators(TPG &tpg, mpi::communicator &world,
@@ -110,6 +110,13 @@ void AssignTeamsToEvaluators(TPG &tpg, mpi::communicator &world,
       string s = "";
       tpg.writeCheckpoint(s, teams);
       world.send(evaluator, 0, s);
+      
+      // cerr << "dbg ev " << evaluator;
+      // for (auto tm : teams) {
+      //   cerr << " " << tm->id_;
+      // }
+      // cerr << endl;
+
       evaluator++;
       teams.clear();
       if (remainder > 0) remainder--;
@@ -173,8 +180,8 @@ void AccumulateStepStats(EvalStruct &eval) {
 
 void FinalizeStepStats(TPG &tpg, EvalStruct &eval) {
   if (eval.game->eval_type_ == "RecursiveForecast") {
-    eval.runTimeStats[REWARD1_IDX] = eval.game->getStep();
-    eval.runTimeStats[REWARD2_IDX] = eval.game->getStep();
+    eval.runTimeStats[REWARD1_IDX] /= eval.game->getStep();
+    eval.runTimeStats[REWARD2_IDX] /= eval.game->getStep();
   }
   eval.runTimeStats[VISITED_TEAMS_IDX] /= eval.game->getStep();
   eval.runTimeStats[INSTRUCTIONS_IDX] /= eval.game->getStep();
@@ -190,9 +197,6 @@ void FinalizeStepStats(TPG &tpg, EvalStruct &eval) {
     eval.evalResult += ":" + to_string(eval.runTimeStats[r]);
   for (size_t r = 0; r < eval.runTimeInts.size(); r++)
     eval.evalResult += ":" + to_string(eval.runTimeInts[r]);
-  eval.tm->getActiveMembersByRef(eval.active);
-  for (auto leiter = eval.active.begin(); leiter != eval.active.end(); leiter++)
-    eval.evalResult += ":" + to_string((*leiter)->id_);
   eval.evalResult += "\n";
 }
 
@@ -219,8 +223,13 @@ void evaluate_main(TPG &tpg, mpi::communicator &world, vector<int> &taskSet) {
   for (size_t task = 0; task < taskSet.size(); task++) {
     tpg.state_["active_task"] = taskSet[task];
     auto teams_to_eval = GetTeamsToEval(tpg);
-    // vector<team*> teams_to_eval;
-    //   tpg.getTeams(teams_to_eval, false);
+
+    // cerr << "dbg t " << tpg.GetState("t_current") << " tToE ";
+    // for (auto tm : teams_to_eval) {
+    //   cerr << " " << tm->id_;
+    // }
+    // cerr << endl;
+
     AssignTeamsToEvaluators(tpg, world, teams_to_eval, world_size_per_task,
                             evaluator);
   }
@@ -230,7 +239,7 @@ void evaluate_main(TPG &tpg, mpi::communicator &world, vector<int> &taskSet) {
   }
 
   // collect evaluation result from each evaluator
-  auto root_teams = tpg.GetTeams(true);
+  auto root_teams_map = tpg.GetTeamsInMap(true);
   all_strings.clear();
   gather(world, my_string, all_strings, 0);
 
@@ -250,10 +259,18 @@ void evaluate_main(TPG &tpg, mpi::communicator &world, vector<int> &taskSet) {
           r_runTimeStats.push_back(atof(splitStr[s++].c_str()));
         for (int i = 0; i < tpg.GetParam<int>("n_point_aux_int"); i++)
           r_runTimeInts.push_back(atoi(splitStr[s++].c_str()));
-        while (s < splitStr.size())
-          active.push_back(atol(splitStr[s++].c_str()));
-        root_teams[rslt_id]->updateActiveMembersFromIds(active);
-        tpg.setOutcome(root_teams[rslt_id], behavSeq, r_runTimeStats,
+
+        // if (tpg.GetState("phase") == _TEST_PHASE) {
+        //   cerr << "dbgev t " << tpg.GetState("t_current") << " id "
+        //        << root_teams[rslt_id]->id_ << " rts "
+        //        << vecToStr(r_runTimeStats) << " mbrs ";
+        //   for (auto m : root_teams[rslt_id]->members_) {
+        //     cerr << " " << m->id_;
+        //   }
+        //   cerr << endl;
+        // }
+
+        tpg.setOutcome(root_teams_map[rslt_id], behavSeq, r_runTimeStats,
                        r_runTimeInts, tpg.GetState("t_current"));
       }
     }
@@ -262,16 +279,17 @@ void evaluate_main(TPG &tpg, mpi::communicator &world, vector<int> &taskSet) {
 
 /******************************************************************************/
 void EvalControl(TPG &tpg, EvalStruct &eval) {
-  eval.game->reset(tpg._rngs[AUX_SEED]);
+  bool verbose = false; // tpg.GetState("phase") == _TEST_PHASE ? true : false;
+  eval.game->reset(tpg.rngs_[AUX_SEED]);
   eval.obs->Set(eval.game->GetObsVec(eval.partially_observable));
   while (!eval.game->terminal()) {
     eval.leafProgram = tpg.getAction(
         eval.tm, eval.obs, true, eval.visitedTeams, eval.decisionInstructions,
-        eval.game->getStep(), eval.teamPath, tpg._rngs[AUX_SEED]);
+        eval.game->getStep(), eval.teamPath, tpg.rngs_[AUX_SEED], verbose);
     MaybeAnimateStep(eval);
     TaskEnv::Results r =
         eval.game->update(WrapDiscreteAction(eval), WrapContinuousAction(eval),
-                          tpg._rngs[AUX_SEED]);
+                          tpg.rngs_[AUX_SEED]);
     eval.runTimeStats[REWARD1_IDX] += r.r1;
     AccumulateStepStats(eval);
     eval.obs->Set(eval.game->GetObsVec(eval.partially_observable));
@@ -281,27 +299,42 @@ void EvalControl(TPG &tpg, EvalStruct &eval) {
 /******************************************************************************/
 void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
   RecursiveUnivar *game = dynamic_cast<RecursiveUnivar *>(eval.game);
-  game->reset(tpg._rngs[AUX_SEED]);
+  game->reset(tpg.rngs_[AUX_SEED]);
+  bool verbose = false; //tpg.GetState("phase") == _TEST_PHASE ? true : false;
+  vector<double> obs(tpg.GetParam<int>("n_input"));
   // prime
+  double prediction_prev = 0;
   int sample = game->t_start[tpg.GetState("phase")][eval.episode];
   for (int i = 0; i < game->num_samples_prime_ - 1; i++) {
-    eval.obs->Set(game->data[sample++]);
+    // new vector obs contain current and previous sample
+    if (i == 0) {obs[0] = 0; obs[1] = game->data[sample][0];}
+    else {obs[0] = game->data[sample - 1][0]; obs[1] = game->data[sample][0];}
+    eval.obs->Set(obs);
+    // original vector obs containing a single val
+    // eval.obs->Set(game->data[sample++]);
+    if (i > 0) prediction_prev = WrapContinuousAction(eval);
     eval.leafProgram = tpg.getAction(
         eval.tm, eval.obs, true, eval.visitedTeams, eval.decisionInstructions,
-        eval.game->getStep(), eval.teamPath, tpg._rngs[AUX_SEED]);
+        eval.game->getStep(), eval.teamPath, tpg.rngs_[AUX_SEED], verbose);
+    sample++;    
   }
   // predict
   for (int i = 0; i < game->num_samples_predict_[tpg.GetState("phase")]; i++) {
-    vector<double> prediction{WrapContinuousAction(eval)};  // prev predition
+    // vector<double> prediction{WrapContinuousAction(eval)};  // prev predition
+    // prev 2 preditions
+    vector<double> prediction{prediction_prev, WrapContinuousAction(eval)};
+    prediction_prev = WrapContinuousAction(eval);
     eval.obs->Set(prediction);
-    eval.leafProgram = tpg.getAction(eval.tm, eval.obs, true, eval.visitedTeams,
-                                     eval.decisionInstructions, game->getStep(),
-                                     eval.teamPath, tpg._rngs[AUX_SEED]);
+    eval.leafProgram = tpg.getAction(
+        eval.tm, eval.obs, true, eval.visitedTeams, eval.decisionInstructions,
+        game->getStep(), eval.teamPath, tpg.rngs_[AUX_SEED], verbose);
     prediction[0] = WrapContinuousAction(eval);
     TaskEnv::Results r =
-        game->update(sample++, prediction[0], tpg._rngs[AUX_SEED]);
+        game->update(sample++, prediction[0], tpg.rngs_[AUX_SEED]);
     eval.runTimeStats[REWARD2_IDX] += r.r2;  // MAE
     eval.runTimeStats[REWARD1_IDX] += r.r1;  // MSE
+    // cerr << "dbg t " << tpg.GetState("t_current") << " tid " << eval.tm->id_
+    // << " step " << game->step << " r2 " << r.r2 << " r1 " << r.r1 << endl;
     AccumulateStepStats(eval);
   }
 }
@@ -325,9 +358,18 @@ void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
       for (auto tm : eval.teams) {
         eval.tm = tm;
         tpg.MarkEffectiveCode(eval.tm);
+
+        // if (tpg.GetState("phase") == _TEST_PHASE) {
+          // cerr << "dbg t " << tpg.GetState("t_current") << " tm " << eval.tm->id_;
+          // for (auto t : eval.tm->members_) {
+          //   cerr << " " << t->id_;
+          // }
+          // cerr << endl;
+        // }
+
         for (eval.episode = 0; eval.episode < eval.tm->_n_eval;
              eval.episode++) {
-          tpg._rngs[AUX_SEED].seed(eval.episode);
+          tpg.rngs_[AUX_SEED].seed(eval.episode);
           eval.tm->InitMemory(tpg._teamMap, tpg.HaveParam("p_bid_mu_const"));
           evaluator_map[eval.game->eval_type_](tpg, eval);
           FinalizeStepStats(tpg, eval);
@@ -351,7 +393,7 @@ void replayer(TPG &tpg, vector<TaskEnv *> &tasks) {
     if (eval.animate) eval.tm->_n_eval = 1;
     tpg.MarkEffectiveCode(eval.tm);
     for (eval.episode = 0; eval.episode < eval.tm->_n_eval; eval.episode++) {
-      tpg._rngs[AUX_SEED].seed(eval.episode);
+      tpg.rngs_[AUX_SEED].seed(eval.episode);
       eval.tm->InitMemory(tpg._teamMap, tpg.HaveParam("p_bid_mu_const"));
       EvalControl(tpg, eval);
       FinalizeStepStats(tpg, eval);

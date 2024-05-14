@@ -18,7 +18,8 @@ if int(acenet):
 if int(ccanada):
     common_env.Append(CPPDEFINES=['CCANADA'])
 else:
-    common_env.Append(CCFLAGS = ['-std=c++20', '-Wno-deprecated', '-Wall', '-Werror', '-Wextra', '-Wno-unused-parameter', '-DARMA_DONT_USE_WRAPPER', '-DARMA_USE_BLAS', '-DARMA_USE_LAPACK', '-DARMA_USE_HDF5'])
+    common_env.Append(CCFLAGS = ['-std=c++20', '-Wno-deprecated', '-Wall', '-Werror', '-Wextra', '-Wno-unused-parameter'])
+# '-DARMA_USE_BLAS', '-DARMA_USE_LAPACK', '-DARMA_USE_HDF5' '-DARMA_DONT_USE_WRAPPER
 
 common_env.MergeFlags(GetOption('cflags'))
 common_env.Append(CPPDEFINES={'VERSION': 1})
@@ -30,15 +31,17 @@ release_env.Append(CPPDEFINES=['RELEASE'])
 # ... and release builds end up in the "build/release" dir
 release_env.VariantDir('build/release', 'src')
 
-# We define our debug build environment in a similar fashion...
-debug_env = common_env.Clone()
-debug_env.Append(CPPDEFINES=['DEBUG'])
-debug_env.VariantDir('build/debug', 'src')
+# # We define our debug build environment in a similar fashion...
+# debug_env = common_env.Clone()
+# debug_env.Append(CPPDEFINES=['DEBUG'])
+# debug_env.VariantDir('build/debug', 'src')
 
-# Now that all build environment have been defined, let's iterate over
-# them and invoke the lower level SConscript files.
-for mode, env in dict(release=release_env, 
-    	       	      debug=debug_env).items():
-    env.SConscript('build/%s/SConscript' % mode, {'env': env})
+# # Now that all build environment have been defined, let's iterate over
+# # them and invoke the lower level SConscript files.
+# for mode, env in dict(release=release_env, 
+#     	       	      debug=debug_env).items():
+#     env.SConscript('build/%s/SConscript' % mode, {'env': env})
+for mode, env in dict(release=release_env).items():
+    env.SConscript('build/%s/SConscript' % mode, {'env': env})    
 
 

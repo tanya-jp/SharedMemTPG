@@ -45,7 +45,7 @@ class program {
 
   inline int action() { return action_; }
   inline void action(int a) { action_ = a; }
-  virtual double Run(state *s, int& time_step, const size_t& graph_depth) = 0;
+  virtual double Run(state *s, int& time_step, const size_t& graph_depth, bool& verbose) = 0;
   inline double bidVal() { return bid_val_; }
   inline void bidVal(double b) { bid_val_ = b; }
   virtual string checkpoint(bool) = 0;

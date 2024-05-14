@@ -18,7 +18,7 @@ class RegisterMachine : public program {
   void CopyInputToMemory(instruction* istr, state* obs, size_t in);
   void MarkFeatures(instruction* istr, int in);
   void MarkIntrons(std::unordered_map<std::string, std::any> &params_);
-  double Run(state *, int& time_step, const size_t& graph_depth);
+  double Run(state *, int& time_step, const size_t& graph_depth, bool& verbose);
   std::string checkpoint(bool);
   // Create arbitrary RegisterMachine
   RegisterMachine(long, long, std::unordered_map<std::string, std::any> &, long,

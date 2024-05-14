@@ -29,7 +29,7 @@ class TPG {
   void removeMemory(memoryEigen *m);
   team *getTeamByID(long id);
   bool haveEliteTeam(string taskset, int fitMode, int phase);
-  void seed(size_t i, int s);
+  void Seed(size_t i, uint_fast32_t s);
 
   /*****************************************************************************
    * Methods to implement the TPG algorithm.
@@ -59,7 +59,7 @@ class TPG {
   program *getAction(team *tm, state *s, bool updateActive,
                      set<team *, teamIdComp> &visitedTeams,
                      long &decisionInstructions, int timeStep,
-                     vector<team *> &teamPath, mt19937 &rng);
+                     vector<team *> &teamPath, mt19937 &rng, bool& verbose);
 
   program *getAction(
       team *tm, state *s, bool updateActive,
@@ -67,14 +67,16 @@ class TPG {
       int timeStep, vector<program *> &allPrograms,
       vector<program *> &winningPrograms, vector<set<long>> &decisionFeatures,
       vector<set<memoryEigen *, memoryEigenIdComp>> &decisionMemories,
-      vector<team *> &teamPath, mt19937 &rng);
+      vector<team *> &teamPath, mt19937 &rng, bool& verbose);
   void GetAllNodes(team *tm, set<team *, teamIdComp> &teams,
                    set<program *, programIdComp> &programs);
   void GetAllNodes(team *tm, set<team *, teamIdComp> &teams,
                    set<program *, programIdComp> &programs,
                    set<memoryEigen *, memoryEigenIdComp> &memories);
   team *getBestTeam();
-  map<long, team *> GetTeams(bool) const;
+  // map<long, team *> GetTeams(bool) const;
+  vector<team*> GetTeamsInVec(bool) const;
+  map<long, team*> GetTeamsInMap(bool) const;
   void getTeams(vector<team *> &t, bool roots) const;     // weed out
   void getTeams(map<long, team *> &t, bool roots) const;  // weed out
   void InitTeams();
@@ -83,23 +85,23 @@ class TPG {
   bool isElitePS(team *tm, int phase);
   void MarkEffectiveCode(team *tm);
   void policyFeatures(int, set<long> &, bool);
-  void printGraphDot(
-      team *, size_t frame, int episode, int step, size_t depth,
-      vector<program *> allPrograms, vector<program *> winningPrograms,
-      vector<set<long>> decisionFeatures,
-      vector<set<memoryEigen *, memoryEigenIdComp>> decisionMemories,
-      vector<team *> teamPath, bool drawPath,
-      set<team *, teamIdComp> visitedTeamsAllTasks);
-  void printGraphDotGPEM(long rootTeamId, map<long, string> &teamColMap,
-                         set<team *, teamIdComp> &visitedTeamsAllTasks,
-                         vector<map<long, double>> &teamUseMapPerTask);
-  void printGraphDotGPEMAnimate(long rootTeamId, size_t frame, int episode,
-                                int step, size_t depth,
-                                vector<program *> allPrograms,
-                                vector<program *> winningPrograms,
-                                set<team *, teamIdComp> &visitedTeamsAllTasks,
-                                vector<map<long, double>> &teamUseMapPerTask,
-                                vector<team *> teamPath);
+  // void printGraphDot(
+  //     team *, size_t frame, int episode, int step, size_t depth,
+  //     vector<program *> allPrograms, vector<program *> winningPrograms,
+  //     vector<set<long>> decisionFeatures,
+  //     vector<set<memoryEigen *, memoryEigenIdComp>> decisionMemories,
+  //     vector<team *> teamPath, bool drawPath,
+  //     set<team *, teamIdComp> visitedTeamsAllTasks);
+  // void printGraphDotGPEM(long rootTeamId, map<long, string> &teamColMap,
+  //                        set<team *, teamIdComp> &visitedTeamsAllTasks,
+  //                        vector<map<long, double>> &teamUseMapPerTask);
+  // void printGraphDotGPEMAnimate(long rootTeamId, size_t frame, int episode,
+  //                               int step, size_t depth,
+  //                               vector<program *> allPrograms,
+  //                               vector<program *> winningPrograms,
+  //                               set<team *, teamIdComp> &visitedTeamsAllTasks,
+  //                               vector<map<long, double>> &teamUseMapPerTask,
+  //                               vector<team *> teamPath);
   void printHostGraphsDFS(long, long);
   void printHostGraphsHostsOnly(long, long);
   void printPhyloGraphDot(team *);
@@ -161,8 +163,8 @@ class TPG {
   // keys: taskSet, fitMode, phase
   map<string, map<int, map<int, team *>>> _eliteTeamPS;
   map<string, deque<double>> _eliteTestScoresMQ;
-  vector<mt19937> _rngs;
-  vector<int> _seeds;
+  vector<mt19937> rngs_;
+  vector<uint_fast32_t> seeds_;
   vector<long> _numStoredOutcomesPerHost;
   ostringstream oss;  // logging, reporting
   vector<size_t> _numEliteTeamsCurrent;
