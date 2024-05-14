@@ -283,15 +283,15 @@ void instruction::SetupOps() {
   op_list_[MATRIX_ST_DEV_OP_] = (&instruction::ExecuteMatrixStDevOp);
 
   op_mem_types_[SCALAR_CONST_SET_OP_] = {
-      memoryEigen::SCALAR_TYPE, memoryEigen::NA_TYPE, memoryEigen::NA_TYPE};
+      memoryEigen::SCALAR_TYPE, memoryEigen::SCALAR_TYPE, memoryEigen::NA_TYPE};
   op_list_[SCALAR_CONST_SET_OP_] = (&instruction::ExecuteScalarConstSetOp);
 
   op_mem_types_[VECTOR_CONST_SET_OP_] = {
-      memoryEigen::VECTOR_TYPE, memoryEigen::NA_TYPE, memoryEigen::NA_TYPE};
+      memoryEigen::VECTOR_TYPE, memoryEigen::VECTOR_TYPE, memoryEigen::NA_TYPE};
   op_list_[VECTOR_CONST_SET_OP_] = (&instruction::ExecuteVectorConstSetOp);
 
   op_mem_types_[MATRIX_CONST_SET_OP_] = {
-      memoryEigen::MATRIX_TYPE, memoryEigen::NA_TYPE, memoryEigen::NA_TYPE};
+      memoryEigen::MATRIX_TYPE, memoryEigen::MATRIX_TYPE, memoryEigen::NA_TYPE};
   op_list_[MATRIX_CONST_SET_OP_] = (&instruction::ExecuteMatrixConstSetOp);
 
   op_mem_types_[SCALAR_UNIFORM_SET_OP_] = {memoryEigen::SCALAR_TYPE,
