@@ -1804,23 +1804,18 @@ void TPG::printPhyloGraphDot(team *tm) {
 
   // Color nodes based on fitness
   if (visited.size() > 1) {
-
-    // Fitness of best team is too large, remove
-    visited.erase(visited.begin());
-
     std::vector<double> fitnesses;
     for (long id : visited) {
-      fitnesses.push_back(_phyloGraph[id].fitness);
+      // Apply log function on fitnesses
+      fitnesses.push_back(log(_phyloGraph[id].fitness));
     }
+    // Normalize
     std::vector<double> normFit = MinMaxNorm(fitnesses);
 
+    // Fill from red to green
     for (size_t i = 0; i < visited.size(); i++) {
-      int r = 255;
-      int g = static_cast<int>(normFit[i] * 255);
-      int b = 0;
-
       ofs << visited[i] << " [style=filled, fillcolor=\""
-          << RGBToHex(r, g, b) << "\"]" << endl;
+          << normFit[i] / 3 << " 1.000 1.000" << "\"]" << endl;
     }
   }
 

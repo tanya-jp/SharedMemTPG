@@ -249,17 +249,6 @@ inline std::vector<double> MinMaxNorm(std::vector<double> v)
    return v;
 }
 
-inline std::string RGBToHex(int r, int g, int b)
-{
-    std::stringstream ss;
-    ss << "#" << std::hex << std::setfill('0') 
-       << std::setw(2) << r 
-       << std::setw(2) << g 
-       << std::setw(2) << b;
-    return ss.str();
-}
-
-
 // class CSVReader
 // {
 //    string fileName;
