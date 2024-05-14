@@ -238,11 +238,17 @@ inline std::vector<double> MinMaxNorm(std::vector<double> v)
    double max = *std::max_element(v.begin(), v.end());
    double range = max - min;
 
+   cerr << "Min: " << min << " Max: " << max << endl;
+
    for (size_t i = 0; i < v.size(); i++) {
+      cerr << "Original value: " << v[i] << endl;
+
       if (range == 0)
          v[i] = 0;
       else
          v[i] = (v[i] - min) / range;
+
+      cerr << "Normalized value: " << v[i] << endl;
    }
 
    return v;

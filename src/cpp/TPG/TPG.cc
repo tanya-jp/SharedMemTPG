@@ -632,44 +632,41 @@ void TPG::GenerateNewTeams() {
     uniform_int_distribution<int> disP(0, parents.size() - 1);
     for (size_t i = 0; i < GetParam<int>("n_elite") / power_set.size() - 1;
          i++) {
+      bool crossover = (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmx"));
       
       // parent teams
-      team *pm1 = parents[disP(_rngs[TPG_SEED])];
-      vector<program *> p1programs;
-      pm1->members(p1programs);
+      team *pm1 = parents[disP(rngs_[TPG_SEED])];
+      std::list<program *> p1programs = pm1->members_;
       auto p1liter = p1programs.begin();
 
-      team *pm2 = parents[disP(_rngs[TPG_SEED])];
-      vector<program *> p2programs;
+      team *pm2 = parents[disP(rngs_[TPG_SEED])];
+      std::list<program *> p2programs = pm2->members_;
+      auto p2liter = p2programs.begin();
 
-      bool crossover = (real_dist_(_rngs[TPG_SEED]) < GetParam<double>("pmx"));
       team *cm = new team(GetState("t_current"), state_["team_count"]++);
 
       // team crossover
       if (crossover) {
-        pm2->members(p2programs);
-        auto p2liter = p2programs.begin();
-
         while (p1liter != p1programs.end() || p2liter != p2programs.end()) {
           if (p1liter != p1programs.end() &&
               (int)cm->size() < GetParam<int>("max_team_size") &&
-              (((*p1liter)->action() < 0 && cm->numAtomic_ < 1) ||
+              (((*p1liter)->action() < 0 && cm->n_atomic_ < 1) ||
               find(p2programs.begin(), p2programs.end(), *p1liter) !=
                   p2programs.end()))
             cm->AddProgram(*p1liter);
           else if ((int)cm->size() < GetParam<int>("max_team_size") &&
                   p1liter != p1programs.end() &&
-                  real_dist_(_rngs[TPG_SEED]) < 0.5)
+                  real_dist_(rngs_[TPG_SEED]) < 0.5)
             cm->AddProgram(*p1liter);
           if ((int)cm->size() < GetParam<int>("max_team_size") &&
               p2liter != p2programs.end() &&
-              real_dist_(_rngs[TPG_SEED]) < 0.5)
+              real_dist_(rngs_[TPG_SEED]) < 0.5)
             cm->AddProgram(*p2liter);
           if (p1liter != p1programs.end()) p1liter++;
           if (p2liter != p2programs.end()) p2liter++;
         }
 
-        if (cm->numAtomic_ < 1)
+        if (cm->n_atomic_ < 1)
           die(__FILE__, __FUNCTION__, __LINE__,
               "Crossover must leave the fail-safe atomic program!");
 
@@ -1811,7 +1808,7 @@ void TPG::printPhyloGraphDot(team *tm) {
   char outputFilename[80];
   ofstream ofs;
 
-  sprintf(outputFilename, "phyloGraphs/phylo-t%05d-s%lu%s",
+  sprintf(outputFilename, "replay/graphs/phylo-t%05d-s%lu%s",
           (int)GetState("t_current"), seeds_[TPG_SEED], ".dot");
   ofs.open(outputFilename, ios::out);
   if (!ofs) die(__FILE__, __FUNCTION__, __LINE__, "Can't open file.");
@@ -1840,9 +1837,10 @@ void TPG::printPhyloGraphDot(team *tm) {
   if (visited.size() > 1) {
     std::vector<double> fitnesses;
     for (long id : visited) {
-      // Apply log function on fitnesses
-      fitnesses.push_back(log(_phyloGraph[id].fitness));
+      // Add small constant so log function behaves well
+      fitnesses.push_back(log(_phyloGraph[id].fitness + 1e-10));
     }
+
     // Normalize
     std::vector<double> normFit = MinMaxNorm(fitnesses);
 
