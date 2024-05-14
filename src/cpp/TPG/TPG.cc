@@ -633,10 +633,63 @@ void TPG::GenerateNewTeams() {
     uniform_int_distribution<int> disP(0, parents.size() - 1);
     for (size_t i = 0; i < GetParam<int>("n_elite") / power_set.size() - 1;
          i++) {
-      auto parent = parents[disP(_rngs[TPG_SEED])];
-      auto new_teams = ApplyVariationOps(parent, n_new_teams);
+      
+      // parent teams
+      team *pm1 = parents[disP(_rngs[TPG_SEED])];
+      team *pm2 = parents[disP(_rngs[TPG_SEED])];
+
+      vector<program *> p1programs;
+      pm1->members(p1programs);
+      auto p1liter = p1programs.begin();
+
+      vector<program *> p2programs;
+
+      bool crossover = (real_dist_(_rngs[TPG_SEED]) < GetParam<double>("p_bid_xover"));
+      team *cm = new team(GetState("t_current"), state_["team_count"]++);
+
+      // team crossover
+      if (crossover) {
+        pm2->members(p2programs);
+        auto p2liter = p2programs.begin();
+
+        while (p1liter != p1programs.end() || p2liter != p2programs.end()) {
+          if (p1liter != p1programs.end() &&
+              (int)cm->size() < GetParam<int>("max_team_size") &&
+              (((*p1liter)->action() < 0 && cm->numAtomic_ < 1) ||
+              find(p2programs.begin(), p2programs.end(), *p1liter) !=
+                  p2programs.end()))
+            cm->AddProgram(*p1liter);
+          else if ((int)cm->size() < GetParam<int>("max_team_size") &&
+                  p1liter != p1programs.end() &&
+                  real_dist_(_rngs[TPG_SEED]) < 0.5)
+            cm->AddProgram(*p1liter);
+          if ((int)cm->size() < GetParam<int>("max_team_size") &&
+              p2liter != p2programs.end() &&
+              real_dist_(_rngs[TPG_SEED]) < 0.5)
+            cm->AddProgram(*p2liter);
+          if (p1liter != p1programs.end()) p1liter++;
+          if (p2liter != p2programs.end()) p2liter++;
+        }
+
+        if (cm->numAtomic_ < 1)
+          die(__FILE__, __FUNCTION__, __LINE__,
+              "Crossover must leave the fail-safe atomic program!");
+
+      // no crossover, just clone first parent
+      } else {
+        for (p1liter = p1programs.begin(); p1liter != p1programs.end(); p1liter++)
+        cm->AddProgram(*p1liter);
+      }
+
+      // Mutate child team
+      vector<team *> new_teams = ApplyVariationOps(cm, n_new_teams);
       for (auto new_team : new_teams) {
-        AddTeamToPhylogeny(parent, new_team);
+        AddTeamToPhylogeny(pm1, new_team);
+
+        if (crossover) {
+          AddTeamToPhylogeny(pm2, new_team);
+        }
+
         AddTeam(new_team);
         n_new_teams++;
       }
@@ -1731,8 +1784,6 @@ void TPG::printPhyloGraphDot(team *tm) {
   if (!ofs) die(__FILE__, __FUNCTION__, __LINE__, "Can't open file.");
 
   ofs << "digraph G {" << endl;
-  ofs << "ratio=0.5" << endl;
-  ofs << "rankdir=\"LR\"" << endl;
 
   // Basic breadth-first search
 

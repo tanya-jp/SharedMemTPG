@@ -107,7 +107,7 @@ p_bid_delete 0.6
 p_bid_add 0.3
 
 # program variation: probability of linear crossover with another team
-p_bid_xover 0.0
+p_bid_xover 0.5
 
 # memory size: number of memory indices
 # each memory index points to a data structure with some number of rows and columns
