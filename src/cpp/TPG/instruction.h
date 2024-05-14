@@ -672,22 +672,23 @@ class instruction {
   }
 
   inline void ExecuteScalarConstSetOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) =
-        constants_[in1Idx_ % constants_.size()];
+    out_->working_memory_[outIdx_] = in1_->const_memory_[in1IdxE_];
     if (dbg) {
     }
   }
 
   inline void ExecuteVectorConstSetOp(bool dbg) {
-    out_->working_memory_[outIdx_] = constants_[in1Idx_ % constants_.size()] *
-                                     MatrixXd::Ones(memoryRows_, 1);
+    out_->working_memory_[outIdx_] = in1_->const_memory_[in1IdxE_];
+    // out_->working_memory_[outIdx_] = constants_[in1Idx_ % constants_.size()] *
+                                    //  MatrixXd::Ones(memoryRows_, 1);
     if (dbg) {
     }
   }
 
   inline void ExecuteMatrixConstSetOp(bool dbg) {
-    out_->working_memory_[outIdx_] = constants_[in1Idx_ % constants_.size()] *
-                                     MatrixXd::Ones(memoryRows_, memoryCols_);
+    out_->working_memory_[outIdx_] = in1_->const_memory_[in1IdxE_];
+    // out_->working_memory_[outIdx_] = constants_[in1Idx_ % constants_.size()] *
+                                    //  MatrixXd::Ones(memoryRows_, memoryCols_);
     if (dbg) {
     }
   }

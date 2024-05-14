@@ -68,34 +68,6 @@ double WrapContinuousAction(EvalStruct &eval) {
       ->working_memory_[1](0, 0);
 }
 
-// vector<team *> GetTeamsToEval(TPG &tpg) {
-//   auto root_teams = tpg.GetTeams(true);
-//   vector<team *> teams;
-//   // train and validate all teams
-//   if (tpg.GetState("phase") != _TEST_PHASE) {
-//     for (auto it : root_teams) {
-//       it.second->_n_eval =
-//           tpg._numStoredOutcomesPerHost[tpg.GetState("phase")] -
-//           it.second->numOutcomes(tpg.GetState("phase"),
-//                                  tpg.GetState("active_task"));
-//       if (it.second->_n_eval > 0) {
-//         teams.push_back(it.second);
-//       }
-//     }
-//   } else {
-//     // only test the validation champions (set fitmode later)
-//     auto PS = PowerSet(tpg.GetParam<int>("n_task"));
-//     for (auto &set : PS) {
-//       team *tm =
-//           tpg._eliteTeamPS[vecToStrNoSpace(set)][tpg.GetParam<int>("fit_mode")]
-//                           [_VALIDATION_PHASE];
-//       tm->_n_eval = tpg._numStoredOutcomesPerHost[tpg.GetState("phase")];
-//       teams.push_back(tm);
-//     }
-//   }
-//   return teams;
-// }
-
 vector<team *> GetTeamsToEval(TPG &tpg) {
   auto root_teams = tpg.GetTeamsInVec(true);
   vector<team *> teams_to_eval;
@@ -329,17 +301,29 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
   RecursiveUnivar *game = dynamic_cast<RecursiveUnivar *>(eval.game);
   game->reset(tpg.rngs_[AUX_SEED]);
   bool verbose = false; //tpg.GetState("phase") == _TEST_PHASE ? true : false;
+  vector<double> obs(tpg.GetParam<int>("n_input"));
   // prime
+  double prediction_prev = 0;
   int sample = game->t_start[tpg.GetState("phase")][eval.episode];
   for (int i = 0; i < game->num_samples_prime_ - 1; i++) {
-    eval.obs->Set(game->data[sample++]);
+    // new vector obs contain current and previous sample
+    if (i == 0) {obs[0] = 0; obs[1] = game->data[sample][0];}
+    else {obs[0] = game->data[sample - 1][0]; obs[1] = game->data[sample][0];}
+    eval.obs->Set(obs);
+    // original vector obs containing a single val
+    // eval.obs->Set(game->data[sample++]);
+    if (i > 0) prediction_prev = WrapContinuousAction(eval);
     eval.leafProgram = tpg.getAction(
         eval.tm, eval.obs, true, eval.visitedTeams, eval.decisionInstructions,
         eval.game->getStep(), eval.teamPath, tpg.rngs_[AUX_SEED], verbose);
+    sample++;    
   }
   // predict
   for (int i = 0; i < game->num_samples_predict_[tpg.GetState("phase")]; i++) {
-    vector<double> prediction{WrapContinuousAction(eval)};  // prev predition
+    // vector<double> prediction{WrapContinuousAction(eval)};  // prev predition
+    // prev 2 preditions
+    vector<double> prediction{prediction_prev, WrapContinuousAction(eval)};
+    prediction_prev = WrapContinuousAction(eval);
     eval.obs->Set(prediction);
     eval.leafProgram = tpg.getAction(
         eval.tm, eval.obs, true, eval.visitedTeams, eval.decisionInstructions,
