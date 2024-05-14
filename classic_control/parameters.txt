@@ -35,7 +35,7 @@ fit_mode 0
 dist_mode 0
 
 # skip introns during evaluation
-skip_introns 0
+skip_introns 1
 
 # auxilliary seed, e.g. for simulators
 seed_aux 42
