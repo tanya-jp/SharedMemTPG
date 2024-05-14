@@ -636,15 +636,14 @@ void TPG::GenerateNewTeams() {
       
       // parent teams
       team *pm1 = parents[disP(_rngs[TPG_SEED])];
-      team *pm2 = parents[disP(_rngs[TPG_SEED])];
-
       vector<program *> p1programs;
       pm1->members(p1programs);
       auto p1liter = p1programs.begin();
 
+      team *pm2 = parents[disP(_rngs[TPG_SEED])];
       vector<program *> p2programs;
 
-      bool crossover = (real_dist_(_rngs[TPG_SEED]) < GetParam<double>("p_bid_xover"));
+      bool crossover = (real_dist_(_rngs[TPG_SEED]) < GetParam<double>("pmx"));
       team *cm = new team(GetState("t_current"), state_["team_count"]++);
 
       // team crossover
