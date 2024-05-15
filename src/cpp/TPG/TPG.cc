@@ -632,8 +632,10 @@ void TPG::GenerateNewTeams() {
     uniform_int_distribution<int> disP(0, parents.size() - 1);
     for (size_t i = 0; i < GetParam<int>("n_elite") / power_set.size() - 1;
          i++) {
-          int rp = disP(rngs_[TPG_SEED]);
-      auto parent = parents[rp];
+      auto parent = parents[disP(rngs_[TPG_SEED])];
+      //select two parents
+      //apply crossover to get child
+      //...then ApplyVariationOps on child
       auto new_teams = ApplyVariationOps(parent, n_new_teams);
       for (auto new_team : new_teams) {
         AddTeamToPhylogeny(parent, new_team);

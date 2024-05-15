@@ -50,6 +50,10 @@ int main(int argc, char** argv) {
       tasks.push_back(new MountainCarContinuous());
     else if (substr == "Sunspots") {
       tasks.push_back(new RecursiveUnivar("Sunspots"));
+    } else if (substr == "Mackey") {
+      tasks.push_back(new RecursiveUnivar("Mackey"));
+    } else if (substr == "Laser") {
+      tasks.push_back(new RecursiveUnivar("Laser"));
     } else {
       cout << "Unrecognised task:" << substr << endl;
       exit(1);
