@@ -29,10 +29,10 @@ class TaskEnv {
   int max_step;
   bool terminalState;
   vector<deque<double> > actionTrace;
-      struct Results {
-      double r1;
-      double r2;
-    };
+  struct Results {
+    double r1;
+    double r2;
+  };
 
   TaskEnv() {
     disNoise = uniform_real_distribution<>(-M_PI, M_PI);
@@ -46,11 +46,9 @@ class TaskEnv {
     }
   }
   double bound(double x, double m, double M) { return min(max(x, m), M); }
-  virtual void display_function(int, int, double){};
+  virtual void display_function(int, int, double) {};
   vector<double> &GetObsVec(bool po) { return po ? state_po : state; }
-  double GetObsVar(int var, bool po) {
-    return po ? state_po[var] : state[var];
-  }
+  double GetObsVar(int var, bool po) { return po ? state_po[var] : state[var]; }
   void setStateVar(int var, double v) {
     state_po[var] = v;
     state[var] = v;
