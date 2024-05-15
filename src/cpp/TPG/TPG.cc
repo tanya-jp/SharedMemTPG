@@ -1834,10 +1834,11 @@ void TPG::printPhyloGraphDot(team *tm) {
   }
 
   // Color nodes based on fitness
-  for (size_t i = 0; i < visited.size(); i++) {
-    double hue = std::clamp(_phyloGraph[visited[i]].fitness, 0.0, 1.0) / 3;
+  for (long id : visited) {
+    double hue = std::clamp(_phyloGraph[id].fitness, 0.0, 1.0) / 3;
+    double fitness = getTeamByID(id)->fit_;
 
-    ofs << visited[i] << " [label=\"id: " << visited[i] << "\\nfit: " << std::fixed << std::setprecision(2) << _phyloGraph[visited[i]].fitness << "\" style=filled, fillcolor=\""
+    ofs << id << " [label=\"id: " << id << "\\nfit: " << std::fixed << std::setprecision(2) << fitness << "\" style=filled, fillcolor=\""
         << hue << " 1.000 1.000\"]" << endl;
   }
   

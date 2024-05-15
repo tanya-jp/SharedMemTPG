@@ -23,7 +23,7 @@ test_mod 50
 
 # in multitask settings, which tasks are active
 # rhs should be a comma-separated list like Cartpole,Acrobot
-active_tasks Cartpole
+active_tasks Cartpole,Pendulum,Mountaincar
 
 # number of fitness functions available
 n_fit_mode 1
@@ -80,7 +80,7 @@ pms 0.1
 pmw 0.1
 
 # team variation: probability of team crossover
-pmx 0.5
+pmx 0.0
 
 # enable continuous outputs
 continuous_output 1
