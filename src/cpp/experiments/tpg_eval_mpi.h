@@ -331,8 +331,9 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
     prediction[0] = WrapContinuousAction(eval);
     TaskEnv::Results r =
         game->update(sample++, prediction[0], tpg.rngs_[AUX_SEED]);
+    eval.runTimeStats[REWARD1_IDX] += r.r1;  // MSE    
     eval.runTimeStats[REWARD2_IDX] += r.r2;  // MAE
-    eval.runTimeStats[REWARD1_IDX] += r.r1;  // MSE
+    
     // cerr << "dbg t " << tpg.GetState("t_current") << " tid " << eval.tm->id_
     // << " step " << game->step << " r2 " << r.r2 << " r1 " << r.r1 << endl;
     AccumulateStepStats(eval);
