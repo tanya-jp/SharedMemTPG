@@ -126,7 +126,9 @@ int main(int argc, char** argv) {
       S.push_back(tsk);
     }
     if (tpg.GetParam<int>("replay")) {
-      replayer(tpg, tasks);
+      tpg.state_["active_task"] = tpg.state_["replay_task"];
+      // replayer(tpg, tasks);
+      replayer_viz(tpg, tasks);
     } else {
       while (tpg.GetState("t_current") <= tpg.GetParam<int>("n_generations")) {
         /* replacement *******************************************************/

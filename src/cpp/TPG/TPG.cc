@@ -1526,6 +1526,150 @@ void TPG::policyFeatures(int hostId, set<long> &features, bool active) {
 //   ofs.close();
 // }
 
+/******************************************************************************/
+void TPG::printGraphDotGPTPXXI(long rootTeamId, 
+                            set<team *, teamIdComp> &visitedTeamsAllTasks,
+                            vector<map<long, double>> &teamUseMapPerTask) {
+  team *rootTeam = _teamMap[rootTeamId];
+
+   cerr << "root team id " << rootTeam->id_ << " size " << rootTeam->members_.size() << " prog acts:";
+  for (auto tmp : rootTeam->members_) {
+    cerr << " " << tmp->action();
+
+  }
+  cerr << endl;
+
+  vector<string> taskCol;
+  taskCol.push_back("#7fc97f");
+  taskCol.push_back("#beaed4");
+  taskCol.push_back("#fdc086");
+  taskCol.push_back("#ffff99");
+  taskCol.push_back("#386cb0");
+  taskCol.push_back("#f0027f");
+  map<long, string> nodeLabMap;
+
+  nodeLabMap[1594815] = "1";  //   29000"
+  nodeLabMap[624659] = "2";   //  149"
+  nodeLabMap[1302870] = "3";  //   28373"
+  nodeLabMap[623346] = "4";   //  580"
+  nodeLabMap[493990] = "5";   //  149"
+  nodeLabMap[836830] = "6";   //  28019"
+  nodeLabMap[548151] = "7";   //  832"
+  nodeLabMap[126871] = "8";   //  1373"
+  nodeLabMap[425177] = "9";   //  774"
+  nodeLabMap[602173] = "10";  //   1826"
+  nodeLabMap[42314] = "11";   //  9"
+  nodeLabMap[26879] = "12";   //  7"
+  nodeLabMap[200127] = "13";  //   4"
+  nodeLabMap[470578] = "14";  //   1826"
+  nodeLabMap[5964] = "15";    // 7"
+  nodeLabMap[23266] = "16";   //  2"
+  nodeLabMap[226807] = "17";  //   394"
+  nodeLabMap[180005] = "18";  //   953"
+
+  double nodeWidth = 2.0;
+  double arrowSize_1 = 3;  // 0.1;
+
+  char outputFilename[80];
+  ofstream ofs;
+
+  set<team *, teamIdComp> teams;
+  set<program *, programIdComp> programs;
+  set<memoryEigen *, memoryEigenIdComp> memories;
+
+  // for (auto it = visitedTeamsAllTasks.begin(); it !=
+  // visitedTeamsAllTasks.end();
+  //      it++) {
+  //   set<program *, programIdComp> p = (*it)->CopyMembers();
+  //   programs.insert(p.begin(), p.end());
+  // }
+
+  sprintf(outputFilename,
+          "replay/gv_taskDecomposition_%d%s",(int)rootTeam->id_, ".dot");
+  ofs.open(outputFilename, ios::out);
+  if (!ofs) die(__FILE__, __FUNCTION__, __LINE__, "Can't open file.");
+
+  ofs << "strict digraph G {" << endl;
+  ofs << "ratio=0.7" << endl;
+  ofs << "root=t_" << rootTeam->id_ << endl;
+
+  // teams
+  for (auto tm : visitedTeamsAllTasks) {
+    string col = "";
+
+    ofs << " t_" << tm->id_ << " [shape=circle, style=wedged, fillcolor=\"";
+    double sumUse = 0;
+    for (int tsk = 0; tsk < 3; tsk++) // TODO(skelly): update for generic number of tasks
+      sumUse += teamUseMapPerTask[tsk][tm->id_];
+    for (int tsk = 0; tsk < 3; tsk++) {
+      ofs << taskCol[tsk] << ";"
+          << (teamUseMapPerTask[tsk].find(tm->id_) !=
+                      teamUseMapPerTask[tsk].end()
+                  ? teamUseMapPerTask[tsk][tm->id_] / sumUse
+                  : 0);
+      if (tsk < 2) ofs << ":"; // TODO(skelly): update for generic number of tasks
+    }
+    ofs << "\"";
+
+    ofs << ", label=\""
+        << (nodeLabMap.find(tm->id_) == nodeLabMap.end()
+                ? ""
+                : nodeLabMap[tm->id_])
+        << "\", fontsize=84, regular=1, width=" << nodeWidth * 2
+        << ",penwidth=0]" << endl;
+  }
+  // team -> team edges
+  for (auto tm : visitedTeamsAllTasks) { 
+    // auto mem = tm->members_;
+    for (auto prog : tm->members_) {
+      if (prog->action() >= 0 &&
+          find(visitedTeamsAllTasks.begin(), visitedTeamsAllTasks.end(),
+               _teamMap[prog->action()]) != visitedTeamsAllTasks.end())
+               {
+          // for (auto tm2 : visitedTeamsAllTasks) {
+            // if (prog->action() == tm2->id_) {
+        ofs << " t_" << tm->id_ << "->t_" << prog->action()
+            << " [arrowsize=" << arrowSize_1 << ", penwidth="
+            << "1"
+            << " color="
+            << "black"
+            << "];" << endl;
+          // }
+          // }
+      }
+    }
+  }
+
+  ////legend
+  // ofs << "subgraph {" << endl;
+  // ofs << "ratio=1" << endl;
+  // ofs << "rank=sink" << endl;
+  // ofs << "node [shape=plaintext]" << endl;
+  // ofs << "legend [colorscheme=set18," << endl;
+  // ofs << "label=<" << endl;
+  //
+  // ofs << "<table border=\"0\" cellborder=\"1\" cellspacing=\"0\">" <<
+  // endl;
+  // ofs << "<tr><td bgcolor=\"" << taskCol[0] << "\">" << "CartPole" <<
+  // "</td></tr>" << endl; ofs << "<tr><td bgcolor=\"" << taskCol[1] << "\">"
+  // <<
+  // "Acrobot" << "</td></tr>" << endl; ofs << "<tr><td bgcolor=\"" <<
+  // taskCol[2] << "\">" << "CartCentering" << "</td></tr>" << endl; ofs <<
+  // "<tr><td bgcolor=\"" << taskCol[3] << "\">" << "Pendulum" <<
+  //"</td></tr>"
+  // << endl; ofs << "<tr><td bgcolor=\"" << taskCol[4] << "\">" <<
+  // "MountainCar" << "</td></tr>" << endl; ofs << "<tr><td bgcolor=\"" <<
+  // taskCol[5] << "\">" << "MountainCarC." << "</td></tr>" << endl;
+  //
+  // ofs << "</table>>" << endl;
+  // ofs << ", fontsize=84, regular=1];" << endl;
+  // ofs << "}" << endl;
+  ///////////////////////////////////////////////////////////
+
+  ofs << "}" << endl;
+  ofs.close();
+}
+
 // /******************************************************************************/
 // void TPG::printGraphDotGPEMAnimate(
 //     long rootTeamId, size_t frame, int episode, int step, size_t depth,
@@ -2130,6 +2274,7 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
   vector<string> outcomeFields;
 
   while (getline(iss, oneline)) {
+    if (oneline.size() == 0) continue;
     outcomeFields.clear();
 
     splitString(oneline, delim, outcomeFields);

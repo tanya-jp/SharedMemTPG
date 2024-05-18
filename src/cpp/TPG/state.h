@@ -38,7 +38,7 @@ class state {
   }
   ~state() {}
 
- protected:
+//  protected:
   vector<float>* featVecFloat_;
   vector<double>* featVecDouble_;
   vector<short>* featVecShort_;

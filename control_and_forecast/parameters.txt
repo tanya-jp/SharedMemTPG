@@ -19,11 +19,11 @@ animate 0
 stateful 1
 
 # how frequently to run test procedure
-test_mod 1000
+test_mod 10
 
 # in multitask settings, which tasks are active
 # rhs should be a comma-separated list like Cartpole,Acrobot
-active_tasks Cartpole,Pendulum,Sunspots
+active_tasks Cartpole
 
 # number of fitness functions available
 n_fit_mode 1
@@ -127,7 +127,7 @@ memory_rows 2
 memory_cols 2
 
 # number of elite teams
-n_elite 1000
+n_elite 100
 
 # number of training outcome to store
 n_stored_outcomes_TRAIN 19

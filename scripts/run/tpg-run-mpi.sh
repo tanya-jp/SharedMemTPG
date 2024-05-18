@@ -4,13 +4,15 @@
 mode=0 #Train:0, Replay:1, Debug:2
 numMPIProc=2
 seed=42
+replay_task=0
 
-while getopts m:n:s: flag
+while getopts m:n:r:s: flag
 do
    case "${flag}" in
       m) mode=${OPTARG};;
       n) numMPIProc=${OPTARG};;
       s) seed=${OPTARG};;
+      r) replay_task=${OPTARG};;
    esac
 done
 
@@ -29,30 +31,60 @@ if [ $mode -eq 1 ]; then
    if ls replay/frames/* 1> /dev/null 2>&1; then rm replay/frames/*; fi
    if ls rplay/graphs/* 1> /dev/null 2>&1; then rm replay/graphs/*; fi
    
-   # Get fitness of best team
-   bestScore=$(grep setElTmsST  tpg.${seed}.*.std | \
+  #  # Get fitness of best team
+  #  bestScore=$(grep setElTmsST  tpg.${seed}.*.std | \
+  #    grep " fm 0 " | \
+  #    grep " phs $phase " | \
+  #    awk -F"mnOut" '{print $2}' | \
+  #    awk -F "p${phase}t0a0 " '{print $2}' | \
+  #    awk '{print $1}' | \
+  #    sort -n | \
+  #    uniq | \
+  #    tail -n 1)
+
+  #  # Get generation of best team
+  #  t_pickup=$(grep setElTmsST tpg.${seed}.*.std | \
+  #    grep " fm 0 " | \
+  #    grep "p${phase}t0a0 ${bestScore} " tpg.${seed}.*.std | \
+  #    grep " phs $phase " | \
+  #    head -n 1 | \
+  #    awk -F" t " '{print $2}' | \
+  #    awk '{print $1}')
+   
+  #  # Get id of best team
+  #  tm=$(grep "setElTmsST" tpg.${seed}.*.std | \
+  #    grep " fm 0 " | \
+  #    grep "p${phase}t0a0 ${bestScore} " | \
+  #    grep " phs $phase " | \
+  #    grep " t $t_pickup " | \
+  #    head -n 1 | \
+  #    awk -F"id" '{print $2}' | \
+  #    awk '{print $1}')
+
+     # Get fitness of best team
+   bestScore=$(grep setElTmsMTA  tpg.${seed}.*.std | \
      grep " fm 0 " | \
      grep " phs $phase " | \
      awk -F"mnOut" '{print $2}' | \
-     awk -F "p${phase}t0a0 " '{print $2}' | \
+     awk -F "p${phase}t2a0 " '{print $2}' | \
      awk '{print $1}' | \
      sort -n | \
      uniq | \
      tail -n 1)
 
    # Get generation of best team
-   t_pickup=$(grep setElTmsST tpg.${seed}.*.std | \
+   t_pickup=$(grep setElTmsMTA tpg.${seed}.*.std | \
      grep " fm 0 " | \
-     grep "p${phase}t0a0 ${bestScore} " tpg.${seed}.*.std | \
+     grep "p${phase}t2a0 ${bestScore} " tpg.${seed}.*.std | \
      grep " phs $phase " | \
      head -n 1 | \
      awk -F" t " '{print $2}' | \
      awk '{print $1}')
    
    # Get id of best team
-   tm=$(grep "setElTmsST" tpg.${seed}.*.std | \
+   tm=$(grep "setElTmsMTA" tpg.${seed}.*.std | \
      grep " fm 0 " | \
-     grep "p${phase}t0a0 ${bestScore} " | \
+     grep "p${phase}t2a0 ${bestScore} " | \
      grep " phs $phase " | \
      grep " t $t_pickup " | \
      head -n 1 | \
@@ -61,16 +93,17 @@ if [ $mode -eq 1 ]; then
    
    echo "Fitness:$bestScore Generation:$t_pickup Team:$tm"
    
-   mpirun --oversubscribe -np 2 \
-     $TPG_PATH/build/release/cpp/experiments/TPGExperimentMPI -a -R $tm -C $phase \
+   mpirun --oversubscribe -np 1 \
+     $TPG_PATH/build/release/cpp/experiments/TPGExperimentMPI -R $tm -r $replay_task -C $phase \
      -p $t_pickup -s $seed -g $seed \
      1> tpg.$seed.replay.std 2> tpg.$seed.replay.err &
    
-   # # replay with debugger
-   # mpirun --oversubscribe -np 2 xterm -hold -e gdb -ex run --args \
-   #   $TPG_PATH/build/release/cpp/experiments/TPGExperimentMPI -a -R $tm -C $phase \
-   #   -p $t_pickup -s $seed -g $seed \
-   #   1> tpg.$seed.replay.std 2> tpg.$seed.replay.err &
+  # #  echo "COMMAND: mpirun --oversubscribe -np 2 xterm -hold -e gdb -ex run --args $TPG_PATH/build/release/cpp/experiments/TPGExperimentMPI -a -R $tm -C $phase -p $t_pickup -s $seed -g $seed 1> tpg.$seed.replay.std 2> tpg.$seed.replay.err &"
+   # replay with debugger
+  #  mpirun --oversubscribe -np 1 xterm -hold -e gdb -ex run --args \
+  #    $TPG_PATH/build/release/cpp/experiments/TPGExperimentMPI -R $tm -r $replay_task -C $phase \
+  #    -p $t_pickup -s $seed -g $seed \
+  #    1> tpg.$seed.replay.std 2> tpg.$seed.replay.err &
 fi
 
 # Debug

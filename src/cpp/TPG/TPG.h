@@ -95,6 +95,9 @@ class TPG {
   // void printGraphDotGPEM(long rootTeamId, map<long, string> &teamColMap,
   //                        set<team *, teamIdComp> &visitedTeamsAllTasks,
   //                        vector<map<long, double>> &teamUseMapPerTask);
+  void printGraphDotGPTPXXI(long rootTeamID,
+                         set<team *, teamIdComp> &visitedTeamsAllTasks,
+                         vector<map<long, double>> &teamUseMapPerTask);
   // void printGraphDotGPEMAnimate(long rootTeamId, size_t frame, int episode,
   //                               int step, size_t depth,
   //                               vector<program *> allPrograms,

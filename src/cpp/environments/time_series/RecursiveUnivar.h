@@ -68,10 +68,13 @@ class RecursiveUnivar : public TaskEnv {
       minFeature = min(
           minFeature, *(min_element(data[sample].begin(), data[sample].end())));
     }
-    for (size_t sample = 0; sample < data.size(); sample++)
-      for (size_t feature = 0; feature < data[sample].size(); feature++)
+    for (size_t sample = 0; sample < data.size(); sample++) {
+      for (size_t feature = 0; feature < data[sample].size(); feature++) {
         data[sample][feature] =
             (data[sample][feature] - minFeature) / (maxFeature - minFeature);
+            // cerr << data[sample][feature] << endl;
+      }
+    }
 
     t_start.resize(3);  // train, validate, test
 
@@ -92,7 +95,6 @@ class RecursiveUnivar : public TaskEnv {
     prediction = 1 / (1 + exp(-prediction));  // sigmoid
     double se = pow(prediction - data[sample + 1][0], 2);
     double ae = abs(prediction - data[sample + 1][0]);
-    // cerr << "env s " << sample << " pred " << prediction << " target " << data[sample + 1][0] << " se " << se << " ae " << ae << endl;
     return {-se, -ae};
   }
 };
