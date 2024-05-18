@@ -66,7 +66,7 @@ if [ $mode -eq 1 ]; then
      grep " fm 0 " | \
      grep " phs $phase " | \
      awk -F"mnOut" '{print $2}' | \
-     awk -F "p${phase}t2a0 " '{print $2}' | \
+     awk -F "p${phase}t3a0 " '{print $2}' | \
      awk '{print $1}' | \
      sort -n | \
      uniq | \
@@ -75,7 +75,7 @@ if [ $mode -eq 1 ]; then
    # Get generation of best team
    t_pickup=$(grep setElTmsMTA tpg.${seed}.*.std | \
      grep " fm 0 " | \
-     grep "p${phase}t2a0 ${bestScore} " tpg.${seed}.*.std | \
+     grep "p${phase}t3a0 ${bestScore} " | \
      grep " phs $phase " | \
      head -n 1 | \
      awk -F" t " '{print $2}' | \
@@ -84,7 +84,7 @@ if [ $mode -eq 1 ]; then
    # Get id of best team
    tm=$(grep "setElTmsMTA" tpg.${seed}.*.std | \
      grep " fm 0 " | \
-     grep "p${phase}t2a0 ${bestScore} " | \
+     grep "p${phase}t3a0 ${bestScore} " | \
      grep " phs $phase " | \
      grep " t $t_pickup " | \
      head -n 1 | \

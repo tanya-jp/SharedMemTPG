@@ -404,7 +404,7 @@ void replayer(TPG &tpg, vector<TaskEnv *> &tasks) {
 /******************************************************************************/
 void EvalControlViz(TPG &tpg, EvalStruct &eval,
                     vector<map<long, double>> &teamUseMapPerTask,
-                    set<team *, teamIdComp>& visitedTeamsAllTasks) {
+                    set<team *, teamIdComp>& visitedTeamsAllTasks, int& steps) {
   bool verbose = false;  // tpg.GetState("phase") == _TEST_PHASE ? true : false;
   eval.game->reset(tpg.rngs_[AUX_SEED]);
   eval.obs->Set(eval.game->GetObsVec(eval.partially_observable));
@@ -422,6 +422,7 @@ void EvalControlViz(TPG &tpg, EvalStruct &eval,
         teamUseMapPerTask[tpg.state_["active_task"]][tm->id_] += 1.0;
       }
     }
+    steps++;
     // teamUseMapPerTask[tpg.state_["active_task"]][eval.tm->id_] += 1.0;
     visitedTeamsAllTasks.insert(eval.visitedTeams.begin(), eval.visitedTeams.end());
 
@@ -441,7 +442,7 @@ void EvalControlViz(TPG &tpg, EvalStruct &eval,
 /******************************************************************************/
 void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
                               vector<map<long, double>> &teamUseMapPerTask,
-                              set<team *, teamIdComp>& visitedTeamsAllTasks) {
+                              set<team *, teamIdComp>& visitedTeamsAllTasks, int &steps) {
   RecursiveUnivar *game = dynamic_cast<RecursiveUnivar *>(eval.game);
   game->reset(tpg.rngs_[AUX_SEED]);
   bool verbose = false; //tpg.GetState("phase") == _TEST_PHASE ? true : false;
@@ -469,6 +470,7 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
         teamUseMapPerTask[tpg.state_["active_task"]][tm->id_] += 1.0;
       }
     }
+    steps++;
     // teamUseMapPerTask[tpg.state_["active_task"]][eval.tm->id_] += 1.0;
     visitedTeamsAllTasks.insert(eval.visitedTeams.begin(), eval.visitedTeams.end());
 
@@ -492,6 +494,7 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
         teamUseMapPerTask[tpg.state_["active_task"]][tm->id_] += 1.0;
       }
     }
+    steps++;
     // teamUseMapPerTask[tpg.state_["active_task"]][eval.tm->id_] += 1.0;
     visitedTeamsAllTasks.insert(eval.visitedTeams.begin(), eval.visitedTeams.end());
 
@@ -520,29 +523,28 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
   eval.evalResult = "";
   for (auto tm : eval.teams) {
     if (tm->id_ != tpg.GetParam<int>("host_to_replay")) continue;
-    cerr << "TMSZ? " << tpg.GetParam<int>("host_to_replay") << " ";
-    cerr << tm->members_.size()  << " check " << tpg._teamMap[tm->id_]->members_.size() << endl;
     eval.tm = tm;
     // if (eval.animate) eval.tm->_n_eval = 1;////////////////////////
     eval.tm->_n_eval = 19;//////////////////
     tpg.MarkEffectiveCode(eval.tm);
+    vector<int> steps_per_task(tpg.GetParam<int>("n_task"),0);
     for (int task = 0; task < tpg.GetParam<int>("n_task"); task++) { 
       tpg.state_["active_task"] = task;
       eval.game = tasks[tpg.GetState("active_task")];
-      // teamUseMapPerTask[tpg.GetState("active_task")][eval.tm->id_] = 0.0;
+      
       for (eval.episode = 0; eval.episode < eval.tm->_n_eval; eval.episode++) {
         tpg.rngs_[AUX_SEED].seed(eval.episode);
         eval.tm->InitMemory(tpg._teamMap, tpg.HaveParam("p_bid_mu_const"));
         
-        if (task == 2) {
+        if (eval.game->eval_type_ == "RecursiveForecast") {
            EvalRecursiveForecastViz(tpg, eval, teamUseMapPerTask,
-                                      visitedTeamsAllTasks);
+                                      visitedTeamsAllTasks, steps_per_task[task]);
         } else {
-           EvalControlViz(tpg, eval, teamUseMapPerTask, visitedTeamsAllTasks);
+           EvalControlViz(tpg, eval, teamUseMapPerTask, visitedTeamsAllTasks, steps_per_task[task]);
         }
         FinalizeStepStats(tpg, eval);
       }
     }
-    tpg.printGraphDotGPTPXXI(eval.tm->id_, visitedTeamsAllTasks, teamUseMapPerTask);
+    tpg.printGraphDotGPTPXXI(eval.tm->id_, visitedTeamsAllTasks, teamUseMapPerTask, steps_per_task);
   }
 }

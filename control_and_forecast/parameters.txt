@@ -80,7 +80,10 @@ pms 0.1
 pmw 0.1
 
 # team variation: probability of team crossover
-pmx 1.0
+pmx 0.5
+
+# team variation: probability of team crossover adding each parent prog to child
+pmx_p 0.3
 
 # enable continuous outputs
 continuous_output 1
@@ -163,7 +166,7 @@ SCALAR_EXP_OP
 SCALAR_LOG_OP
 SCALAR_HEAVYSIDE_OP
 SCALAR_COND_A_OP
-SCALAR_COND_B_OP
+#SCALAR_COND_B_OP
 SCALAR_POW_OP
 SCALAR_SQR_OP
 SCALAR_CUBE_OP

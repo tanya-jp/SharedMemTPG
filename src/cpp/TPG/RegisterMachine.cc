@@ -254,20 +254,24 @@ void RegisterMachine::CopyInputToMemory(instruction *istr, state *obs,
                                         size_t in) {
   // in this case inMem(in) will be inputMemory_ and we use index 0
   size_t idx = 0;
-  if (istr->inType(in) == memoryEigen::SCALAR_TYPE)
+  if (istr->inType(in) == memoryEigen::SCALAR_TYPE) {
     istr->inMem(in)->working_memory_[idx](0, 0) =
         obs->stateValueAtIndex(istr->inIdx(in));
-  else if (istr->inType(in) == memoryEigen::VECTOR_TYPE)
+  } else if (istr->inType(in) == memoryEigen::VECTOR_TYPE) {
     for (size_t f = istr->inIdx(in), row = 0;
-         row < istr->inMem(in)->memoryRows(); row++)
+         row < istr->inMem(in)->memoryRows(); row++) {
       istr->inMem(in)->working_memory_[idx](row, 0) =
           obs->stateValueAtIndex(f++ % num_input_);
-  else if (istr->inType(in) == memoryEigen::MATRIX_TYPE)
+    }
+  } else if (istr->inType(in) == memoryEigen::MATRIX_TYPE) {
     for (size_t f = istr->inIdx(in), row = 0;
-         row < istr->inMem(in)->memoryRows(); row++)
-      for (size_t col = 0; col < istr->inMem(in)->memoryCols(); col++)
+         row < istr->inMem(in)->memoryRows(); row++) {
+      for (size_t col = 0; col < istr->inMem(in)->memoryCols(); col++) {
         istr->inMem(in)->working_memory_[idx](row, col) =
             obs->stateValueAtIndex(f++ % num_input_);
+      }
+    }
+  }
   istr->inIdxE(in, idx);  // reset inIdxE to zero for input ref
 }
 
