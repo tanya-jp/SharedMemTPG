@@ -632,7 +632,7 @@ void TPG::GenerateNewTeams() {
     uniform_int_distribution<int> disP(0, parents.size() - 1);
     for (size_t i = 0; i < GetParam<int>("n_elite") / power_set.size() - 1;
          i++) {
-      bool crossover = (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmx"));
+      bool team_xover = (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmx"));
       
       // parent teams
       team *pm1 = parents[disP(rngs_[TPG_SEED])];
@@ -646,7 +646,7 @@ void TPG::GenerateNewTeams() {
       team *cm = new team(GetState("t_current"), state_["team_count"]++);
 
       // team crossover
-      if (crossover) {
+      if (team_xover) {
         while (p1liter != p1programs.end() || p2liter != p2programs.end()) {
           if (p1liter != p1programs.end() &&
               (int)cm->size() < GetParam<int>("max_team_size") &&
@@ -660,7 +660,7 @@ void TPG::GenerateNewTeams() {
             cm->AddProgram(*p1liter);
           if ((int)cm->size() < GetParam<int>("max_team_size") &&
               p2liter != p2programs.end() &&
-              real_dist_(rngs_[TPG_SEED]) < 0.5)
+              real_dist_(rngs_[TPG_SEED]) < 0.4)
             cm->AddProgram(*p2liter);
           if (p1liter != p1programs.end()) p1liter++;
           if (p2liter != p2programs.end()) p2liter++;
@@ -677,11 +677,11 @@ void TPG::GenerateNewTeams() {
       }
 
       // Mutate child team
-      vector<team *> new_teams = ApplyVariationOps(cm, n_new_teams);
+      vector<team *> new_teams = ApplyVariationOps(cm, n_new_teams, team_xover);
       for (auto new_team : new_teams) {
         AddTeamToPhylogeny(pm1, new_team);
 
-        if (crossover) {
+        if (team_xover) {
           AddTeamToPhylogeny(pm2, new_team);
         }
 
@@ -700,13 +700,16 @@ void TPG::GenerateNewTeams() {
 }
 
 /******************************************************************************/
-vector<team *> TPG::ApplyVariationOps(team *pm1, int &n_new_teams) {
+vector<team *> TPG::ApplyVariationOps(team *pm1, int &n_new_teams,
+                                      bool team_xover) {
   uniform_int_distribution<int> disL(0, _L.size() - 1);
   team *new_team = CloneTeam(pm1);
   // Mutate team
-  TeamMutator_RemovePrograms(new_team);
-  TeamMutator_AddPrograms(new_team);
-  TeamMutator_ProgramOrder(new_team);
+  if (!team_xover) {
+    TeamMutator_RemovePrograms(new_team);
+    TeamMutator_AddPrograms(new_team);
+    TeamMutator_ProgramOrder(new_team);
+  }
   // Mutate programs
   deque<program *> progs_without_refs;
   set<program *, programIdComp> new_team_programs = new_team->CopyMembers();

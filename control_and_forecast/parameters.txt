@@ -80,7 +80,7 @@ pms 0.1
 pmw 0.1
 
 # team variation: probability of team crossover
-pmx 0.5
+pmx 1.0
 
 # enable continuous outputs
 continuous_output 1

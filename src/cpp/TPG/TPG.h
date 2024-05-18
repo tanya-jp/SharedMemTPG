@@ -52,7 +52,8 @@ class TPG {
                                     int &n_new_teams,
                                     deque<program *> &progs_without_refs);
   void AddTeamToPhylogeny(team *parent, team *new_team);
-  vector<team *> ApplyVariationOps(team *parent1, int &n_new_teams);
+  vector<team *> ApplyVariationOps(team *parent1, int &n_new_teams,
+                                   bool team_xover);
   team *genTeamsInternal(long, mt19937 &, set<team *, teamIdComp> &,
                          map<long, team *> &);
   int genUniqueProgram(program *, set<program *, programIdComp>);
