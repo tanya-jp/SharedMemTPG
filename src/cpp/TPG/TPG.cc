@@ -632,13 +632,59 @@ void TPG::GenerateNewTeams() {
     uniform_int_distribution<int> disP(0, parents.size() - 1);
     for (size_t i = 0; i < GetParam<int>("n_elite") / power_set.size() - 1;
          i++) {
-      auto parent = parents[disP(rngs_[TPG_SEED])];
-      //select two parents
-      //apply crossover to get child
-      //...then ApplyVariationOps on child
-      auto new_teams = ApplyVariationOps(parent, n_new_teams);
+      bool crossover = (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmx"));
+      
+      // parent teams
+      team *pm1 = parents[disP(rngs_[TPG_SEED])];
+      std::list<program *> p1programs = pm1->members_;
+      auto p1liter = p1programs.begin();
+
+      team *pm2 = parents[disP(rngs_[TPG_SEED])];
+      std::list<program *> p2programs = pm2->members_;
+      auto p2liter = p2programs.begin();
+
+      team *cm = new team(GetState("t_current"), state_["team_count"]++);
+
+      // team crossover
+      if (crossover) {
+        while (p1liter != p1programs.end() || p2liter != p2programs.end()) {
+          if (p1liter != p1programs.end() &&
+              (int)cm->size() < GetParam<int>("max_team_size") &&
+              (((*p1liter)->action() < 0 && cm->n_atomic_ < 1) ||
+              find(p2programs.begin(), p2programs.end(), *p1liter) !=
+                  p2programs.end()))
+            cm->AddProgram(*p1liter);
+          else if ((int)cm->size() < GetParam<int>("max_team_size") &&
+                  p1liter != p1programs.end() &&
+                  real_dist_(rngs_[TPG_SEED]) < 0.5)
+            cm->AddProgram(*p1liter);
+          if ((int)cm->size() < GetParam<int>("max_team_size") &&
+              p2liter != p2programs.end() &&
+              real_dist_(rngs_[TPG_SEED]) < 0.5)
+            cm->AddProgram(*p2liter);
+          if (p1liter != p1programs.end()) p1liter++;
+          if (p2liter != p2programs.end()) p2liter++;
+        }
+
+        if (cm->n_atomic_ < 1)
+          die(__FILE__, __FUNCTION__, __LINE__,
+              "Crossover must leave the fail-safe atomic program!");
+
+      // no crossover, just clone first parent
+      } else {
+        for (p1liter = p1programs.begin(); p1liter != p1programs.end(); p1liter++)
+        cm->AddProgram(*p1liter);
+      }
+
+      // Mutate child team
+      vector<team *> new_teams = ApplyVariationOps(cm, n_new_teams);
       for (auto new_team : new_teams) {
-        AddTeamToPhylogeny(parent, new_team);
+        AddTeamToPhylogeny(pm1, new_team);
+
+        if (crossover) {
+          AddTeamToPhylogeny(pm2, new_team);
+        }
+
         AddTeam(new_team);
         n_new_teams++;
       }
@@ -1903,114 +1949,43 @@ void TPG::printGraphDotGPTPXXI(long rootTeamId,
 
 /******************************************************************************/
 void TPG::printPhyloGraphDot(team *tm) {
-  vector<long> teamIds;
-  tm->getAncestorIds(teamIds);
-
-  double nodeWidth = 10.0;
-  double edgeWidth_1 = 20.0;  // 5;
-                              // double edgeWidth_2 = 30;
-                              // double arrowSize_1 = 2;//0.1;
-                              // double arrowSize_2 = 1;//0.2;
-
   char outputFilename[80];
   ofstream ofs;
 
-  sprintf(outputFilename, "phyloGraphs/phylo-t%05d-s%lu%s",
+  sprintf(outputFilename, "replay/graphs/phylo-t%05d-s%lu%s",
           (int)GetState("t_current"), seeds_[TPG_SEED], ".dot");
   ofs.open(outputFilename, ios::out);
   if (!ofs) die(__FILE__, __FUNCTION__, __LINE__, "Can't open file.");
 
   ofs << "digraph G {" << endl;
-  ofs << "ratio=0.5" << endl;
-  ofs << "rankdir=\"LR\"" << endl;
 
-  for (auto it = teamIds.begin(); it != teamIds.end(); it++) {
-    ofs << "subgraph {" << endl;
+  // Basic breadth-first search
 
-    string col = "";
-    if (_phyloGraph[*it].fitnessBin.compare("012") == 0)
-      col = "1";
-    else if (_phyloGraph[*it].fitnessBin.compare("12") == 0)
-      col = "2";
-    else if (_phyloGraph[*it].fitnessBin.compare("02") == 0)
-      col = "3";
-    else if (_phyloGraph[*it].fitnessBin.compare("2") == 0)
-      col = "4";
-    else if (_phyloGraph[*it].fitnessBin.compare("01") == 0)
-      col = "5";
-    else if (_phyloGraph[*it].fitnessBin.compare("1") == 0)
-      col = "6";
-    else if (_phyloGraph[*it].fitnessBin.compare("0") == 0)
-      col = "8";
+  std::vector<long> visited = {tm->id_};
+  list<long> queue = {tm->id_};
 
-    ofs << " t_" << *it
-        << " [shape=circle, style=filled, colorscheme=set18, color="
-        << col.c_str()
-        << ", label=\"\", fontsize=84, regular=1, width=" << nodeWidth << "]"
-        << endl;
+  while (!queue.empty()) {
+    long currId = queue.front();
+    queue.pop_front();
 
-    if (_phyloGraph[*it].adj.size() > 0)
-      for (size_t i = 0; i < _phyloGraph[*it].adj.size(); i++)
-        if (find(teamIds.begin(), teamIds.end(), _phyloGraph[*it].adj[i]) !=
-            teamIds.end())
-          ofs << " t_" << *it << "->" << "t_" << _phyloGraph[*it].adj[i]
-              << " [penwidth=" << edgeWidth_1 << " color=" << "black" << "];"
-              << endl;
-    ofs << "}" << endl;
+    for (long ancId : _phyloGraph[currId].ancestorIds) {
+      ofs << ancId << " -> " << currId << endl;
+      if (std::find(visited.begin(), visited.end(), ancId) == visited.end()) {
+        visited.push_back(ancId);
+        queue.push_back(ancId);
+      }
+    }
   }
 
-  ////legend
-  // vector <int> S;
-  // for (int tsk = 0; tsk < (int)GetParam<int>("n_task"); tsk++)
-  //    S.push_back(tsk);
-  // vector <int> tmpSet;
-  // vector < vector < int > > PS;
-  // findPowerSet(S, tmpSet, PS, GetParam<int>("n_task"), 1);
-  // for (size_t ss = 0; ss < PS.size(); ss++)
-  //    sort(PS[ss].begin(), PS[ss].end());
-  // string col = "";
-  // ofs << "subgraph {" << endl;
-  // ofs << "ratio=1" << endl;
-  // ofs << "node [shape=plaintext]" << endl;
-  // ofs << "legend [colorscheme=set18," << endl;
-  // ofs << "label=<" << endl;
-  // ofs << "<table border=\"0\" cellborder=\"1\" cellspacing=\"0\">" << endl;
-  // string taskSetString = "";
-  // for (size_t ss = 0; ss < PS.size(); ss++){
-  //    if (vecToStrNoSpace(PS[ss]) == "012"){
-  //       col = "1";
-  //       taskSetString = "Acrobot + Cart Centering + Mountain Car Continuous";
-  //    }
-  //    else if (vecToStrNoSpace(PS[ss]) == "12"){
-  //       col = "2";
-  //       taskSetString = "Cart Centering + Mountain Car Continuous";
-  //    }
-  //    else if (vecToStrNoSpace(PS[ss]) == "02"){
-  //       col = "3";
-  //       taskSetString = "Acrobot + Mountain Car Continuous";
-  //    }
-  //    else if (vecToStrNoSpace(PS[ss]) == "2"){
-  //       col = "4";
-  //       taskSetString = "Mountain Car Continuous";
-  //    }
-  //    else if (vecToStrNoSpace(PS[ss]) == "01"){
-  //       col = "5";
-  //       taskSetString = "Acrobot + Cart Centering";
-  //    }
-  //    else if (vecToStrNoSpace(PS[ss]) == "1"){
-  //       col = "6";
-  //       taskSetString = "Cart Centering";
-  //    }
-  //    else if (vecToStrNoSpace(PS[ss]) == "0"){
-  //       col = "8";
-  //       taskSetString = "Acrobot";
-  //    }
-  //    ofs << "<tr><td bgcolor=\"" << col << "\">" << taskSetString <<
-  //    "</td></tr>" << endl;
-  // }
-  // ofs << "</table>>" << endl;
-  // ofs << ", fontsize=84, regular=1];" << endl;
-  // ofs << "}" << endl;
+  // Color nodes based on fitness
+  for (long id : visited) {
+    double fitness = _phyloGraph[id].fitness;
+    double hue = std::clamp(fitness, 0.0, 1.0) / 3;
+
+    ofs << id << " [label=\"id: " << id << "\\nfit: " << std::fixed << std::setprecision(4) << fitness << "\" style=filled, fillcolor=\""
+        << hue << " 1.000 1.000\"]" << endl;
+  }
+  
   ofs << "}" << endl;
   ofs.close();
 }

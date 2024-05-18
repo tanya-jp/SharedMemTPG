@@ -11,14 +11,15 @@
 #include <unordered_map>
 #include <algorithm>
 #include <numeric>
-//#include <bzlib.h>
+// #include <bzlib.h>
 #include <deque>
 #include <chrono>
 #include <sstream>
 #include <any>
-//#include <boost/iostreams/filtering_streambuf.hpp>
-//#include <boost/iostreams/copy.hpp>
-//#include <boost/iostreams/filter/gzip.hpp>
+// #include <boost/iostreams/filtering_streambuf.hpp>
+// #include <boost/iostreams/copy.hpp>
+// #include <boost/iostreams/filter/gzip.hpp>
+#include <iomanip>
 
 using namespace std;
 using std::numeric_limits;
@@ -39,15 +40,16 @@ typedef double behaviourType;
 int compressedLength(char *);
 
 inline double bound(double x, double m, double M) { return min(max(x, m), M); }
-inline double discretize(double f,double min, double max, int steps){
-   double d = round(((f - min)/(max - min))*(steps-1));
-   return d>steps?steps-1:d;
+inline double discretize(double f, double min, double max, int steps)
+{
+   double d = round(((f - min) / (max - min)) * (steps - 1));
+   return d > steps ? steps - 1 : d;
 }
-void die(const char*, const char *, const int, const char *);
+void die(const char *, const char *, const int, const char *);
 double EuclideanDistSqrd(double *, double *, int);
-double EuclideanDistSqrd(std::vector < double > &, std::vector < double > &);
-double EuclideanDistSqrdNorm(std::vector < double > &, std::vector < double > &);
-double EuclideanDist(std::vector < double > &, std::vector < double > &);
+double EuclideanDistSqrd(std::vector<double> &, std::vector<double> &);
+double EuclideanDistSqrdNorm(std::vector<double> &, std::vector<double> &);
+double EuclideanDist(std::vector<double> &, std::vector<double> &);
 
 inline bool fileExists(const char *fileName)
 {
@@ -55,44 +57,57 @@ inline bool fileExists(const char *fileName)
    return infile.good();
 }
 
-int hammingDist(std::vector < int > &, std::vector < int > &);
+int hammingDist(std::vector<int> &, std::vector<int> &);
 
 inline bool isEqual(double x, double y)
-{ return fabs(x - y) < NEARZERO; }
+{
+   return fabs(x - y) < NEARZERO;
+}
 
 inline bool isEqual(double x, double y, double e)
-{ return fabs(x - y) < e; }
+{
+   return fabs(x - y) < e;
+}
 
 inline bool isEqual(unsigned char x, unsigned char y)
-{ return fabs(x - y) < 0; }
+{
+   return fabs(x - y) < 0;
+}
 
-bool isEqual(std::vector < int > &, std::vector < int > &);
-bool isEqual(std::vector < double > &, std::vector < double > &, double);
-template<class T>
-bool isEqual(std::vector < T > &, std::vector < T > &, double);
+bool isEqual(std::vector<int> &, std::vector<int> &);
+bool isEqual(std::vector<double> &, std::vector<double> &, double);
+template <class T>
+bool isEqual(std::vector<T> &, std::vector<T> &, double);
 inline bool isGreater(double x, double y, double e, bool orEqual = false) { return orEqual ? x > y || fabs(x - y) < e : x > y && fabs(x - y) > e; }
 inline bool isLess(double x, double y, double e, bool orEqual = false) { return orEqual ? x < y || fabs(x - y) < e : x < y && fabs(x - y) > e; }
 
-struct modesRecord{
-   set < long > activeProgramIds;
-   set < long > activeTeamIds;
+struct modesRecord
+{
+   set<long> activeProgramIds;
+   set<long> activeTeamIds;
    string behaviourString;
    long effectiveInstructionsTotal;
    double runTimeComplexityIns;
-   modesRecord(){ effectiveInstructionsTotal = 0; runTimeComplexityIns = 0;}
+   modesRecord()
+   {
+      effectiveInstructionsTotal = 0;
+      runTimeComplexityIns = 0;
+   }
 };
-//double normalizedCompressionDistance(std::vector<int>&v1,std::vector<int>&v2);
-//double normalizedCompressionDistance(string&v1, string&v2);
+// double normalizedCompressionDistance(std::vector<int>&v1,std::vector<int>&v2);
+// double normalizedCompressionDistance(string&v1, string&v2);
 
-struct noveltyDescriptor {
+struct noveltyDescriptor
+{
    double novelty;
-   std::vector < int > profile;
-   std::vector < long > profileLong;
-} ;
+   std::vector<int> profile;
+   std::vector<long> profileLong;
+};
 
-struct phyloRecord{
-   std::vector < long > adj;
-   set < long > ancestorIds;
+struct phyloRecord
+{
+   std::vector<long> adj; // children
+   set<long> ancestorIds;
    string behaviourString;
    long gtime;
    long dtime;
@@ -103,25 +118,34 @@ struct phyloRecord{
    long numActivePrograms;
    long numActiveTeams;
    long numEffectiveInstructions;
-   phyloRecord(){ gtime = -1; dtime = -1; fitnessBin = ""; fitness = 0; root = true; }
+   phyloRecord()
+   {
+      gtime = -1;
+      dtime = -1;
+      fitnessBin = "";
+      fitness = 0;
+      root = true;
+   }
 };
 
-inline void getAncestorIds(map <long, phyloRecord > &phyloGraph, set < long > &a, long id) {
+inline void getAncestorIds(map<long, phyloRecord> &phyloGraph, set<long> &a, long id)
+{
    a.insert(phyloGraph[id].ancestorIds.begin(), phyloGraph[id].ancestorIds.end());
    for (auto it = phyloGraph[id].ancestorIds.begin(); it != phyloGraph[id].ancestorIds.end(); it++)
       getAncestorIds(phyloGraph, a, *it);
 }
 
-int readMap(string, map < string, string > &);
+int readMap(string, map<string, string> &);
 void ReadParameters(string file_name, std::unordered_map<string, std::any> &params);
-inline double sigmoid(double x, double m) { return 1 / (1 + exp(-(m*x))); }
+inline double sigmoid(double x, double m) { return 1 / (1 + exp(-(m * x))); }
 double stdDev(std::vector<double>);
 int stringToInt(string);
 long stringToLong(string);
 double stringToDouble(string);
 
-inline double sas(double s1,double s2, double a){
-   return sqrt(pow(s1,2) + pow(s2,2) - (2*s1*s2*cos(a*(3.14159265/180.0))));
+inline double sas(double s1, double s2, double a)
+{
+   return sqrt(pow(s1, 2) + pow(s2, 2) - (2 * s1 * s2 * cos(a * (3.14159265 / 180.0))));
 }
 std::vector<string> &splitString(const string &s, char delim, std::vector<string> &elems);
 std::vector<string> splitString(const string &s, char delim);
@@ -134,37 +158,51 @@ std::vector<string> splitString(const string &s, char delim);
 // {
 //    bool operator() (ptype *lhs, ptype *rhs) { return lhs->key() > rhs->key(); }
 // };
-template < class vtype > string vecToStr(std::vector < vtype > &v)
-{ ostringstream oss; //oss.precision(numeric_limits<double>::digits10+1);
-   for(size_t i = 0; i < v.size(); i++) {
+template <class vtype>
+string vecToStr(std::vector<vtype> &v)
+{
+   ostringstream oss; // oss.precision(numeric_limits<double>::digits10+1);
+   for (size_t i = 0; i < v.size(); i++)
+   {
       oss << v[i];
       if (i < v.size() - 1)
          oss << " ";
    }
    return oss.str();
 }
-template < class vtype > string setToStr(set < vtype > &s)
-{ ostringstream oss; //oss.precision(numeric_limits<double>::digits10+1);
-   for(auto it = s.begin(); it != s.end(); it++) {
+template <class vtype>
+string setToStr(set<vtype> &s)
+{
+   ostringstream oss; // oss.precision(numeric_limits<double>::digits10+1);
+   for (auto it = s.begin(); it != s.end(); it++)
+   {
       oss << *it;
       if (next(it) != s.end())
          oss << " ";
    }
    return oss.str();
 }
-template < class vtype > string vecToStrNoSpace(std::vector < vtype > &v)
-{ ostringstream oss; for(size_t i = 0; i < v.size(); i++) { oss << v[i]; } return oss.str(); }
+template <class vtype>
+string vecToStrNoSpace(std::vector<vtype> &v)
+{
+   ostringstream oss;
+   for (size_t i = 0; i < v.size(); i++)
+   {
+      oss << v[i];
+   }
+   return oss.str();
+}
 
 double vecMedian(std::vector<double>);
 int vecMedian(std::vector<int>);
 double vecMean(std::vector<double>);
 double vecMean(std::vector<int>);
 
-//string compressString(std::string& data);
-//string decompressString(std::string& data);
+// string compressString(std::string& data);
+// string decompressString(std::string& data);
 
 // Function to generate power set PS of given set S
-inline void FindPowerSet(std::vector<int> const &S, std::vector<int> &set, std::vector < std::vector <int> > &PS, size_t n, size_t minSubsetSize)
+inline void FindPowerSet(std::vector<int> const &S, std::vector<int> &set, std::vector<std::vector<int>> &PS, size_t n, size_t minSubsetSize)
 {
    // if we have considered all elements
    if (n == 0)
@@ -181,13 +219,39 @@ inline void FindPowerSet(std::vector<int> const &S, std::vector<int> &set, std::
    FindPowerSet(S, set, PS, n - 1, minSubsetSize);
 }
 
-inline std::vector < std::vector < int > > PowerSet(size_t n) {
-   std::vector <int> S(n);
+inline std::vector<std::vector<int>> PowerSet(size_t n)
+{
+   std::vector<int> S(n);
    std::iota(S.begin(), S.end(), 0);
-   std::vector <int> tmpSet;
-   std::vector < std::vector < int > > PS;
+   std::vector<int> tmpSet;
+   std::vector<std::vector<int>> PS;
    FindPowerSet(S, tmpSet, PS, n, 1);
    return PS;
+}
+
+/**
+ * Performs min-max normalization on a vector of doubles
+ */
+inline std::vector<double> MinMaxNorm(std::vector<double> v)
+{
+   double min = *std::min_element(v.begin(), v.end());
+   double max = *std::max_element(v.begin(), v.end());
+   double range = max - min;
+
+   cerr << "Min: " << min << " Max: " << max << endl;
+
+   for (size_t i = 0; i < v.size(); i++) {
+      cerr << "Original value: " << v[i] << endl;
+
+      if (range == 0)
+         v[i] = 0;
+      else
+         v[i] = (v[i] - min) / range;
+
+      cerr << "Normalized value: " << v[i] << endl;
+   }
+
+   return v;
 }
 
 inline double RoundTo(double value, double precision = 1.0)
