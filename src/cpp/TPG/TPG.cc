@@ -656,11 +656,11 @@ void TPG::GenerateNewTeams() {
             cm->AddProgram(*p1liter);
           else if ((int)cm->size() < GetParam<int>("max_team_size") &&
                   p1liter != p1programs.end() &&
-                  real_dist_(rngs_[TPG_SEED]) < GetParam<int>("pmx_p"))
+                  real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmx_p"))
             cm->AddProgram(*p1liter);
           if ((int)cm->size() < GetParam<int>("max_team_size") &&
               p2liter != p2programs.end() &&
-              real_dist_(rngs_[TPG_SEED]) < GetParam<int>("pmx_p"))
+              real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmx_p"))
             cm->AddProgram(*p2liter);
           if (p1liter != p1programs.end()) p1liter++;
           if (p2liter != p2programs.end()) p2liter++;
