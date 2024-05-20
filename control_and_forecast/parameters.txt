@@ -130,7 +130,7 @@ memory_rows 2
 memory_cols 2
 
 # number of elite teams
-n_elite 315
+n_elite 945
 
 # number of training outcome to store
 n_stored_outcomes_TRAIN 19
@@ -194,7 +194,7 @@ SCALAR_MAX_OP
 #VECTOR_MEAN_OP
 #VECTOR_ST_DEV_OP
 #VECTOR_CONST_SET_OP
-#
+
 ## matrix #########################
 #VECTOR_OUTER_PRODUCT_OP
 #SCALAR_MATRIX_PRODUCT_OP
