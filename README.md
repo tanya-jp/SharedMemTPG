@@ -38,6 +38,8 @@ To run an experiment using 4 parallel MPI processes, make tpg/classic_control_ex
 tpg-run-mpi.sh -n 4
 ```
 
+Note that as of right now, the number of assigned processes must be greater than the number of active tasks.
+
 ### 5. Plot results
 Generate classic_control_example_p0.pdf with various statistics:
 ```
