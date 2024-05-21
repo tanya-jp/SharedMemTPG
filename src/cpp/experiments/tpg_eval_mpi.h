@@ -96,13 +96,23 @@ vector<team *> GetTeamsToEval(TPG &tpg) {
   return teams_to_eval;
 }
 
+/**
+ * Parameters:
+ * - tpg: TPG instance
+ * - world: MPI communicator object, which represents a group of processes that can communicate with each other
+ * - teams_to_eval: teams to evaluate
+ * - world_size_per_task: number of processors available to evaluate on this task
+ * - evaluator: keeps track of current processor
+*/
 void AssignTeamsToEvaluators(TPG &tpg, mpi::communicator &world,
                              vector<team *> &teams_to_eval,
                              int world_size_per_task, int &evaluator) {
   auto teams_per_evaluator = teams_to_eval.size() / world_size_per_task;
   auto remainder = teams_to_eval.size() % world_size_per_task;
   vector<team *> teams;
+
   for (auto it = teams_to_eval.begin(); it != teams_to_eval.end(); it++) {
+    // Assign teams_per_evaluator teams to each of world_size_per_task processors
     teams.push_back(*it);
     if ((remainder > 0 && teams.size() == teams_per_evaluator + 1) ||
         (remainder == 0 && teams.size() == teams_per_evaluator) ||
@@ -207,6 +217,8 @@ bool NotDoneAndActive(EvalStruct &eval) {
 
 /*******************************************************************************
  * 1. Assign agents to evaluator procs
+ *  a. Partition available processes into groups for each task
+ *  b. Each process in a group evaluates a subset of agents on the task
  * 2. Wait for evals to finish
  * 3. Collect results
  ******************************************************************************/
@@ -217,7 +229,9 @@ void evaluate_main(TPG &tpg, mpi::communicator &world, vector<int> &taskSet) {
   vector<string> splitStr;
   string resultLine;
 
+  // Number of processors dedicated to evaluating each task
   int world_size_per_task = (world.size() - 1) / taskSet.size();
+
   // assign agents to evaluators
   int evaluator = 1;
   for (size_t task = 0; task < taskSet.size(); task++) {
@@ -230,9 +244,11 @@ void evaluate_main(TPG &tpg, mpi::communicator &world, vector<int> &taskSet) {
     // }
     // cerr << endl;
 
+    // Evaluate all teams on one task
     AssignTeamsToEvaluators(tpg, world, teams_to_eval, world_size_per_task,
                             evaluator);
   }
+
   // let the rest of the procs know they are not needed this round
   while (evaluator <= (world.size() - 1)) {
     world.send(evaluator++, 0, "x");
@@ -275,6 +291,11 @@ void evaluate_main(TPG &tpg, mpi::communicator &world, vector<int> &taskSet) {
       }
     }
   }
+}
+
+void estimate_main(TPG &tpg, vector<int> &taskSet)
+{
+
 }
 
 /******************************************************************************/

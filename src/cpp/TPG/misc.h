@@ -20,6 +20,7 @@
 // #include <boost/iostreams/copy.hpp>
 // #include <boost/iostreams/filter/gzip.hpp>
 #include <iomanip>
+#include <random>
 
 using namespace std;
 using std::numeric_limits;
@@ -230,28 +231,15 @@ inline std::vector<std::vector<int>> PowerSet(size_t n)
 }
 
 /**
- * Performs min-max normalization on a vector of doubles
- */
-inline std::vector<double> MinMaxNorm(std::vector<double> v)
+ * Takes a set S and splits it into two disjoint sets A and B, where A has size n.
+*/
+template <typename T>
+inline void SplitSet(std::vector<T> S, std::vector<T> &A, std::vector<T> &B, int n, std::mt19937 &g)
 {
-   double min = *std::min_element(v.begin(), v.end());
-   double max = *std::max_element(v.begin(), v.end());
-   double range = max - min;
+   std::shuffle(S.begin(), S.end(), g);
 
-   cerr << "Min: " << min << " Max: " << max << endl;
-
-   for (size_t i = 0; i < v.size(); i++) {
-      cerr << "Original value: " << v[i] << endl;
-
-      if (range == 0)
-         v[i] = 0;
-      else
-         v[i] = (v[i] - min) / range;
-
-      cerr << "Normalized value: " << v[i] << endl;
-   }
-
-   return v;
+   A = std::vector<int>(S.begin(), S.begin() + n);
+   B = std::vector<int>(S.begin() + n, S.end());
 }
 
 inline double RoundTo(double value, double precision = 1.0)

@@ -6,6 +6,7 @@
 #include <Pendulum.h>
 #include <RecursiveUnivar.h>
 #include <TPG.h>
+#include <misc.h>
 
 #include <algorithm>
 #include <boost/mpi.hpp>
@@ -59,9 +60,6 @@ int main(int argc, char** argv) {
       exit(1);
     }
   }
-
-  string allTaskString = "";
-  for (size_t i = 0; i < tasks.size(); i++) allTaskString += to_string(i);
 
   tpg.params_["n_task"] = (int)tasks.size();
   tpg.state_["active_task"] = 0;
@@ -143,8 +141,15 @@ int main(int argc, char** argv) {
 
         /* evaluation ********************************************************/
         startEval = chrono::system_clock::now();
-        // evaluate on all tasks
-        evaluate_main(tpg, world, taskSet);
+        // Split tasks into evaluated and estimated
+        vector<int> evalTasks, estTasks;
+        SplitSet(taskSet, evalTasks, estTasks, tpg.GetParam<int>("n_sampled_tasks_for_eval"), tpg.rngs_[TPG_SEED]);
+
+        // Evaluate tasks
+        evaluate_main(tpg, world, evalTasks);
+
+        // Estimate remaining tasks with phylogeny
+        estimate_main(tpg, estTasks);
         endEval = chrono::system_clock::now() - startEval;
 
         /* selection *********************************************************/
