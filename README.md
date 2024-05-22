@@ -67,28 +67,44 @@ The Digital Research Alliance of Canada (aka "The Alliance") provide High Perfor
 ### Resources
 [Technical Documentation](https://docs.alliancecan.ca/wiki/Technical_documentation)
 
-## TPG on The Alliance Quick Start
-1. Pick a [compute cluster](https://docs.alliancecan.ca/wiki/National_systems#Compute_clusters) to use and login via ssh. We'll use [narval](https://docs.alliancecan.ca/wiki/Narval):
+### Quick Start
+Pick a [compute cluster](https://docs.alliancecan.ca/wiki/National_systems#Compute_clusters) to use and login via ssh. We'll use [narval](https://docs.alliancecan.ca/wiki/Narval):
 ```
 ssh <user>@narval.alliancecan.ca
 ```
 
-2. Move to your [scratch filesystem](https://docs.alliancecan.ca/wiki/Storage_and_file_management):
+Set up your environment variables to automatically load when you login by adding the following to the end of your `.bash_profile` file:
+```
+export TPG_PATH=/home/$HOME/scratch/tpg
+export PATH=$PATH:$TPG_PATH/scripts/plot
+export PATH=$PATH:$TPG_PATH/scripts/run
+
+module load \
+  StdEnv/2023 scipy-stack/2023b python/3.10 \
+  arrow/15.0.1 gcc/12.3 opencv/4.9.0 cmake/3.27.7 \
+  eigen/3.4.0 boost-mpi/1.82.0
+```
+
+After editing `.bash_profile`, run:
+```
+source ~/.bash_profile
+```
+
+Move to your [scratch filesystem](https://docs.alliancecan.ca/wiki/Storage_and_file_management):
 ```
 cd $SCRATCH
 ```
 
-3. Clone this repo and cd to to alliance_tutorials/deap:
+3. Clone this repo and cd to its root directory:
 ```
 git clone https://gitlab.cas.mcmaster.ca/kellys32/tpg.git
+cd tpg
 ```
 
-4. `scripts/run/tpg-run-slurm.sh` is the [job script](https://docs.alliancecan.ca/wiki/Running_jobs) which sets parameters such as how many nodes and cpus you need and which [time limit queue](https://docs.alliancecan.ca/wiki/Job_scheduling_policies#Time_limits) you want to place your job in. In very general terms, shorter jobs that use less resources will run sooner. See [scheduling policies](https://docs.alliancecan.ca/wiki/Job_scheduling_policies) for complete details. 
+4. `tpg/scripts/run/tpg-run-slurm.sh` is the [job script](https://docs.alliancecan.ca/wiki/Running_jobs) which sets parameters such as how many nodes and cpus you need and which [time limit queue](https://docs.alliancecan.ca/wiki/Job_scheduling_policies#Time_limits) you want to place your job in. In general, shorter jobs that use less resources will run sooner. See [scheduling policies](https://docs.alliancecan.ca/wiki/Job_scheduling_policies) for complete details. 
 
 In our example, each job (experiment repeat) will use 64 cpus and we want them all on the same node, so we use an entire 64-cpu node. The default time limit is 3 hours. Our script looks like this:
 ```
-
-1016 B
 #!/bin/bash 
 #SBATCH --account=def-skelly
 # single node
@@ -123,7 +139,7 @@ From inside the newly created experiment directory, we run serveral experiments 
 for i in `seq 1 3`; do sbatch ../scripts/run/tpg-run-slurm.sh -s $i; done
 ```
 
-To **monitor** your job use:
+To [monitor](https://docs.alliancecan.ca/wiki/Running_jobs#Monitoring_jobs) your job use:
 ```
 squeue -u <user>
 ```
@@ -140,9 +156,9 @@ scancel -u <user>
 
 **Copying data from clusters to you local computer**
 
-You can use `scp` to copy data from the server to you local computer. Here's an example command to run locally:
+You can use `scp` to copy data from the cluster to you local computer. Here's an example command to run locally:
 ```
-scp -r skelly@narval.alliancecan.ca:/scratch/skelly/alliance_tutorials/deap/data_out ./
+scp -r skelly@narval.alliancecan.ca:/home/skelly/scratch/tpg/control_and_forecast-2024-05-21-21-27-09-294294c ./
 ```
-The `-r` flag indicates you want to copy the `data_out` directory and all its contents recursively.
+The `-r` flag indicates you want to copy the directory and all its contents recursively.
 
