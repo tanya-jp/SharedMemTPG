@@ -62,13 +62,13 @@ tpg-cleanup.sh
 ```
 
 ## Experiments on the Digital Research Alliance of Canada
-The Digital Research Alliance of Canada (aka "The Alliance") provide High Performance Parallel Compute (HPPC) reseources to Canada's research community. This includes servers with many parallel CPUs, GPUs, FPGAs, and more. We primarily use many CPUs.
+The Digital Research Alliance of Canada (aka "The Alliance") provides High Performance Parallel Compute (HPPC) reseources to Canada's research community. This includes servers with many parallel CPUs, GPUs, FPGAs, and more. We primarily use many CPUs.
 
 ### Resources
 [Technical Documentation](https://docs.alliancecan.ca/wiki/Technical_documentation)
 
 ### Quick Start
-Pick a [compute cluster](https://docs.alliancecan.ca/wiki/National_systems#Compute_clusters) to use and login via ssh. We'll use [narval](https://docs.alliancecan.ca/wiki/Narval):
+Pick a [compute cluster](https://docs.alliancecan.ca/wiki/National_systems#Compute_clusters) to use and login via ssh. We'll use [narval](https://docs.alliancecan.ca/wiki/Narval). Note you'll need to setup [multifactor authentication](https://docs.alliancecan.ca/wiki/Multifactor_authentication).
 ```
 ssh <user>@narval.alliancecan.ca
 ```
