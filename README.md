@@ -152,7 +152,7 @@ scancel <jobid>
 To cancel all your running jobs:
 ```
 scancel -u <user>
-
+```
 
 **Copying data from clusters to you local computer**
 
@@ -161,4 +161,5 @@ You can use `scp` to copy data from the cluster to you local computer. Here's an
 scp -r skelly@narval.alliancecan.ca:/home/skelly/scratch/tpg/control_and_forecast-2024-05-21-21-27-09-294294c ./
 ```
 The `-r` flag indicates you want to copy the directory and all its contents recursively.
+Note that you can also transfer data using other ssh clients such as [FileZilla](https://filezilla-project.org/) or [WinSCP](https://docs.alliancecan.ca/wiki/Multifactor_authentication#WinSCP).
 
