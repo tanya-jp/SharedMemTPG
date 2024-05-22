@@ -75,7 +75,7 @@ ssh <user>@narval.alliancecan.ca
 
 Set up your environment variables to automatically load when you login by adding the following to the end of your `.bash_profile` file:
 ```
-export TPG_PATH=/home/$HOME/scratch/tpg
+export TPG_PATH=$HOME/scratch/tpg
 export PATH=$PATH:$TPG_PATH/scripts/plot
 export PATH=$PATH:$TPG_PATH/scripts/run
 
