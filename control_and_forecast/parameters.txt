@@ -50,7 +50,7 @@ mu_internal 0
 n_discrete_action 3
 
 # initial team size
-initial_team_size 5
+initial_team_size 10
 
 # max team size
 max_team_size 1000000
@@ -65,10 +65,10 @@ p_atomic 0.95
 pmd 0.7
 
 # team mtation: probability of adding program to team
-pma 0.5
+pma 0.6
 
 # team mutation: probability of mutating a program
-pmm 1.0
+pmm 0.2
 
 # team mutation: probability of mutating a program's action pointer
 pmn 0.1
@@ -80,7 +80,7 @@ pms 0.1
 pmw 0.1
 
 # team variation: probability of team crossover
-pmx 0.5
+pmx 0.2
 
 # team variation: probability of team crossover adding each parent prog to child
 pmx_p 0.5
@@ -101,13 +101,13 @@ max_prog_size 1000000
 p_bid_mutate 1.0
 
 # program variation: probability of swaping the position of two instructions
-p_bid_swap 0.5
+p_bid_swap 0.2
 
 # program variation: probability of deleting an instruction
-p_bid_delete 0.7
+p_bid_delete 0.5
 
 # program variation: probability of adding an instruction
-p_bid_add 0.5
+p_bid_add 0.4
 
 # program variation: probability of linear crossover with another team
 p_bid_xover 0.0
