@@ -95,13 +95,13 @@ Move to your [scratch filesystem](https://docs.alliancecan.ca/wiki/Storage_and_f
 cd $SCRATCH
 ```
 
-3. Clone this repo and cd to its root directory:
+Clone this repo and cd to its root directory:
 ```
 git clone https://gitlab.cas.mcmaster.ca/kellys32/tpg.git
 cd tpg
 ```
 
-4. `tpg/scripts/run/tpg-run-slurm.sh` is the [job script](https://docs.alliancecan.ca/wiki/Running_jobs) which sets parameters such as how many nodes and cpus you need and which [time limit queue](https://docs.alliancecan.ca/wiki/Job_scheduling_policies#Time_limits) you want to place your job in. In general, shorter jobs that use less resources will run sooner. See [scheduling policies](https://docs.alliancecan.ca/wiki/Job_scheduling_policies) for complete details. 
+`tpg/scripts/run/tpg-run-slurm.sh` is the [job script](https://docs.alliancecan.ca/wiki/Running_jobs) which sets parameters such as how many nodes and cpus you need and which [time limit queue](https://docs.alliancecan.ca/wiki/Job_scheduling_policies#Time_limits) you want to place your job in. In general, shorter jobs that use less resources will run sooner. See [scheduling policies](https://docs.alliancecan.ca/wiki/Job_scheduling_policies) for complete details. 
 
 In our example, each job (experiment repeat) will use 64 cpus and we want them all on the same node, so we use an entire 64-cpu node. The default time limit is 3 hours. Our `tpg-run-slurm.sh` job script looks like this:
 ```
