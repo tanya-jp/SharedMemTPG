@@ -61,3 +61,88 @@ Delete all checkpoints and output files:
 tpg-cleanup.sh
 ```
 
+## Experiments on the Digital Research Alliance of Canada
+The Digital Research Alliance of Canada (aka "The Alliance") provide High Performance Parallel Compute (HPPC) reseources to Canada's research community. This includes servers with many parallel CPUs, GPUs, FPGAs, and more. We primarily use many CPUs.
+
+### Resources
+[Technical Documentation](https://docs.alliancecan.ca/wiki/Technical_documentation)
+
+## TPG on The Alliance Quick Start
+1. Pick a [compute cluster](https://docs.alliancecan.ca/wiki/National_systems#Compute_clusters) to use and login via ssh. We'll use [narval](https://docs.alliancecan.ca/wiki/Narval):
+```
+ssh <user>@narval.alliancecan.ca
+```
+
+2. Move to your [scratch filesystem](https://docs.alliancecan.ca/wiki/Storage_and_file_management):
+```
+cd $SCRATCH
+```
+
+3. Clone this repo and cd to to alliance_tutorials/deap:
+```
+git clone https://gitlab.cas.mcmaster.ca/kellys32/tpg.git
+```
+
+4. `scripts/run/tpg-run-slurm.sh` is the [job script](https://docs.alliancecan.ca/wiki/Running_jobs) which sets parameters such as how many nodes and cpus you need and which [time limit queue](https://docs.alliancecan.ca/wiki/Job_scheduling_policies#Time_limits) you want to place your job in. In very general terms, shorter jobs that use less resources will run sooner. See [scheduling policies](https://docs.alliancecan.ca/wiki/Job_scheduling_policies) for complete details. 
+
+In our example, each job (experiment repeat) will use 64 cpus and we want them all on the same node, so we use an entire 64-cpu node. The default time limit is 3 hours. Our script looks like this:
+```
+
+1016 B
+#!/bin/bash 
+#SBATCH --account=def-skelly
+# single node
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=64
+#SBATCH --mem=0
+#SBATCH --time=0-3:00  # time (DD-HH:MM)
+
+#defaults
+mode=0 #Train:0, Replay:1, Debug:2
+seed=1
+while getopts m:s: flag
+do
+   case "${flag}" in
+      m) mode=${OPTARG};;
+      s) seed=${OPTARG};;
+   esac
+done
+if [ $mode -eq 0 ]; then
+  srun ../build/release/cpp/experiments/TPGExperimentMPI -s $seed \
+  1> tpg.$seed.$$.std 2> tpg.$seed.$$.err
+fi
+```
+
+For each unique experiment, best practice is to copy the experiment directory and append a unique date, time, and git revision like this:
+```
+cp -r control_and_forecast/ control_and_forecast-`date +%Y-%m-%d-%H-%M-%S`-`git rev-parse --short HEAD`
+```
+
+From inside the newly created experiment directory, we run serveral experiments at once using unique seeds. Here's an example command using a for loop:
+```
+for i in `seq 1 3`; do sbatch ../scripts/run/tpg-run-slurm.sh -s $i; done
+```
+
+To **monitor** your job use:
+```
+squeue -u <user>
+```
+
+To cancel a job:
+```
+scancel <jobid>
+```
+
+To cancel all your running jobs:
+```
+scancel -u <user>
+
+
+**Copying data from clusters to you local computer**
+
+You can use `scp` to copy data from the server to you local computer. Here's an example command to run locally:
+```
+scp -r skelly@narval.alliancecan.ca:/scratch/skelly/alliance_tutorials/deap/data_out ./
+```
+The `-r` flag indicates you want to copy the `data_out` directory and all its contents recursively.
+
