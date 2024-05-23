@@ -60,4 +60,3 @@ Delete all checkpoints and output files:
 ```
 tpg-cleanup.sh
 ```
-
