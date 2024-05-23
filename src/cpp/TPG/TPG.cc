@@ -588,7 +588,7 @@ void TPG::ProgramMutator_ActionPointer(program *prog_to_mu, team *new_team,
     uniform_int_distribution<int> disM(0, _M.size() - 1);
     team *tm;
     do {
-      tm = _teamMap[_Mids[disM(rngs_[TPG_SEED])]];
+      tm = _teamMap[_Mids[disM(rngs_[TPG_SEED])]];  // can point to any team
     } while ((tm->gtime_ == GetState("t_current") || tm->clones_ > 0 ||
               prog_to_mu->action() == tm->id_));
 

@@ -27,6 +27,8 @@ int main(int argc, char** argv) {
   tpg.params_["id"] = -1;  // remove later
   tpg.setParams();
   tpg_arg_parse(tpg, argc, argv);
+  tpg.params_["memory_rows"] = tpg.GetParam<int>("n_input");
+  tpg.params_["memory_cols"] = tpg.GetParam<int>("n_input");
 
   ostringstream os;  // logging
 
@@ -48,13 +50,19 @@ int main(int argc, char** argv) {
       tasks.push_back(new MountainCar());
     else if (substr == "MountainCarContinuous")
       tasks.push_back(new MountainCarContinuous());
-    else if (substr == "Sunspots") {
+    else if (substr == "Sunspots")
       tasks.push_back(new RecursiveUnivar("Sunspots"));
-    } else if (substr == "Mackey") {
+    else if (substr == "Mackey")
       tasks.push_back(new RecursiveUnivar("Mackey"));
-    } else if (substr == "Laser") {
+    else if (substr == "Laser")
       tasks.push_back(new RecursiveUnivar("Laser"));
-    } else {
+    else if (substr == "Offset")
+      tasks.push_back(new RecursiveUnivar("Offset"));
+    else if (substr == "Duration")
+      tasks.push_back(new RecursiveUnivar("Duration"));
+    else if (substr == "Pitch")
+      tasks.push_back(new RecursiveUnivar("Pitch"));
+    else {
       cout << "Unrecognised task:" << substr << endl;
       exit(1);
     }

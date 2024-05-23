@@ -76,8 +76,7 @@ vector<team *> GetTeamsToEval(TPG &tpg) {
     for (auto tm : root_teams) {
       tm->_n_eval =
           tpg._numStoredOutcomesPerHost[tpg.GetState("phase")] -
-          tm->numOutcomes(tpg.GetState("phase"),
-                                 tpg.GetState("active_task"));
+          tm->numOutcomes(tpg.GetState("phase"), tpg.GetState("active_task"));
       if (tm->_n_eval > 0) {
         teams_to_eval.push_back(tm);
       }
@@ -110,7 +109,7 @@ void AssignTeamsToEvaluators(TPG &tpg, mpi::communicator &world,
       string s = "";
       tpg.writeCheckpoint(s, teams);
       world.send(evaluator, 0, s);
-      
+
       // cerr << "dbg ev " << evaluator;
       // for (auto tm : teams) {
       //   cerr << " " << tm->id_;
@@ -279,7 +278,7 @@ void evaluate_main(TPG &tpg, mpi::communicator &world, vector<int> &taskSet) {
 
 /******************************************************************************/
 void EvalControl(TPG &tpg, EvalStruct &eval) {
-  bool verbose = false; // tpg.GetState("phase") == _TEST_PHASE ? true : false;
+  bool verbose = false;  // tpg.GetState("phase") == _TEST_PHASE ? true : false;
   eval.game->reset(tpg.rngs_[AUX_SEED]);
   eval.obs->Set(eval.game->GetObsVec(eval.partially_observable));
   while (!eval.game->terminal()) {
@@ -300,37 +299,33 @@ void EvalControl(TPG &tpg, EvalStruct &eval) {
 void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
   RecursiveUnivar *game = dynamic_cast<RecursiveUnivar *>(eval.game);
   game->reset(tpg.rngs_[AUX_SEED]);
-  bool verbose = false; //tpg.GetState("phase") == _TEST_PHASE ? true : false;
-  vector<double> obs(tpg.GetParam<int>("n_input"));
+  bool verbose = false;  // tpg.GetState("phase") == _TEST_PHASE ? true : false;
+  list<double> obs_list(tpg.GetParam<int>("n_input"), 0.0);
+  vector<double> obs(tpg.GetParam<int>("n_input"), 0.0);
   // prime
-  double prediction_prev = 0;
   int sample = game->t_start[tpg.GetState("phase")][eval.episode];
   for (int i = 0; i < game->num_samples_prime_ - 1; i++) {
-    // new vector obs contain current and previous sample
-    if (i == 0) {obs[0] = 0; obs[1] = game->data[sample][0];}
-    else {obs[0] = game->data[sample - 1][0]; obs[1] = game->data[sample][0];}
+    obs_list.push_back(game->data[sample][0]); obs_list.pop_front();
+    // TODO(skelly): make this more efficient ?
+    std::copy(obs_list.begin(), obs_list.end(), obs.begin());  
     eval.obs->Set(obs);
-    // original vector obs containing a single val
-    // eval.obs->Set(game->data[sample++]);
-    if (i > 0) prediction_prev = WrapContinuousAction(eval);
     eval.leafProgram = tpg.getAction(
         eval.tm, eval.obs, true, eval.visitedTeams, eval.decisionInstructions,
         eval.game->getStep(), eval.teamPath, tpg.rngs_[AUX_SEED], verbose);
-    sample++;    
+    sample++;
   }
   // predict
   for (int i = 0; i < game->num_samples_predict_[tpg.GetState("phase")]; i++) {
-    // prev 2 preditions
-    vector<double> prediction{prediction_prev, WrapContinuousAction(eval)};
-    prediction_prev = WrapContinuousAction(eval);
-    eval.obs->Set(prediction);
+    obs_list.push_back(WrapContinuousAction(eval)); obs_list.pop_front();
+    // TODO(skelly): make this more efficient ?
+    std::copy(obs_list.begin(), obs_list.end(), obs.begin());
+    eval.obs->Set(obs);
     eval.leafProgram = tpg.getAction(
         eval.tm, eval.obs, true, eval.visitedTeams, eval.decisionInstructions,
         game->getStep(), eval.teamPath, tpg.rngs_[AUX_SEED], verbose);
-    prediction[0] = WrapContinuousAction(eval);
     TaskEnv::Results r =
-        game->update(sample++, prediction[0], tpg.rngs_[AUX_SEED]);
-    eval.runTimeStats[REWARD1_IDX] += r.r1;  // MSE    
+        game->update(sample++, WrapContinuousAction(eval), tpg.rngs_[AUX_SEED]);
+    eval.runTimeStats[REWARD1_IDX] += r.r1;  // MSE
     eval.runTimeStats[REWARD2_IDX] += r.r2;  // MAE
     AccumulateStepStats(eval);
   }
@@ -355,14 +350,6 @@ void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
       for (auto tm : eval.teams) {
         eval.tm = tm;
         tpg.MarkEffectiveCode(eval.tm);
-
-        // if (tpg.GetState("phase") == _TEST_PHASE) {
-          // cerr << "dbg t " << tpg.GetState("t_current") << " tm " << eval.tm->id_;
-          // for (auto t : eval.tm->members_) {
-          //   cerr << " " << t->id_;
-          // }
-          // cerr << endl;
-        // }
 
         for (eval.episode = 0; eval.episode < eval.tm->_n_eval;
              eval.episode++) {
@@ -398,13 +385,10 @@ void replayer(TPG &tpg, vector<TaskEnv *> &tasks) {
   }
 }
 
-
-
-
 /******************************************************************************/
 void EvalControlViz(TPG &tpg, EvalStruct &eval,
                     vector<map<long, double>> &teamUseMapPerTask,
-                    set<team *, teamIdComp>& visitedTeamsAllTasks, int& steps) {
+                    set<team *, teamIdComp> &visitedTeamsAllTasks, int &steps) {
   bool verbose = false;  // tpg.GetState("phase") == _TEST_PHASE ? true : false;
   eval.game->reset(tpg.rngs_[AUX_SEED]);
   eval.obs->Set(eval.game->GetObsVec(eval.partially_observable));
@@ -412,7 +396,6 @@ void EvalControlViz(TPG &tpg, EvalStruct &eval,
     eval.leafProgram = tpg.getAction(
         eval.tm, eval.obs, true, eval.visitedTeams, eval.decisionInstructions,
         eval.game->getStep(), eval.teamPath, tpg.rngs_[AUX_SEED], verbose);
-
 
     for (auto tm : eval.visitedTeams) {
       if (teamUseMapPerTask[tpg.state_["active_task"]].find(tm->id_) ==
@@ -424,7 +407,8 @@ void EvalControlViz(TPG &tpg, EvalStruct &eval,
     }
     steps++;
     // teamUseMapPerTask[tpg.state_["active_task"]][eval.tm->id_] += 1.0;
-    visitedTeamsAllTasks.insert(eval.visitedTeams.begin(), eval.visitedTeams.end());
+    visitedTeamsAllTasks.insert(eval.visitedTeams.begin(),
+                                eval.visitedTeams.end());
 
     MaybeAnimateStep(eval);
     TaskEnv::Results r =
@@ -435,29 +419,27 @@ void EvalControlViz(TPG &tpg, EvalStruct &eval,
     eval.obs->Set(eval.game->GetObsVec(eval.partially_observable));
   }
   for (auto p : teamUseMapPerTask[tpg.state_["active_task"]]) {
-    p.second = p.second/eval.game->step;
+    p.second = p.second / eval.game->step;
   }
 }
 
 /******************************************************************************/
 void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
                               vector<map<long, double>> &teamUseMapPerTask,
-                              set<team *, teamIdComp>& visitedTeamsAllTasks, int &steps) {
+                              set<team *, teamIdComp> &visitedTeamsAllTasks,
+                              int &steps) {
   RecursiveUnivar *game = dynamic_cast<RecursiveUnivar *>(eval.game);
   game->reset(tpg.rngs_[AUX_SEED]);
-  bool verbose = false; //tpg.GetState("phase") == _TEST_PHASE ? true : false;
-  vector<double> obs(tpg.GetParam<int>("n_input"));
+  bool verbose = false;  // tpg.GetState("phase") == _TEST_PHASE ? true : false;
+  list<double> obs_list(tpg.GetParam<int>("n_input"), 0.0);
+  vector<double> obs(tpg.GetParam<int>("n_input"), 0.0);
   // prime
-  double prediction_prev = 0;
   int sample = game->t_start[tpg.GetState("phase")][eval.episode];
   for (int i = 0; i < game->num_samples_prime_ - 1; i++) {
-    // new vector obs contain current and previous sample
-    if (i == 0) {obs[0] = 0; obs[1] = game->data[sample][0];}
-    else {obs[0] = game->data[sample - 1][0]; obs[1] = game->data[sample][0];}
+    obs_list.push_back(game->data[sample][0]); obs_list.pop_front();  //  FIFO
+    // TODO(skelly): make this more efficient ?
+    std::copy(obs_list.begin(), obs_list.end(), obs.begin());
     eval.obs->Set(obs);
-    // original vector obs containing a single val
-    // eval.obs->Set(game->data[sample++]);
-    if (i > 0) prediction_prev = WrapContinuousAction(eval);
     eval.leafProgram = tpg.getAction(
         eval.tm, eval.obs, true, eval.visitedTeams, eval.decisionInstructions,
         eval.game->getStep(), eval.teamPath, tpg.rngs_[AUX_SEED], verbose);
@@ -472,16 +454,17 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
     }
     steps++;
     // teamUseMapPerTask[tpg.state_["active_task"]][eval.tm->id_] += 1.0;
-    visitedTeamsAllTasks.insert(eval.visitedTeams.begin(), eval.visitedTeams.end());
+    visitedTeamsAllTasks.insert(eval.visitedTeams.begin(),
+                                eval.visitedTeams.end());
 
-    sample++;    
+    sample++;
   }
   // predict
   for (int i = 0; i < game->num_samples_predict_[tpg.GetState("phase")]; i++) {
-    // prev 2 preditions
-    vector<double> prediction{prediction_prev, WrapContinuousAction(eval)};
-    prediction_prev = WrapContinuousAction(eval);
-    eval.obs->Set(prediction);
+    obs_list.push_back(WrapContinuousAction(eval)); obs_list.pop_front();  //  FIFO
+    // TODO(skelly): make this more efficient ?
+    std::copy(obs_list.begin(), obs_list.end(), obs.begin());
+    eval.obs->Set(obs);
     eval.leafProgram = tpg.getAction(
         eval.tm, eval.obs, true, eval.visitedTeams, eval.decisionInstructions,
         game->getStep(), eval.teamPath, tpg.rngs_[AUX_SEED], verbose);
@@ -496,20 +479,19 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
     }
     steps++;
     // teamUseMapPerTask[tpg.state_["active_task"]][eval.tm->id_] += 1.0;
-    visitedTeamsAllTasks.insert(eval.visitedTeams.begin(), eval.visitedTeams.end());
-
-    prediction[0] = WrapContinuousAction(eval);
+    visitedTeamsAllTasks.insert(eval.visitedTeams.begin(),
+                                eval.visitedTeams.end());
     TaskEnv::Results r =
-        game->update(sample++, prediction[0], tpg.rngs_[AUX_SEED]);
-    eval.runTimeStats[REWARD1_IDX] += r.r1;  // MSE    
+        game->update(sample++, WrapContinuousAction(eval), tpg.rngs_[AUX_SEED]);
+    eval.runTimeStats[REWARD1_IDX] += r.r1;  // MSE
     eval.runTimeStats[REWARD2_IDX] += r.r2;  // MAE
     AccumulateStepStats(eval);
   }
 }
 
 /******************************************************************************/
-// For each task, map team id to the proportion of steps in which this team was used
-// vector<map<long, double>> teamUseMapPerTask;
+// For each task, map team id to the proportion of steps in which this team was
+// used vector<map<long, double>> teamUseMapPerTask;
 
 void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
   MaybeStartAnimation(tpg);
@@ -525,26 +507,28 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
     if (tm->id_ != tpg.GetParam<int>("host_to_replay")) continue;
     eval.tm = tm;
     // if (eval.animate) eval.tm->_n_eval = 1;////////////////////////
-    eval.tm->_n_eval = 19;//////////////////
+    eval.tm->_n_eval = 19;  //////////////////
     tpg.MarkEffectiveCode(eval.tm);
-    vector<int> steps_per_task(tpg.GetParam<int>("n_task"),0);
-    for (int task = 0; task < tpg.GetParam<int>("n_task"); task++) { 
+    vector<int> steps_per_task(tpg.GetParam<int>("n_task"), 0);
+    for (int task = 0; task < tpg.GetParam<int>("n_task"); task++) {
       tpg.state_["active_task"] = task;
       eval.game = tasks[tpg.GetState("active_task")];
-      
+
       for (eval.episode = 0; eval.episode < eval.tm->_n_eval; eval.episode++) {
         tpg.rngs_[AUX_SEED].seed(eval.episode);
         eval.tm->InitMemory(tpg._teamMap, tpg.HaveParam("p_bid_mu_const"));
-        
+
         if (eval.game->eval_type_ == "RecursiveForecast") {
-           EvalRecursiveForecastViz(tpg, eval, teamUseMapPerTask,
-                                      visitedTeamsAllTasks, steps_per_task[task]);
+          EvalRecursiveForecastViz(tpg, eval, teamUseMapPerTask,
+                                   visitedTeamsAllTasks, steps_per_task[task]);
         } else {
-           EvalControlViz(tpg, eval, teamUseMapPerTask, visitedTeamsAllTasks, steps_per_task[task]);
+          EvalControlViz(tpg, eval, teamUseMapPerTask, visitedTeamsAllTasks,
+                         steps_per_task[task]);
         }
         FinalizeStepStats(tpg, eval);
       }
     }
-    tpg.printGraphDotGPTPXXI(eval.tm->id_, visitedTeamsAllTasks, teamUseMapPerTask, steps_per_task);
+    tpg.printGraphDotGPTPXXI(eval.tm->id_, visitedTeamsAllTasks,
+                             teamUseMapPerTask, steps_per_task);
   }
 }

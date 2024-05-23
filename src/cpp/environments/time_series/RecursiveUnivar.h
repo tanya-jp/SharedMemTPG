@@ -12,9 +12,9 @@ class RecursiveUnivar : public TaskEnv {
   // starting points to slice datasets
   vector<vector<int>> t_start;
 
-  const int num_samples_prime_ = 50;
+  int num_samples_prime_;
   // number of samples for training, validation, test
-  const int num_samples_predict_[3] = {50, 100, 100};
+  int num_samples_predict_[3];
   class CSVReader {
     const string filename;
     const int dim;
@@ -54,38 +54,82 @@ class RecursiveUnivar : public TaskEnv {
           new CSVReader("../datasets/SN_ms_tot_V2.0_Nov1834-June1926.csv", DIM);
     else if (task == "Mackey")
       reader = new CSVReader("../datasets/Mackey-1100.csv", DIM);
-    else  // task == "Laser"
+    else if (task == "Laser")
       reader = new CSVReader("../datasets/Laser-10000-1000-2100.csv", DIM);
+    else if (task == "Audio")
+      reader = new CSVReader("../datasets/2024-05-22-ali-10sec.dat", DIM);
+    else if (task == "Offset")
+      reader = new CSVReader("../datasets/Simulation_29_offset.csv", DIM);
+    else if (task == "Duration")
+      reader = new CSVReader("../datasets/Simulation_29_duration.csv", DIM);
+    else  // task == "Pitch"
+      reader = new CSVReader("../datasets/Simulation_29_pitch.csv", DIM);
     data = reader->ReadData();
     delete reader;
 
-    // normalize data in [0,1]
-    double maxFeature = numeric_limits<double>::lowest();
-    double minFeature = numeric_limits<double>::max();
-    for (size_t sample = 0; sample < data.size(); sample++) {
-      maxFeature = max(
-          maxFeature, *(max_element(data[sample].begin(), data[sample].end())));
-      minFeature = min(
-          minFeature, *(min_element(data[sample].begin(), data[sample].end())));
-    }
-    for (size_t sample = 0; sample < data.size(); sample++) {
-      for (size_t feature = 0; feature < data[sample].size(); feature++) {
-        data[sample][feature] =
-            (data[sample][feature] - minFeature) / (maxFeature - minFeature);
-            // cerr << data[sample][feature] << endl;
+    if (task != "Music") {
+      // normalize data in [0,1]
+      double maxFeature = numeric_limits<double>::lowest();
+      double minFeature = numeric_limits<double>::max();
+      for (size_t sample = 0; sample < data.size(); sample++) {
+        maxFeature =
+            max(maxFeature,
+                *(max_element(data[sample].begin(), data[sample].end())));
+        minFeature =
+            min(minFeature,
+                *(min_element(data[sample].begin(), data[sample].end())));
+      }
+      for (size_t sample = 0; sample < data.size(); sample++) {
+        for (size_t feature = 0; feature < data[sample].size(); feature++) {
+          data[sample][feature] =
+              (data[sample][feature] - minFeature) / (maxFeature - minFeature);
+          // cerr << data[sample][feature] << endl;
+        }
       }
     }
 
     t_start.resize(3);  // train, validate, test
 
-    // train
-    t_start[0].insert(t_start[0].begin(),
-                      {0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900});
-    // validate
-    t_start[1].insert(t_start[1].begin(),
-                      {50, 150, 250, 350, 450, 550, 650, 750, 850});
-    // test
-    t_start[2].insert(t_start[2].begin(), {950});
+    if (task == "Audio") {
+      num_samples_prime_ = 50;
+      num_samples_predict_[0] = 50;   // train
+      num_samples_predict_[1] = 100;  // validate
+      num_samples_predict_[2] = 100;  // test
+
+      // train
+      t_start[0].insert(t_start[0].begin(), {0, 1000, 2000, 3000, 4000, 5000,
+                                             6000, 7000, 8000, 9000});
+      // validate
+      t_start[1].insert(t_start[1].begin(), {500, 1500, 2500, 3500, 4500, 5500,
+                                             6500, 7500, 8500, 9500});
+      // test
+      t_start[2].insert(t_start[2].begin(), {1000});
+    } else if (task == "Sunspots" || task == "Mackey" || task == "Laser") {
+      num_samples_prime_ = 50;
+      num_samples_predict_[0] = 50;   // train
+      num_samples_predict_[1] = 100;  // validate
+      num_samples_predict_[2] = 100;  // test
+      // train
+      t_start[0].insert(t_start[0].begin(),
+                        {0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500,
+                         550, 600, 650, 700, 750, 800, 850, 900});
+      // validate
+      t_start[1].insert(t_start[1].begin(),
+                        {50, 150, 250, 350, 450, 550, 650, 750, 850});
+      // test
+      t_start[2].insert(t_start[2].begin(), {950});
+    } else if (task == "Offset" || task == "Duration" || task == "Pitch") {
+      num_samples_prime_ = 50;
+      num_samples_predict_[0] = 50;   // train
+      num_samples_predict_[1] = 100;  // validate
+      num_samples_predict_[2] = 100;  // test
+      // train
+      for (int s = 0; s <= 750; s += 25) t_start[0].push_back(s);
+      // validate
+      for (int s = 0; s <= 750; s += 25) t_start[1].push_back(s);
+      // test
+      t_start[2].push_back(666);
+    }
   }
 
   void reset(mt19937 & /*rng*/) { step = 0; }
