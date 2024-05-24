@@ -109,13 +109,6 @@ void AssignTeamsToEvaluators(TPG &tpg, mpi::communicator &world,
       string s = "";
       tpg.writeCheckpoint(s, teams);
       world.send(evaluator, 0, s);
-
-      // cerr << "dbg ev " << evaluator;
-      // for (auto tm : teams) {
-      //   cerr << " " << tm->id_;
-      // }
-      // cerr << endl;
-
       evaluator++;
       teams.clear();
       if (remainder > 0) remainder--;
@@ -223,12 +216,6 @@ void evaluate_main(TPG &tpg, mpi::communicator &world, vector<int> &taskSet) {
     tpg.state_["active_task"] = taskSet[task];
     auto teams_to_eval = GetTeamsToEval(tpg);
 
-    // cerr << "dbg t " << tpg.GetState("t_current") << " tToE ";
-    // for (auto tm : teams_to_eval) {
-    //   cerr << " " << tm->id_;
-    // }
-    // cerr << endl;
-
     AssignTeamsToEvaluators(tpg, world, teams_to_eval, world_size_per_task,
                             evaluator);
   }
@@ -258,17 +245,6 @@ void evaluate_main(TPG &tpg, mpi::communicator &world, vector<int> &taskSet) {
           r_runTimeStats.push_back(atof(splitStr[s++].c_str()));
         for (int i = 0; i < tpg.GetParam<int>("n_point_aux_int"); i++)
           r_runTimeInts.push_back(atoi(splitStr[s++].c_str()));
-
-        // if (tpg.GetState("phase") == _TEST_PHASE) {
-        //   cerr << "dbgev t " << tpg.GetState("t_current") << " id "
-        //        << root_teams[rslt_id]->id_ << " rts "
-        //        << vecToStr(r_runTimeStats) << " mbrs ";
-        //   for (auto m : root_teams[rslt_id]->members_) {
-        //     cerr << " " << m->id_;
-        //   }
-        //   cerr << endl;
-        // }
-
         tpg.setOutcome(root_teams_map[rslt_id], behavSeq, r_runTimeStats,
                        r_runTimeInts, tpg.GetState("t_current"));
       }
@@ -305,9 +281,10 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
   // prime
   int sample = game->t_start[tpg.GetState("phase")][eval.episode];
   for (int i = 0; i < game->num_samples_prime_ - 1; i++) {
-    obs_list.push_back(game->data[sample][0]); obs_list.pop_front();
+    obs_list.push_back(game->data[sample][0]);
+    obs_list.pop_front();
     // TODO(skelly): make this more efficient ?
-    std::copy(obs_list.begin(), obs_list.end(), obs.begin());  
+    std::copy(obs_list.begin(), obs_list.end(), obs.begin());
     eval.obs->Set(obs);
     eval.leafProgram = tpg.getAction(
         eval.tm, eval.obs, true, eval.visitedTeams, eval.decisionInstructions,
@@ -316,7 +293,8 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
   }
   // predict
   for (int i = 0; i < game->num_samples_predict_[tpg.GetState("phase")]; i++) {
-    obs_list.push_back(WrapContinuousAction(eval)); obs_list.pop_front();
+    obs_list.push_back(WrapContinuousAction(eval));
+    obs_list.pop_front();
     // TODO(skelly): make this more efficient ?
     std::copy(obs_list.begin(), obs_list.end(), obs.begin());
     eval.obs->Set(obs);
@@ -436,7 +414,8 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
   // prime
   int sample = game->t_start[tpg.GetState("phase")][eval.episode];
   for (int i = 0; i < game->num_samples_prime_ - 1; i++) {
-    obs_list.push_back(game->data[sample][0]); obs_list.pop_front();  //  FIFO
+    obs_list.push_back(game->data[sample][0]);
+    obs_list.pop_front();  //  FIFO
     // TODO(skelly): make this more efficient ?
     std::copy(obs_list.begin(), obs_list.end(), obs.begin());
     eval.obs->Set(obs);
@@ -461,7 +440,8 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
   }
   // predict
   for (int i = 0; i < game->num_samples_predict_[tpg.GetState("phase")]; i++) {
-    obs_list.push_back(WrapContinuousAction(eval)); obs_list.pop_front();  //  FIFO
+    obs_list.push_back(WrapContinuousAction(eval));
+    obs_list.pop_front();  //  FIFO
     // TODO(skelly): make this more efficient ?
     std::copy(obs_list.begin(), obs_list.end(), obs.begin());
     eval.obs->Set(obs);
@@ -483,6 +463,8 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
                                 eval.visitedTeams.end());
     TaskEnv::Results r =
         game->update(sample++, WrapContinuousAction(eval), tpg.rngs_[AUX_SEED]);
+    cerr << std::fixed << "test tm " << eval.tm->id_ << " t,p "
+         << game->data[sample][0] << "," << WrapContinuousAction(eval) << endl;
     eval.runTimeStats[REWARD1_IDX] += r.r1;  // MSE
     eval.runTimeStats[REWARD2_IDX] += r.r2;  // MAE
     AccumulateStepStats(eval);

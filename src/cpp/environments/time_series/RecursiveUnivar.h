@@ -59,11 +59,11 @@ class RecursiveUnivar : public TaskEnv {
     else if (task == "Audio")
       reader = new CSVReader("../datasets/2024-05-22-ali-10sec.dat", DIM);
     else if (task == "Offset")
-      reader = new CSVReader("../datasets/Simulation_29_offset.csv", DIM);
+      reader = new CSVReader("../datasets/ali_offset.csv", DIM);
     else if (task == "Duration")
-      reader = new CSVReader("../datasets/Simulation_29_duration.csv", DIM);
+      reader = new CSVReader("../datasets/ali_duration.csv", DIM);
     else  // task == "Pitch"
-      reader = new CSVReader("../datasets/Simulation_29_pitch.csv", DIM);
+      reader = new CSVReader("../datasets/ali_pitch.csv", DIM);
     data = reader->ReadData();
     delete reader;
 
@@ -124,11 +124,11 @@ class RecursiveUnivar : public TaskEnv {
       num_samples_predict_[1] = 100;  // validate
       num_samples_predict_[2] = 100;  // test
       // train
-      for (int s = 0; s <= 750; s += 25) t_start[0].push_back(s);
+      for (int s = 0; s <= 500; s += 25) t_start[0].push_back(s);
       // validate
-      for (int s = 0; s <= 750; s += 25) t_start[1].push_back(s);
+      for (int s = 0; s <= 500; s += 25) t_start[1].push_back(s);
       // test
-      t_start[2].push_back(666);
+      t_start[2].push_back(550);
     }
   }
 

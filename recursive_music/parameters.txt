@@ -19,7 +19,7 @@ animate 0
 stateful 1
 
 # how frequently to run test procedure
-test_mod 1000
+test_mod 100
 
 # in multitask settings, which tasks are active
 # rhs should be a comma-separated list like Cartpole,Acrobot
@@ -95,7 +95,7 @@ n_input 2
 max_initial_prog_size 10
 
 # max program size
-max_prog_size 945
+max_prog_size 100
 
 # program variation: probability of changing the program
 p_bid_mutate 1.0
@@ -127,10 +127,10 @@ memory_indices 8
 n_elite 945
 
 # number of training outcome to store
-n_stored_outcomes_TRAIN 30
+n_stored_outcomes_TRAIN 20
 
 # number of test outcomes to store
-n_stored_outcomes_VALIDATION 20
+n_stored_outcomes_VALIDATION 10
 
 # number of validation outcomes to store
 n_stored_outcomes_TEST 1
