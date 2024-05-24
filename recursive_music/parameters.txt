@@ -19,11 +19,11 @@ animate 0
 stateful 1
 
 # how frequently to run test procedure
-test_mod 10
+test_mod 100
 
 # in multitask settings, which tasks are active
 # rhs should be a comma-separated list like Cartpole,Acrobot
-active_tasks Offset,Duration,Pitch
+active_tasks Pitch
 
 # number of fitness functions available
 n_fit_mode 1
@@ -62,10 +62,10 @@ max_teams_per_graph 1000000
 p_atomic 0.95
 
 # team mutation: probability of deleting program from team
-pmd 0.7
+pmd 0.5
 
 # team mtation: probability of adding program to team
-pma 0.6
+pma 0.3
 
 # team mutation: probability of mutating a program
 pmm 0.2
@@ -107,7 +107,7 @@ p_bid_swap 0.2
 p_bid_delete 0.5
 
 # program variation: probability of adding an instruction
-p_bid_add 0.4
+p_bid_add 0.3
 
 # program variation: probability of linear crossover with another team
 p_bid_xover 0.0
@@ -124,16 +124,16 @@ bid_mu_const_stddev 0.05
 memory_indices 8
 
 # number of elite teams
-n_elite 945
+n_elite 1008
 
 # number of training outcome to store
-n_stored_outcomes_TRAIN 20
+n_stored_outcomes_TRAIN 9
 
 # number of test outcomes to store
-n_stored_outcomes_VALIDATION 10
+n_stored_outcomes_VALIDATION 6
 
 # number of validation outcomes to store
-n_stored_outcomes_TEST 1
+n_stored_outcomes_TEST 6
 
 # fitness proportional selection
 fit_prop_select 0
