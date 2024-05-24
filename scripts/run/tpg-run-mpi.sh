@@ -66,7 +66,7 @@ if [ $mode -eq 1 ]; then
      grep " fm 0 " | \
      grep " phs $phase " | \
      awk -F"mnOut" '{print $2}' | \
-     awk -F "p${phase}t3a0 " '{print $2}' | \
+     awk -F "p${phase}t2a0 " '{print $2}' | \
      awk '{print $1}' | \
      sort -n | \
      uniq | \
@@ -75,7 +75,7 @@ if [ $mode -eq 1 ]; then
    # Get generation of best team
    t_pickup=$(grep setElTmsMTA tpg.${seed}.*.std | \
      grep " fm 0 " | \
-     grep "p${phase}t3a0 ${bestScore} " | \
+     grep "p${phase}t2a0 ${bestScore} " | \
      grep " phs $phase " | \
      head -n 1 | \
      awk -F" t " '{print $2}' | \
@@ -84,7 +84,7 @@ if [ $mode -eq 1 ]; then
    # Get id of best team
    tm=$(grep "setElTmsMTA" tpg.${seed}.*.std | \
      grep " fm 0 " | \
-     grep "p${phase}t3a0 ${bestScore} " | \
+     grep "p${phase}t2a0 ${bestScore} " | \
      grep " phs $phase " | \
      grep " t $t_pickup " | \
      head -n 1 | \
@@ -99,7 +99,7 @@ if [ $mode -eq 1 ]; then
      1> tpg.$seed.replay.std 2> tpg.$seed.replay.err &
    
   # #  echo "COMMAND: mpirun --oversubscribe -np 2 xterm -hold -e gdb -ex run --args $TPG_PATH/build/release/cpp/experiments/TPGExperimentMPI -a -R $tm -C $phase -p $t_pickup -s $seed -g $seed 1> tpg.$seed.replay.std 2> tpg.$seed.replay.err &"
-   # replay with debugger
+  #  replay with debugger
   #  mpirun --oversubscribe -np 1 xterm -hold -e gdb -ex run --args \
   #    $TPG_PATH/build/release/cpp/experiments/TPGExperimentMPI -R $tm -r $replay_task -C $phase \
   #    -p $t_pickup -s $seed -g $seed \

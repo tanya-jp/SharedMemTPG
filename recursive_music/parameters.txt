@@ -19,7 +19,7 @@ animate 0
 stateful 1
 
 # how frequently to run test procedure
-test_mod 100
+test_mod 10
 
 # in multitask settings, which tasks are active
 # rhs should be a comma-separated list like Cartpole,Acrobot
