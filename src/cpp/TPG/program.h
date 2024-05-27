@@ -86,7 +86,7 @@ class program {
   }
 
   inline void ClearWorking() {
-    for (size_t i = 0; i < sharedMemory_.size(); i++) {
+    for (size_t i = 0; i < privateMemory_.size(); i++) {
       privateMemory_[i]->ClearWorking();
     }
   }

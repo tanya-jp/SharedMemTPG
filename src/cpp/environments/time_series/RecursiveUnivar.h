@@ -125,13 +125,10 @@ class RecursiveUnivar : public TaskEnv {
       num_samples_predict_[2] = 100;  // test
       // train
       for (int s = 0; s <= 800; s += 100) t_start[0].push_back(s);
-      cerr << "train episode " << t_start[0].size() << endl;
       // validate
       for (int s = 0; s <= 750; s += 150) t_start[1].push_back(s);
-      cerr << "train episode " << t_start[1].size() << endl;
       // test
       for (int s = 50; s <= 800; s += 150) t_start[2].push_back(s);
-      cerr << "train episode " << t_start[2].size() << endl;
     }
   }
 
@@ -139,7 +136,7 @@ class RecursiveUnivar : public TaskEnv {
 
   Results update(int sample, double prediction, mt19937 & /*rng*/) {
     step++;
-    prediction = 1 / (1 + exp(-prediction));  // sigmoid
+    // prediction = 1 / (1 + exp(-prediction));  // sigmoid
     double se = pow(prediction - data[sample + 1][0], 2);
     double ae = abs(prediction - data[sample + 1][0]);
     return {-se, -ae};

@@ -83,14 +83,18 @@ vector<team *> GetTeamsToEval(TPG &tpg) {
     }
   } else {
     // only test the validation champions (set fitmode later)
-    auto PS = PowerSet(tpg.GetParam<int>("n_task"));
-    for (auto &set : PS) {
-      team *tm =
-          tpg._eliteTeamPS[vecToStrNoSpace(set)][tpg.GetParam<int>("fit_mode")]
-                          [_VALIDATION_PHASE];
-      tm->_n_eval = tpg._numStoredOutcomesPerHost[tpg.GetState("phase")];
-      teams_to_eval.push_back(tm);
-    }
+    // auto PS = PowerSet(tpg.GetParam<int>("n_task"));
+    // for (auto &set : PS) {
+    // team *tm =
+    // tpg._eliteTeamPS[vecToStrNoSpace(set)][tpg.GetParam<int>("fit_mode")][_VALIDATION_PHASE];
+    team *tm =
+        tpg._eliteTeamPS[to_string(tpg.GetState("active_task"))]
+                        [tpg.GetParam<int>("fit_mode")][_VALIDATION_PHASE];
+    tm->_n_eval =
+        tpg._numStoredOutcomesPerHost[tpg.GetState("phase")] -
+        tm->numOutcomes(tpg.GetState("phase"), tpg.GetState("active_task"));
+    teams_to_eval.push_back(tm);
+    // }
   }
   return teams_to_eval;
 }
@@ -285,6 +289,7 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
     obs_list.pop_front();
     // TODO(skelly): make this more efficient ?
     std::copy(obs_list.begin(), obs_list.end(), obs.begin());
+
     eval.obs->Set(obs);
     eval.leafProgram = tpg.getAction(
         eval.tm, eval.obs, true, eval.visitedTeams, eval.decisionInstructions,

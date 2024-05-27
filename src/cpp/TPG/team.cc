@@ -58,12 +58,14 @@ void team::InitMemory(map<long, team *> &teamMap, bool use_evolved_const) {
   //   m->ClearWriteTime();  // needed?
   // }
   // this resets private memory to evolved constants
-  if (use_evolved_const) {
+  // if (use_evolved_const) {
     for (auto p : programs) {
-      p->CopySharedConstToWorking();
-      // p->ClearWorking();
+      if (use_evolved_const)
+        p->CopySharedConstToWorking();
+      else 
+        p->ClearWorking();
     }
-  }
+  // }
 }
 
 /******************************************************************************/
@@ -308,14 +310,11 @@ double team::getMeanOutcome(int phase, int task, int auxDouble, bool allPhase,
 
   //}
 
-  for (auto ouiter1 = outcomes_.begin(); ouiter1 != outcomes_.end();
-       ouiter1++) {  // task
+  for (auto ouiter1 = outcomes_.begin(); ouiter1 != outcomes_.end(); ouiter1++) {  // task
     if (ouiter1->first != task && !allTask) continue;
-    for (auto ouiter2 = ouiter1->second.begin();
-         ouiter2 != ouiter1->second.end(); ouiter2++) {  // phase
+    for (auto ouiter2 = ouiter1->second.begin(); ouiter2 != ouiter1->second.end(); ouiter2++) {  // phase
       if (ouiter2->first != phase && !allPhase) continue;
-      for (auto ouiter3 = ouiter2->second.begin();
-           ouiter3 != ouiter2->second.end(); ouiter3++)  // points
+      for (auto ouiter3 = ouiter2->second.begin(); ouiter3 != ouiter2->second.end(); ouiter3++)  // points
         outcomes.push_back(ouiter3->second->auxDouble(auxDouble));
     }
   }
@@ -557,6 +556,7 @@ void team::setOutcome(point *pt) {
     quickSums_[pt->task()][pt->key()][pt->phase()] += pt->auxDouble(pt->key());
   else
     quickSums_[pt->task()][pt->key()][pt->phase()] = pt->auxDouble(pt->key());
+
   quickMeans_[pt->task()][pt->key()][pt->phase()] =
       quickSums_[pt->task()][pt->key()][pt->phase()] /
       numOutcomes(pt->phase(), pt->task());

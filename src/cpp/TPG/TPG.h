@@ -122,7 +122,12 @@ class TPG {
   void recalculateProgramRefs();
   inline void resetOutcomes(int phase, bool roots);
   void selTeams(long, bool, int);
-  void setEliteTeams(int, int, int, bool);
+  void UpdateTeamPhyloData(team *tm);
+  void FindSingleTaskElites(vector<vector<double>>& mins, vector<vector<double>>& maxs);
+  vector <team*> NormalizeScoresAndRankTeams(vector<int>& set, vector<vector<double>>& min_scores, vector<vector<double>>& max_scores);
+  void FindMultiTaskElites(vector<vector<double>> &min_scores,
+    vector<vector<double>> &max_scores);
+  void SetEliteTeams(bool);
   void setOutcome(team *tm, string behav, vector<double> &rewards,
                   vector<int> &ints, long gtime);
   void setParams();
@@ -145,7 +150,7 @@ class TPG {
   // Map team id -> team* for program graph traversal
   map<long, team *> _teamMap;
   // keep track of which teams are elites wrt each taskSet
-  map<string, vector<team *>> _taskSetMap;
+  map<string, vector<team *>> task_set_map_;
   map<long, program *> _L;
   vector<long> _Lids;
   vector<long> _Mids;

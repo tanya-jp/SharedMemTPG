@@ -110,7 +110,7 @@ void TPG::clearMemory() {
 program *TPG::getAction(team *tm, state *s, bool updateActive,
                         set<team *, teamIdComp> &visitedTeams,
                         long &decisionInstructions, int timeStep,
-                        vector<team *> &teamPath, mt19937 &rng, bool& verbose) {
+                        vector<team *> &teamPath, mt19937 &rng, bool &verbose) {
   visitedTeams.clear();
   decisionInstructions = 0;
   teamPath.clear();
@@ -125,7 +125,7 @@ program *TPG::getAction(
     int timeStep, vector<program *> &allPrograms,
     vector<program *> &winningPrograms, vector<set<long>> &decisionFeatures,
     vector<set<memoryEigen *, memoryEigenIdComp>> &decisionMemories,
-    vector<team *> &teamPath, mt19937 &rng, bool& verbose) {
+    vector<team *> &teamPath, mt19937 &rng, bool &verbose) {
   allPrograms.clear();
   winningPrograms.clear();
   decisionInstructions = 0;
@@ -451,7 +451,7 @@ void TPG::finalize() {
   _persistenceFilterAllTime.clear();
   state_["point_count"] = 0;
   state_["program_count"] = 0;
-  _taskSetMap.clear();
+  task_set_map_.clear();
   state_["team_count"] = 0;
   _teamPairsToCompair.clear();
 
@@ -626,14 +626,14 @@ void TPG::GenerateNewTeams() {
   int n_new_teams = 0;
   auto power_set = PowerSet(GetParam<int>("n_task"));
   for (auto &set : power_set) {
-    if (_taskSetMap[vecToStrNoSpace(set)].size() == 0) continue;
+    if (task_set_map_[vecToStrNoSpace(set)].size() == 0) continue;
     // TODO(skelly): only roots?
-    vector<team *> parents = _taskSetMap[vecToStrNoSpace(set)];
+    vector<team *> parents = task_set_map_[vecToStrNoSpace(set)];
     uniform_int_distribution<int> disP(0, parents.size() - 1);
     for (size_t i = 0; i < GetParam<int>("n_elite") / power_set.size() - 1;
          i++) {
       bool team_xover = (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmx"));
-      
+
       // parent teams
       team *pm1 = parents[disP(rngs_[TPG_SEED])];
       std::list<program *> p1programs = pm1->members_;
@@ -651,12 +651,12 @@ void TPG::GenerateNewTeams() {
           if (p1liter != p1programs.end() &&
               (int)cm->size() < GetParam<int>("max_team_size") &&
               (((*p1liter)->action() < 0 && cm->n_atomic_ < 1) ||
-              find(p2programs.begin(), p2programs.end(), *p1liter) !=
-                  p2programs.end()))
+               find(p2programs.begin(), p2programs.end(), *p1liter) !=
+                   p2programs.end()))
             cm->AddProgram(*p1liter);
           else if ((int)cm->size() < GetParam<int>("max_team_size") &&
-                  p1liter != p1programs.end() &&
-                  real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmx_p"))
+                   p1liter != p1programs.end() &&
+                   real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmx_p"))
             cm->AddProgram(*p1liter);
           if ((int)cm->size() < GetParam<int>("max_team_size") &&
               p2liter != p2programs.end() &&
@@ -670,10 +670,11 @@ void TPG::GenerateNewTeams() {
           die(__FILE__, __FUNCTION__, __LINE__,
               "Crossover must leave the fail-safe atomic program!");
 
-      // no crossover, just clone first parent
+        // no crossover, just clone first parent
       } else {
-        for (p1liter = p1programs.begin(); p1liter != p1programs.end(); p1liter++)
-        cm->AddProgram(*p1liter);
+        for (p1liter = p1programs.begin(); p1liter != p1programs.end();
+             p1liter++)
+          cm->AddProgram(*p1liter);
       }
 
       // Mutate child team
@@ -815,147 +816,180 @@ team *TPG::getBestTeam() {
   return *teams.begin();
 }
 
+void TPG::UpdateTeamPhyloData(team *tm) {
+  MarkEffectiveCode(tm);
+  if (tm->runTimeComplexityIns() == 0) {
+    // TODO(skelly): clean out magic number - 2
+    tm->updateComplexityRecord(_teamMap,
+                               GetParam<int>("n_point_aux_double") - 2);
+  }
+  _phyloGraph[tm->id_].fitness = tm->fit_;
+  _phyloGraph[tm->id_].numActiveFeatures = tm->numActiveFeatures_;
+  _phyloGraph[tm->id_].numActivePrograms = tm->numActivePrograms_;
+  _phyloGraph[tm->id_].numActiveTeams = tm->numActiveTeams_;
+  _phyloGraph[tm->id_].numEffectiveInstructions =
+      tm->numEffectiveInstructions();
+}
 /******************************************************************************/
-void TPG::setEliteTeams(int t, int phase, int fitMode, bool verbose) {
-  vector<vector<double>> minScoresST, maxScoresST;
-  minScoresST.resize(1);
-  maxScoresST.resize(1);
+// Find the elite single-task program graphs
+void TPG::FindSingleTaskElites(vector<vector<double>> &mins,
+                               vector<vector<double>> &maxs) {
   vector<team *> teamsRankedVec;
-  teamsRankedVec.reserve(_Mroot.size() * GetParam<int>("n_task"));
-
-  // Find the elite single-task program graphs
-  _numEliteTeamsCurrent[phase] = 0;
-
-  minScoresST[fitMode].resize(GetParam<int>("n_task"));
-  maxScoresST[fitMode].resize(GetParam<int>("n_task"));
-  for (int o = 0; o < GetParam<int>("n_task"); o++) {
+  for (int task = 0; task < GetParam<int>("n_task"); task++) {
     teamsRankedVec.clear();
-    for (auto teiter = _Mroot.begin(); teiter != _Mroot.end(); teiter++) {
-      (*teiter)->elite(phase, false);
-      if ((phase == _TRAIN_PHASE && (*teiter)->numOutcomes(phase, o) > 0) ||
-          ((*teiter)->numOutcomes(phase, o) >=
-           _numStoredOutcomesPerHost[phase])) {
-        // if ((*teiter)->runTimeComplexityIns() == 0)
-        //    (*teiter)->updateComplexityRecord(_teamMap, _numPointAuxDouble -
-        //    2);
-        (*teiter)->fit_ = (*teiter)->getQuickMean(o, fitMode, phase);
-        teamsRankedVec.push_back(*teiter);
-        if (phase == _TEST_PHASE) {
-          MarkEffectiveCode(*teiter);
-          if ((*teiter)->runTimeComplexityIns() == 0)
-            (*teiter)->updateComplexityRecord(
-                _teamMap, GetParam<int>("n_point_aux_double") - 2);
-          _phyloGraph[(*teiter)->id_].fitness = (*teiter)->fit_;
-          _phyloGraph[(*teiter)->id_].numActiveFeatures =
-              (*teiter)->numActiveFeatures_;
-          _phyloGraph[(*teiter)->id_].numActivePrograms =
-              (*teiter)->numActivePrograms_;
-          _phyloGraph[(*teiter)->id_].numActiveTeams =
-              (*teiter)->numActiveTeams_;
-          _phyloGraph[(*teiter)->id_].numEffectiveInstructions =
-              (*teiter)->numEffectiveInstructions();
+    for (auto tm : _Mroot) {
+      tm->elite(GetState("phase"), false);  // mark team as not elite
+      if (tm->numOutcomes(GetState("phase"), task) >=
+          _numStoredOutcomesPerHost[GetState("phase")]) {
+        tm->fit_ =
+            tm->getQuickMean(task, GetState("fitMode"), GetState("phase"));
+        tm->fit_ = tm->getMeanOutcome(GetState("phase"), task, 0, false, false);
+        teamsRankedVec.push_back(tm);
+        if (GetState("phase") == _TEST_PHASE) {
+          UpdateTeamPhyloData(tm);
         }
-      } else
-        (*teiter)->elite(true);  // mark elite to protect until eval in all
-                                 // tasks
+      } else {
+        // mark elite to protect until eval in all tasks
+        tm->elite(true);
+      }
     }
     if (teamsRankedVec.size() > 0) {
       sort(teamsRankedVec.begin(), teamsRankedVec.end(),
            teamFitnessLexicalCompare());
-      maxScoresST[fitMode][o] = (*(teamsRankedVec.begin()))->fit_;
-      minScoresST[fitMode][o] = (*(teamsRankedVec.rbegin()))->fit_;
+      maxs[GetState("fitMode")][task] = (*(teamsRankedVec.begin()))->fit_;
+      mins[GetState("fitMode")][task] = (*(teamsRankedVec.rbegin()))->fit_;
     }
   }
+}
 
-  // find multitask elites
-  int n_nonempty_sets = 0;
-  for (auto &set : PowerSet(GetParam<int>("n_task")))
-    n_nonempty_sets += set.size() == 0 ? 0 : 1;
-  auto PS = PowerSet(GetParam<int>("n_task"));
-
-  for (auto &set : PS) {
-    if (phase == _TRAIN_PHASE) _taskSetMap[vecToStrNoSpace(set)].clear();
-    teamsRankedVec.clear();
+/******************************************************************************/
+vector<team *> TPG::NormalizeScoresAndRankTeams(
+    vector<int> &set, vector<vector<double>> &min_scores,
+    vector<vector<double>> &max_scores) {
+  vector<team *> vec;
+  for (auto tm : _Mroot) {
+    if (GetState("phase") == _TEST_PHASE &&
+        tm->id_ != (_eliteTeamPS[vecToStrNoSpace(set)]
+                                [GetParam<int>("fit_mode")][_VALIDATION_PHASE])
+                       ->id_) {
+      continue;
+    }
     vector<double> normalizedScores;
-    double rawMeanScore;
-    for (auto teiter = _Mroot.begin(); teiter != _Mroot.end(); teiter++) {
-      normalizedScores.clear();
-      for (size_t o = 0; o < set.size(); o++) {
-        if (((phase == _TRAIN_PHASE &&
-              (*teiter)->numOutcomes(phase, set[o]) > 0) ||
-             ((*teiter)->numOutcomes(phase, set[o]) >=
-              _numStoredOutcomesPerHost[phase]))) {
-          rawMeanScore = (*teiter)->getQuickMean(set[o], fitMode, phase);
-          if (!isEqual(minScoresST[fitMode][set[o]],
-                       maxScoresST[fitMode][set[o]]))
-            normalizedScores.push_back(
-                (rawMeanScore - minScoresST[fitMode][set[o]]) /
-                (maxScoresST[fitMode][set[o]] - minScoresST[fitMode][set[o]]));
-          else
-            normalizedScores.push_back(
-                isfinite(rawMeanScore) ? rawMeanScore : 0);  // be careful
-        }
+    for (size_t task = 0; task < set.size(); task++) {
+      if (tm->numOutcomes(GetState("phase"), set[task]) <
+          _numStoredOutcomesPerHost[GetState("phase")]) {
+        die(__FILE__, __FUNCTION__, __LINE__,
+            "All root teams should have enough evaluations at this point.");
       }
-      if (normalizedScores.size() == set.size()) {
-        (*teiter)->fit_ = *min_element(
-            normalizedScores.begin(),
-            normalizedScores.end());  // if PS.size() == 1 then
-                                      // normalizedScores.size() == 1
-        teamsRankedVec.push_back(*teiter);
+      auto raw_mean_score =
+          // tm->getQuickMean(set[task], GetState("fitMode"),
+          // GetState("phase"));
+          tm->getMeanOutcome(GetState("phase"), task, 0, false, false);
+      // guards for same min and max
+      if (!isEqual(min_scores[GetState("fitMode")][set[task]],
+                   max_scores[GetState("fitMode")][set[task]])) {
+        normalizedScores.push_back(
+            (raw_mean_score - min_scores[GetState("fitMode")][set[task]]) /
+            (max_scores[GetState("fitMode")][set[task]] -
+             min_scores[GetState("fitMode")][set[task]]));
+      } else {
+        normalizedScores.push_back(raw_mean_score /
+                                   max_scores[GetState("fitMode")][set[task]]);
       }
     }
-    if (teamsRankedVec.size() > 0) {      
-      sort(teamsRankedVec.begin(), teamsRankedVec.end(),
-           teamFitnessLexicalCompare());
-      size_t ne = GetParam<int>("n_elite") / n_nonempty_sets;
-      size_t c = 0;
-      bool gotPSElite = false;
-      for (auto teiter = teamsRankedVec.begin();
-           teiter != teamsRankedVec.end() && c < ne; teiter++) {
-        if (!gotPSElite) {
-          _eliteTeamPS[vecToStrNoSpace(set)][fitMode][phase] =
-              *(teiter);  // keep track of single elite for each taskset
-          gotPSElite = true;
-        }
-        if (!(*teiter)->elite(phase)) {
-          c++;
-          _numEliteTeamsCurrent[phase]++;
-          (*teiter)->elite(phase, true);
-          if (phase == _TRAIN_PHASE) {
-            (*teiter)->fitnessBin(t, vecToStrNoSpace(set));
-            _phyloGraph[(*teiter)->id_].fitnessBin = (*teiter)->fitnessBin();
-            _phyloGraph[(*teiter)->id_].fitness = (*teiter)->fit_;
-          }
-          if (phase == _TRAIN_PHASE)
-            _taskSetMap[vecToStrNoSpace(set)].push_back(*teiter);
-        }
-      }
-      _eliteTeamPS[vecToStrNoSpace(set)][fitMode][phase] =
-          *(teamsRankedVec.begin());
+    if (normalizedScores.size() != set.size()) {
+      die(__FILE__, __FUNCTION__, __LINE__,
+          "This team should have a score for all tasks.");
     }
+    tm->fit_ = *min_element(normalizedScores.begin(), normalizedScores.end());
+    vec.push_back(tm);
+  }
+  return vec;
+}
 
-    if (verbose && set.size() == 1 &&
-        haveEliteTeam(vecToStrNoSpace(set), fitMode, phase)) {
-      oss << "setElTmsST eLSz " << _numEliteTeamsCurrent[GetState("phase")]
-          << " ss " << vecToStrNoSpace(set) << " fm " << fitMode << " minThr "
-          << _eliteTeamPS[vecToStrNoSpace(set)][fitMode][phase]->fit_ << " ";
-      printTeamInfo(t, phase, false,
-                    _eliteTeamPS[vecToStrNoSpace(set)][fitMode][phase]->id_);
+/******************************************************************************/
+void TPG::FindMultiTaskElites(vector<vector<double>> &min_scores,
+                              vector<vector<double>> &max_scores) {
+  auto PS = PowerSet(GetParam<int>("n_task"));
+  for (auto &set : PS) {
+    if (GetState("phase") == _TRAIN_PHASE)
+      task_set_map_[vecToStrNoSpace(set)].clear();  // check this
+    auto teams_normed_scores =
+        NormalizeScoresAndRankTeams(set, min_scores, max_scores);
+    size_t n_elite_per_task = GetParam<int>("n_elite") / PS.size() - 1;
+    sort(teams_normed_scores.begin(), teams_normed_scores.end(),
+         teamFitnessLexicalCompare());
+    size_t elite_count = 0;
+    for (auto tm : teams_normed_scores) {
+      if (!tm->elite(GetState("phase"))) {
+        elite_count++;
+        _numEliteTeamsCurrent[GetState("phase")]++;
+        tm->elite(GetState("phase"), true);
+        if (GetState("phase") == _TRAIN_PHASE) {
+          tm->fitnessBin(GetState("t_current"), vecToStrNoSpace(set));
+          _phyloGraph[tm->id_].fitnessBin = tm->fitnessBin();
+          _phyloGraph[tm->id_].fitness = tm->fit_;
+        }
+        if (GetState("phase") == _TRAIN_PHASE)
+          task_set_map_[vecToStrNoSpace(set)].push_back(tm);
+      }
+      if (elite_count >= n_elite_per_task) break;
     }
-    if (verbose && set.size() == (size_t)GetParam<int>("n_task") &&
-        GetParam<int>("n_task") > 1 &&
-        haveEliteTeam(vecToStrNoSpace(set), fitMode, phase)) {
-      oss << "setElTmsMTA eLSz " << _numEliteTeamsCurrent[GetState("phase")]
-          << " ss " << vecToStrNoSpace(set) << " fm " << fitMode << " minThr "
-          << _eliteTeamPS[vecToStrNoSpace(set)][fitMode][phase]->fit_ << " ";
-      printTeamInfo(t, phase, false,
-                    _eliteTeamPS[vecToStrNoSpace(set)][fitMode][phase]->id_);
-    }
+    // Always keep track of single elite team for each task set
+    _eliteTeamPS[vecToStrNoSpace(set)][GetState("fitMode")][GetState("phase")] =
+        *(teams_normed_scores.begin());
+  }
+}
 
-    // if (phase == _TRAIN_PHASE)
-    //    if (haveEliteTeam(vecToStrNoSpace(PS[ss]), fitMode, _TEST_PHASE))
-    //       getEliteTeam(vecToStrNoSpace(PS[ss]), fitMode,
-    //       _TEST_PHASE)->elite(phase,true);
+/******************************************************************************/
+void TPG::SetEliteTeams(bool verbose) {
+  vector<team *> teams_normed_scores;
+  _numEliteTeamsCurrent[GetState("phase")] = 0;
+  // min/max scores for normalization, overcomplicated data structure?
+  vector<vector<double>> min_scores, max_scores;
+  min_scores.resize(GetParam<int>("n_fit_mode"));
+  max_scores.resize(GetParam<int>("n_fit_mode"));
+  min_scores[GetState("fitMode")].resize(GetParam<int>("n_task"));
+  max_scores[GetState("fitMode")].resize(GetParam<int>("n_task"));
+
+  FindSingleTaskElites(min_scores, max_scores);
+  FindMultiTaskElites(min_scores, max_scores);
+
+  if (verbose) {
+    auto PS = PowerSet(GetParam<int>("n_task"));
+    for (auto &set : PS) {
+      if (set.size() == 1 &&
+          haveEliteTeam(vecToStrNoSpace(set), GetState("fitMode"),
+                        GetState("phase"))) {
+        oss << "setElTmsST eLSz " << _numEliteTeamsCurrent[GetState("phase")]
+            << " ss " << vecToStrNoSpace(set) << " fm " << GetState("fitMode")
+            << " minThr "
+            << _eliteTeamPS[vecToStrNoSpace(set)][GetState("fitMode")]
+                           [GetState("phase")]
+                               ->fit_
+            << " ";
+        printTeamInfo(GetState("t_current"), GetState("phase"), false,
+                      _eliteTeamPS[vecToStrNoSpace(set)][GetState("fitMode")]
+                                  [GetState("phase")]
+                                      ->id_);
+      }
+      if (set.size() == (size_t)GetParam<int>("n_task") &&
+          GetParam<int>("n_task") > 1 &&
+          haveEliteTeam(vecToStrNoSpace(set), GetState("fitMode"),
+                        GetState("phase"))) {
+        oss << "setElTmsMTA eLSz " << _numEliteTeamsCurrent[GetState("phase")]
+            << " ss " << vecToStrNoSpace(set) << " fm " << GetState("fitMode")
+            << " minThr "
+            << _eliteTeamPS[vecToStrNoSpace(set)][GetState("fitMode")]
+                           [GetState("phase")]
+                               ->fit_
+            << " ";
+        printTeamInfo(GetState("t_current"), GetState("phase"), false,
+                      _eliteTeamPS[vecToStrNoSpace(set)][GetState("fitMode")]
+                                  [GetState("phase")]
+                                      ->id_);
+      }
+    }
   }
 }
 
@@ -969,9 +1003,9 @@ void TPG::setEliteTeams(int t, int phase, int fitMode, bool verbose) {
 //       set < team*, teamIdComp > &internalReplacements,
 //       mt19937 &rng){
 //    (void)rng;
-//    vector <double> minScoresST, maxScoresST;
-//    minScoresST.resize(GetParam<int>("n_task"));
-//    maxScoresST.resize(GetParam<int>("n_task"));
+//    vector <double> min_scores, max_scores;
+//    min_scores.resize(GetParam<int>("n_task"));
+//    max_scores.resize(GetParam<int>("n_task"));
 //
 //    vector <team *> teamsRankedVec;
 //    teamsRankedVec.reserve(internalReplacements.size() *
@@ -1007,8 +1041,8 @@ void TPG::setEliteTeams(int t, int phase, int fitMode, bool verbose) {
 //       }
 //       if (teamsRankedVec.size() > 0){
 //          sort(teamsRankedVec.begin(), teamsRankedVec.end(),
-//          teamFitnessCompare()); maxScoresST[o] =
-//          (*(teamsRankedVec.begin()))->fit(); minScoresST[o] =
+//          teamFitnessCompare()); max_scores[o] =
+//          (*(teamsRankedVec.begin()))->fit(); min_scores[o] =
 //          (*(teamsRankedVec.rbegin()))->fit();
 //       }
 //    }
@@ -1022,15 +1056,15 @@ void TPG::setEliteTeams(int t, int phase, int fitMode, bool verbose) {
 //       normalizedScores.clear();
 //       for (size_t o = 0; o < GetParam<int>("n_task"); o++){
 //          rawMeanScore = (*teiterInternal)->getQuickMean(o, fitMode, phase);
-//          if (!isEqual(minScoresST[o], maxScoresST[0]))
+//          if (!isEqual(min_scores[o], max_scores[0]))
 //             normalizedScores.push_back((rawMeanScore -
-//             minScoresST[o])/(maxScoresST[o] - minScoresST[o]));
+//             min_scores[o])/(max_scores[o] - min_scores[o]));
 //          else
-//             normalizedScores.push_back(rawMeanScore / minScoresST[o]);
+//             normalizedScores.push_back(rawMeanScore / min_scores[o]);
 //          //watch out for nan here in case of zero scores...
 //       }
 //       (*teiterInternal)->fit(*min_element(normalizedScores.begin(),
-//       normalizedScores.end())); teamsRankedVec.push_back(*teiterInternal);
+//       normalizedScores.end())); SetL.push_back(*teiterInternal);
 //    }
 //
 //    ////find pareto front wrt fitness & complexity
@@ -1132,11 +1166,11 @@ void TPG::InitTeams() {
         if (HaveParam("p_bid_mu_const")) {
           // new_prog->privateMemory_[mem_t]->RandomizeConst();
           mem->RandomizeConst();
-        } 
+        }
         AddMemory(mem);  // add new memory to memory population
         new_prog->MemSet(mem_t, mem);
       }
-      
+
       new_team->AddProgram(new_prog);
       AddProgram(new_prog);  // add program to program population
     }
@@ -1595,8 +1629,8 @@ void TPG::printGraphDotGPTPXXI(long rootTeamId,
   char outputFilename[80];
   ofstream ofs;
 
-  sprintf(outputFilename,
-          "replay/gv_taskDecomposition_%d%s",(int)rootTeam->id_, ".dot");
+  sprintf(outputFilename, "replay/gv_taskDecomposition_%d%s",
+          (int)rootTeam->id_, ".dot");
   ofs.open(outputFilename, ios::out);
   if (!ofs) die(__FILE__, __FUNCTION__, __LINE__, "Can't open file.");
 
@@ -1651,13 +1685,13 @@ void TPG::printGraphDotGPTPXXI(long rootTeamId,
   // ofs << "legend [colorscheme=set18," << endl;
   // ofs << "label=<" << endl;
   // ofs << "<table border=\"0\" cellborder=\"1\" cellspacing=\"0\">" << endl;
-  // ofs << "<tr><td bgcolor=\"" << taskCol[0] << "\">" << "CartPole" << "</td></tr>" << endl; 
-  // ofs << "<tr><td bgcolor=\"" << taskCol[1] << "\">" << "Pendulum" << "</td></tr>" << endl; 
-  // ofs << "<tr><td bgcolor=\"" << taskCol[2] << "\">" << "Sunspots" << "</td></tr>" << endl; 
-  // ofs << "<tr><td bgcolor=\"" << taskCol[3] << "\">" << "Mackey-Glass" << "</td></tr>" << endl; 
-  // ofs << "</table>>" << endl;
-  // ofs << ", fontsize=84, regular=1];" << endl;
-  // ofs << "}" << endl;
+  // ofs << "<tr><td bgcolor=\"" << taskCol[0] << "\">" << "CartPole" <<
+  // "</td></tr>" << endl; ofs << "<tr><td bgcolor=\"" << taskCol[1] << "\">" <<
+  // "Pendulum" << "</td></tr>" << endl; ofs << "<tr><td bgcolor=\"" <<
+  // taskCol[2] << "\">" << "Sunspots" << "</td></tr>" << endl; ofs << "<tr><td
+  // bgcolor=\"" << taskCol[3] << "\">" << "Mackey-Glass" << "</td></tr>" <<
+  // endl; ofs << "</table>>" << endl; ofs << ", fontsize=84, regular=1];" <<
+  // endl; ofs << "}" << endl;
 
   ofs << "}" << endl;
   ofs.close();
@@ -1929,10 +1963,11 @@ void TPG::printPhyloGraphDot(team *tm) {
     double fitness = _phyloGraph[id].fitness;
     double hue = std::clamp(fitness, 0.0, 1.0) / 3;
 
-    ofs << id << " [label=\"id: " << id << "\\nfit: " << std::fixed << std::setprecision(4) << fitness << "\" style=filled, fillcolor=\""
+    ofs << id << " [label=\"id: " << id << "\\nfit: " << std::fixed
+        << std::setprecision(4) << fitness << "\" style=filled, fillcolor=\""
         << hue << " 1.000 1.000\"]" << endl;
   }
-  
+
   ofs << "}" << endl;
   ofs.close();
 }
@@ -1969,19 +2004,21 @@ void TPG::printTeamInfo(long t, int phase, bool singleBest, long teamId) {
 
       oss << " mnOut";
       for (int phs : {0, 1, 2}) {
-        bool allPhase = false;
-        bool allTask = false;  // for genomic, set to true
+        // bool allPhase = false;
+        // bool allTask = false;  // for genomic, set to true
 
         // multi-task
         // statistics stored in aux doubles
-        for (int task = 0; task < GetParam<int>("n_task"); task++)
+        for (int task = 0; task < GetParam<int>("n_task"); task++) {
           for (int i = 0; i < GetParam<int>("n_point_aux_double"); i++) {
             if ((*teiter)->numOutcomes(phs, task) > 0) {
-              oss << " p" << phs << "t" << task << "a" << i << " "
-                  << (*teiter)->getMeanOutcome(phs, task, i, allPhase, allTask);
+              oss << " p" << phs << "t" << task << "a" << i << " ";
+              // oss << (*teiter)->getQuickMean(task, GetState("fitMode"), phs);
+              oss << (*teiter)->getMeanOutcome(phs, task, i, false, false);
             } else
               oss << " p" << phs << "t" << task << "a" << i << " x";
           }
+        }
       }
 
       oss << " fit " << (*teiter)->fit_;
@@ -2431,8 +2468,8 @@ void TPG::selTeams(long t, bool verbose, int genTime) {
     while (_Memory[mem_t].size() < _M.size()) {
       auto mem = new memoryEigen(state_["memory_count"]++, mem_t, params_);
       if (HaveParam("p_bid_mu_const")) {
-          mem->RandomizeConst();
-        }
+        mem->RandomizeConst();
+      }
       AddMemory(mem);
     }
   }

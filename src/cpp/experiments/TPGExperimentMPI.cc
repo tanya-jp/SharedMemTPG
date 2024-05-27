@@ -118,7 +118,6 @@ int main(int argc, char** argv) {
       tpg.readCheckpoint(tpg.GetParam<int>("t_pickup"),
                          tpg.GetParam<int>("checkpoint_in_phase"), -1, false,
                          "");
-      string s = "";
     } else {
       tpg.InitTeams();
     }
@@ -128,10 +127,8 @@ int main(int argc, char** argv) {
     tpg.state_["t_current"] = 0;  // tpg.GetParam<int>("t_start");
     tpg.state_["phase"] = _TRAIN_PHASE;
     vector<int> taskSet;
-    vector<int> S;
     for (int tsk = 0; tsk < (int)tasks.size(); tsk++) {
       taskSet.push_back(tsk);
-      S.push_back(tsk);
     }
     if (tpg.GetParam<int>("replay")) {
       tpg.state_["active_task"] = tpg.state_["replay_task"];
@@ -146,11 +143,6 @@ int main(int argc, char** argv) {
           endGenTeams = chrono::system_clock::now() - startGenTeams;
         }
 
-        // uniform_int_distribution<int> dis_dbg(0, 1000);
-        // for (int i = 0; i < 10000; i++) {
-        //   cerr << "dbg " << dis_dbg(tpg.rngs_[0]) << endl;
-        // }
-
         /* evaluation ********************************************************/
         startEval = chrono::system_clock::now();
         // evaluate on all tasks
@@ -159,8 +151,7 @@ int main(int argc, char** argv) {
 
         /* selection *********************************************************/
         startSetEliteTeams = chrono::system_clock::now();
-        tpg.setEliteTeams(tpg.GetState("t_current"), tpg.GetState("phase"), 0,
-                          true);
+        tpg.SetEliteTeams(true);
         endSetEliteTeams = chrono::system_clock::now() - startSetEliteTeams;
         startSelTeams = chrono::system_clock::now();
         tpg.selTeams(
@@ -174,17 +165,16 @@ int main(int argc, char** argv) {
         /* accounting and reporting ******************************************/
         startReport = chrono::system_clock::now();
         if (tpg.GetState("t_current") % tpg.GetParam<int>("test_mod") == 0) {
+          
           // validation
           tpg.state_["phase"] = _VALIDATION_PHASE;
-          evaluate_main(tpg, world, S);
-          tpg.setEliteTeams(tpg.GetState("t_current"), _VALIDATION_PHASE,
-                            tpg.GetParam<int>("fit_mode"), true);
+          evaluate_main(tpg, world, taskSet);
+          tpg.SetEliteTeams(true);
 
           // test
           tpg.state_["phase"] = _TEST_PHASE;
-          evaluate_main(tpg, world, S);
-          tpg.setEliteTeams(tpg.GetState("t_current"), _TEST_PHASE,
-                            tpg.GetParam<int>("fit_mode"), true);
+          evaluate_main(tpg, world, taskSet);
+          tpg.SetEliteTeams(true);
 
           if (tpg.GetParam<int>("write_checkpoints")) {
             // checkpoint single elite program graph in each dimension
