@@ -21,6 +21,10 @@ class TPG {
   TPG(const TPG &);
   ~TPG();
 
+  void InitMemory() {
+    for (auto p : _L)
+      p.second->ClearWorking();
+  }
   void AddProgram(program *p);
   void removeProgram(program *p, bool updateLids);
   void AddTeam(team *tm);
