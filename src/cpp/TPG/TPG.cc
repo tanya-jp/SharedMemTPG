@@ -891,12 +891,12 @@ vector<team *> TPG::NormalizeScoresAndRankTeams(
     vector<vector<double>> &max_scores) {
   vector<team *> vec;
   for (auto tm : _Mroot) {
-    if (GetState("phase") == _TEST_PHASE &&
-        tm->id_ != (_eliteTeamPS[vecToStrNoSpace(set)]
-                                [GetParam<int>("fit_mode")][_VALIDATION_PHASE])
-                       ->id_) {
-      continue;
-    }
+    // if (GetState("phase") == _TEST_PHASE &&
+    //     tm->id_ != (_eliteTeamPS[vecToStrNoSpace(set)]
+    //                             [GetParam<int>("fit_mode")][_TRAIN_PHASE])
+    //                    ->id_) {
+    //   continue;
+    // }
     vector<double> normalizedScores;
     for (size_t task = 0; task < set.size(); task++) {
       if (tm->numOutcomes(GetState("phase"), set[task]) <
