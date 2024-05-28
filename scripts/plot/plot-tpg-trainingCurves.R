@@ -26,6 +26,7 @@ if (maxy > 0){
    #rangey <- range(-0.06,max(tbl_m,na.rm=TRUE))
    #rangey <- range(min(medians,na.rm=TRUE),max(tbl_m,na.rm=TRUE))
 }
+# rangey = range(-0.0265, -0.024)
 par(bty="n", cex=1, cex.axis=1, las=1, mar=c(5, 6, 4, 4) + 0.1, lwd=1)
 
 plot(rangex, rangey, type="n", col="black", ann=FALSE, axes=FALSE, ylim=rangey)  

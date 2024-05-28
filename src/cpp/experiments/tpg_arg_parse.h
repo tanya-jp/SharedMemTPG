@@ -5,7 +5,7 @@
 
 void tpg_arg_parse(TPG& tpg, int argc, char** argv) {
   int option_char;
-  while ((option_char = getopt(argc, argv, "aC:g:R:s:t:p:")) != -1) {
+  while ((option_char = getopt(argc, argv, "aC:g:R:r:s:t:p:")) != -1) {
     switch (option_char) {
       case 'C': {
         tpg.params_["checkpoint"] = 1;
@@ -20,6 +20,10 @@ void tpg_arg_parse(TPG& tpg, int argc, char** argv) {
       case 'R': {
         tpg.params_["replay"] = 1;
         tpg.params_["host_to_replay"] = atoi(optarg);
+        break;
+      }
+      case 'r': {
+        tpg.state_["replay_task"] = atoi(optarg);
         break;
       }
       case 's': {

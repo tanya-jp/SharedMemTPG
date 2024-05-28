@@ -120,18 +120,17 @@ class instruction {
   static vector<operation> op_list_;
   inline void exec(bool dbg) {
     (this->*op_list_[op_])(dbg);
-    // // protect output
-    // out_->working_memory_[outIdx_].array() =
-    //     (out_->working_memory_[outIdx_].array().isFinite()).select(out_->working_memory_[outIdx_],
-    //     0);
-    // will get a lot ofnan without this
+ 
+    // will get a lot of nan without this
     out_->working_memory_[outIdx_].array() =
         out_->working_memory_[outIdx_].array().unaryExpr(
             [](double v) { return std::isfinite(v) ? v : 0.0; });
 
-    // out_->working_memory_[outIdx_].array() =
-    //     out_->working_memory_[outIdx_].array().unaryExpr(
-    //         [](double v) { return isEqual(v,0.0) ? abs(v) : v; });     
+    // TODO(skelly): remove this
+    out_->working_memory_[outIdx_].array() =
+        out_->working_memory_[outIdx_].array().unaryExpr(
+            [](double v) { return isEqual(v,0.0) ? 0.0 : v; });    
+             
     if (dbg)
        cerr << out_->working_memory_[outIdx_](0, 0) << endl;   
   }
