@@ -647,21 +647,44 @@ void TPG::GenerateNewTeams() {
 
       // team crossover
       if (team_xover) {
+        // while (p1liter != p1programs.end() || p2liter != p2programs.end()) {
+        //   if (p1liter != p1programs.end() && (int)cm->size() <
+        //   GetParam<int>("max_team_size") && (((*p1liter)->action() < 0 &&
+        //   cm->n_atomic_ < 1) ||
+        //        find(p2programs.begin(), p2programs.end(), *p1liter) !=
+        //            p2programs.end()))
+        //     cm->AddProgram(*p1liter);
+        //   else if ((int)cm->size() < GetParam<int>("max_team_size") &&
+        //            p1liter != p1programs.end() &&
+        //            real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmx_p"))
+        //     cm->AddProgram(*p1liter);
+        //   if ((int)cm->size() < GetParam<int>("max_team_size") &&
+        //       p2liter != p2programs.end() &&
+        //       real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmx_p"))
+        //     cm->AddProgram(*p2liter);
+        //   if (p1liter != p1programs.end()) p1liter++;
+        //   if (p2liter != p2programs.end()) p2liter++;
+        // }
+
         while (p1liter != p1programs.end() || p2liter != p2programs.end()) {
-          if (p1liter != p1programs.end() &&
-              (int)cm->size() < GetParam<int>("max_team_size") &&
-              (((*p1liter)->action() < 0 && cm->n_atomic_ < 1) ||
-               find(p2programs.begin(), p2programs.end(), *p1liter) !=
-                   p2programs.end()))
-            cm->AddProgram(*p1liter);
-          else if ((int)cm->size() < GetParam<int>("max_team_size") &&
-                   p1liter != p1programs.end() &&
-                   real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmx_p"))
-            cm->AddProgram(*p1liter);
-          if ((int)cm->size() < GetParam<int>("max_team_size") &&
-              p2liter != p2programs.end() &&
-              real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmx_p"))
-            cm->AddProgram(*p2liter);
+          if (p1liter != p1programs.end()) {
+            if ((*p1liter)->action() < 0 && cm->n_atomic_ < 1) {
+              cm->AddProgram(*p1liter);
+            } else if ((int)cm->size() < GetParam<int>("max_team_size") &&
+                       real_dist_(rngs_[TPG_SEED]) <
+                           GetParam<double>("pmx_p")) {
+              cm->AddProgram(*p1liter);
+            }
+          }
+          if (p2liter != p2programs.end()) {
+            if ((*p2liter)->action() < 0 && cm->n_atomic_ < 1) {
+              cm->AddProgram(*p2liter);
+            } else if ((int)cm->size() < GetParam<int>("max_team_size") &&
+                       real_dist_(rngs_[TPG_SEED]) <
+                           GetParam<double>("pmx_p")) {
+              cm->AddProgram(*p2liter);
+            }
+          }
           if (p1liter != p1programs.end()) p1liter++;
           if (p2liter != p2programs.end()) p2liter++;
         }
