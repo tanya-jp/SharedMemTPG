@@ -428,6 +428,7 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
                               vector<map<long, double>> &teamUseMapPerTask,
                               set<team *, teamIdComp> &visitedTeamsAllTasks,
                               int &steps) {
+  cerr << "";  // TODO(skelly): why do we need this?
   RecursiveUnivar *game = dynamic_cast<RecursiveUnivar *>(eval.game);
   game->reset(tpg.rngs_[AUX_SEED]);
   bool verbose = false;  // tpg.GetState("phase") == _TEST_PHASE ? true : false;

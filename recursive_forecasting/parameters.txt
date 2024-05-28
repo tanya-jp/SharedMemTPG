@@ -89,7 +89,7 @@ pmx_p 0.5
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 2
+n_input 6
 
 # max initial program size
 max_initial_prog_size 10
@@ -127,7 +127,7 @@ memory_indices 8
 n_elite 1008
 
 # number of training outcome to store
-n_stored_outcomes_TRAIN 19
+n_stored_outcomes_TRAIN 28
 
 # number of test outcomes to store
 n_stored_outcomes_VALIDATION 9

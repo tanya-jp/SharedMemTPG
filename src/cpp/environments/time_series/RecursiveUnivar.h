@@ -106,16 +106,19 @@ class RecursiveUnivar : public TaskEnv {
       t_start[2].insert(t_start[2].begin(), {1000});
     } else if (task == "Sunspots" || task == "Mackey" || task == "Laser") {
       num_samples_prime_ = 50;
-      num_samples_predict_[0] = 50;   // train
+      num_samples_predict_[0] = 100;   // train
       num_samples_predict_[1] = 100;  // validate
       num_samples_predict_[2] = 100;  // test
       // train
       t_start[0].insert(t_start[0].begin(),
                         {0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500,
-                         550, 600, 650, 700, 750, 800, 850, 900});
+                         550, 600, 650, 700, 750, 800, 850, 900});                   
       // validate
       t_start[1].insert(t_start[1].begin(),
                         {50, 150, 250, 350, 450, 550, 650, 750, 850});
+      //temporarily combine training and validation
+      t_start[0].insert(t_start[0].end(), t_start[1].begin(), t_start[1].end());
+                        
       // test
       t_start[2].insert(t_start[2].begin(), {950});
     } else if (task == "Offset" || task == "Duration" || task == "Pitch") {
