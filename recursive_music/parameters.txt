@@ -124,7 +124,7 @@ bid_mu_const_stddev 0.05
 memory_indices 8
 
 # number of elite teams
-n_elite 1008
+n_elite 400
 
 # number of training outcome to store
 n_stored_outcomes_TRAIN 15

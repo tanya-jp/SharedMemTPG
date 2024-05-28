@@ -433,7 +433,8 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
   list<double> obs_list(tpg.GetParam<int>("n_input"), 0.0);
   vector<double> obs(tpg.GetParam<int>("n_input"), 0.0);
   // prime
-  int sample = game->t_start[tpg.GetState("phase")][eval.episode];
+  // int sample = game->t_start[tpg.GetParam<int>("checkpoint_in_phase")][eval.episode];
+  int sample = game->t_start[_TRAIN_PHASE][eval.episode];
   for (int i = 0; i < game->num_samples_prime_ - 1; i++) {
     obs_list.push_back(game->data[sample][0]);
     obs_list.pop_front();  //  FIFO
@@ -460,7 +461,7 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
     sample++;
   }
   // predict
-  for (int i = 0; i < game->num_samples_predict_[tpg.GetState("phase")]; i++) {
+  for (int i = 0; i < game->num_samples_predict_[tpg.GetParam<int>("checkpoint_in_phase")]; i++) {
     obs_list.push_back(WrapContinuousActionSigmoid(eval));
     obs_list.pop_front();  //  FIFO
     // TODO(skelly): make this more efficient ?
@@ -509,8 +510,8 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
   for (auto tm : eval.teams) {
     if (tm->id_ != tpg.GetParam<int>("host_to_replay")) continue;
     eval.tm = tm;
-    // if (eval.animate) eval.tm->_n_eval = 1;////////////////////////
-    eval.tm->_n_eval = 19;  //////////////////
+    if (eval.animate) eval.tm->_n_eval = 1;
+    eval.tm->_n_eval = tpg._numStoredOutcomesPerHost[tpg.GetParam<int>("checkpoint_in_phase")];
     tpg.MarkEffectiveCode(eval.tm);
     vector<int> steps_per_task(tpg.GetParam<int>("n_task"), 0);
     for (int task = 0; task < tpg.GetParam<int>("n_task"); task++) {
