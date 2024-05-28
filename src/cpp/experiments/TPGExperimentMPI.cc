@@ -181,7 +181,7 @@ int main(int argc, char** argv) {
             tpg.writeCheckpoint(tpg.GetState("t_current"), true);
           }
           tpg.state_["phase"] = _TRAIN_PHASE;
-          if (std::any_cast<int>(tpg.params_["write_checkpoints"])) {
+          if (tpg.GetParam<int>("write_checkpoints")) {
             tpg.printPhyloGraphDot(tpg.getBestTeam());
             tpg.writeCheckpoint(tpg.GetState("t_current"), true);
           }
