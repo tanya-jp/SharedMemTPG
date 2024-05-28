@@ -69,8 +69,8 @@ double WrapContinuousAction(EvalStruct &eval) {
 }
 double WrapContinuousActionSigmoid(EvalStruct &eval) {
   double p = eval.leafProgram->privateMemory_[memoryEigen::SCALAR_TYPE]
-      ->working_memory_[1](0, 0);
-  return 1 / (1 + exp(-p));    
+                 ->working_memory_[1](0, 0);
+  return 1 / (1 + exp(-p));
 }
 
 vector<team *> GetTeamsToEval(TPG &tpg) {
@@ -91,7 +91,8 @@ vector<team *> GetTeamsToEval(TPG &tpg) {
     // // auto PS = PowerSet(tpg.GetParam<int>("n_task"));
     // // for (auto &set : PS) {
     // // team *tm =
-    // // tpg._eliteTeamPS[vecToStrNoSpace(set)][tpg.GetParam<int>("fit_mode")][_VALIDATION_PHASE];
+    // //
+    // tpg._eliteTeamPS[vecToStrNoSpace(set)][tpg.GetParam<int>("fit_mode")][_VALIDATION_PHASE];
     // team *tm =
     //     tpg._eliteTeamPS[to_string(tpg.GetState("active_task"))]
     //                     [tpg.GetParam<int>("fit_mode")][_VALIDATION_PHASE];
@@ -320,9 +321,9 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
     eval.obs->Set(obs);
     eval.leafProgram = tpg.getAction(
         eval.tm, eval.obs, true, eval.visitedTeams, eval.decisionInstructions,
-        game->getStep(), eval.teamPath, tpg.rngs_[AUX_SEED], verbose);   
-    TaskEnv::Results r =
-        game->update(sample++, WrapContinuousActionSigmoid(eval), tpg.rngs_[AUX_SEED]);
+        game->getStep(), eval.teamPath, tpg.rngs_[AUX_SEED], verbose);
+    TaskEnv::Results r = game->update(
+        sample++, WrapContinuousActionSigmoid(eval), tpg.rngs_[AUX_SEED]);
     eval.runTimeStats[REWARD1_IDX] += r.r1;  // MSE
     eval.runTimeStats[REWARD2_IDX] += r.r2;  // MAE
     AccumulateStepStats(eval);
@@ -433,8 +434,8 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
   list<double> obs_list(tpg.GetParam<int>("n_input"), 0.0);
   vector<double> obs(tpg.GetParam<int>("n_input"), 0.0);
   // prime
-  // int sample = game->t_start[tpg.GetParam<int>("checkpoint_in_phase")][eval.episode];
-  int sample = game->t_start[_TRAIN_PHASE][eval.episode];
+  int sample =
+      game->t_start[tpg.GetParam<int>("checkpoint_in_phase")][eval.episode];
   for (int i = 0; i < game->num_samples_prime_ - 1; i++) {
     obs_list.push_back(game->data[sample][0]);
     obs_list.pop_front();  //  FIFO
@@ -461,7 +462,9 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
     sample++;
   }
   // predict
-  for (int i = 0; i < game->num_samples_predict_[tpg.GetParam<int>("checkpoint_in_phase")]; i++) {
+  for (int i = 0;
+       i < game->num_samples_predict_[tpg.GetParam<int>("checkpoint_in_phase")];
+       i++) {
     obs_list.push_back(WrapContinuousActionSigmoid(eval));
     obs_list.pop_front();  //  FIFO
     // TODO(skelly): make this more efficient ?
@@ -483,10 +486,11 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
     // teamUseMapPerTask[tpg.state_["active_task"]][eval.tm->id_] += 1.0;
     visitedTeamsAllTasks.insert(eval.visitedTeams.begin(),
                                 eval.visitedTeams.end());
-    TaskEnv::Results r =
-        game->update(sample++, WrapContinuousActionSigmoid(eval), tpg.rngs_[AUX_SEED]);
+    TaskEnv::Results r = game->update(
+        sample++, WrapContinuousActionSigmoid(eval), tpg.rngs_[AUX_SEED]);
     cerr << std::fixed << "test tm " << eval.tm->id_ << " t,p "
-         << game->data[sample][0] << "," << WrapContinuousActionSigmoid(eval) << endl;
+         << game->data[sample][0] << "," << WrapContinuousActionSigmoid(eval)
+         << endl;
     eval.runTimeStats[REWARD1_IDX] += r.r1;  // MSE
     eval.runTimeStats[REWARD2_IDX] += r.r2;  // MAE
     AccumulateStepStats(eval);
@@ -511,7 +515,8 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
     if (tm->id_ != tpg.GetParam<int>("host_to_replay")) continue;
     eval.tm = tm;
     if (eval.animate) eval.tm->_n_eval = 1;
-    eval.tm->_n_eval = tpg._numStoredOutcomesPerHost[tpg.GetParam<int>("checkpoint_in_phase")];
+    eval.tm->_n_eval =
+        tpg._numStoredOutcomesPerHost[tpg.GetParam<int>("checkpoint_in_phase")];
     tpg.MarkEffectiveCode(eval.tm);
     vector<int> steps_per_task(tpg.GetParam<int>("n_task"), 0);
     for (int task = 0; task < tpg.GetParam<int>("n_task"); task++) {
