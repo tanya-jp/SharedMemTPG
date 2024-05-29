@@ -32,7 +32,8 @@ int main(int argc, char** argv) {
 
   ostringstream os;  // logging
 
-  /* task sets ***************************************************************/
+  /****************************************************************************/
+  // Read task sets from parameters and create environments. 
   vector<TaskEnv*> tasks;
   stringstream ss(tpg.GetParam<string>("active_tasks"));
   while (ss.good()) {
@@ -67,6 +68,37 @@ int main(int argc, char** argv) {
       exit(1);
     }
   }
+  // Read numStoredOutcomesPerHost from parameters. This  is the number of 
+  // episodes per agent in each phase (training, validation, test).
+  tpg._numStoredOutcomesPerHost.resize(tasks.size());
+  int task = 0;
+  ss.clear();
+  ss.str(tpg.GetParam<string>("n_stored_outcomes_TRAIN"));
+  while (ss.good()) {
+    string substr;
+    getline(ss, substr, ',');
+    tpg._numStoredOutcomesPerHost[task++].push_back(std::stoi(substr));
+  }
+  task = 0;
+  ss.clear();
+  ss.str(tpg.GetParam<string>("n_stored_outcomes_VALIDATION"));
+  while (ss.good()) {
+    string substr;
+    getline(ss, substr, ',');
+    tpg._numStoredOutcomesPerHost[task++].push_back(std::stoi(substr));
+  }
+  task = 0;
+  ss.clear();
+  ss.str(tpg.GetParam<string>("n_stored_outcomes_TEST"));
+  while (ss.good()) {
+    string substr;
+    getline(ss, substr, ',');
+    tpg._numStoredOutcomesPerHost[task++].push_back(std::stoi(substr));
+  }
+
+
+
+
 
   string allTaskString = "";
   for (size_t i = 0; i < tasks.size(); i++) allTaskString += to_string(i);

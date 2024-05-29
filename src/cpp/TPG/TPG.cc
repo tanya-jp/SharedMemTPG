@@ -7,7 +7,7 @@ TPG::TPG() {
   _Memids.resize(memoryEigen::NUM_MEMORY_TYPES);
   _Memory.resize(memoryEigen::NUM_MEMORY_TYPES);
   for (size_t i = 0; i < _NUM_PHASE; i++) _numEliteTeamsCurrent.push_back(0);
-  _numStoredOutcomesPerHost.resize(_NUM_PHASE);
+  // _numStoredOutcomesPerHost.resize(_NUM_PHASE);
   _ops.resize(instruction::NUM_OP);
   fill(_ops.begin(), _ops.end(), false);
   rngs_.resize(NUM_RNG);
@@ -401,7 +401,10 @@ void TPG::ReadParameters(string file_name,
     if (outcome_fields[0] == "SCALAR_SQRT_OP")
       _ops[instruction::SCALAR_SQRT_OP_] = true;
 
-    if (outcome_fields[0] == "active_tasks")
+    if (outcome_fields[0] == "active_tasks" ||
+        outcome_fields[0] == "n_stored_outcomes_TRAIN" ||
+        outcome_fields[0] == "n_stored_outcomes_VALIDATION" ||
+        outcome_fields[0] == "n_stored_outcomes_TEST")
       params[outcome_fields[0]] = outcome_fields[1];
     else if (outcome_fields[1].find('.') !=
              std::string::npos)  // found double parameter
@@ -863,7 +866,7 @@ void TPG::FindSingleTaskElites(vector<vector<double>> &mins,
     for (auto tm : _Mroot) {
       tm->elite(GetState("phase"), false);  // mark team as not elite
       if (tm->numOutcomes(GetState("phase"), task) >=
-          _numStoredOutcomesPerHost[GetState("phase")]) {
+          _numStoredOutcomesPerHost[task][GetState("phase")]) {
         tm->fit_ =
             tm->getQuickMean(task, GetState("fitMode"), GetState("phase"));
         tm->fit_ = tm->getMeanOutcome(GetState("phase"), task, 0, false, false);
@@ -900,7 +903,7 @@ vector<team *> TPG::NormalizeScoresAndRankTeams(
     vector<double> normalizedScores;
     for (size_t task = 0; task < set.size(); task++) {
       if (tm->numOutcomes(GetState("phase"), set[task]) <
-          _numStoredOutcomesPerHost[GetState("phase")]) {
+          _numStoredOutcomesPerHost[set[task]][GetState("phase")]) {
         die(__FILE__, __FUNCTION__, __LINE__,
             "All root teams should have enough evaluations at this point.");
       }
@@ -2564,12 +2567,6 @@ void TPG::cleanupProgramsWithNoRefs(long t,
 /******************************************************************************/
 void TPG::setParams() {
   ReadParameters("parameters.txt", params_);
-  _numStoredOutcomesPerHost[_TRAIN_PHASE] =
-      GetParam<int>("n_stored_outcomes_TRAIN");
-  _numStoredOutcomesPerHost[_VALIDATION_PHASE] =
-      GetParam<int>("n_stored_outcomes_VALIDATION");
-  _numStoredOutcomesPerHost[_TEST_PHASE] =
-      GetParam<int>("n_stored_outcomes_TEST");
 }
 
 /******************************************************************************/

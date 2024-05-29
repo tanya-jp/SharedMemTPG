@@ -178,7 +178,7 @@ class TPG {
   map<string, deque<double>> _eliteTestScoresMQ;
   vector<mt19937> rngs_;
   vector<uint_fast32_t> seeds_;
-  vector<long> _numStoredOutcomesPerHost;
+  vector<vector<long>> _numStoredOutcomesPerHost;  // [task][phase]
   ostringstream oss;  // logging, reporting
   vector<size_t> _numEliteTeamsCurrent;
 

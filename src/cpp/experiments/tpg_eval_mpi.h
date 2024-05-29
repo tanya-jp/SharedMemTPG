@@ -80,8 +80,8 @@ vector<team *> GetTeamsToEval(TPG &tpg) {
   if (tpg.GetState("phase") != _TEST_PHASE) {
     for (auto tm : root_teams) {
       tm->_n_eval =
-          tpg._numStoredOutcomesPerHost[tpg.GetState("phase")] -
-          tm->numOutcomes(tpg.GetState("phase"), tpg.GetState("active_task"));
+          tpg._numStoredOutcomesPerHost[tpg.GetState("active_task")][tpg.GetState("phase")] -
+          tm->numOutcomes(tpg.GetState("phase"), tpg.GetState("active_task"));    
       if (tm->_n_eval > 0) {
         teams_to_eval.push_back(tm);
       }
@@ -97,7 +97,7 @@ vector<team *> GetTeamsToEval(TPG &tpg) {
     //     tpg._eliteTeamPS[to_string(tpg.GetState("active_task"))]
     //                     [tpg.GetParam<int>("fit_mode")][_VALIDATION_PHASE];
     // tm->_n_eval =
-    //     tpg._numStoredOutcomesPerHost[tpg.GetState("phase")] -
+    //     tpg._numStoredOutcomesPerHost[tpg.GetState("active_task")][tpg.GetState("phase")] -
     //     tm->numOutcomes(tpg.GetState("phase"), tpg.GetState("active_task"));
     // teams_to_eval.push_back(tm);
     // // }
@@ -105,7 +105,7 @@ vector<team *> GetTeamsToEval(TPG &tpg) {
     // TODO(skelly): for now test every root team
     for (auto tm : root_teams) {
       tm->_n_eval =
-          tpg._numStoredOutcomesPerHost[tpg.GetState("phase")] -
+          tpg._numStoredOutcomesPerHost[tpg.GetState("active_task")][tpg.GetState("phase")] -
           tm->numOutcomes(tpg.GetState("phase"), tpg.GetState("active_task"));
       if (tm->_n_eval > 0) {
         teams_to_eval.push_back(tm);
@@ -517,7 +517,7 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
     eval.tm = tm;
     if (eval.animate) eval.tm->_n_eval = 1;
     eval.tm->_n_eval =
-        tpg._numStoredOutcomesPerHost[tpg.GetParam<int>("checkpoint_in_phase")];
+        tpg._numStoredOutcomesPerHost[tpg.GetState("active_task")][tpg.GetParam<int>("checkpoint_in_phase")];
     tpg.MarkEffectiveCode(eval.tm);
     vector<int> steps_per_task(tpg.GetParam<int>("n_task"), 0);
     for (int task = 0; task < tpg.GetParam<int>("n_task"); task++) {
