@@ -115,10 +115,7 @@ class RecursiveUnivar : public TaskEnv {
                          550, 600, 650, 700, 750, 800, 850, 900});                   
       // validate
       t_start[1].insert(t_start[1].begin(),
-                        {50, 150, 250, 350, 450, 550, 650, 750, 850});
-      //temporarily combine training and validation
-      t_start[0].insert(t_start[0].end(), t_start[1].begin(), t_start[1].end());
-                        
+                        {50, 150, 250, 350, 450, 550, 650, 750, 850});                        
       // test
       t_start[2].insert(t_start[2].begin(), {950});
     } else if (task == "Offset" || task == "Duration" || task == "Pitch") {
@@ -127,10 +124,10 @@ class RecursiveUnivar : public TaskEnv {
       num_samples_predict_[1] = 100;  // validate
       num_samples_predict_[2] = 100;  // test
       // train
-      for (int s = 0; s <= 800; s += 100) t_start[0].push_back(s);
-      for (int s = 0; s <= 750; s += 150) t_start[0].push_back(s);
+      //for (int s = 0; s <= 800; s += 100) t_start[0].push_back(s);
+      for (int s = 0; s <= 800; s += 50) t_start[0].push_back(s);
       // validate
-      // for (int s = 0; s <= 750; s += 150) t_start[1].push_back(s);
+      for (int s = 0; s <= 750; s += 150) t_start[1].push_back(s);
       // test
       for (int s = 50; s <= 800; s += 150) t_start[2].push_back(s);
 

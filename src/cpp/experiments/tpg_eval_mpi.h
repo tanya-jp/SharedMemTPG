@@ -436,7 +436,7 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
   vector<double> obs(tpg.GetParam<int>("n_input"), 0.0);
   // prime
   int sample =
-      game->t_start[tpg.GetParam<int>("checkpoint_in_phase")][eval.episode];
+      game->t_start[tpg.GetParam<int>("checkpoint_in_phase")][eval.episode];   
   for (int i = 0; i < game->num_samples_prime_ - 1; i++) {
     obs_list.push_back(game->data[sample][0]);
     obs_list.pop_front();  //  FIFO
