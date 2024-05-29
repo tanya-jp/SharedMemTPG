@@ -869,7 +869,7 @@ void TPG::FindSingleTaskElites(vector<vector<double>> &mins,
           _numStoredOutcomesPerHost[task][GetState("phase")]) {
         tm->fit_ =
             tm->getQuickMean(task, GetState("fitMode"), GetState("phase"));
-        tm->fit_ = tm->getMeanOutcome(GetState("phase"), task, 0, false, false);
+        // tm->fit_ = tm->getMeanOutcome(GetState("phase"), task, 0, false, false);
         teamsRankedVec.push_back(tm);
         if (GetState("phase") == _TEST_PHASE) {
           UpdateTeamPhyloData(tm);
@@ -908,9 +908,9 @@ vector<team *> TPG::NormalizeScoresAndRankTeams(
             "All root teams should have enough evaluations at this point.");
       }
       auto raw_mean_score =
-          // tm->getQuickMean(set[task], GetState("fitMode"),
-          // GetState("phase"));
-          tm->getMeanOutcome(GetState("phase"), task, 0, false, false);
+          tm->getQuickMean(set[task], GetState("fitMode"),
+          GetState("phase"));
+          // tm->getMeanOutcome(GetState("phase"), set[task], 0, false, false);
       // guards for same min and max
       if (!isEqual(min_scores[GetState("fitMode")][set[task]],
                    max_scores[GetState("fitMode")][set[task]])) {
