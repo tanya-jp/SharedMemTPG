@@ -50,25 +50,25 @@ mu_internal 0
 n_discrete_action 3
 
 # initial team size
-initial_team_size 10
+initial_team_size 5
 
 # max team size
-max_team_size 20
+max_team_size 1000000
 
 # max teams per graph
-max_teams_per_graph 100
+max_teams_per_graph 1000000
 
 # when changing action pointer, probability of selecting atomic action
 p_atomic 0.95
 
 # team mutation: probability of deleting program from team
-pmd 0.5
+pmd 0.7
 
 # team mtation: probability of adding program to team
-pma 0.3
+pma 0.5
 
 # team mutation: probability of mutating a program
-pmm 0.2
+pmm 1.0
 
 # team mutation: probability of mutating a program's action pointer
 pmn 0.1
@@ -80,34 +80,34 @@ pms 0.1
 pmw 0.1
 
 # team variation: probability of team crossover
-pmx 0.2
+pmx 0.5
 
 # team variation: probability of team crossover adding each parent prog to child
-pmx_p 0.5
+pmx_p 0.3
 
 # enable continuous outputs
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 6
+n_input 2
 
 # max initial program size
 max_initial_prog_size 10
 
 # max program size
-max_prog_size 100
+max_prog_size 1000000
 
 # program variation: probability of changing the program
 p_bid_mutate 1.0
 
 # program variation: probability of swaping the position of two instructions
-p_bid_swap 0.2
+p_bid_swap 0.5
 
 # program variation: probability of deleting an instruction
-p_bid_delete 0.5
+p_bid_delete 0.7
 
 # program variation: probability of adding an instruction
-p_bid_add 0.3
+p_bid_add 0.5
 
 # program variation: probability of linear crossover with another team
 p_bid_xover 0.0
@@ -119,20 +119,19 @@ p_bid_xover 0.0
 bid_mu_const_stddev 0.05
 
 # memory size: number of memory indices
-# each memory index points to a data structure with some number of rows and columns
-# more the 4 indicies breaks introns removal for continus output???
+# each memory index points to a data structure (scalar, vector, or matrix)
 memory_indices 8
 
 # number of elite teams
-n_elite 1008
+n_elite 945
 
-# number of training outcome to store
-n_stored_outcomes_TRAIN 28
+# number of training outcomes to store per agent for each task
+n_stored_outcomes_TRAIN 19
 
-# number of test outcomes to store
+# number of test outcomes to store per agent for each task
 n_stored_outcomes_VALIDATION 9
 
-# number of validation outcomes to store
+# number of validation outcomes to store per agent for each task
 n_stored_outcomes_TEST 1
 
 # fitness proportional selection
