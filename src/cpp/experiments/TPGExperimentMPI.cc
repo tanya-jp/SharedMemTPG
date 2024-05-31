@@ -194,10 +194,11 @@ int main(int argc, char** argv) {
         startReport = chrono::system_clock::now();
         if (tpg.GetState("t_current") % tpg.GetParam<int>("test_mod") == 0) {
           
-          // validation
-          tpg.state_["phase"] = _VALIDATION_PHASE;
-          evaluate_main(tpg, world, taskSet);
-          tpg.SetEliteTeams(true);
+          // TODO(skelly): re-enable validation
+          // // validation
+          // tpg.state_["phase"] = _VALIDATION_PHASE;
+          // evaluate_main(tpg, world, taskSet);
+          // tpg.SetEliteTeams(true);
 
           // test
           tpg.state_["phase"] = _TEST_PHASE;

@@ -19,7 +19,7 @@ animate 0
 stateful 1
 
 # how frequently to run test procedure
-test_mod 100
+test_mod 1000
 
 # in multitask settings, which tasks are active
 # rhs should be a comma-separated list like Cartpole,Acrobot
@@ -65,7 +65,7 @@ p_atomic 0.95
 pmd 0.7
 
 # team mtation: probability of adding program to team
-pma 0.5
+pma 0.4
 
 # team mutation: probability of mutating a program
 pmm 1.0
@@ -107,7 +107,7 @@ p_bid_swap 0.5
 p_bid_delete 0.7
 
 # program variation: probability of adding an instruction
-p_bid_add 0.5
+p_bid_add 0.4
 
 # program variation: probability of linear crossover with another team
 p_bid_xover 0.0
