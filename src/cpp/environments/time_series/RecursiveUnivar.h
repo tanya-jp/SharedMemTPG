@@ -15,6 +15,7 @@ class RecursiveUnivar : public TaskEnv {
   int num_samples_prime_;
   // number of samples for training, validation, test
   int num_samples_predict_[3];
+  
   class CSVReader {
     const string filename;
     const int dim;
@@ -42,6 +43,7 @@ class RecursiveUnivar : public TaskEnv {
     state.reserve(DIM);
     state.resize(DIM);
     PrepareData(task);
+    min_reward_ = -1000;
   }
 
   ~RecursiveUnivar() {}

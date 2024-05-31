@@ -194,6 +194,10 @@ void FinalizeStepStats(TPG &tpg, EvalStruct &eval) {
   if (eval.game->eval_type_ == "RecursiveForecast") {
     eval.runTimeStats[REWARD1_IDX] /= eval.game->getStep();
     eval.runTimeStats[REWARD2_IDX] /= eval.game->getStep();
+    if (!isfinite(eval.runTimeStats[REWARD1_IDX]))
+      eval.runTimeStats[REWARD1_IDX] = eval.game->min_reward_;
+    if (!isfinite(eval.runTimeStats[REWARD2_IDX]))
+      eval.runTimeStats[REWARD2_IDX] = eval.game->min_reward_;
   }
   eval.runTimeStats[VISITED_TEAMS_IDX] /= eval.game->getStep();
   eval.runTimeStats[INSTRUCTIONS_IDX] /= eval.game->getStep();
@@ -314,7 +318,7 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
   }
   // predict
   for (int i = 0; i < game->num_samples_predict_[tpg.GetState("phase")]; i++) {
-    obs_list.push_back(WrapContinuousActionSigmoid(eval));
+    obs_list.push_back(WrapContinuousAction(eval));
     obs_list.pop_front();
     // TODO(skelly): make this more efficient ?
     std::copy(obs_list.begin(), obs_list.end(), obs.begin());
@@ -323,7 +327,7 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
         eval.tm, eval.obs, true, eval.visitedTeams, eval.decisionInstructions,
         game->getStep(), eval.teamPath, tpg.rngs_[AUX_SEED], verbose);
     TaskEnv::Results r = game->update(
-        sample++, WrapContinuousActionSigmoid(eval), tpg.rngs_[AUX_SEED]);
+        sample++, WrapContinuousAction(eval), tpg.rngs_[AUX_SEED]);
     eval.runTimeStats[REWARD1_IDX] += r.r1;  // MSE
     eval.runTimeStats[REWARD2_IDX] += r.r2;  // MAE
     AccumulateStepStats(eval);
@@ -466,7 +470,7 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
   for (int i = 0;
        i < game->num_samples_predict_[tpg.GetParam<int>("checkpoint_in_phase")];
        i++) {
-    obs_list.push_back(WrapContinuousActionSigmoid(eval));
+    obs_list.push_back(WrapContinuousAction(eval));
     obs_list.pop_front();  //  FIFO
     // TODO(skelly): make this more efficient ?
     std::copy(obs_list.begin(), obs_list.end(), obs.begin());
@@ -488,9 +492,9 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
     visitedTeamsAllTasks.insert(eval.visitedTeams.begin(),
                                 eval.visitedTeams.end());
     TaskEnv::Results r = game->update(
-        sample++, WrapContinuousActionSigmoid(eval), tpg.rngs_[AUX_SEED]);
+        sample++, WrapContinuousAction(eval), tpg.rngs_[AUX_SEED]);
     cerr << std::fixed << "test tm " << eval.tm->id_ << " t,p "
-         << game->data[sample][0] << "," << WrapContinuousActionSigmoid(eval)
+         << game->data[sample][0] << "," << WrapContinuousAction(eval)
          << endl;
     eval.runTimeStats[REWARD1_IDX] += r.r1;  // MSE
     eval.runTimeStats[REWARD2_IDX] += r.r2;  // MAE

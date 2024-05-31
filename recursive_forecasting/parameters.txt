@@ -123,7 +123,10 @@ bid_mu_const_stddev 0.05
 memory_indices 8
 
 # number of elite teams
-n_elite 945
+n_elite 1000
+
+# multiplier for # new teams to generate each generation
+n_elite_mul 5
 
 # number of training outcomes to store per agent for each task
 n_stored_outcomes_TRAIN 19

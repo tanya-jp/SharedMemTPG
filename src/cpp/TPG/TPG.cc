@@ -628,13 +628,14 @@ void TPG::AddTeamToPhylogeny(team *parent, team *new_team) {
 void TPG::GenerateNewTeams() {
   int n_new_teams = 0;
   auto power_set = PowerSet(GetParam<int>("n_task"));
+  int n_teams_per_set = (GetParam<int>("n_elite") / power_set.size()) *
+                        GetParam<int>("n_elite_mul");
   for (auto &set : power_set) {
     if (task_set_map_[vecToStrNoSpace(set)].size() == 0) continue;
     // TODO(skelly): only roots?
     vector<team *> parents = task_set_map_[vecToStrNoSpace(set)];
     uniform_int_distribution<int> disP(0, parents.size() - 1);
-    for (size_t i = 0; i < GetParam<int>("n_elite") / power_set.size() - 1;
-         i++) {
+    for (int i = 0; i < n_teams_per_set; i++) {
       bool team_xover = (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmx"));
 
       // parent teams
@@ -650,25 +651,6 @@ void TPG::GenerateNewTeams() {
 
       // team crossover
       if (team_xover) {
-        // while (p1liter != p1programs.end() || p2liter != p2programs.end()) {
-        //   if (p1liter != p1programs.end() && (int)cm->size() <
-        //   GetParam<int>("max_team_size") && (((*p1liter)->action() < 0 &&
-        //   cm->n_atomic_ < 1) ||
-        //        find(p2programs.begin(), p2programs.end(), *p1liter) !=
-        //            p2programs.end()))
-        //     cm->AddProgram(*p1liter);
-        //   else if ((int)cm->size() < GetParam<int>("max_team_size") &&
-        //            p1liter != p1programs.end() &&
-        //            real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmx_p"))
-        //     cm->AddProgram(*p1liter);
-        //   if ((int)cm->size() < GetParam<int>("max_team_size") &&
-        //       p2liter != p2programs.end() &&
-        //       real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmx_p"))
-        //     cm->AddProgram(*p2liter);
-        //   if (p1liter != p1programs.end()) p1liter++;
-        //   if (p2liter != p2programs.end()) p2liter++;
-        // }
-
         while (p1liter != p1programs.end() || p2liter != p2programs.end()) {
           if (p1liter != p1programs.end()) {
             if ((*p1liter)->action() < 0 && cm->n_atomic_ < 1) {
@@ -858,8 +840,8 @@ void TPG::UpdateTeamPhyloData(team *tm) {
 }
 /******************************************************************************/
 // Find the elite single-task program graphs
-void TPG::FindSingleTaskElites(vector<vector<double>> &mins,
-                               vector<vector<double>> &maxs) {
+void TPG::FindSingleTaskFitnessRange(vector<vector<double>> &mins,
+                                     vector<vector<double>> &maxs) {
   vector<team *> teamsRankedVec;
   for (int task = 0; task < GetParam<int>("n_task"); task++) {
     teamsRankedVec.clear();
@@ -869,7 +851,6 @@ void TPG::FindSingleTaskElites(vector<vector<double>> &mins,
           _numStoredOutcomesPerHost[task][GetState("phase")]) {
         tm->fit_ =
             tm->getQuickMean(task, GetState("fitMode"), GetState("phase"));
-        // tm->fit_ = tm->getMeanOutcome(GetState("phase"), task, 0, false, false);
         teamsRankedVec.push_back(tm);
         if (GetState("phase") == _TEST_PHASE) {
           UpdateTeamPhyloData(tm);
@@ -908,9 +889,8 @@ vector<team *> TPG::NormalizeScoresAndRankTeams(
             "All root teams should have enough evaluations at this point.");
       }
       auto raw_mean_score =
-          tm->getQuickMean(set[task], GetState("fitMode"),
-          GetState("phase"));
-          // tm->getMeanOutcome(GetState("phase"), set[task], 0, false, false);
+          tm->getQuickMean(set[task], GetState("fitMode"), GetState("phase"));
+      // tm->getMeanOutcome(GetState("phase"), set[task], 0, false, false);
       // guards for same min and max
       if (!isEqual(min_scores[GetState("fitMode")][set[task]],
                    max_scores[GetState("fitMode")][set[task]])) {
@@ -939,10 +919,10 @@ void TPG::FindMultiTaskElites(vector<vector<double>> &min_scores,
   auto PS = PowerSet(GetParam<int>("n_task"));
   for (auto &set : PS) {
     if (GetState("phase") == _TRAIN_PHASE)
-      task_set_map_[vecToStrNoSpace(set)].clear();  // check this
+      task_set_map_[vecToStrNoSpace(set)].clear();  // TODO(skelly): check this
     auto teams_normed_scores =
         NormalizeScoresAndRankTeams(set, min_scores, max_scores);
-    size_t n_elite_per_task = GetParam<int>("n_elite") / PS.size() - 1;
+    size_t n_elite_per_task = GetParam<int>("n_elite") / PS.size();
     sort(teams_normed_scores.begin(), teams_normed_scores.end(),
          teamFitnessLexicalCompare());
     size_t elite_count = 0;
@@ -978,7 +958,7 @@ void TPG::SetEliteTeams(bool verbose) {
   min_scores[GetState("fitMode")].resize(GetParam<int>("n_task"));
   max_scores[GetState("fitMode")].resize(GetParam<int>("n_task"));
 
-  FindSingleTaskElites(min_scores, max_scores);
+  FindSingleTaskFitnessRange(min_scores, max_scores);
   FindMultiTaskElites(min_scores, max_scores);
 
   if (verbose) {
@@ -2565,9 +2545,7 @@ void TPG::cleanupProgramsWithNoRefs(long t,
 }
 
 /******************************************************************************/
-void TPG::setParams() {
-  ReadParameters("parameters.txt", params_);
-}
+void TPG::setParams() { ReadParameters("parameters.txt", params_); }
 
 /******************************************************************************/
 void TPG::teamTaskRank(int phase, const vector<int> &objectives) {
