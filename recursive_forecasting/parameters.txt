@@ -126,7 +126,7 @@ memory_indices 16
 n_elite 1000
 
 # multiplier for # new teams to generate each generation
-n_elite_mul 5
+n_elite_mul 10
 
 # number of training outcomes to store per agent for each task
 n_stored_outcomes_TRAIN 19

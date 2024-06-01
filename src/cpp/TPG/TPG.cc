@@ -590,11 +590,12 @@ void TPG::ProgramMutator_ActionPointer(program *prog_to_mu, team *new_team,
   } else {  // path
     uniform_int_distribution<int> disM(0, _M.size() - 1);
     team *tm;
+    tm = _teamMap[_Mids[disM(rngs_[TPG_SEED])]];////////////////////////////////////////
+    int tries = 0;
     do {
       tm = _teamMap[_Mids[disM(rngs_[TPG_SEED])]];  // can point to any team
-    } while ((tm->gtime_ == GetState("t_current") || tm->clones_ > 0 ||
+    } while (tries++ < 20 &&(tm->gtime_ == GetState("t_current") || tm->clones_ > 0 ||
               prog_to_mu->action() == tm->id_));
-
     if (prog_to_mu->action() >= 0)
       _teamMap[prog_to_mu->action()]->removeIncomingProgram(prog_to_mu->id_);
     if (!tm->root()) {  // already subsumed, don't clone
@@ -684,7 +685,6 @@ void TPG::GenerateNewTeams() {
              p1liter++)
           cm->AddProgram(*p1liter);
       }
-
       // Mutate child team
       vector<team *> new_teams = ApplyVariationOps(cm, n_new_teams, team_xover);
       for (auto new_team : new_teams) {
