@@ -318,7 +318,7 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
   }
   // predict
   for (int i = 0; i < game->num_samples_predict_[tpg.GetState("phase")]; i++) {
-    obs_list.push_back(WrapContinuousAction(eval));
+    obs_list.push_back(WrapContinuousActionSigmoid(eval));
     obs_list.pop_front();
     // TODO(skelly): make this more efficient ?
     std::copy(obs_list.begin(), obs_list.end(), obs.begin());
@@ -327,7 +327,7 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
         eval.tm, eval.obs, true, eval.visitedTeams, eval.decisionInstructions,
         game->getStep(), eval.teamPath, tpg.rngs_[AUX_SEED], verbose);
     TaskEnv::Results r = game->update(
-        sample++, WrapContinuousAction(eval), tpg.rngs_[AUX_SEED]);
+        sample++, WrapContinuousActionSigmoid(eval), tpg.rngs_[AUX_SEED]);
     eval.runTimeStats[REWARD1_IDX] += r.r1;  // MSE
     eval.runTimeStats[REWARD2_IDX] += r.r2;  // MAE
     AccumulateStepStats(eval);
