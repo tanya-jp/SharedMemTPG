@@ -470,7 +470,7 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
   for (int i = 0;
        i < game->num_samples_predict_[tpg.GetParam<int>("checkpoint_in_phase")];
        i++) {
-    obs_list.push_back(WrapContinuousAction(eval));
+    obs_list.push_back(WrapContinuousActionSigmoid(eval));
     obs_list.pop_front();  //  FIFO
     // TODO(skelly): make this more efficient ?
     std::copy(obs_list.begin(), obs_list.end(), obs.begin());
@@ -492,9 +492,9 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
     visitedTeamsAllTasks.insert(eval.visitedTeams.begin(),
                                 eval.visitedTeams.end());
     TaskEnv::Results r = game->update(
-        sample++, WrapContinuousAction(eval), tpg.rngs_[AUX_SEED]);
+        sample++, WrapContinuousActionSigmoid(eval), tpg.rngs_[AUX_SEED]);
     cerr << std::fixed << "test tm " << eval.tm->id_ << " t,p "
-         << game->data[sample][0] << "," << WrapContinuousAction(eval)
+         << game->data[sample][0] << "," << WrapContinuousActionSigmoid(eval)
          << endl;
     eval.runTimeStats[REWARD1_IDX] += r.r1;  // MSE
     eval.runTimeStats[REWARD2_IDX] += r.r2;  // MAE

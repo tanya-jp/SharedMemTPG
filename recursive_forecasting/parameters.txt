@@ -19,7 +19,7 @@ animate 0
 stateful 1
 
 # how frequently to run test procedure
-test_mod 500
+test_mod 100
 
 # in multitask settings, which tasks are active
 # rhs should be a comma-separated list like Cartpole,Acrobot
@@ -89,7 +89,7 @@ pmx_p 0.3
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 2
+n_input 8
 
 # max initial program size
 max_initial_prog_size 10
@@ -120,10 +120,10 @@ bid_mu_const_stddev 0.05
 
 # memory size: number of memory indices
 # each memory index points to a data structure (scalar, vector, or matrix)
-memory_indices 16
+memory_indices 8
 
 # number of elite teams
-n_elite 2000
+n_elite 200
 
 # multiplier for # new teams to generate each generation
 n_elite_mul 5
@@ -191,35 +191,35 @@ VECTOR_MEAN_OP
 VECTOR_ST_DEV_OP
 VECTOR_CONST_SET_OP
 
-## matrix #########################
-#VECTOR_OUTER_PRODUCT_OP
-#SCALAR_MATRIX_PRODUCT_OP
-#MATRIX_RECIPROCAL_OP
-#MATRIX_VECTOR_PRODUCT_OP
-#VECTOR_COLUMN_BROADCAST_OP
-#VECTOR_ROW_BROADCAST_OP
-#MATRIX_NORM_OP
-#MATRIX_COLUMN_NORM_OP
-#MATRIX_ROW_NORM_OP
-#MATRIX_TRANSPOSE_OP
-#MATRIX_ABS_OP
-#MATRIX_SUM_OP
-#MATRIX_DIFF_OP
-#MATRIX_PRODUCT_OP
-#MATRIX_DIVISION_OP
-#MATRIX_MATRIX_PRODUCT_OP
-#MATRIX_MIN_OP
-#MATRIX_MAX_OP
-#MATRIX_MEAN_OP
-#MATRIX_ROW_MEAN_OP
-#MATRIX_ROW_ST_DEV_OP
-#MATRIX_ST_DEV_OP
-#MATRIX_CONST_SET_OP
+# matrix #########################
+VECTOR_OUTER_PRODUCT_OP
+SCALAR_MATRIX_PRODUCT_OP
+MATRIX_RECIPROCAL_OP
+MATRIX_VECTOR_PRODUCT_OP
+VECTOR_COLUMN_BROADCAST_OP
+VECTOR_ROW_BROADCAST_OP
+MATRIX_NORM_OP
+MATRIX_COLUMN_NORM_OP
+MATRIX_ROW_NORM_OP
+MATRIX_TRANSPOSE_OP
+MATRIX_ABS_OP
+MATRIX_SUM_OP
+MATRIX_DIFF_OP
+MATRIX_PRODUCT_OP
+MATRIX_DIVISION_OP
+MATRIX_MATRIX_PRODUCT_OP
+MATRIX_MIN_OP
+MATRIX_MAX_OP
+MATRIX_MEAN_OP
+MATRIX_ROW_MEAN_OP
+MATRIX_ROW_ST_DEV_OP
+MATRIX_ST_DEV_OP
+MATRIX_CONST_SET_OP
 
 # noise ##########################
 #SCALAR_UNIFORM_SET_OP
-#SCALAR_GAUSSIAN_SET_OP
+SCALAR_GAUSSIAN_SET_OP
 #VECTOR_UNIFORM_SET_OP
-#VECTOR_GAUSSIAN_SET_OP
+VECTOR_GAUSSIAN_SET_OP
 #MATRIX_UNIFORM_SET_OP
-#MATRIX_GAUSSIAN_SET_OP
+MATRIX_GAUSSIAN_SET_OP

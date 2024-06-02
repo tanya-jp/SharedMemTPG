@@ -590,11 +590,13 @@ void TPG::ProgramMutator_ActionPointer(program *prog_to_mu, team *new_team,
   } else {  // path
     uniform_int_distribution<int> disM(0, _M.size() - 1);
     team *tm;
-    tm = _teamMap[_Mids[disM(rngs_[TPG_SEED])]];////////////////////////////////////////
+    tm = _teamMap[_Mids[disM(
+        rngs_[TPG_SEED])]];  ////////////////////////////////////////
     int tries = 0;
     do {
       tm = _teamMap[_Mids[disM(rngs_[TPG_SEED])]];  // can point to any team
-    } while (tries++ < 20 &&(tm->gtime_ == GetState("t_current") || tm->clones_ > 0 ||
+    } while (tries++ < 20 &&
+             (tm->gtime_ == GetState("t_current") || tm->clones_ > 0 ||
               prog_to_mu->action() == tm->id_));
     if (prog_to_mu->action() >= 0)
       _teamMap[prog_to_mu->action()]->removeIncomingProgram(prog_to_mu->id_);
@@ -1158,7 +1160,8 @@ bool compareByDistance(const distanceInstance &a, const distanceInstance &b) {
 /******************************************************************************/
 void TPG::InitTeams() {
   uniform_int_distribution<int> disA(0, GetParam<int>("n_discrete_action") - 1);
-  for (int t = 0; t < GetParam<int>("n_elite"); t++) {
+  for (int t = 0; t < GetParam<int>("n_elite") * GetParam<int>("n_elite_mul");
+       t++) {
     auto new_team = new team(GetState("t_current"), state_["team_count"]++);
     for (int p = 0; p < GetParam<int>("initial_team_size"); p++) {
       // discrete atomic actions are negatives -1 to -numAtomicActions()
@@ -1185,7 +1188,7 @@ void TPG::InitTeams() {
     _phyloGraph[new_team->id_].gtime = 0;
   }
 
-  oss << "initTms Msz " << _M.size() << " Lsz " << _L.size() << " rSz "
+  oss << "InitTms Msz " << _M.size() << " Lsz " << _L.size() << " rSz "
       << _Mroot.size() << " mSz";
   for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
     oss << " " << _Memory[mem_t].size();
