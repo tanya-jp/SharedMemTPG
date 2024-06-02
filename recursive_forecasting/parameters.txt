@@ -19,7 +19,7 @@ animate 0
 stateful 1
 
 # how frequently to run test procedure
-test_mod 1000
+test_mod 500
 
 # in multitask settings, which tasks are active
 # rhs should be a comma-separated list like Cartpole,Acrobot
@@ -129,7 +129,7 @@ n_elite 2000
 n_elite_mul 5
 
 # number of training outcomes to store per agent for each task
-n_stored_outcomes_TRAIN 19
+n_stored_outcomes_TRAIN 37
 
 # number of test outcomes to store per agent for each task
 n_stored_outcomes_VALIDATION 9
