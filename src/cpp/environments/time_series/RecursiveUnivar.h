@@ -116,11 +116,10 @@ class RecursiveUnivar : public TaskEnv {
       //   t_start[0].push_back(s);
       // }  
 
-      // train (doubled, 45 start points)
-      for (int s = 0; s <= 900; s+=10) {
+      // train (doubled, 45 start points) TODO(skelly): remove test set
+      for (int s = 0; s <= 950; s+=10) {
         t_start[0].push_back(s);
       } 
-      cerr << t_start[0].size();
                  
       // validation (original, 9 start points)  
       for (int s = 50; s <= 850; s+=100) {

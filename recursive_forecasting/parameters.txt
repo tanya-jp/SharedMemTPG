@@ -129,7 +129,7 @@ n_elite 200
 n_elite_mul 5
 
 # number of training outcomes to store per agent for each task
-n_stored_outcomes_TRAIN 91
+n_stored_outcomes_TRAIN 96
 
 # number of test outcomes to store per agent for each task
 n_stored_outcomes_VALIDATION 9
