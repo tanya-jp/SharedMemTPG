@@ -89,7 +89,7 @@ pmx_p 0.3
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 8
+n_input 2
 
 # max initial program size
 max_initial_prog_size 10
@@ -120,7 +120,7 @@ bid_mu_const_stddev 0.05
 
 # memory size: number of memory indices
 # each memory index points to a data structure (scalar, vector, or matrix)
-memory_indices 8
+memory_indices 16
 
 # number of elite teams
 n_elite 200
