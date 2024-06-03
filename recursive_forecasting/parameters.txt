@@ -19,7 +19,7 @@ animate 0
 stateful 1
 
 # how frequently to run test procedure
-test_mod 100
+test_mod 1
 
 # in multitask settings, which tasks are active
 # rhs should be a comma-separated list like Cartpole,Acrobot
@@ -59,7 +59,7 @@ max_team_size 1000000
 max_teams_per_graph 1000000
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 0.95
+p_atomic 1.0
 
 # team mutation: probability of deleting program from team
 pmd 0.7
@@ -129,7 +129,7 @@ n_elite 200
 n_elite_mul 5
 
 # number of training outcomes to store per agent for each task
-n_stored_outcomes_TRAIN 46
+n_stored_outcomes_TRAIN 91
 
 # number of test outcomes to store per agent for each task
 n_stored_outcomes_VALIDATION 9

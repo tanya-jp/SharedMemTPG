@@ -117,10 +117,10 @@ class RecursiveUnivar : public TaskEnv {
       // }  
 
       // train (doubled, 45 start points)
-      for (int s = 0; s <= 900; s+=20) {
+      for (int s = 0; s <= 900; s+=10) {
         t_start[0].push_back(s);
       } 
-      cerr << t_start[0].size() << endl;
+      cerr << t_start[0].size();
                  
       // validation (original, 9 start points)  
       for (int s = 50; s <= 850; s+=100) {
