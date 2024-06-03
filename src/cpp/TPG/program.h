@@ -12,10 +12,7 @@ class program {
   int action_;         // Action index
   double bid_val_;     // Most recent bid value
   static long count_;  // Next id to use
-  // TODO (spkelly) dim is in instruction as num_input, is it needed here?
-  long num_input_;  // Expected dimension of input feature vector.
-  size_t memoryRows_;
-  size_t memoryCols_;
+  size_t memory_size_;
   // vector<double>* feature;
 
   // Features indexed by non-introns in this program, determined in
@@ -49,8 +46,6 @@ class program {
   inline double bidVal() { return bid_val_; }
   inline void bidVal(double b) { bid_val_ = b; }
   virtual string checkpoint(bool) = 0;
-  inline long dim() { return num_input_; }
-  inline void dim(long d) { num_input_ = d; }
   inline void features(set<long> &f) { f = features_; }
   inline void featuresMem(set<long> &f) { f = featuresMem_; }
   inline void getProfile(vector<double> &p) { p = profile_; }

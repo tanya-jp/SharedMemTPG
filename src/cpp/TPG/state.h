@@ -8,7 +8,7 @@
 
 class state {
  public:
-  long dim;
+  long dim_;
   size_t scalarStateType;  // 0: double, 1: short, 2:float
 
   inline double getStateVarDouble(int v) { return (*featVecDouble_)[v]; }
@@ -31,10 +31,8 @@ class state {
   inline void Set(vector<short>& s) { featVecShort_ = &s; }
   state() {}
   state(long d) {
-    dim = d;
+    dim_ = d;
     scalarStateType = 0;
-    //_featVecFloat.reserve(dim); _featVecFloat.resize(dim);
-    //_featVecDouble.reserve(dim); _featVecDouble.resize(dim);
   }
   ~state() {}
 

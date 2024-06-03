@@ -27,8 +27,6 @@ int main(int argc, char** argv) {
   tpg.params_["id"] = -1;  // remove later
   tpg.setParams();
   tpg_arg_parse(tpg, argc, argv);
-  tpg.params_["memory_rows"] = tpg.GetParam<int>("n_input");
-  tpg.params_["memory_cols"] = tpg.GetParam<int>("n_input");
 
   ostringstream os;  // logging
 
@@ -68,6 +66,16 @@ int main(int argc, char** argv) {
       exit(1);
     }
   }
+  // Read number of inpts per task from parameters
+  ss.clear();
+  ss.str(tpg.GetParam<string>("n_input"));
+  while (ss.good()) {
+    string substr;
+    getline(ss, substr, ',');
+    tpg.n_input_.push_back(std::stoi(substr));
+  }
+
+
   // Read numStoredOutcomesPerHost from parameters. This  is the number of 
   // episodes per agent in each phase (training, validation, test).
   tpg._numStoredOutcomesPerHost.resize(tasks.size());

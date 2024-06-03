@@ -59,7 +59,7 @@ max_team_size 1000000
 max_teams_per_graph 1000000
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 1.0
+p_atomic 0.95
 
 # team mutation: probability of deleting program from team
 pmd 0.7
@@ -89,7 +89,7 @@ pmx_p 0.3
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 2
+n_input 8
 
 # max initial program size
 max_initial_prog_size 10
@@ -120,7 +120,10 @@ bid_mu_const_stddev 0.05
 
 # memory size: number of memory indices
 # each memory index points to a data structure (scalar, vector, or matrix)
-memory_indices 16
+memory_indices 8
+
+# this is the dimensionality for vector & matrix memory
+memory_size 8
 
 # number of elite teams
 n_elite 200
@@ -129,7 +132,7 @@ n_elite 200
 n_elite_mul 5
 
 # number of training outcomes to store per agent for each task
-n_stored_outcomes_TRAIN 96
+n_stored_outcomes_TRAIN 91
 
 # number of test outcomes to store per agent for each task
 n_stored_outcomes_VALIDATION 9
@@ -190,7 +193,7 @@ VECTOR_MAX_OP
 VECTOR_MEAN_OP
 VECTOR_ST_DEV_OP
 VECTOR_CONST_SET_OP
-
+ 
 # matrix #########################
 VECTOR_OUTER_PRODUCT_OP
 SCALAR_MATRIX_PRODUCT_OP

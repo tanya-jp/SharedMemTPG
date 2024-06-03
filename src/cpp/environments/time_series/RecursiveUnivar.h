@@ -108,7 +108,7 @@ class RecursiveUnivar : public TaskEnv {
       t_start[2].insert(t_start[2].begin(), {1000});
     } else if (task == "Sunspots" || task == "Mackey" || task == "Laser") {
       num_samples_prime_ = 50;
-      num_samples_predict_[0] = 100;   // train
+      num_samples_predict_[0] = 100;   // train // TODO(spkelly): set back to 50
       num_samples_predict_[1] = 100;  // validate
       num_samples_predict_[2] = 100;  // test
       // // train (original, 19 start points)
@@ -117,9 +117,9 @@ class RecursiveUnivar : public TaskEnv {
       // }  
 
       // train (doubled, 45 start points) TODO(skelly): remove test set
-      for (int s = 0; s <= 950; s+=10) {
+      for (int s = 0; s <= 900; s+=10) {
         t_start[0].push_back(s);
-      } 
+      }
                  
       // validation (original, 9 start points)  
       for (int s = 50; s <= 850; s+=100) {

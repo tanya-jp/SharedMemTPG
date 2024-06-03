@@ -402,6 +402,7 @@ void TPG::ReadParameters(string file_name,
       _ops[instruction::SCALAR_SQRT_OP_] = true;
 
     if (outcome_fields[0] == "active_tasks" ||
+        outcome_fields[0] == "n_input" ||
         outcome_fields[0] == "n_stored_outcomes_TRAIN" ||
         outcome_fields[0] == "n_stored_outcomes_VALIDATION" ||
         outcome_fields[0] == "n_stored_outcomes_TEST")
@@ -2057,10 +2058,10 @@ void TPG::printTeamInfo(long t, int phase, bool singleBest, long teamId) {
       oss << " nT " << visitedTeams2.size();
       oss << " nM " << memories.size();
 
-      visitedTeams.clear();
-      set<long> pF;
-      (*teiter)->policyFeatures(_teamMap, visitedTeams, pF, true);
-      oss << " pF " << (double)pF.size() / GetParam<int>("n_input");
+      // visitedTeams.clear();
+      // set<long> pF;
+      // (*teiter)->policyFeatures(_teamMap, visitedTeams, pF, true);
+      // oss << " pF " << (double)pF.size() / n_input_[]; //GetParam<int>("n_input");
 
       vector<int> op_countsSingle;
       vector<int> op_countsTally;
@@ -2274,21 +2275,19 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       long id = atoi(outcomeFields[i++].c_str());
       int type = atoi(outcomeFields[i++].c_str());
       int memoryIndices = atoi(outcomeFields[i++].c_str());
-      int memoryRows = atoi(outcomeFields[i++].c_str());
-      int memoryCols = atoi(outcomeFields[i++].c_str());
+      int memory_size = atoi(outcomeFields[i++].c_str());
       int nrefs = atoi(outcomeFields[i++].c_str());
-      memoryEigen *mem = new memoryEigen(id, type, memoryIndices, memoryRows,
-                                         memoryCols, nrefs);
+      memoryEigen *mem = new memoryEigen(id, type, memoryIndices, memory_size, nrefs);
       // read in evolved constants
       for (int idx = 0; idx < memoryIndices; idx++) {
         if (type == memoryEigen::SCALAR_TYPE) {
           mem->const_memory_[idx](0, 0) = stod(outcomeFields[i++].c_str());
         } else if (type == memoryEigen::VECTOR_TYPE) {
-          for (int r = 0; r < memoryRows; r++)
+          for (int r = 0; r < memory_size; r++)
             mem->const_memory_[idx](r, 0) = stod(outcomeFields[i++].c_str());
         } else if (type == memoryEigen::MATRIX_TYPE) {
-          for (int r = 0; r < memoryRows; r++)
-            for (int c = 0; c < memoryCols; c++)
+          for (int r = 0; r < memory_size; r++)
+            for (int c = 0; c < memory_size; c++)
               mem->const_memory_[idx](r, c) = stod(outcomeFields[i++].c_str());
         }
       }
@@ -2305,8 +2304,6 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       long gtime = atoi(outcomeFields[f++].c_str());
       long action = atoi(outcomeFields[f++].c_str());
       int stateful = atoi(outcomeFields[f++].c_str());
-      long dim = atoi(outcomeFields[f++].c_str());
-      (void)dim;
       int nrefs = atoi(outcomeFields[f++].c_str());
       for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
         memTypeIds[mem_t] = atoi(outcomeFields[f++].c_str());
