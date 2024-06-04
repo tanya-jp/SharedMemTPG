@@ -3,6 +3,7 @@ checkpoint 0
 
 # write checkpoints
 write_checkpoints 1
+write_phylogeny 0
 
 # re-evaluate an individual from a checkpoint file
 replay 0
@@ -19,7 +20,7 @@ animate 0
 stateful 1
 
 # how frequently to run test procedure
-test_mod 1000
+test_mod 1
 
 # in multitask settings, which tasks are active
 # rhs should be a comma-separated list like Cartpole,Acrobot
@@ -59,7 +60,7 @@ max_team_size 1000000
 max_teams_per_graph 1000000
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 0.95
+p_atomic 1.0
 
 # team mutation: probability of deleting program from team
 pmd 0.7
@@ -89,7 +90,7 @@ pmx_p 0.3
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 2
+n_input 2,2,8,8
 
 # max initial program size
 max_initial_prog_size 10
@@ -122,11 +123,17 @@ bid_mu_const_stddev 0.05
 # each memory index points to a data structure (scalar, vector, or matrix)
 memory_indices 8
 
+# this is the dimensionality for vector & matrix memory
+memory_size 8
+
 # number of elite teams
-n_elite 945
+n_elite 200
+
+# multiplier for # new teams to generate each generation
+n_elite_mul 5
 
 # number of training outcomes to store per agent for each task
-n_stored_outcomes_TRAIN 20,20,19,19
+n_stored_outcomes_TRAIN 20,20,91,91
 
 # number of test outcomes to store per agent for each task
 n_stored_outcomes_VALIDATION 1,1,9,9
@@ -187,36 +194,36 @@ VECTOR_MAX_OP
 VECTOR_MEAN_OP
 VECTOR_ST_DEV_OP
 VECTOR_CONST_SET_OP
-
-## matrix #########################
-#VECTOR_OUTER_PRODUCT_OP
-#SCALAR_MATRIX_PRODUCT_OP
-#MATRIX_RECIPROCAL_OP
-#MATRIX_VECTOR_PRODUCT_OP
-#VECTOR_COLUMN_BROADCAST_OP
-#VECTOR_ROW_BROADCAST_OP
-#MATRIX_NORM_OP
-#MATRIX_COLUMN_NORM_OP
-#MATRIX_ROW_NORM_OP
-#MATRIX_TRANSPOSE_OP
-#MATRIX_ABS_OP
-#MATRIX_SUM_OP
-#MATRIX_DIFF_OP
-#MATRIX_PRODUCT_OP
-#MATRIX_DIVISION_OP
-#MATRIX_MATRIX_PRODUCT_OP
-#MATRIX_MIN_OP
-#MATRIX_MAX_OP
-#MATRIX_MEAN_OP
-#MATRIX_ROW_MEAN_OP
-#MATRIX_ROW_ST_DEV_OP
-#MATRIX_ST_DEV_OP
-#MATRIX_CONST_SET_OP
+ 
+# matrix #########################
+VECTOR_OUTER_PRODUCT_OP
+SCALAR_MATRIX_PRODUCT_OP
+MATRIX_RECIPROCAL_OP
+MATRIX_VECTOR_PRODUCT_OP
+VECTOR_COLUMN_BROADCAST_OP
+VECTOR_ROW_BROADCAST_OP
+MATRIX_NORM_OP
+MATRIX_COLUMN_NORM_OP
+MATRIX_ROW_NORM_OP
+MATRIX_TRANSPOSE_OP
+MATRIX_ABS_OP
+MATRIX_SUM_OP
+MATRIX_DIFF_OP
+MATRIX_PRODUCT_OP
+MATRIX_DIVISION_OP
+MATRIX_MATRIX_PRODUCT_OP
+MATRIX_MIN_OP
+MATRIX_MAX_OP
+MATRIX_MEAN_OP
+MATRIX_ROW_MEAN_OP
+MATRIX_ROW_ST_DEV_OP
+MATRIX_ST_DEV_OP
+MATRIX_CONST_SET_OP
 
 # noise ##########################
 #SCALAR_UNIFORM_SET_OP
-#SCALAR_GAUSSIAN_SET_OP
+SCALAR_GAUSSIAN_SET_OP
 #VECTOR_UNIFORM_SET_OP
-#VECTOR_GAUSSIAN_SET_OP
+VECTOR_GAUSSIAN_SET_OP
 #MATRIX_UNIFORM_SET_OP
-#MATRIX_GAUSSIAN_SET_OP
+MATRIX_GAUSSIAN_SET_OP
