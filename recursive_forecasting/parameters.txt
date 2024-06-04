@@ -3,6 +3,7 @@ checkpoint 0
 
 # write checkpoints
 write_checkpoints 1
+write_phylogeny 0
 
 # re-evaluate an individual from a checkpoint file
 replay 0
