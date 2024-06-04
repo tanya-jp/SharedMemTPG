@@ -219,8 +219,10 @@ int main(int argc, char** argv) {
           }
           tpg.state_["phase"] = _TRAIN_PHASE;
           if (tpg.GetParam<int>("write_checkpoints")) {
-            tpg.printPhyloGraphDot(tpg.getBestTeam());
             tpg.writeCheckpoint(tpg.GetState("t_current"), true);
+          }
+          if (tpg.GetParam<int>("write_phylogeny")) {
+            tpg.printPhyloGraphDot(tpg.getBestTeam());
           }
         }
         endReport = chrono::system_clock::now() - startReport;
