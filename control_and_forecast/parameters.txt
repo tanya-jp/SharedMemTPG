@@ -1,8 +1,11 @@
 # start from a checkpoint file
 checkpoint 0
 
-# write checkpoints
-write_checkpoints 1
+# save checkpoints during evolution
+write_train_checkpoints 0
+write_test_checkpoints 1
+
+# save phylogenetic data
 write_phylogeny 0
 
 # re-evaluate an individual from a checkpoint file
@@ -60,7 +63,7 @@ max_team_size 1000000
 max_teams_per_graph 1000000
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 1.0
+p_atomic 0.999
 
 # team mutation: probability of deleting program from team
 pmd 0.7

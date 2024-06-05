@@ -212,18 +212,12 @@ int main(int argc, char** argv) {
           tpg.state_["phase"] = _TEST_PHASE;
           evaluate_main(tpg, world, taskSet);
           tpg.SetEliteTeams(true);
-
-          if (tpg.GetParam<int>("write_checkpoints")) {
+          if (tpg.GetParam<int>("write_test_checkpoints")) {
             // checkpoint single elite program graph in each dimension
             tpg.writeCheckpoint(tpg.GetState("t_current"), true);
           }
           tpg.state_["phase"] = _TRAIN_PHASE;
-          if (tpg.GetParam<int>("write_checkpoints")) {
-            tpg.writeCheckpoint(tpg.GetState("t_current"), true);
-          }
-          if (tpg.GetParam<int>("write_phylogeny")) {
-            tpg.printPhyloGraphDot(tpg.getBestTeam());
-          }
+          
         }
         endReport = chrono::system_clock::now() - startReport;
 
@@ -236,10 +230,13 @@ int main(int argc, char** argv) {
 
         /* checkpoint ********************************************************/
         startChkp = chrono::system_clock::now();
-        if (tpg.GetParam<int>("write_checkpoints") &&
+        if (tpg.GetParam<int>("write_train_checkpoints") &&
             tpg.GetState("t_current") % CHECKPOINT_MOD == 0) {
           tpg.writeCheckpoint(tpg.GetState("t_current"),
                               false);  // checkpoint entire pop
+        }
+        if (tpg.GetParam<int>("write_phylogeny")) {
+            tpg.printPhyloGraphDot(tpg.getBestTeam());
         }
         endChkp = chrono::system_clock::now() - startChkp;
         endGen = chrono::system_clock::now() - startGen;
