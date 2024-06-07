@@ -130,7 +130,7 @@ memory_indices 8
 memory_size 8
 
 # number of elite teams
-n_elite 20
+n_elite 200
 
 # multiplier for # new teams to generate each generation
 n_elite_mul 5
@@ -223,10 +223,10 @@ MATRIX_ROW_ST_DEV_OP
 MATRIX_ST_DEV_OP
 MATRIX_CONST_SET_OP
 
-# noise ##########################
-#SCALAR_UNIFORM_SET_OP
-SCALAR_GAUSSIAN_SET_OP
-#VECTOR_UNIFORM_SET_OP
-VECTOR_GAUSSIAN_SET_OP
-#MATRIX_UNIFORM_SET_OP
-MATRIX_GAUSSIAN_SET_OP
+## noise ##########################
+##SCALAR_UNIFORM_SET_OP
+#SCALAR_GAUSSIAN_SET_OP
+##VECTOR_UNIFORM_SET_OP
+#VECTOR_GAUSSIAN_SET_OP
+##MATRIX_UNIFORM_SET_OP
+#MATRIX_GAUSSIAN_SET_OP
