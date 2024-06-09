@@ -401,8 +401,7 @@ void TPG::ReadParameters(string file_name,
     if (outcome_fields[0] == "SCALAR_SQRT_OP")
       _ops[instruction::SCALAR_SQRT_OP_] = true;
 
-    if (outcome_fields[0] == "active_tasks" ||
-        outcome_fields[0] == "n_input" ||
+    if (outcome_fields[0] == "active_tasks" || outcome_fields[0] == "n_input" ||
         outcome_fields[0] == "n_stored_outcomes_TRAIN" ||
         outcome_fields[0] == "n_stored_outcomes_VALIDATION" ||
         outcome_fields[0] == "n_stored_outcomes_TEST")
@@ -878,12 +877,12 @@ vector<team *> TPG::NormalizeScoresAndRankTeams(
     vector<vector<double>> &max_scores) {
   vector<team *> vec;
   for (auto tm : _Mroot) {
-    // if (GetState("phase") == _TEST_PHASE &&
-    //     tm->id_ != (_eliteTeamPS[vecToStrNoSpace(set)]
-    //                             [GetParam<int>("fit_mode")][_TRAIN_PHASE])
-    //                    ->id_) {
-    //   continue;
-    // }
+    if (GetState("phase") == _TEST_PHASE &&
+        tm->id_ != (_eliteTeamPS[vecToStrNoSpace(set)]
+                                [GetParam<int>("fit_mode")][_VALIDATION_PHASE])
+                       ->id_) {
+      continue;
+    }
     vector<double> normalizedScores;
     for (size_t task = 0; task < set.size(); task++) {
       if (tm->numOutcomes(GetState("phase"), set[task]) <
@@ -1160,11 +1159,15 @@ bool compareByDistance(const distanceInstance &a, const distanceInstance &b) {
 
 /******************************************************************************/
 void TPG::InitTeams() {
+  uniform_int_distribution<int> disSize(
+      2, GetParam<int>("max_initial_team_size") - 1);
   uniform_int_distribution<int> disA(0, GetParam<int>("n_discrete_action") - 1);
   for (int t = 0; t < GetParam<int>("n_elite") * GetParam<int>("n_elite_mul");
        t++) {
     auto new_team = new team(GetState("t_current"), state_["team_count"]++);
-    for (int p = 0; p < GetParam<int>("initial_team_size"); p++) {
+
+    int team_size = disSize(rngs_[TPG_SEED]);
+    for (int p = 0; p < team_size; p++) {
       // discrete atomic actions are negatives -1 to -numAtomicActions()
       long discrete_action = -1 - disA(rngs_[TPG_SEED]);
       auto new_prog =
@@ -2061,7 +2064,8 @@ void TPG::printTeamInfo(long t, int phase, bool singleBest, long teamId) {
       // visitedTeams.clear();
       // set<long> pF;
       // (*teiter)->policyFeatures(_teamMap, visitedTeams, pF, true);
-      // oss << " pF " << (double)pF.size() / n_input_[]; //GetParam<int>("n_input");
+      // oss << " pF " << (double)pF.size() / n_input_[];
+      // //GetParam<int>("n_input");
 
       vector<int> op_countsSingle;
       vector<int> op_countsTally;
@@ -2277,7 +2281,8 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       int memoryIndices = atoi(outcomeFields[i++].c_str());
       int memory_size = atoi(outcomeFields[i++].c_str());
       int nrefs = atoi(outcomeFields[i++].c_str());
-      memoryEigen *mem = new memoryEigen(id, type, memoryIndices, memory_size, nrefs);
+      memoryEigen *mem =
+          new memoryEigen(id, type, memoryIndices, memory_size, nrefs);
       // read in evolved constants
       for (int idx = 0; idx < memoryIndices; idx++) {
         if (type == memoryEigen::SCALAR_TYPE) {

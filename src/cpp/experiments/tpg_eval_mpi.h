@@ -86,31 +86,24 @@ vector<team *> GetTeamsToEval(TPG &tpg) {
         teams_to_eval.push_back(tm);
       }
     }
-  } else {
-    // // only test the validation champions (set fitmode later)
-    // // auto PS = PowerSet(tpg.GetParam<int>("n_task"));
-    // // for (auto &set : PS) {
-    // // team *tm =
-    // //
-    // tpg._eliteTeamPS[vecToStrNoSpace(set)][tpg.GetParam<int>("fit_mode")][_VALIDATION_PHASE];
-    // team *tm =
-    //     tpg._eliteTeamPS[to_string(tpg.GetState("active_task"))]
-    //                     [tpg.GetParam<int>("fit_mode")][_VALIDATION_PHASE];
-    // tm->_n_eval =
-    //     tpg._numStoredOutcomesPerHost[tpg.GetState("active_task")][tpg.GetState("phase")] -
-    //     tm->numOutcomes(tpg.GetState("phase"), tpg.GetState("active_task"));
-    // teams_to_eval.push_back(tm);
-    // // }
-
-    // TODO(skelly): for now test every root team
-    for (auto tm : root_teams) {
-      tm->_n_eval =
-          tpg._numStoredOutcomesPerHost[tpg.GetState("active_task")][tpg.GetState("phase")] -
-          tm->numOutcomes(tpg.GetState("phase"), tpg.GetState("active_task"));
-      if (tm->_n_eval > 0) {
-        teams_to_eval.push_back(tm);
-      }
+  }
+  else {
+    // test the single validation champion for each subset
+    auto PS = PowerSet(tpg.GetParam<int>("n_task"));
+    for (auto &set : PS) {
+    team *tm = tpg._eliteTeamPS[vecToStrNoSpace(set)][tpg.GetParam<int>("fit_mode")][_VALIDATION_PHASE];
+    tm->_n_eval = tpg._numStoredOutcomesPerHost[tpg.GetState("active_task")][tpg.GetState("phase")] - tm->numOutcomes(tpg.GetState("phase"), tpg.GetState("active_task"));
+    teams_to_eval.push_back(tm);
     }
+    // // TODO(skelly): for now test every root team
+    // for (auto tm : root_teams) {
+    //   tm->_n_eval =
+    //       tpg._numStoredOutcomesPerHost[tpg.GetState("active_task")][tpg.GetState("phase")] -
+    //       tm->numOutcomes(tpg.GetState("phase"), tpg.GetState("active_task"));
+    //   if (tm->_n_eval > 0) {
+    //     teams_to_eval.push_back(tm);
+    //   }
+    // }
   }
   return teams_to_eval;
 }
@@ -533,8 +526,9 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
         tpg._numStoredOutcomesPerHost[tpg.GetState("active_task")][tpg.GetParam<int>("checkpoint_in_phase")];
     tpg.MarkEffectiveCode(eval.tm);
     vector<int> steps_per_task(tpg.GetParam<int>("n_task"), 0);
-    for (int task = 0; task < tpg.GetParam<int>("n_task"); task++) {
-      tpg.state_["active_task"] = task;
+    // TODO(skelly): clean up
+    // for (int task = 0; task < tpg.GetParam<int>("n_task"); task++) {
+      // tpg.state_["active_task"] = task;
       eval.game = tasks[tpg.GetState("active_task")];
 
       for (eval.episode = 0; eval.episode < eval.tm->_n_eval; eval.episode++) {
@@ -543,14 +537,14 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
 
         if (eval.game->eval_type_ == "RecursiveForecast") {
           EvalRecursiveForecastViz(tpg, eval, teamUseMapPerTask,
-                                   visitedTeamsAllTasks, steps_per_task[task]);
+                                   visitedTeamsAllTasks, steps_per_task[tpg.GetState("active_task")]);
         } else {
           EvalControlViz(tpg, eval, teamUseMapPerTask, visitedTeamsAllTasks,
-                         steps_per_task[task]);
+                         steps_per_task[tpg.GetState("active_task")]);
         }
         FinalizeStepStats(tpg, eval);
       }
-    }
+    // }
     tpg.printGraphDotGPTPXXI(eval.tm->id_, visitedTeamsAllTasks,
                              teamUseMapPerTask, steps_per_task);
   }

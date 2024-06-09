@@ -1,8 +1,11 @@
 # start from a checkpoint file
 checkpoint 0
 
-# write checkpoints
-write_checkpoints 1
+# save checkpoints during evolution
+write_train_checkpoints 0
+write_test_checkpoints 1
+
+# save phylogenetic data
 write_phylogeny 0
 
 # re-evaluate an individual from a checkpoint file
@@ -24,7 +27,7 @@ test_mod 1
 
 # in multitask settings, which tasks are active
 # rhs should be a comma-separated list like Cartpole,Acrobot
-active_tasks Mackey
+active_tasks Sunspots
 
 # number of fitness functions available
 n_fit_mode 1
@@ -51,7 +54,7 @@ mu_internal 0
 n_discrete_action 3
 
 # initial team size
-initial_team_size 5
+max_initial_team_size 10
 
 # max team size
 max_team_size 1000000

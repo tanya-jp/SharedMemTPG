@@ -263,8 +263,10 @@ class team {
   int numActivePrograms_;
   int numEffectiveInstructions_;
   int numActiveFeatures_;
+  // TODO(skelly): simplify this data structure
   // Maps point[task][phase][envSeed] -> outcome
   map<int, map<int, map<int, point *>>> outcomes_;
+  
   set<long> policyFeatures_;
   set<long> policyFeaturesActive_;
   set<long> policyRootIds_;

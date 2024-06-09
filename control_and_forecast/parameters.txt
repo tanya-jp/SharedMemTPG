@@ -139,10 +139,10 @@ n_elite_mul 5
 n_stored_outcomes_TRAIN 20,20,91,91
 
 # number of test outcomes to store per agent for each task
-n_stored_outcomes_VALIDATION 1,1,9,9
+n_stored_outcomes_VALIDATION 50,50,9,9
 
 # number of validation outcomes to store per agent for each task
-n_stored_outcomes_TEST 1,1,1,1
+n_stored_outcomes_TEST 100,100,1,1
 
 # fitness proportional selection
 fit_prop_select 0
