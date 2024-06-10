@@ -34,6 +34,10 @@ class MountainCarContinuous : public TaskEnv {
 
   double min_reward;
 
+  const int n_eval_train_ = 20;
+  const int n_eval_validation_ = 50;
+  const int n_eval_test_ = 100;
+
  public:
   bool discreteActions() const { return false; }
   double maxActionContinuous() const { return max_action; }
@@ -50,6 +54,15 @@ class MountainCarContinuous : public TaskEnv {
   }
 
   ~MountainCarContinuous() {}
+
+  int GetNumEval(int phase) {
+    if (phase == 0)
+      return n_eval_train_;
+    else if (phase == 1)
+      return n_eval_validation_;
+    else
+      return n_eval_test_;
+  }
 
   void normalizeState(bool po) {
     if (po) {

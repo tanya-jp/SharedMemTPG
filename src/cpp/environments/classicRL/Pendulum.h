@@ -36,6 +36,10 @@ class Pendulum : public TaskEnv {
 
   double costs_sum;
 
+  const int n_eval_train_ = 20;
+  const int n_eval_validation_ = 50;
+  const int n_eval_test_ = 100;
+
  public:
   double angle_normalize(double x) {
     double a = fmod(x + M_PI, 2 * M_PI);
@@ -74,6 +78,15 @@ class Pendulum : public TaskEnv {
   }
 
   ~Pendulum() {}
+
+  int GetNumEval(int phase) {
+    if (phase == 0)
+      return n_eval_train_;
+    else if (phase == 1)
+      return n_eval_validation_;
+    else
+      return n_eval_test_;
+  }
 
   void reset(mt19937 &rng) {
     _state[_theta] = disReset(rng);

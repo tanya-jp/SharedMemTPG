@@ -66,42 +66,13 @@ int main(int argc, char** argv) {
       exit(1);
     }
   }
-  // Read number of inpts per task from parameters
+  // Read number of inputs per task from parameters
   ss.clear();
   ss.str(tpg.GetParam<string>("n_input"));
   while (ss.good()) {
     string substr;
     getline(ss, substr, ',');
     tpg.n_input_.push_back(std::stoi(substr));
-  }
-
-
-  // Read numStoredOutcomesPerHost from parameters. This  is the number of 
-  // episodes per agent in each phase (training, validation, test).
-  tpg._numStoredOutcomesPerHost.resize(tasks.size());
-  int task = 0;
-  ss.clear();
-  ss.str(tpg.GetParam<string>("n_stored_outcomes_TRAIN"));
-  while (ss.good()) {
-    string substr;
-    getline(ss, substr, ',');
-    tpg._numStoredOutcomesPerHost[task++].push_back(std::stoi(substr));
-  }
-  task = 0;
-  ss.clear();
-  ss.str(tpg.GetParam<string>("n_stored_outcomes_VALIDATION"));
-  while (ss.good()) {
-    string substr;
-    getline(ss, substr, ',');
-    tpg._numStoredOutcomesPerHost[task++].push_back(std::stoi(substr));
-  }
-  task = 0;
-  ss.clear();
-  ss.str(tpg.GetParam<string>("n_stored_outcomes_TEST"));
-  while (ss.good()) {
-    string substr;
-    getline(ss, substr, ',');
-    tpg._numStoredOutcomesPerHost[task++].push_back(std::stoi(substr));
   }
 
   string allTaskString = "";
@@ -162,10 +133,6 @@ int main(int argc, char** argv) {
     tpg.params_["t_start"] = 0;
     tpg.state_["t_current"] = 0;  // tpg.GetParam<int>("t_start");
     tpg.state_["phase"] = _TRAIN_PHASE;
-    vector<int> taskSet;
-    for (int tsk = 0; tsk < (int)tasks.size(); tsk++) {
-      taskSet.push_back(tsk);
-    }
     if (tpg.GetParam<int>("replay")) {
       tpg.state_["active_task"] = tpg.state_["replay_task"];
       // replayer(tpg, tasks);
@@ -182,12 +149,12 @@ int main(int argc, char** argv) {
         /* evaluation ********************************************************/
         startEval = chrono::system_clock::now();
         // evaluate on all tasks
-        evaluate_main(tpg, world, taskSet);
+        evaluate_main(tpg, world, tasks);
         endEval = chrono::system_clock::now() - startEval;
 
         /* selection *********************************************************/
         startSetEliteTeams = chrono::system_clock::now();
-        tpg.SetEliteTeams(true);
+        tpg.SetEliteTeams(tasks, true);
         endSetEliteTeams = chrono::system_clock::now() - startSetEliteTeams;
         startSelTeams = chrono::system_clock::now();
         tpg.selTeams(
@@ -204,13 +171,13 @@ int main(int argc, char** argv) {
           
           // validation
           tpg.state_["phase"] = _VALIDATION_PHASE;
-          evaluate_main(tpg, world, taskSet);
-          tpg.SetEliteTeams(true);
+          evaluate_main(tpg, world, tasks);
+          tpg.SetEliteTeams(tasks, true);
 
           // test
           tpg.state_["phase"] = _TEST_PHASE;
-          evaluate_main(tpg, world, taskSet);
-          tpg.SetEliteTeams(true);
+          evaluate_main(tpg, world, tasks);
+          tpg.SetEliteTeams(tasks, true);
           if (tpg.GetParam<int>("write_test_checkpoints")) {
             // checkpoint single elite program graph in each dimension
             tpg.writeCheckpoint(tpg.GetState("t_current"), true);
@@ -255,7 +222,6 @@ int main(int argc, char** argv) {
         os << endGen.count() - (endEval.count() + endGenTeams.count() +
                                 endSetEliteTeams.count() + endSelTeams.count() +
                                 endChkp.count() + endReport.count());
-        os << " tskS " << vecToStrNoSpace(taskSet);
         os << endl;
         tpg.printOss(os);
 

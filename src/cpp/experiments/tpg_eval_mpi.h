@@ -73,15 +73,13 @@ double WrapContinuousActionSigmoid(EvalStruct &eval) {
   return 1 / (1 + exp(-p));
 }
 
-vector<team *> GetTeamsToEval(TPG &tpg) {
+vector<team *> GetTeamsToEval(TPG &tpg, TaskEnv* task) {
   auto root_teams = tpg.GetTeamsInVec(true);
   vector<team *> teams_to_eval;
   // train and validate all teams
   if (tpg.GetState("phase") != _TEST_PHASE) {
     for (auto tm : root_teams) {
-      tm->_n_eval =
-          tpg._numStoredOutcomesPerHost[tpg.GetState("active_task")][tpg.GetState("phase")] -
-          tm->numOutcomes(tpg.GetState("phase"), tpg.GetState("active_task"));    
+      tm->_n_eval = task->GetNumEval(tpg.GetState("phase")) - tm->numOutcomes(tpg.GetState("phase"), tpg.GetState("active_task"));  
       if (tm->_n_eval > 0) {
         teams_to_eval.push_back(tm);
       }
@@ -92,18 +90,9 @@ vector<team *> GetTeamsToEval(TPG &tpg) {
     auto PS = PowerSet(tpg.GetParam<int>("n_task"));
     for (auto &set : PS) {
     team *tm = tpg._eliteTeamPS[vecToStrNoSpace(set)][tpg.GetParam<int>("fit_mode")][_VALIDATION_PHASE];
-    tm->_n_eval = tpg._numStoredOutcomesPerHost[tpg.GetState("active_task")][tpg.GetState("phase")] - tm->numOutcomes(tpg.GetState("phase"), tpg.GetState("active_task"));
+    tm->_n_eval = task->GetNumEval(tpg.GetState("phase")) - tm->numOutcomes(tpg.GetState("phase"), tpg.GetState("active_task"));
     teams_to_eval.push_back(tm);
     }
-    // // TODO(skelly): for now test every root team
-    // for (auto tm : root_teams) {
-    //   tm->_n_eval =
-    //       tpg._numStoredOutcomesPerHost[tpg.GetState("active_task")][tpg.GetState("phase")] -
-    //       tm->numOutcomes(tpg.GetState("phase"), tpg.GetState("active_task"));
-    //   if (tm->_n_eval > 0) {
-    //     teams_to_eval.push_back(tm);
-    //   }
-    // }
   }
   return teams_to_eval;
 }
@@ -220,19 +209,19 @@ bool NotDoneAndActive(EvalStruct &eval) {
  * 2. Wait for evals to finish
  * 3. Collect results
  ******************************************************************************/
-void evaluate_main(TPG &tpg, mpi::communicator &world, vector<int> &taskSet) {
+void evaluate_main(TPG &tpg, mpi::communicator &world, vector<TaskEnv*>& tasks) {
   string my_string = "MAIN";
   vector<team *> teams_this_eval;
   vector<string> all_strings;
   vector<string> splitStr;
   string resultLine;
 
-  int world_size_per_task = (world.size() - 1) / taskSet.size();
+  int world_size_per_task = (world.size() - 1) / tasks.size();
   // assign agents to evaluators
   int evaluator = 1;
-  for (size_t task = 0; task < taskSet.size(); task++) {
-    tpg.state_["active_task"] = taskSet[task];
-    auto teams_to_eval = GetTeamsToEval(tpg);
+  for (size_t task = 0; task < tasks.size(); task++) {
+    tpg.state_["active_task"] = task;
+    auto teams_to_eval = GetTeamsToEval(tpg, tasks[task]);
 
     AssignTeamsToEvaluators(tpg, world, teams_to_eval, world_size_per_task,
                             evaluator);
@@ -522,15 +511,13 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
     if (tm->id_ != tpg.GetParam<int>("host_to_replay")) continue;
     eval.tm = tm;
     if (eval.animate) eval.tm->_n_eval = 1;
-    eval.tm->_n_eval =
-        tpg._numStoredOutcomesPerHost[tpg.GetState("active_task")][tpg.GetParam<int>("checkpoint_in_phase")];
     tpg.MarkEffectiveCode(eval.tm);
     vector<int> steps_per_task(tpg.GetParam<int>("n_task"), 0);
     // TODO(skelly): clean up
     // for (int task = 0; task < tpg.GetParam<int>("n_task"); task++) {
       // tpg.state_["active_task"] = task;
       eval.game = tasks[tpg.GetState("active_task")];
-
+      eval.tm->_n_eval = eval.game->GetNumEval(tpg.GetParam<int>("checkpoint_in_phase"));
       for (eval.episode = 0; eval.episode < eval.tm->_n_eval; eval.episode++) {
         tpg.rngs_[AUX_SEED].seed(eval.episode);
         eval.tm->InitMemory(tpg._teamMap, tpg.HaveParam("p_bid_mu_const"));

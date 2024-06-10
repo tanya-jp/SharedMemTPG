@@ -7,7 +7,6 @@ TPG::TPG() {
   _Memids.resize(memoryEigen::NUM_MEMORY_TYPES);
   _Memory.resize(memoryEigen::NUM_MEMORY_TYPES);
   for (size_t i = 0; i < _NUM_PHASE; i++) _numEliteTeamsCurrent.push_back(0);
-  // _numStoredOutcomesPerHost.resize(_NUM_PHASE);
   _ops.resize(instruction::NUM_OP);
   fill(_ops.begin(), _ops.end(), false);
   rngs_.resize(NUM_RNG);
@@ -508,19 +507,8 @@ void TPG::TeamMutator_AddPrograms(team *team_to_mu) {
 }
 
 void TPG::TeamMutator_RemovePrograms(team *team_to_mu) {
-  auto rd = real_dist_(rngs_[TPG_SEED]);
-  uniform_int_distribution<int> dis_programs(0, team_to_mu->size() - 1);
-  auto ri = dis_programs(rngs_[TPG_SEED]);
-
-  if (team_to_mu->size() > 1 && rd < GetParam<double>("pmd")) {
-    auto it = team_to_mu->members_.begin();
-    advance(it, ri);
-    // Don't remove the only atomic
-    if (!((*it)->action() < 0 && team_to_mu->n_atomic_ < 2)) {
-      if ((*it)->action_ < 0) team_to_mu->n_atomic_--;
-      team_to_mu->members_.erase(it);
-    }
-  }
+  if (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmd"))
+    team_to_mu->RemoveRandomProgram(rngs_[TPG_SEED]);
 }
 
 team *TPG::CloneTeam(team *team_to_clone) {
@@ -631,8 +619,11 @@ void TPG::AddTeamToPhylogeny(team *parent, team *new_team) {
 void TPG::GenerateNewTeams() {
   int n_new_teams = 0;
   auto power_set = PowerSet(GetParam<int>("n_task"));
-  int n_teams_per_set = (GetParam<int>("n_elite") / power_set.size()) *
-                        GetParam<int>("n_elite_mul");
+  // int n_teams_per_set = (GetParam<int>("n_elite") / power_set.size()) *
+  //                       GetParam<int>("n_elite_mul");
+  int n_teams_per_set =
+      (GetParam<int>("n_elite") * (GetParam<int>("n_elite_mul") - 1)) /
+      power_set.size();
   for (auto &set : power_set) {
     if (task_set_map_[vecToStrNoSpace(set)].size() == 0) continue;
     // TODO(skelly): only roots?
@@ -842,7 +833,8 @@ void TPG::UpdateTeamPhyloData(team *tm) {
 }
 /******************************************************************************/
 // Find the elite single-task program graphs
-void TPG::FindSingleTaskFitnessRange(vector<vector<double>> &mins,
+void TPG::FindSingleTaskFitnessRange(vector<TaskEnv *> &tasks,
+                                     vector<vector<double>> &mins,
                                      vector<vector<double>> &maxs) {
   vector<team *> teamsRankedVec;
   for (int task = 0; task < GetParam<int>("n_task"); task++) {
@@ -850,7 +842,7 @@ void TPG::FindSingleTaskFitnessRange(vector<vector<double>> &mins,
     for (auto tm : _Mroot) {
       tm->elite(GetState("phase"), false);  // mark team as not elite
       if (tm->numOutcomes(GetState("phase"), task) >=
-          _numStoredOutcomesPerHost[task][GetState("phase")]) {
+          tasks[task]->GetNumEval(GetState("phase"))) {
         tm->fit_ =
             tm->getQuickMean(task, GetState("fitMode"), GetState("phase"));
         teamsRankedVec.push_back(tm);
@@ -873,8 +865,8 @@ void TPG::FindSingleTaskFitnessRange(vector<vector<double>> &mins,
 
 /******************************************************************************/
 vector<team *> TPG::NormalizeScoresAndRankTeams(
-    vector<int> &set, vector<vector<double>> &min_scores,
-    vector<vector<double>> &max_scores) {
+    vector<TaskEnv *> &tasks, vector<int> &set,
+    vector<vector<double>> &min_scores, vector<vector<double>> &max_scores) {
   vector<team *> vec;
   for (auto tm : _Mroot) {
     if (GetState("phase") == _TEST_PHASE &&
@@ -886,13 +878,12 @@ vector<team *> TPG::NormalizeScoresAndRankTeams(
     vector<double> normalizedScores;
     for (size_t task = 0; task < set.size(); task++) {
       if (tm->numOutcomes(GetState("phase"), set[task]) <
-          _numStoredOutcomesPerHost[set[task]][GetState("phase")]) {
+          tasks[set[task]]->GetNumEval(GetState("phase"))) {
         die(__FILE__, __FUNCTION__, __LINE__,
             "All root teams should have enough evaluations at this point.");
       }
       auto raw_mean_score =
           tm->getQuickMean(set[task], GetState("fitMode"), GetState("phase"));
-      // tm->getMeanOutcome(GetState("phase"), set[task], 0, false, false);
       // guards for same min and max
       if (!isEqual(min_scores[GetState("fitMode")][set[task]],
                    max_scores[GetState("fitMode")][set[task]])) {
@@ -916,14 +907,15 @@ vector<team *> TPG::NormalizeScoresAndRankTeams(
 }
 
 /******************************************************************************/
-void TPG::FindMultiTaskElites(vector<vector<double>> &min_scores,
+void TPG::FindMultiTaskElites(vector<TaskEnv *> &tasks,
+                              vector<vector<double>> &min_scores,
                               vector<vector<double>> &max_scores) {
   auto PS = PowerSet(GetParam<int>("n_task"));
   for (auto &set : PS) {
     if (GetState("phase") == _TRAIN_PHASE)
       task_set_map_[vecToStrNoSpace(set)].clear();  // TODO(skelly): check this
     auto teams_normed_scores =
-        NormalizeScoresAndRankTeams(set, min_scores, max_scores);
+        NormalizeScoresAndRankTeams(tasks, set, min_scores, max_scores);
     size_t n_elite_per_task = GetParam<int>("n_elite") / PS.size();
     sort(teams_normed_scores.begin(), teams_normed_scores.end(),
          teamFitnessLexicalCompare());
@@ -950,7 +942,7 @@ void TPG::FindMultiTaskElites(vector<vector<double>> &min_scores,
 }
 
 /******************************************************************************/
-void TPG::SetEliteTeams(bool verbose) {
+void TPG::SetEliteTeams(vector<TaskEnv *> &tasks, bool verbose) {
   vector<team *> teams_normed_scores;
   _numEliteTeamsCurrent[GetState("phase")] = 0;
   // min/max scores for normalization, overcomplicated data structure?
@@ -960,8 +952,8 @@ void TPG::SetEliteTeams(bool verbose) {
   min_scores[GetState("fitMode")].resize(GetParam<int>("n_task"));
   max_scores[GetState("fitMode")].resize(GetParam<int>("n_task"));
 
-  FindSingleTaskFitnessRange(min_scores, max_scores);
-  FindMultiTaskElites(min_scores, max_scores);
+  FindSingleTaskFitnessRange(tasks, min_scores, max_scores);
+  FindMultiTaskElites(tasks, min_scores, max_scores);
 
   if (verbose) {
     auto PS = PowerSet(GetParam<int>("n_task"));
@@ -1197,8 +1189,7 @@ void TPG::InitTeams() {
   for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
     oss << " " << _Memory[mem_t].size();
   }
-  oss << _Memory.size() << " eLSz " << _numEliteTeamsCurrent[GetState("phase")]
-      << endl;
+  oss << " eLSz " << _numEliteTeamsCurrent[GetState("phase")] << endl;
 }
 
 /******************************************************************************/
@@ -2475,6 +2466,7 @@ void TPG::selTeams(long t, bool verbose, int genTime) {
 
   cleanupProgramsWithNoRefs(t, programsWithNoRefs, false);
 
+  // maintina 1 shared memory per team
   for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
     while (_Memory[mem_t].size() < _M.size()) {
       auto mem = new memoryEigen(state_["memory_count"]++, mem_t, params_);
@@ -2484,6 +2476,18 @@ void TPG::selTeams(long t, bool verbose, int genTime) {
       AddMemory(mem);
     }
   }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // TODO(skelly): debug programRefs
+  recalculateProgramRefs();
+  vector<program *> programs_to_delete;
+  for (auto p : _L)
+    if (p.second->nrefs_ < 1) programs_to_delete.push_back(p.second);
+  for (auto p : programs_to_delete) {
+    removeProgram(p, true);
+    delete p;
+  }
+  //////////////////////////////////////////////////////////////////////////////
 
   oss << "selTms t " << t << " Msz " << _M.size() << " Lsz " << _L.size()
       << " mrSz " << _Mroot.size() << " mSz";

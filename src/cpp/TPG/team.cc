@@ -10,7 +10,7 @@ void team::AddProgram(program *prog, int position) {
   members_.insert(it, prog);
   if (prog->action() < 0) n_atomic_++;
   members_run_.resize(members_.size());  //put in mark introns
-  prog->refInc();
+  prog->nrefs_++;
 }
 
 /******************************************************************************/
@@ -494,12 +494,30 @@ void team::cleanup(map<long, team *> &teamMap, deque<program *> &p) {
 }
 
 // Assumes the program is in the team
-// TODO(skelly): note that a prog* could point to different programs
+// Does not maintain team size > 0
+// Does not maintain n_atomic_ > 0
 void team::RemoveProgram(program *prog) {
+  if (prog->action() < 0) n_atomic_--;
+  prog->nrefs_--;
   auto it = find(members_.begin(), members_.end(), prog);
   members_.erase(it);
   members_run_.resize(members_.size());  // put in mark introns
-  if (prog->action() < 0) n_atomic_--;
+}
+
+// Return true if a program was removed, otherwise return false
+bool team::RemoveRandomProgram(mt19937 &rng) {
+  if (members_.size() < 2) return false;  // Maintain team size > 0
+  uniform_int_distribution<int> dis_programs(0, members_.size() - 1);
+  auto it = members_.begin();
+  advance(it, dis_programs(rng));
+  // Don't remove the only atomic
+  if (!((*it)->action() < 0 && n_atomic_ < 2)) {
+    if ((*it)->action_ < 0) n_atomic_--;
+    (*it)->nrefs_--;
+    members_.erase(it);
+    return true;
+  }
+  return false;
 }
 
 /******************************************************************************/

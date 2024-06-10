@@ -1,5 +1,7 @@
 #ifndef TPG_H
 #define TPG_H
+#include <TaskEnv.h>
+
 #include <any>
 #include <iomanip>
 #include <random>
@@ -128,14 +130,16 @@ class TPG {
   inline void resetOutcomes(int phase, bool roots);
   void selTeams(long, bool, int);
   void UpdateTeamPhyloData(team *tm);
-  void FindSingleTaskFitnessRange(vector<vector<double>> &mins,
+  void FindSingleTaskFitnessRange(vector<TaskEnv *> &tasks,
+                                  vector<vector<double>> &mins,
                                   vector<vector<double>> &maxs);
   vector<team *> NormalizeScoresAndRankTeams(
-      vector<int> &set, vector<vector<double>> &min_scores,
-      vector<vector<double>> &max_scores);
-  void FindMultiTaskElites(vector<vector<double>> &min_scores,
+      vector<TaskEnv *> &tasks, vector<int> &set,
+      vector<vector<double>> &min_scores, vector<vector<double>> &max_scores);
+  void FindMultiTaskElites(vector<TaskEnv *> &tasks,
+                           vector<vector<double>> &min_scores,
                            vector<vector<double>> &max_scores);
-  void SetEliteTeams(bool);
+  void SetEliteTeams(vector<TaskEnv *> &tasks, bool verbose);
   void setOutcome(team *tm, string behav, vector<double> &rewards,
                   vector<int> &ints, long gtime);
   void setParams();
@@ -182,9 +186,8 @@ class TPG {
   map<string, deque<double>> _eliteTestScoresMQ;
   vector<mt19937> rngs_;
   vector<uint_fast32_t> seeds_;
-  vector<vector<long>> _numStoredOutcomesPerHost;  // [task][phase]
   vector<int> n_input_;  // number of inputs per task
-  ostringstream oss;                               // logging, reporting
+  ostringstream oss;     // logging, reporting
   vector<size_t> _numEliteTeamsCurrent;
 
   uniform_real_distribution<> real_dist_;  // random reals in [0,1]

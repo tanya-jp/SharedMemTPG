@@ -86,7 +86,7 @@ class team {
     copy(members_.begin(), members_.end(), inserter(m, m.end()));
     return m;
   }
-  // inline void SetMembers(list<program *> &m) { 
+  // inline void SetMembers(list<program *> &m) {
   //   members_.clear();
   //   members_.assign(m.begin(), m.end());
   //  }
@@ -132,6 +132,7 @@ class team {
   void policyInstructions(map<long, team *> &, set<team *, teamIdComp> &,
                           vector<int> &, vector<int> &) const;
   void RemoveProgram(program *prog);
+  bool RemoveRandomProgram(mt19937 &rng);
   void resetOutcomes(int); /* Delete all outcomes from phase. */
   inline bool root() const { return incomingPrograms_.size() == 0; }
   inline double runTimeComplexityIns() const { return runTimeComplexityIns_; }
@@ -254,7 +255,7 @@ class team {
   set<long> incomingPrograms_;
   double key_; /* For sorting. */
   int lastCompareFactor_;
-  std::list<program *> members_;  // team members for fast variation
+  std::list<program *> members_;   // team members for fast variation
   vector<program *> members_run_;  // team members for fast direct access
   int n_atomic_;
   int _n_eval;
@@ -266,7 +267,7 @@ class team {
   // TODO(skelly): simplify this data structure
   // Maps point[task][phase][envSeed] -> outcome
   map<int, map<int, map<int, point *>>> outcomes_;
-  
+
   set<long> policyFeatures_;
   set<long> policyFeaturesActive_;
   set<long> policyRootIds_;

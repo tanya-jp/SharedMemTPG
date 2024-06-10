@@ -37,6 +37,10 @@ class CartCentering : public TaskEnv {
   int lastActionD = -FORCE_MAG;
   uniform_real_distribution<> disReset;
 
+  const int n_eval_train_ = 20;
+  const int n_eval_validation_ = 50;
+  const int n_eval_test_ = 100;
+
  public:
   /****************************************************************************/
   CartCentering() {
@@ -54,6 +58,15 @@ class CartCentering : public TaskEnv {
 
   /****************************************************************************/
   ~CartCentering() {}
+
+  int GetNumEval(int phase) {
+    if (phase == 0)
+      return n_eval_train_;
+    else if (phase == 1)
+      return n_eval_validation_;
+    else
+      return n_eval_test_;
+  }
 
   /****************************************************************************/
   void normalizeState(bool po) {

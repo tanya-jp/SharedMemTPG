@@ -135,15 +135,6 @@ n_elite 20
 # multiplier for # new teams to generate each generation
 n_elite_mul 5
 
-# number of training outcomes to store per agent for each task
-n_stored_outcomes_TRAIN 91
-
-# number of test outcomes to store per agent for each task
-n_stored_outcomes_VALIDATION 9
-
-# number of validation outcomes to store per agent for each task
-n_stored_outcomes_TEST 1
-
 # fitness proportional selection
 fit_prop_select 0
 
