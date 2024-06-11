@@ -143,15 +143,22 @@ int main(int argc, char** argv) {
 
         /* evaluation ********************************************************/
         startEval = chrono::system_clock::now();
-        // Split tasks into evaluated and estimated
-        vector<int> evalTasks, estTasks;
-        SplitSet(taskSet, evalTasks, estTasks, tpg.GetParam<int>("n_sampled_tasks_for_eval"), tpg.rngs_[TPG_SEED]);
 
-        // Evaluate tasks
-        evaluate_main(tpg, world, evalTasks);
+        if (tpg.GetState("t_current") > tpg.GetParam<int>("t_start")) {
+          // Split tasks into evaluated and estimated
+          vector<int> evalTasks, estTasks;
+          SplitSet(taskSet, evalTasks, estTasks, tpg.GetParam<int>("n_sampled_tasks_for_eval"), tpg.rngs_[TPG_SEED]);
 
-        // Estimate remaining tasks with phylogeny
-        estimate_main(tpg, estTasks);
+          // Evaluate tasks
+          evaluate_main(tpg, world, evalTasks);
+
+          // Estimate remaining tasks with phylogeny
+          estimate_main(tpg, estTasks);
+        } else {
+          // If first generation, evaluate on all tasks
+          evaluate_main(tpg, world, taskSet);
+        }
+
         endEval = chrono::system_clock::now() - startEval;
 
         /* selection *********************************************************/
