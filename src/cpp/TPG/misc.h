@@ -114,6 +114,7 @@ struct phyloRecord
    long dtime;
    string fitnessBin;
    double fitness;
+   vector<double> taskFitnesses;
    bool root;
    long numActiveFeatures;
    long numActivePrograms;

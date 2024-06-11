@@ -866,7 +866,7 @@ void TPG::FindSingleTaskElites(vector<vector<double>> &mins,
           _numStoredOutcomesPerHost[GetState("phase")]) {
         tm->fit_ =
             tm->getQuickMean(task, GetState("fitMode"), GetState("phase"));
-        tm->fit_ = tm->getMeanOutcome(GetState("phase"), task, 0, false, false);
+        // tm->fit_ = tm->getMeanOutcome(GetState("phase"), task, 0, false, false);
         teamsRankedVec.push_back(tm);
         if (GetState("phase") == _TEST_PHASE) {
           UpdateTeamPhyloData(tm);
@@ -952,6 +952,11 @@ void TPG::FindMultiTaskElites(vector<vector<double>> &min_scores,
           tm->fitnessBin(GetState("t_current"), vecToStrNoSpace(set));
           _phyloGraph[tm->id_].fitnessBin = tm->fitnessBin();
           _phyloGraph[tm->id_].fitness = tm->fit_;
+
+          _phyloGraph[tm->id_].taskFitnesses.clear();
+          for (int task = 0; task < GetParam<int>("n_task"); task++) {
+            _phyloGraph[tm->id_].taskFitnesses.push_back(tm->getQuickMean(task, GetState("fitMode"), GetState("phase")));
+          }
         }
         if (GetState("phase") == _TRAIN_PHASE)
           task_set_map_[vecToStrNoSpace(set)].push_back(tm);
@@ -2452,7 +2457,15 @@ void TPG::recalculateProgramRefs() {
 }
 
 /******************************************************************************/
+/**
+ * Selects teams based on certain criteria.
+ *
+ * @param t The current time.
+ * @param verbose Flag indicating whether to print verbose output.
+ * @param genTime The generation time.
+ */
 void TPG::selTeams(long t, bool verbose, int genTime) {
+  // Suppress compiler warnings
   (void)verbose;
   (void)genTime;
 
@@ -2462,6 +2475,7 @@ void TPG::selTeams(long t, bool verbose, int genTime) {
 
   deque<program *> programsWithNoRefs;
 
+  // remove teams that are not elite and have not been elite for a while
   vector<long> deletedIds;
   for (auto teiter = _Mroot.begin(); teiter != _Mroot.end();) {
     if (!(*teiter)->elite(GetState("phase")) &&
@@ -2478,6 +2492,7 @@ void TPG::selTeams(long t, bool verbose, int genTime) {
       teiter++;
   }
 
+  
   sort(deletedIds.begin(), deletedIds.end());
   sort(_Mids.begin(), _Mids.end());
   vector<long> diff;

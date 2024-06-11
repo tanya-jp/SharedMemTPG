@@ -286,9 +286,34 @@ void evaluate_main(TPG &tpg, mpi::communicator &world, vector<int> &taskSet) {
   }
 }
 
+/// @brief Estimates the fitness of all teams on a given set of tasks
+/// @param tpg The TPG instance with all the teams
+/// @param taskSet The set of tasks
 void estimate_main(TPG &tpg, vector<int> &taskSet)
 {
+  // Loop through tasks
+  for (size_t task = 0; task < taskSet.size(); task++) {
+    tpg.state_["active_task"] = taskSet[task];
+    auto teams_to_eval = GetTeamsToEval(tpg);
 
+    // Loop through teams
+    for (auto tm : teams_to_eval) {
+      // Estimate fitness of team
+      double est_fit = estimate_fitness(tpg, tm, taskSet[task]);
+
+      string behavSeq = "";
+      vector<double> r_runTimeStats = {est_fit};
+      vector<int> r_runTimeInts;
+
+      tpg.setOutcome(tm, behavSeq, r_runTimeStats, r_runTimeInts, tpg.GetState("t_current"));
+    }
+  }
+}
+
+/// @brief Estimates the fitness of a team on a given task using its phylogeny
+/// @return The estimated fitness of the team
+double estimate_fitness(TPG &tpg, team *tm, int task) {
+  
 }
 
 /******************************************************************************/
