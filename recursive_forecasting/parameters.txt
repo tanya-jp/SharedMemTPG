@@ -27,7 +27,7 @@ test_mod 1
 
 # in multitask settings, which tasks are active
 # rhs should be a comma-separated list like Cartpole,Acrobot
-active_tasks Sunspots
+active_tasks Mackey
 
 # number of fitness functions available
 n_fit_mode 1
@@ -84,7 +84,7 @@ pms 0.1
 pmw 0.1
 
 # team variation: probability of team crossover
-pmx 0.5
+pmx 0.0
 
 # team variation: probability of team crossover adding each parent prog to child
 pmx_p 0.3
@@ -93,7 +93,7 @@ pmx_p 0.3
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 8
+n_input 4
 
 # max initial program size
 max_initial_prog_size 10
@@ -130,7 +130,7 @@ memory_indices 8
 memory_size 8
 
 # number of elite teams
-n_elite 20
+n_elite 200
 
 # multiplier for # new teams to generate each generation
 n_elite_mul 5
@@ -140,6 +140,8 @@ fit_prop_select 0
 
 # which diversity mode to use, if available
 diversity_mode 0
+
+parent_select_roots_only 1
 
 # operations, uncomment to activate
 

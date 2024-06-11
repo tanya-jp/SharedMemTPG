@@ -29,7 +29,7 @@ class TPG {
   void AddProgram(program *p);
   void removeProgram(program *p, bool updateLids);
   void AddTeam(team *tm);
-  void removeTeam(team *tm, bool updateMids);
+  void RemoveTeam(team *tm, deque<program *> &programsWithNoRefs);
   void AddMemory(memoryEigen *m);
   void removeMemory(memoryEigen *m);
   team *getTeamByID(long id);
@@ -40,7 +40,7 @@ class TPG {
    * Methods to implement the TPG algorithm.
    ****************************************************************************/
   void checkRefCounts(const char *);
-  void cleanupProgramsWithNoRefs(long, deque<program *> &, bool);
+  void CleanupProgramsWithNoRefs(deque<program *> &, bool);
   void clearMemory();
   void countRefs();
   void finalize();
@@ -54,11 +54,10 @@ class TPG {
   void ProgramMutator_MemoryPointer(program *prog_to_mu);
   void ProgramMutator_Instructions(program *prog_to_mu);
   void ProgramMutator_ActionPointer(program *prog_to_mu, team *new_team,
-                                    int &n_new_teams,
-                                    deque<program *> &progs_without_refs);
-  void AddTeamToPhylogeny(team *parent, team *new_team);
-  vector<team *> ApplyVariationOps(team *parent1, int &n_new_teams,
-                                   bool team_xover);
+                                    int &n_new_teams);
+  void AddAncestorToPhylogeny(team *parent, team *new_team);
+  void AddTeamToPhylogeny(team *new_team);
+  void ApplyVariationOps(team *team_to_modify, int &n_new_teams);
   team *genTeamsInternal(long, mt19937 &, set<team *, teamIdComp> &,
                          map<long, team *> &);
   int genUniqueProgram(program *, set<program *, programIdComp>);
@@ -127,8 +126,11 @@ class TPG {
   void ReadParameters(string file_name,
                       std::unordered_map<string, std::any> &params);
   void recalculateProgramRefs();
+  void SanityCheck();
+  void TeamSizesMatchProgRefs();  // Sanity check.
   inline void resetOutcomes(int phase, bool roots);
-  void selTeams(long, bool, int);
+  void SelectTeams();
+  team* TeamXover(vector<team *>& parents);
   void UpdateTeamPhyloData(team *tm);
   void FindSingleTaskFitnessRange(vector<TaskEnv *> &tasks,
                                   vector<vector<double>> &mins,
@@ -165,7 +167,6 @@ class TPG {
   map<string, vector<team *>> task_set_map_;
   map<long, program *> _L;
   vector<long> _Lids;
-  vector<long> _Mids;
   vector<vector<long>> _Memids;
   // one map for each memory type: id->memory*
   vector<map<long, memoryEigen *>> _Memory;

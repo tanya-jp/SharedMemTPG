@@ -157,12 +157,7 @@ int main(int argc, char** argv) {
         tpg.SetEliteTeams(tasks, true);
         endSetEliteTeams = chrono::system_clock::now() - startSetEliteTeams;
         startSelTeams = chrono::system_clock::now();
-        tpg.selTeams(
-            tpg.GetState("t_current"), true,
-            tpg.GetState("t_current") > 1
-                ? floor(chrono::duration_cast<chrono::milliseconds>(endGen)
-                            .count())
-                : 0);  // also does some reporting
+        tpg.SelectTeams();
         endSelTeams = chrono::system_clock::now() - startSelTeams;
 
         /* accounting and reporting ******************************************/
@@ -227,6 +222,7 @@ int main(int argc, char** argv) {
 
         startGen = chrono::system_clock::now();
         if (tpg.GetState("t_current") % PRINT_MOD == 0) tpg.printOss();
+        tpg.SanityCheck();
         tpg.state_["t_current"]++;
       }
     }

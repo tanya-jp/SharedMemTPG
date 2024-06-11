@@ -103,16 +103,12 @@ class program {
   }  
   inline void op_counts(vector<int> &v) { v = op_counts_; }
   inline void setId(long id) { id_ = id; }
-  inline void setNrefs(int nrefs) { nrefs_ = nrefs; }
   inline void setProfile(vector<double> &p) { profile_ = p; }
   virtual int Size() = 0;
   virtual int SizeEffective() = 0;
   inline bool stateful() { return stateful_; }
   inline void stateful(bool s) { stateful_ = s; }
   inline bool targetMem() { return targetMem_; }
-  inline int refs() { return nrefs_; }
-  inline int refDec() { return --nrefs_; }
-  inline int refInc() { return ++nrefs_; }
 };
 
 struct programIdComp {

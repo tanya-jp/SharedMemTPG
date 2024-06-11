@@ -41,7 +41,6 @@ class team {
   }
   bool hasPointDesc(string, int, int);
   double getPointDescScore(string, int, int, int);
-  void cleanup(map<long, team *> &, deque<program *> &);
   void features(set<long> &) const;
   inline string fitnessBin() const { return (fitnessBins_.rbegin())->second; }
   inline string fitnessBin(long t) const {
@@ -195,8 +194,16 @@ class team {
     runTimeComplexityTms_ = 0;
   };
 
-  // Affects program refs, unlike addProgram() and removeProgram()
-  ~team(){};
+  ~team() {// TODO(skelly) clean outcome data structure
+    for (auto ouiter1 = outcomes_.begin(); ouiter1 != outcomes_.end(); ouiter1++) {
+      for (auto ouiter2 = ouiter1->second.begin(); ouiter2 != ouiter1->second.end(); ouiter2++) {
+        for (auto ouiter3 = ouiter2->second.begin(); ouiter3 != ouiter2->second.end();) {
+          delete ouiter3->second;
+          ouiter2->second.erase(ouiter3++);
+        }  
+      }
+    }
+  }
 
   inline void addDistance(int type, double d) {
     if (type == 0)

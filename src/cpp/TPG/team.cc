@@ -80,7 +80,6 @@ void team::clone(map<long, phyloRecord> &phyloGraph, team **tm) {
   phyloGraph[(*tm)->id_].ancestorIds.insert(id_);
     for (auto prog : members_) {
     (*tm)->AddProgram(prog);
-    prog->refInc();
   }
   (*tm)->fitnessBins(fitnessBins_);
   (*tm)->cloneId_ = id_;
@@ -473,25 +472,6 @@ int team::numOutcomes(int phase, int task) {
 }
 
 /******************************************************************************/
-
-void team::cleanup(map<long, team *> &teamMap, deque<program *> &p) {
-  // decrement program refs
-  for (auto prog : members_) {
-    prog->refDec();
-    if (prog->refs() == 0)  // && find(p.begin(), p.end(), *leiter) ==
-                                 // p.end())//could prob skip the find/check
-      p.push_back(prog);
-  }
-  for (auto ouiter1 = outcomes_.begin(); ouiter1 != outcomes_.end(); ouiter1++)
-    for (auto ouiter2 = ouiter1->second.begin();
-         ouiter2 != ouiter1->second.end(); ouiter2++)
-      for (auto ouiter3 = ouiter2->second.begin();
-           ouiter3 != ouiter2->second.end();) {
-        delete ouiter3->second;
-        ouiter2->second.erase(ouiter3++);
-      }
-  if (teamMap.find(cloneId_) != teamMap.end()) teamMap[cloneId_]->clones_--;
-}
 
 // Assumes the program is in the team
 // Does not maintain team size > 0
