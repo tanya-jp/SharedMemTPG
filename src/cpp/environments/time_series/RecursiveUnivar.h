@@ -114,28 +114,35 @@ class RecursiveUnivar : public TaskEnv {
       num_samples_predict_[1] = 100;  // validate
       num_samples_predict_[2] = 100;  // test
       
-      // // train (original, 19 start points)
-      // for (int s = 0; s <= 900; s+=50) {
-      //   t_start[0].push_back(s);
-      // }  
+      // train (original, 19 start points)
+      for (int s = 0; s <= 900; s+=50) {
+        t_start[0].push_back(s);
+      }  
 
-      // // validation (original, 9 start points)  
-      // for (int s = 50; s <= 850; s+=100) {
-      //   t_start[1].push_back(s);
-      // }   
-      //
-
+      // validation (original, 9 start points)  
+      for (int s = 50; s <= 850; s+=100) {
+        t_start[1].push_back(s);
+      }   
+      
       // test (original single start point)
       t_start[2].insert(t_start[2].begin(), {950});
 
-
-      // train on entire set TODO(skelly): cheating!
-      for (int s = 0; s <= 950; s+=10) {
-        t_start[0].push_back(s);
-      }
+      // // train on entire set TODO(skelly): cheating!
+      // for (int s = 0; s <= 950; s+=10) {
+      //   t_start[0].push_back(s);
+      // }
                  
-      // validate on test set TODO(skelly): cheating!
-      t_start[1].insert(t_start[1].begin(), {950});
+      // // validate on test set TODO(skelly): cheating!
+      // t_start[1].insert(t_start[1].begin(), {950});
+
+      // // validate on train set TODO(skelly): cheating!
+      //  for (int s = 0; s <= 900; s+=50) {
+      //   t_start[1].push_back(s);
+      // }  
+      // // test on train set TODO(skelly): cheating!
+      // for (int s = 0; s <= 900; s+=50) {
+      //   t_start[2].push_back(s);
+      // } 
                                         
     } else if (task == "Offset" || task == "Duration" || task == "Pitch") {
       num_samples_prime_ = 50;

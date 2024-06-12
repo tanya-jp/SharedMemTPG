@@ -73,25 +73,38 @@ double WrapContinuousActionSigmoid(EvalStruct &eval) {
   return 1 / (1 + exp(-p));
 }
 
-vector<team *> GetTeamsToEval(TPG &tpg, TaskEnv* task) {
+vector<team *> GetTeamsToEval(TPG &tpg, TaskEnv *task) {
   auto root_teams = tpg.GetTeamsInVec(true);
   vector<team *> teams_to_eval;
   // train and validate all teams
   if (tpg.GetState("phase") != _TEST_PHASE) {
     for (auto tm : root_teams) {
-      tm->_n_eval = task->GetNumEval(tpg.GetState("phase")) - tm->numOutcomes(tpg.GetState("phase"), tpg.GetState("active_task"));  
+      tm->_n_eval =
+          task->GetNumEval(tpg.GetState("phase")) -
+          tm->numOutcomes(tpg.GetState("phase"), tpg.GetState("active_task"));
       if (tm->_n_eval > 0) {
         teams_to_eval.push_back(tm);
       }
     }
-  }
-  else {
-    // test the single validation champion for each subset
-    auto PS = PowerSet(tpg.GetParam<int>("n_task"));
-    for (auto &set : PS) {
-    team *tm = tpg._eliteTeamPS[vecToStrNoSpace(set)][tpg.GetParam<int>("fit_mode")][_VALIDATION_PHASE];
-    tm->_n_eval = task->GetNumEval(tpg.GetState("phase")) - tm->numOutcomes(tpg.GetState("phase"), tpg.GetState("active_task"));
-    teams_to_eval.push_back(tm);
+  } else {
+    // // test the single validation champion for each subset
+    // auto PS = PowerSet(tpg.GetParam<int>("n_task"));
+    // for (auto &set : PS) {
+    // team *tm =
+    // tpg._eliteTeamPS[vecToStrNoSpace(set)][tpg.GetParam<int>("fit_mode")][_VALIDATION_PHASE];
+    // tm->_n_eval = task->GetNumEval(tpg.GetState("phase")) -
+    // tm->numOutcomes(tpg.GetState("phase"), tpg.GetState("active_task"));
+    // teams_to_eval.push_back(tm);
+    // }
+
+    // TODO(skelly): temporarily test all roots
+    for (auto tm : root_teams) {
+      tm->_n_eval =
+          task->GetNumEval(tpg.GetState("phase")) -
+          tm->numOutcomes(tpg.GetState("phase"), tpg.GetState("active_task"));
+      if (tm->_n_eval > 0) {
+        teams_to_eval.push_back(tm);
+      }
     }
   }
   return teams_to_eval;
@@ -167,8 +180,9 @@ void AccumulateStepStats(EvalStruct &eval) {
   //                                            eval.game->maxActionContinuous()),
   //                                      eval.game->minActionContinuous(),
   //                                      eval.game->maxActionContinuous(), 3));
-  // eval.behavSeq.push_back(discretize(eval.obs->getStateVarDouble(0), 0, 1, 3));
-  // eval.behavSeq.push_back(discretize(eval.obs->getStateVarDouble(1), 0, 1, 3));
+  // eval.behavSeq.push_back(discretize(eval.obs->getStateVarDouble(0), 0, 1,
+  // 3)); eval.behavSeq.push_back(discretize(eval.obs->getStateVarDouble(1), 0,
+  // 1, 3));
   eval.runTimeStats[VISITED_TEAMS_IDX] += eval.visitedTeams.size();
   eval.runTimeStats[INSTRUCTIONS_IDX] += eval.decisionInstructions;
 }
@@ -209,7 +223,8 @@ bool NotDoneAndActive(EvalStruct &eval) {
  * 2. Wait for evals to finish
  * 3. Collect results
  ******************************************************************************/
-void evaluate_main(TPG &tpg, mpi::communicator &world, vector<TaskEnv*>& tasks) {
+void evaluate_main(TPG &tpg, mpi::communicator &world,
+                   vector<TaskEnv *> &tasks) {
   string my_string = "MAIN";
   vector<team *> teams_this_eval;
   vector<string> all_strings;
@@ -263,7 +278,7 @@ void evaluate_main(TPG &tpg, mpi::communicator &world, vector<TaskEnv*>& tasks) 
 void EvalControl(TPG &tpg, EvalStruct &eval) {
   bool verbose = false;  // tpg.GetState("phase") == _TEST_PHASE ? true : false;
   eval.game->reset(tpg.rngs_[AUX_SEED]);
-  state* obs = new state(tpg.n_input_[tpg.GetState("active_task")]);
+  state *obs = new state(tpg.n_input_[tpg.GetState("active_task")]);
   obs->Set(eval.game->GetObsVec(eval.partially_observable));
   while (!eval.game->terminal()) {
     eval.leafProgram = tpg.getAction(
@@ -283,7 +298,7 @@ void EvalControl(TPG &tpg, EvalStruct &eval) {
 /******************************************************************************/
 void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
   RecursiveUnivar *game = dynamic_cast<RecursiveUnivar *>(eval.game);
-  state* obs = new state(tpg.n_input_[tpg.GetState("active_task")]);
+  state *obs = new state(tpg.n_input_[tpg.GetState("active_task")]);
   game->reset(tpg.rngs_[AUX_SEED]);
   bool verbose = false;  // tpg.GetState("phase") == _TEST_PHASE ? true : false;
   // list<double> obs_list(tpg.GetParam<int>("n_input"), 0.0);
@@ -382,7 +397,7 @@ void EvalControlViz(TPG &tpg, EvalStruct &eval,
                     set<team *, teamIdComp> &visitedTeamsAllTasks, int &steps) {
   bool verbose = false;  // tpg.GetState("phase") == _TEST_PHASE ? true : false;
   eval.game->reset(tpg.rngs_[AUX_SEED]);
-  state* obs = new state(tpg.n_input_[tpg.GetState("active_task")]);
+  state *obs = new state(tpg.n_input_[tpg.GetState("active_task")]);
   obs->Set(eval.game->GetObsVec(eval.partially_observable));
   while (!eval.game->terminal()) {
     eval.leafProgram = tpg.getAction(
@@ -423,14 +438,14 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
                               int &steps) {
   cerr << "";  // TODO(skelly): why do we need this?
   RecursiveUnivar *game = dynamic_cast<RecursiveUnivar *>(eval.game);
-  state* obs = new state(tpg.n_input_[tpg.GetState("active_task")]);
+  state *obs = new state(tpg.n_input_[tpg.GetState("active_task")]);
   game->reset(tpg.rngs_[AUX_SEED]);
   bool verbose = false;  // tpg.GetState("phase") == _TEST_PHASE ? true : false;
   list<double> obs_list(tpg.n_input_[tpg.GetState("active_task")], 0.0);
   vector<double> obs_vec(tpg.n_input_[tpg.GetState("active_task")], 0.0);
   // prime
   int sample =
-      game->t_start[tpg.GetParam<int>("checkpoint_in_phase")][eval.episode];   
+      game->t_start[tpg.GetParam<int>("checkpoint_in_phase")][eval.episode];
   for (int i = 0; i < game->num_samples_prime_ - 1; i++) {
     obs_list.push_back(game->data[sample][0]);
     obs_list.pop_front();  //  FIFO
@@ -515,22 +530,24 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
     vector<int> steps_per_task(tpg.GetParam<int>("n_task"), 0);
     // TODO(skelly): clean up
     // for (int task = 0; task < tpg.GetParam<int>("n_task"); task++) {
-      // tpg.state_["active_task"] = task;
-      eval.game = tasks[tpg.GetState("active_task")];
-      eval.tm->_n_eval = eval.game->GetNumEval(tpg.GetParam<int>("checkpoint_in_phase"));
-      for (eval.episode = 0; eval.episode < eval.tm->_n_eval; eval.episode++) {
-        tpg.rngs_[AUX_SEED].seed(eval.episode);
-        eval.tm->InitMemory(tpg._teamMap, tpg.HaveParam("p_bid_mu_const"));
+    // tpg.state_["active_task"] = task;
+    eval.game = tasks[tpg.GetState("active_task")];
+    eval.tm->_n_eval =
+        eval.game->GetNumEval(tpg.GetParam<int>("checkpoint_in_phase"));
+    for (eval.episode = 0; eval.episode < eval.tm->_n_eval; eval.episode++) {
+      tpg.rngs_[AUX_SEED].seed(eval.episode);
+      eval.tm->InitMemory(tpg._teamMap, tpg.HaveParam("p_bid_mu_const"));
 
-        if (eval.game->eval_type_ == "RecursiveForecast") {
-          EvalRecursiveForecastViz(tpg, eval, teamUseMapPerTask,
-                                   visitedTeamsAllTasks, steps_per_task[tpg.GetState("active_task")]);
-        } else {
-          EvalControlViz(tpg, eval, teamUseMapPerTask, visitedTeamsAllTasks,
-                         steps_per_task[tpg.GetState("active_task")]);
-        }
-        FinalizeStepStats(tpg, eval);
+      if (eval.game->eval_type_ == "RecursiveForecast") {
+        EvalRecursiveForecastViz(tpg, eval, teamUseMapPerTask,
+                                 visitedTeamsAllTasks,
+                                 steps_per_task[tpg.GetState("active_task")]);
+      } else {
+        EvalControlViz(tpg, eval, teamUseMapPerTask, visitedTeamsAllTasks,
+                       steps_per_task[tpg.GetState("active_task")]);
       }
+      FinalizeStepStats(tpg, eval);
+    }
     // }
     tpg.printGraphDotGPTPXXI(eval.tm->id_, visitedTeamsAllTasks,
                              teamUseMapPerTask, steps_per_task);
