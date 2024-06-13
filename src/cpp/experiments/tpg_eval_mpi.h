@@ -286,6 +286,36 @@ void evaluate_main(TPG &tpg, mpi::communicator &world, vector<int> &taskSet) {
   }
 }
 
+/// @brief Estimates the fitness of a team on a given task using its phylogeny
+/// @return The estimated fitness of the team
+double estimate_fitness(TPG &tpg, team *tm, int task) {
+  std::vector<long> visited = {tm->id_};
+  list<long> queue = {tm->id_};
+
+  // Breadth-first search through phylogeny
+  while (!queue.empty()) {
+    long currId = queue.front();
+    queue.pop_front();
+
+    // If the team has been evaluated on the task, return its fitness
+    vector<double> taskFitnesses = tpg._phyloGraph[currId].taskFitnesses;
+    int sizeInt = static_cast<int>(taskFitnesses.size());
+    if (task < sizeInt) {
+      return taskFitnesses[task];
+    }
+
+    for (long ancId : tpg._phyloGraph[currId].ancestorIds) {
+      if (std::find(visited.begin(), visited.end(), ancId) == visited.end()) {
+        visited.push_back(ancId);
+        queue.push_back(ancId);
+      }
+    }
+  }
+
+  cerr << "Reached unexpected point in estimate_fitness function" << endl;
+  return 0;
+}
+
 /// @brief Estimates the fitness of all teams on a given set of tasks
 /// @param tpg The TPG instance with all the teams
 /// @param taskSet The set of tasks
@@ -308,35 +338,6 @@ void estimate_main(TPG &tpg, vector<int> &taskSet)
       tpg.setOutcome(tm, behavSeq, r_runTimeStats, r_runTimeInts, tpg.GetState("t_current"));
     }
   }
-}
-
-/// @brief Estimates the fitness of a team on a given task using its phylogeny
-/// @return The estimated fitness of the team
-double estimate_fitness(TPG &tpg, team *tm, int task) {
-  std::vector<long> visited = {tm->id_};
-  list<long> queue = {tm->id_};
-
-  // Breadth-first search through phylogeny
-  while (!queue.empty()) {
-    long currId = queue.front();
-    queue.pop_front();
-
-    // If the team has been evaluated on the task, return its fitness
-    vector<double> taskFitnesses = _phyloGraph[currId].taskFitnesses;
-    if (task < taskFitnesses.size()) {
-      return taskFitnesses[task];
-    }
-
-    for (long ancId : _phyloGraph[currId].ancestorIds) {
-      if (std::find(visited.begin(), visited.end(), ancId) == visited.end()) {
-        visited.push_back(ancId);
-        queue.push_back(ancId);
-      }
-    }
-  }
-
-  cerr << "Reached unexpected point in estimate_fitness function" << endl;
-  return 0;
 }
 
 /******************************************************************************/
