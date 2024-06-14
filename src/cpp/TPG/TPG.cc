@@ -984,7 +984,7 @@ void TPG::SetEliteTeams(vector<TaskEnv *> &tasks) {
       if (GetState("phase") == _TEST_PHASE &&
           elite_team_id_history_.find(elite_id) ==
               elite_team_id_history_.end()) {
-        cerr << "new elite! checkpoint t " << GetState("t_current") << endl;
+        // cerr << "new elite! checkpoint t " << GetState("t_current") << endl;
         elite_team_id_history_.insert(elite_id);
         if (GetParam<int>("write_test_checkpoints")) {
           writeCheckpoint(GetState("t_current"), true);
