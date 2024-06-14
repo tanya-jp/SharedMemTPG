@@ -78,14 +78,14 @@ int main(int argc, char** argv) {
   string allTaskString = "";
   for (size_t i = 0; i < tasks.size(); i++) allTaskString += to_string(i);
 
-  tpg.params_["n_task"] = (int)tasks.size();
+  tpg.state_["n_task"] = (int)tasks.size();
   tpg.state_["active_task"] = 0;
   tpg.params_["n_point_aux_double"] = NUM_POINT_AUX_DOUBLE;
   tpg.params_["n_point_aux_int"] = NUM_POINT_AUX_INT;
   tpg.state_["phase"] = _TRAIN_PHASE;
   if (world.rank() == 0) {
     os << "world_size " << world.size() << endl;
-    os << "n_task " << tpg.GetParam<int>("n_task") << endl;
+    os << "n_task " << tpg.GetState("n_task") << endl;
   }
 
   // placeholders for logging stats only
@@ -154,7 +154,7 @@ int main(int argc, char** argv) {
 
         /* selection *********************************************************/
         startSetEliteTeams = chrono::system_clock::now();
-        tpg.SetEliteTeams(tasks, true);
+        tpg.SetEliteTeams(tasks);
         endSetEliteTeams = chrono::system_clock::now() - startSetEliteTeams;
         startSelTeams = chrono::system_clock::now();
         tpg.SelectTeams();
@@ -167,18 +167,14 @@ int main(int argc, char** argv) {
           // validation
           tpg.state_["phase"] = _VALIDATION_PHASE;
           evaluate_main(tpg, world, tasks);
-          tpg.SetEliteTeams(tasks, true);
+          tpg.SetEliteTeams(tasks);
 
           // test
           tpg.state_["phase"] = _TEST_PHASE;
           evaluate_main(tpg, world, tasks);
-          tpg.SetEliteTeams(tasks, true);
-          if (tpg.GetParam<int>("write_test_checkpoints")) {
-            // checkpoint single elite program graph in each dimension
-            tpg.writeCheckpoint(tpg.GetState("t_current"), true);
-          }
+          tpg.SetEliteTeams(tasks);
+
           tpg.state_["phase"] = _TRAIN_PHASE;
-          
         }
         endReport = chrono::system_clock::now() - startReport;
 

@@ -88,7 +88,7 @@ vector<team *> GetTeamsToEval(TPG &tpg, TaskEnv *task) {
     }
   } else {
     // test the single validation champion for each subset
-    auto PS = PowerSet(tpg.GetParam<int>("n_task"));
+    auto PS = PowerSet(tpg.GetState("n_task"));
     for (auto &set : PS) {
     team *tm =
     tpg._eliteTeamPS[vecToStrNoSpace(set)][tpg.GetParam<int>("fit_mode")][_VALIDATION_PHASE];
@@ -517,7 +517,7 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
   EvalStruct eval(tpg);
 
   vector<map<long, double>> teamUseMapPerTask;
-  teamUseMapPerTask.resize(tpg.GetParam<int>("n_task"));
+  teamUseMapPerTask.resize(tpg.GetState("n_task"));
   std::set<team *, teamIdComp> visitedTeamsAllTasks;
 
   tpg.getTeams(eval.teams, true);
@@ -527,9 +527,9 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
     eval.tm = tm;
     if (eval.animate) eval.tm->_n_eval = 1;
     tpg.MarkEffectiveCode(eval.tm);
-    vector<int> steps_per_task(tpg.GetParam<int>("n_task"), 0);
+    vector<int> steps_per_task(tpg.GetState("n_task"), 0);
     // TODO(skelly): clean up
-    // for (int task = 0; task < tpg.GetParam<int>("n_task"); task++) {
+    // for (int task = 0; task < tpg.GetState("n_task"); task++) {
     // tpg.state_["active_task"] = task;
     eval.game = tasks[tpg.GetState("active_task")];
     eval.tm->_n_eval =

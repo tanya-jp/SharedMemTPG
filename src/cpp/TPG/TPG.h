@@ -141,7 +141,7 @@ class TPG {
   void FindMultiTaskElites(vector<TaskEnv *> &tasks,
                            vector<vector<double>> &min_scores,
                            vector<vector<double>> &max_scores);
-  void SetEliteTeams(vector<TaskEnv *> &tasks, bool verbose);
+  void SetEliteTeams(vector<TaskEnv *> &tasks);
   void setOutcome(team *tm, string behav, vector<double> &rewards,
                   vector<int> &ints, long gtime);
   void setParams();
@@ -184,7 +184,7 @@ class TPG {
   set<team *, teamIdComp> _eliteTeams;
   // keys: taskSet, fitMode, phase
   map<string, map<int, map<int, team *>>> _eliteTeamPS;
-  map<string, deque<double>> _eliteTestScoresMQ;
+  set<long> elite_team_id_history_;
   vector<mt19937> rngs_;
   vector<uint_fast32_t> seeds_;
   vector<int> n_input_;  // number of inputs per task

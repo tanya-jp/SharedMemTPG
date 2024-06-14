@@ -27,7 +27,7 @@ test_mod 1
 
 # in multitask settings, which tasks are active
 # rhs should be a comma-separated list like Cartpole,Acrobot
-active_tasks Mackey
+active_tasks Cartpole,Pendulum,Sunspots,Mackey
 
 # number of fitness functions available
 n_fit_mode 1
@@ -92,8 +92,9 @@ pmx_p 0.3
 # enable continuous outputs
 continuous_output 1
 
-# number of inputs (aka "features" or "state variables")
-n_input 8
+# number of inputs (aka "features" or "observation variables")
+# must be a comma-separated list for each task
+n_input 2,2,8,8
 
 # max initial program size
 max_initial_prog_size 10
@@ -130,7 +131,7 @@ memory_indices 8
 memory_size 8
 
 # number of elite teams
-n_elite 100
+n_elite 20
 
 # multiplier for # new teams to generate each generation
 n_elite_mul 5
