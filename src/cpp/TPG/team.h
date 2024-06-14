@@ -312,7 +312,9 @@ struct teamFitnessLexicalCompare {
       t1->lastCompareFactor_ = 7;
       t2->lastCompareFactor_ = 7;
       // cout << "teamLexComp lcf 7 " << t1->id_ << " (>) " << t2->id_ << endl;
-      return t1->id_ > t2->id_;
+      // return t1->id_ > t2->id_;  // younger is better
+      // older is better TODO(skelly): potential dramatic effect on neutrality & evolution!
+      return t1->id_ < t2->id_;  
     }
   }
 };
