@@ -55,19 +55,19 @@ class RecursiveUnivar : public TaskEnv {
     CSVReader *reader;
     if (task == "Sunspots")
       reader =
-          new CSVReader("../datasets/SN_ms_tot_V2.0_Nov1834-June1926.csv", DIM);
+          new CSVReader("./datasets/SN_ms_tot_V2.0_Nov1834-June1926.csv", DIM);
     else if (task == "Mackey")
-      reader = new CSVReader("../datasets/Mackey-1100.csv", DIM);
+      reader = new CSVReader("./datasets/Mackey-1100.csv", DIM);
     else if (task == "Laser")
-      reader = new CSVReader("../datasets/Laser-10000-1000-2100.csv", DIM);
+      reader = new CSVReader("./datasets/Laser-10000-1000-2100.csv", DIM);
     else if (task == "Audio")
-      reader = new CSVReader("../datasets/2024-05-22-ali-10sec.dat", DIM);
+      reader = new CSVReader("./datasets/2024-05-22-ali-10sec.dat", DIM);
     else if (task == "Offset")
-      reader = new CSVReader("../datasets/ali_offset.csv", DIM);
+      reader = new CSVReader("./datasets/ali_offset.csv", DIM);
     else if (task == "Duration")
-      reader = new CSVReader("../datasets/ali_duration.csv", DIM);
+      reader = new CSVReader("./datasets/ali_duration.csv", DIM);
     else  // task == "Pitch"
-      reader = new CSVReader("../datasets/ali_pitch.csv", DIM);
+      reader = new CSVReader("./datasets/ali_pitch.csv", DIM);
     data = reader->ReadData();
     delete reader;
 
