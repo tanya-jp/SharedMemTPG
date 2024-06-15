@@ -110,7 +110,7 @@ class RecursiveUnivar : public TaskEnv {
       t_start[2].insert(t_start[2].begin(), {1000});
     } else if (task == "Sunspots" || task == "Mackey" || task == "Laser") {
       num_samples_prime_ = 50;
-      num_samples_predict_[0] = 100;   // train
+      num_samples_predict_[0] = 50;   // train
       num_samples_predict_[1] = 100;  // validate
       num_samples_predict_[2] = 100;  // test
       
@@ -126,23 +126,6 @@ class RecursiveUnivar : public TaskEnv {
       
       // test (original single start point)
       t_start[2].insert(t_start[2].begin(), {950});
-
-      // // train on entire set TODO(skelly): cheating!
-      // for (int s = 0; s <= 950; s+=10) {
-      //   t_start[0].push_back(s);
-      // }
-                 
-      // // validate on test set TODO(skelly): cheating!
-      // t_start[1].insert(t_start[1].begin(), {950});
-
-      // // validate on train set TODO(skelly): cheating!
-      //  for (int s = 0; s <= 900; s+=50) {
-      //   t_start[1].push_back(s);
-      // }  
-      // // test on train set TODO(skelly): cheating!
-      // for (int s = 0; s <= 900; s+=50) {
-      //   t_start[2].push_back(s);
-      // } 
                                         
     } else if (task == "Offset" || task == "Duration" || task == "Pitch") {
       num_samples_prime_ = 50;
@@ -156,11 +139,6 @@ class RecursiveUnivar : public TaskEnv {
       for (int s = 0; s <= 750; s += 150) t_start[1].push_back(s);
       // test
       for (int s = 50; s <= 800; s += 150) t_start[2].push_back(s);
-
-      // // same same same
-      // for (int s = 0; s <= 800; s += 100) t_start[0].push_back(s);
-      // for (int s = 0; s <= 800; s += 100) t_start[1].push_back(s);
-      // for (int s = 0; s <= 800; s += 100) t_start[2].push_back(s);
     }
   }
 
