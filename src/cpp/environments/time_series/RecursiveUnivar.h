@@ -133,8 +133,8 @@ class RecursiveUnivar : public TaskEnv {
       num_samples_predict_[1] = 100;  // validate
       num_samples_predict_[2] = 100;  // test
       // train
-      //for (int s = 0; s <= 800; s += 100) t_start[0].push_back(s);
-      for (int s = 0; s <= 800; s += 50) t_start[0].push_back(s);
+      for (int s = 0; s <= 800; s += 100) t_start[0].push_back(s);
+      for (int s = 25; s <= 825; s += 100) t_start[0].push_back(s);
       // validate
       for (int s = 0; s <= 750; s += 150) t_start[1].push_back(s);
       // test
