@@ -901,6 +901,8 @@ vector<team *> TPG::NormalizeScoresAndRankTeams(
     for (size_t task = 0; task < set.size(); task++) {
       if (tm->numOutcomes(GetState("phase"), set[task]) <
           _numStoredOutcomesPerHost[GetState("phase")]) {
+        cerr << "Team " << tm->id_ << ": Task " << set[task] << " has " << tm->numOutcomes(GetState("phase"), set[task]) << " outcomes." << endl;
+
         die(__FILE__, __FUNCTION__, __LINE__,
             "All root teams should have enough evaluations at this point.");
       }
