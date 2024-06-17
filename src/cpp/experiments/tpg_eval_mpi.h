@@ -301,7 +301,6 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
   state *obs = new state(tpg.n_input_[tpg.GetState("active_task")]);
   game->reset(tpg.rngs_[AUX_SEED]);
   bool verbose = false;  // tpg.GetState("phase") == _TEST_PHASE ? true : false;
-  // list<double> obs_list(tpg.GetParam<int>("n_input"), 0.0);
   list<double> obs_list(tpg.n_input_[tpg.GetState("active_task")], 0.0);
   vector<double> obs_vec(tpg.n_input_[tpg.GetState("active_task")], 0.0);
   // prime

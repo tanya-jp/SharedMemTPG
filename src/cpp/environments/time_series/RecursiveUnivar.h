@@ -63,7 +63,7 @@ class RecursiveUnivar : public TaskEnv {
     else if (task == "Audio")
       reader = new CSVReader("./datasets/2024-05-22-ali-10sec.dat", DIM);
     else if (task == "Offset")
-      reader = new CSVReader("./datasets/ali_offset.csv", DIM);
+      reader = new CSVReader("./datasets/ali_offset_diff.csv", DIM);
     else if (task == "Duration")
       reader = new CSVReader("./datasets/ali_duration.csv", DIM);
     else  // task == "Pitch"
