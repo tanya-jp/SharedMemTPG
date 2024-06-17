@@ -43,6 +43,10 @@ class Acrobot : public TaskEnv {
   const int _theta1_po = 0;
   const int _theta2_po = 1;
 
+  const int n_eval_train_ = 20;
+  const int n_eval_validation_ = 50;
+  const int n_eval_test_ = 100;
+
  public:
    Acrobot() {
     disReset = uniform_real_distribution<>(-0.1, 0.1);
@@ -60,6 +64,15 @@ class Acrobot : public TaskEnv {
   ~Acrobot() {}
 
   bool discreteActions() const { return false; }
+
+  int GetNumEval(int phase) {
+    if (phase == 0)
+      return n_eval_train_;
+    else if (phase == 1)
+      return n_eval_validation_;
+    else
+      return n_eval_test_;
+  }
 
   double minActionContinuous() const { return -1.0; }
 

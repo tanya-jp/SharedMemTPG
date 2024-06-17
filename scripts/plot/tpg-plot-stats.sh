@@ -76,16 +76,16 @@ do
    #
    #echo $(grep "tToEvl " $f | head -n $maxT | awk -F" tToEvl " '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-genTimeCurve-tToEvl.rslt
 
-#   for task in `seq 0 $(echo "$numTask-1" | bc)`; do
-#      echo $(tac $f | sed '/restart/q' | tac | grep setElTmsST | grep " fm ${fitMode} " | grep "ss $task " | grep " phs $phs " | head -n $maxT | awk -F " nP " '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-pCount-st-${task}.rslt
-#      echo $(tac $f | sed '/restart/q' | tac | grep setElTmsST | grep "fm ${fitMode} " | grep "ss $task " | grep " phs $phs " | head -n $maxT | awk -F " nT " '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-tCount-st-${task}.rslt
-#      echo $(tac $f | sed '/restart/q' | tac | grep setElTmsST | grep "fm ${fitMode} " | grep "ss $task " | grep " phs $phs " | head -n $maxT | awk -F "age" '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-age-st-${task}.rslt
-#      echo $(tac $f | sed '/restart/q' | tac | grep setElTmsST | grep "fm ${fitMode} " | grep "ss $task " | grep " phs $phs " | head -n $maxT | awk -F "fit" '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-fit-st-${task}.rslt
-#   done
+  for task in `seq 0 $(echo "$numTask-1" | bc)`; do
+     echo $(tac $f | sed '/restart/q' | tac | grep setElTmsST | grep " fm ${fitMode} " | grep "ss $task " | grep " phs $phs " | head -n $maxT | awk -F " nP " '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-pCount-st-${task}.rslt
+     echo $(tac $f | sed '/restart/q' | tac | grep setElTmsST | grep "fm ${fitMode} " | grep "ss $task " | grep " phs $phs " | head -n $maxT | awk -F " nT " '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-tCount-st-${task}.rslt
+     echo $(tac $f | sed '/restart/q' | tac | grep setElTmsST | grep "fm ${fitMode} " | grep "ss $task " | grep " phs $phs " | head -n $maxT | awk -F "age" '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-age-st-${task}.rslt
+     #echo $(tac $f | sed '/restart/q' | tac | grep setElTmsST | grep "fm ${fitMode} " | grep "ss $task " | grep " phs $phs " | head -n $maxT | awk -F "fit" '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-fit-st-${task}.rslt
+  done
 
-   #echo $(tac $f | sed '/restart/q' | tac | grep "setElTmsMTA fm ${fitMode} " | grep " phs $phs " | head -n $maxT | awk -F " nP " '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-pCount-mt.rslt
-   #echo $(tac $f | sed '/restart/q' | tac | grep "setElTmsMTA fm ${fitMode} " | grep " phs $phs " | head -n $maxT | awk -F " nT " '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-tCount-mt.rslt
-   #echo $(tac $f | sed '/restart/q' | tac | grep setElTmsMTA | grep " fm ${fitMode} "  | grep " phs $phs " | head -n $maxT | awk -F "age" '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-age-mt.rslt   
+   # echo $(tac $f | sed '/restart/q' | tac | grep "setElTmsMTA fm ${fitMode} " | grep " phs $phs " | head -n $maxT | awk -F " nP " '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-pCount-mt.rslt
+   # echo $(tac $f | sed '/restart/q' | tac | grep "setElTmsMTA fm ${fitMode} " | grep " phs $phs " | head -n $maxT | awk -F " nT " '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-tCount-mt.rslt
+   # echo $(tac $f | sed '/restart/q' | tac | grep setElTmsMTA | grep " fm ${fitMode} "  | grep " phs $phs " | head -n $maxT | awk -F "age" '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-age-mt.rslt   
 
    #echo $(tac $f | sed '/restart/q' | tac | grep "setElTmsMTA fm ${fitMode} " | grep " phs $phs " | head -n $maxT | awk -F " mnProgIns " '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-meanPIns.rslt
    #echo $(tac $f | sed '/restart/q' | tac | grep "setElTmsMTA fm ${fitMode} " | grep " phs $phs " | head -n $maxT | awk -F " mnEProgIns " '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-meanEPIns.rslt
@@ -219,32 +219,32 @@ fi
 #    done
 # fi
 
-#  for task in `seq 0 $(echo "$numTask-1" | bc)`; do
-#     i=$((i+1))
-#     Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-tCount-st-${task}.rslt "Teams per Graph (best single-task ${task})" "$winSize" "$(printf "%03d" $i)-st-${task}" 0
-#  done
+ for task in `seq 0 $(echo "$numTask-1" | bc)`; do
+    i=$((i+1))
+    Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-tCount-st-${task}.rslt "Teams per Graph (best single-task ${task})" "$winSize" "$(printf "%03d" $i)-st-${task}" 0
+ done
 #  
-#  for task in `seq 0 $(echo "$numTask-1" | bc)`; do
-#     i=$((i+1))
-#     Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-pCount-st-${task}.rslt "Programs per Graph (best single-task ${task})" "$winSize" "$(printf "%03d" $i)-st-${task}" 0
-#  done
-#  
-#  for task in `seq 0 $(echo "$numTask-1" | bc)`; do
-#     i=$((i+1))
-#     Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-age-st-${task}.rslt "Age of Graph (best single-task ${task})" "$winSize" "$(printf "%03d" $i)-st-${task}" 0
-#  done
+ for task in `seq 0 $(echo "$numTask-1" | bc)`; do
+    i=$((i+1))
+    Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-pCount-st-${task}.rslt "Programs per Graph (best single-task ${task})" "$winSize" "$(printf "%03d" $i)-st-${task}" 0
+ done
+ 
+ for task in `seq 0 $(echo "$numTask-1" | bc)`; do
+    i=$((i+1))
+    Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-age-st-${task}.rslt "Age of Graph (best single-task ${task})" "$winSize" "$(printf "%03d" $i)-st-${task}" 0
+ done
 
-#for task in `seq 0 $(echo "$numTask-1" | bc)`; do
+# for task in `seq 0 $(echo "$numTask-1" | bc)`; do
 #     i=$((i+1))
 #     Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-fit-st-${task}.rslt "Fitness of Graph (best single-task ${task})" "$winSize" "$(printf "%03d" $i)-st-${task}" 0
-#done
+# done
 
-#i=$((i+1))
-#Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-tCount-mt.rslt "Teams per Graph (best multi-task ${task})" "$winSize" "$(printf "%03d" $i)" 0
-#i=$((i+1))
-#Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-pCount-mt.rslt "Programs per Graph (best multi-task ${task})" "$winSize" "$(printf "%03d" $i)" 0
-#i=$((i+1))
-#Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-age-mt.rslt "Age of Graph (best multi-task ${task})" "$winSize" "$(printf "%03d" $i)" 0
+# i=$((i+1))
+# Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-tCount-mt.rslt "Teams per Graph (best multi-task ${task})" "$winSize" "$(printf "%03d" $i)" 0
+# i=$((i+1))
+# Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-pCount-mt.rslt "Programs per Graph (best multi-task ${task})" "$winSize" "$(printf "%03d" $i)" 0
+# i=$((i+1))
+# Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-age-mt.rslt "Age of Graph (best multi-task ${task})" "$winSize" "$(printf "%03d" $i)" 0
 #i=$((i+1))
 #Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-auxDouble_MTA-minThresh.rslt "minThreshold" "$winSize" "$(printf "%03d" $i)" 0
 #i=$((i+1))
@@ -297,14 +297,14 @@ fi
 #Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-meanEPIns.rslt "Mean Effective Instructions per Program (best graph)" "$winSize" "$(printf "%03d" $i)" 0 
 #i=$((i+1))
 #Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-policyFeatures.rslt "Features (best graph)" "$winSize" "$(printf "%03d" $i)" 0
-#i=$((i+1))
-#Rscript  $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-gt-Msize.rslt "Team Population Size" "$winSize" "$(printf "%03d" $i)" 0 
-#i=$((i+1))
-#Rscript  $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-gt-Lsize.rslt "Program Population Size" "$winSize" "$(printf "%03d" $i)" 0
+i=$((i+1))
+Rscript  $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-gt-Msize.rslt "Team Population Size" "$winSize" "$(printf "%03d" $i)" 0 
+i=$((i+1))
+Rscript  $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-gt-Lsize.rslt "Program Population Size" "$winSize" "$(printf "%03d" $i)" 0
 #i=$((i+1))
 #Rscript  $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-gt-MemSize.rslt "Memory Population Size" "$winSize" "$(printf "%03d" $i)" 0
-#i=$((i+1))
-#Rscript  $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-gt-Rsize.rslt "Root Population Size" "$winSize" "$(printf "%03d" $i)" 0
+i=$((i+1))
+Rscript  $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-gt-Rsize.rslt "Root Population Size" "$winSize" "$(printf "%03d" $i)" 0
 #i=$((i+1))
 #Rscript  $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-gt-eLSz.rslt "Elite Teams " "$winSize" "$(printf "%03d" $i)" 0
 #i=$((i+1))

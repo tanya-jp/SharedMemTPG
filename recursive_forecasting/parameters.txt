@@ -27,7 +27,7 @@ test_mod 1
 
 # in multitask settings, which tasks are active
 # rhs should be a comma-separated list like Cartpole,Acrobot
-active_tasks Sunspots
+active_tasks Laser
 
 # number of fitness functions available
 n_fit_mode 1
@@ -57,7 +57,7 @@ n_discrete_action 3
 max_initial_team_size 10
 
 # max team size
-max_team_size 10
+max_team_size 1000000
 
 # max teams per graph
 max_teams_per_graph 100
@@ -66,7 +66,7 @@ max_teams_per_graph 100
 p_atomic 1.0
 
 # team mutation: probability of deleting program from team
-pmd 0.7
+pmd 0.5
 
 # team mtation: probability of adding program to team
 pma 0.4
@@ -84,7 +84,7 @@ pms 0.1
 pmw 0.1
 
 # team variation: probability of team crossover
-pmx 0.5
+pmx 0.0
 
 # team variation: probability of team crossover adding each parent prog to child
 pmx_p 0.3
@@ -93,13 +93,13 @@ pmx_p 0.3
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 8
+n_input 1
 
 # max initial program size
 max_initial_prog_size 10
 
 # max program size
-max_prog_size 100
+max_prog_size 1000000
 
 # program variation: probability of changing the program
 p_bid_mutate 1.0
@@ -108,7 +108,7 @@ p_bid_mutate 1.0
 p_bid_swap 0.5
 
 # program variation: probability of deleting an instruction
-p_bid_delete 0.7
+p_bid_delete 0.5
 
 # program variation: probability of adding an instruction
 p_bid_add 0.4
@@ -130,25 +130,18 @@ memory_indices 8
 memory_size 8
 
 # number of elite teams
-n_elite 20
+n_elite 50
 
 # multiplier for # new teams to generate each generation
 n_elite_mul 5
-
-# number of training outcomes to store per agent for each task
-n_stored_outcomes_TRAIN 91
-
-# number of test outcomes to store per agent for each task
-n_stored_outcomes_VALIDATION 9
-
-# number of validation outcomes to store per agent for each task
-n_stored_outcomes_TEST 1
 
 # fitness proportional selection
 fit_prop_select 0
 
 # which diversity mode to use, if available
 diversity_mode 0
+
+parent_select_roots_only 1
 
 # operations, uncomment to activate
 
@@ -223,10 +216,10 @@ MATRIX_ROW_ST_DEV_OP
 MATRIX_ST_DEV_OP
 MATRIX_CONST_SET_OP
 
-# noise ##########################
-#SCALAR_UNIFORM_SET_OP
-SCALAR_GAUSSIAN_SET_OP
-#VECTOR_UNIFORM_SET_OP
-VECTOR_GAUSSIAN_SET_OP
-#MATRIX_UNIFORM_SET_OP
-MATRIX_GAUSSIAN_SET_OP
+## noise ##########################
+##SCALAR_UNIFORM_SET_OP
+#SCALAR_GAUSSIAN_SET_OP
+##VECTOR_UNIFORM_SET_OP
+#VECTOR_GAUSSIAN_SET_OP
+##MATRIX_UNIFORM_SET_OP
+#MATRIX_GAUSSIAN_SET_OP

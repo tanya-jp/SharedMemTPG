@@ -30,6 +30,10 @@ class MountainCar : public TaskEnv {
   const int _position = 0;
   const int _velocity = 1;
 
+  const int n_eval_train_ = 20;
+  const int n_eval_validation_ = 50;
+  const int n_eval_test_ = 100;
+
  public:
   MountainCar() {
     disReset = uniform_real_distribution<>(-0.6, -0.4);
@@ -42,6 +46,15 @@ class MountainCar : public TaskEnv {
   }
 
   ~MountainCar() {}
+
+  int GetNumEval(int phase) {
+    if (phase == 0)
+      return n_eval_train_;
+    else if (phase == 1)
+      return n_eval_validation_;
+    else
+      return n_eval_test_;
+  }
 
   void normalizeState(bool po) {
     if (po)
@@ -73,7 +86,7 @@ class MountainCar : public TaskEnv {
     return terminalState;
   }
 
-   Results update(int actionD, double actionC, mt19937 &rng) {
+  Results update(int actionD, double actionC, mt19937 &rng) {
     (void)actionC;
 
     state[_velocity] +=

@@ -1,5 +1,7 @@
 #ifndef TPG_H
 #define TPG_H
+#include <TaskEnv.h>
+
 #include <any>
 #include <iomanip>
 #include <random>
@@ -27,7 +29,7 @@ class TPG {
   void AddProgram(program *p);
   void removeProgram(program *p, bool updateLids);
   void AddTeam(team *tm);
-  void removeTeam(team *tm, bool updateMids);
+  void RemoveTeam(team *tm, deque<program *> &programsWithNoRefs);
   void AddMemory(memoryEigen *m);
   void removeMemory(memoryEigen *m);
   team *getTeamByID(long id);
@@ -38,7 +40,7 @@ class TPG {
    * Methods to implement the TPG algorithm.
    ****************************************************************************/
   void checkRefCounts(const char *);
-  void cleanupProgramsWithNoRefs(long, deque<program *> &, bool);
+  void CleanupProgramsWithNoRefs(deque<program *> &, bool);
   void clearMemory();
   void countRefs();
   void finalize();
@@ -52,11 +54,10 @@ class TPG {
   void ProgramMutator_MemoryPointer(program *prog_to_mu);
   void ProgramMutator_Instructions(program *prog_to_mu);
   void ProgramMutator_ActionPointer(program *prog_to_mu, team *new_team,
-                                    int &n_new_teams,
-                                    deque<program *> &progs_without_refs);
-  void AddTeamToPhylogeny(team *parent, team *new_team);
-  vector<team *> ApplyVariationOps(team *parent1, int &n_new_teams,
-                                   bool team_xover);
+                                    int &n_new_teams);
+  void AddAncestorToPhylogeny(team *parent, team *new_team);
+  void AddTeamToPhylogeny(team *new_team);
+  void ApplyVariationOps(team *team_to_modify, int &n_new_teams);
   team *genTeamsInternal(long, mt19937 &, set<team *, teamIdComp> &,
                          map<long, team *> &);
   int genUniqueProgram(program *, set<program *, programIdComp>);
@@ -125,17 +126,22 @@ class TPG {
   void ReadParameters(string file_name,
                       std::unordered_map<string, std::any> &params);
   void recalculateProgramRefs();
+  void SanityCheck();
+  void TeamSizesMatchProgRefs();  // Sanity check.
   inline void resetOutcomes(int phase, bool roots);
-  void selTeams(long, bool, int);
+  void SelectTeams();
+  team* TeamXover(vector<team *>& parents);
   void UpdateTeamPhyloData(team *tm);
-  void FindSingleTaskFitnessRange(vector<vector<double>> &mins,
+  void FindSingleTaskFitnessRange(vector<TaskEnv *> &tasks,
+                                  vector<vector<double>> &mins,
                                   vector<vector<double>> &maxs);
   vector<team *> NormalizeScoresAndRankTeams(
-      vector<int> &set, vector<vector<double>> &min_scores,
-      vector<vector<double>> &max_scores);
-  void FindMultiTaskElites(vector<vector<double>> &min_scores,
+      vector<TaskEnv *> &tasks, vector<int> &set,
+      vector<vector<double>> &min_scores, vector<vector<double>> &max_scores);
+  void FindMultiTaskElites(vector<TaskEnv *> &tasks,
+                           vector<vector<double>> &min_scores,
                            vector<vector<double>> &max_scores);
-  void SetEliteTeams(bool);
+  void SetEliteTeams(vector<TaskEnv *> &tasks);
   void setOutcome(team *tm, string behav, vector<double> &rewards,
                   vector<int> &ints, long gtime);
   void setParams();
@@ -161,7 +167,6 @@ class TPG {
   map<string, vector<team *>> task_set_map_;
   map<long, program *> _L;
   vector<long> _Lids;
-  vector<long> _Mids;
   vector<vector<long>> _Memids;
   // one map for each memory type: id->memory*
   vector<map<long, memoryEigen *>> _Memory;
@@ -179,12 +184,11 @@ class TPG {
   set<team *, teamIdComp> _eliteTeams;
   // keys: taskSet, fitMode, phase
   map<string, map<int, map<int, team *>>> _eliteTeamPS;
-  map<string, deque<double>> _eliteTestScoresMQ;
+  set<long> elite_team_id_history_;
   vector<mt19937> rngs_;
   vector<uint_fast32_t> seeds_;
-  vector<vector<long>> _numStoredOutcomesPerHost;  // [task][phase]
   vector<int> n_input_;  // number of inputs per task
-  ostringstream oss;                               // logging, reporting
+  ostringstream oss;     // logging, reporting
   vector<size_t> _numEliteTeamsCurrent;
 
   uniform_real_distribution<> real_dist_;  // random reals in [0,1]

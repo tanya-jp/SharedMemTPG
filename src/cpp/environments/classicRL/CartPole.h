@@ -44,6 +44,10 @@ class CartPole : public TaskEnv {
 
   int lastActionD = 0;
 
+  const int n_eval_train_ = 20;
+  const int n_eval_validation_ = 50;
+  const int n_eval_test_ = 100;
+
  public:
   CartPole() {
     disReset = uniform_real_distribution<>(-0.05, 0.05);
@@ -63,6 +67,15 @@ class CartPole : public TaskEnv {
     state_po.clear();
     actionsDiscrete.clear();
     actionTrace.clear();
+  }
+
+  int GetNumEval(int phase) {
+    if (phase == 0)
+      return n_eval_train_;
+    else if (phase == 1)
+      return n_eval_validation_;
+    else
+      return n_eval_test_;
   }
 
   void normalizeState(bool po) {

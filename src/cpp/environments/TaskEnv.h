@@ -52,6 +52,7 @@ class TaskEnv {
   virtual void display_function(int, int, double) {};
   vector<double> &GetObsVec(bool po) { return po ? state_po : state; }
   double GetObsVar(int var, bool po) { return po ? state_po[var] : state[var]; }
+  virtual int GetNumEval(int phase) = 0;
   void setStateVar(int var, double v) {
     state_po[var] = v;
     state[var] = v;

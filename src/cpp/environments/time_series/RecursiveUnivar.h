@@ -48,24 +48,26 @@ class RecursiveUnivar : public TaskEnv {
 
   ~RecursiveUnivar() {}
 
+  int GetNumEval(int phase) { return static_cast<int>(t_start[phase].size()); }
+
   void PrepareData(string task) {
     // import data
     CSVReader *reader;
     if (task == "Sunspots")
       reader =
-          new CSVReader("../datasets/SN_ms_tot_V2.0_Nov1834-June1926.csv", DIM);
+          new CSVReader("./datasets/SN_ms_tot_V2.0_Nov1834-June1926.csv", DIM);
     else if (task == "Mackey")
-      reader = new CSVReader("../datasets/Mackey-1100.csv", DIM);
+      reader = new CSVReader("./datasets/Mackey-1100.csv", DIM);
     else if (task == "Laser")
-      reader = new CSVReader("../datasets/Laser-10000-1000-2100.csv", DIM);
+      reader = new CSVReader("./datasets/Laser-10000-1000-2100.csv", DIM);
     else if (task == "Audio")
-      reader = new CSVReader("../datasets/2024-05-22-ali-10sec.dat", DIM);
+      reader = new CSVReader("./datasets/2024-05-22-ali-10sec.dat", DIM);
     else if (task == "Offset")
-      reader = new CSVReader("../datasets/ali_offset.csv", DIM);
+      reader = new CSVReader("./datasets/ali_offset_diff.csv", DIM);
     else if (task == "Duration")
-      reader = new CSVReader("../datasets/ali_duration.csv", DIM);
+      reader = new CSVReader("./datasets/ali_duration.csv", DIM);
     else  // task == "Pitch"
-      reader = new CSVReader("../datasets/ali_pitch.csv", DIM);
+      reader = new CSVReader("./datasets/ali_pitch.csv", DIM);
     data = reader->ReadData();
     delete reader;
 
@@ -112,40 +114,31 @@ class RecursiveUnivar : public TaskEnv {
       num_samples_predict_[1] = 100;  // validate
       num_samples_predict_[2] = 100;  // test
       
-      // // train (original, 19 start points)
-      // for (int s = 0; s <= 900; s+=50) {
-      //   t_start[0].push_back(s);
-      // }  
-
-      for (int s = 0; s <= 900; s+=10) {
+      // train (original, 19 start points)
+      for (int s = 0; s <= 900; s+=50) {
         t_start[0].push_back(s);
-      }
-                 
+      }  
+
       // validation (original, 9 start points)  
       for (int s = 50; s <= 850; s+=100) {
         t_start[1].push_back(s);
       }   
-                                        
-      // test
-      t_start[2].insert(t_start[2].begin(), {950});
       
+      // test (original single start point)
+      t_start[2].insert(t_start[2].begin(), {950});
+                                        
     } else if (task == "Offset" || task == "Duration" || task == "Pitch") {
       num_samples_prime_ = 50;
       num_samples_predict_[0] = 50;   // train
       num_samples_predict_[1] = 100;  // validate
       num_samples_predict_[2] = 100;  // test
       // train
-      //for (int s = 0; s <= 800; s += 100) t_start[0].push_back(s);
-      for (int s = 0; s <= 800; s += 50) t_start[0].push_back(s);
+      for (int s = 0; s <= 800; s += 100) t_start[0].push_back(s);
+      for (int s = 25; s <= 825; s += 100) t_start[0].push_back(s);
       // validate
       for (int s = 0; s <= 750; s += 150) t_start[1].push_back(s);
       // test
       for (int s = 50; s <= 800; s += 150) t_start[2].push_back(s);
-
-      // // same same same
-      // for (int s = 0; s <= 800; s += 100) t_start[0].push_back(s);
-      // for (int s = 0; s <= 800; s += 100) t_start[1].push_back(s);
-      // for (int s = 0; s <= 800; s += 100) t_start[2].push_back(s);
     }
   }
 

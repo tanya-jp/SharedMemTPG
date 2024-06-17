@@ -1,8 +1,12 @@
 # start from a checkpoint file
 checkpoint 0
 
-# write checkpoints
-write_checkpoints 1
+# save checkpoints during evolution
+write_train_checkpoints 0
+write_test_checkpoints 1
+
+# save phylogenetic data
+write_phylogeny 0
 
 # re-evaluate an individual from a checkpoint file
 replay 0
@@ -19,7 +23,7 @@ animate 0
 stateful 1
 
 # how frequently to run test procedure
-test_mod 10
+test_mod 1
 
 # in multitask settings, which tasks are active
 # rhs should be a comma-separated list like Cartpole,Acrobot
@@ -53,22 +57,22 @@ n_discrete_action 3
 max_initial_team_size 10
 
 # max team size
-max_team_size 20
+max_team_size 1000000
 
 # max teams per graph
 max_teams_per_graph 100
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 0.95
+p_atomic 1.0
 
 # team mutation: probability of deleting program from team
 pmd 0.5
 
 # team mtation: probability of adding program to team
-pma 0.3
+pma 0.4
 
 # team mutation: probability of mutating a program
-pmm 0.2
+pmm 1.0
 
 # team mutation: probability of mutating a program's action pointer
 pmn 0.1
@@ -80,34 +84,34 @@ pms 0.1
 pmw 0.1
 
 # team variation: probability of team crossover
-pmx 0.2
+pmx 0.0
 
 # team variation: probability of team crossover adding each parent prog to child
-pmx_p 0.5
+pmx_p 0.3
 
 # enable continuous outputs
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 6
+n_input 16
 
 # max initial program size
 max_initial_prog_size 10
 
 # max program size
-max_prog_size 100
+max_prog_size 1000000
 
 # program variation: probability of changing the program
 p_bid_mutate 1.0
 
 # program variation: probability of swaping the position of two instructions
-p_bid_swap 0.2
+p_bid_swap 0.5
 
 # program variation: probability of deleting an instruction
 p_bid_delete 0.5
 
 # program variation: probability of adding an instruction
-p_bid_add 0.3
+p_bid_add 0.4
 
 # program variation: probability of linear crossover with another team
 p_bid_xover 0.0
@@ -119,30 +123,25 @@ p_bid_xover 0.0
 bid_mu_const_stddev 0.05
 
 # memory size: number of memory indices
-# each memory index points to a data structure with some number of rows and columns
-# more the 4 indicies breaks introns removal for continus output???
+# each memory index points to a data structure (scalar, vector, or matrix)
 memory_indices 8
 
+# this is the dimensionality for vector & matrix memory
+memory_size 8
+
 # number of elite teams
-n_elite 1008
+n_elite 200
 
 # multiplier for # new teams to generate each generation
 n_elite_mul 5
-
-# number of training outcome to store
-n_stored_outcomes_TRAIN 17
-
-# number of test outcomes to store
-n_stored_outcomes_VALIDATION 6
-
-# number of validation outcomes to store
-n_stored_outcomes_TEST 6
 
 # fitness proportional selection
 fit_prop_select 0
 
 # which diversity mode to use, if available
 diversity_mode 0
+
+parent_select_roots_only 1
 
 # operations, uncomment to activate
 
@@ -191,36 +190,36 @@ VECTOR_MAX_OP
 VECTOR_MEAN_OP
 VECTOR_ST_DEV_OP
 VECTOR_CONST_SET_OP
+ 
+# matrix #########################
+VECTOR_OUTER_PRODUCT_OP
+SCALAR_MATRIX_PRODUCT_OP
+MATRIX_RECIPROCAL_OP
+MATRIX_VECTOR_PRODUCT_OP
+VECTOR_COLUMN_BROADCAST_OP
+VECTOR_ROW_BROADCAST_OP
+MATRIX_NORM_OP
+MATRIX_COLUMN_NORM_OP
+MATRIX_ROW_NORM_OP
+MATRIX_TRANSPOSE_OP
+MATRIX_ABS_OP
+MATRIX_SUM_OP
+MATRIX_DIFF_OP
+MATRIX_PRODUCT_OP
+MATRIX_DIVISION_OP
+MATRIX_MATRIX_PRODUCT_OP
+MATRIX_MIN_OP
+MATRIX_MAX_OP
+MATRIX_MEAN_OP
+MATRIX_ROW_MEAN_OP
+MATRIX_ROW_ST_DEV_OP
+MATRIX_ST_DEV_OP
+MATRIX_CONST_SET_OP
 
-## matrix #########################
-#VECTOR_OUTER_PRODUCT_OP
-#SCALAR_MATRIX_PRODUCT_OP
-#MATRIX_RECIPROCAL_OP
-#MATRIX_VECTOR_PRODUCT_OP
-#VECTOR_COLUMN_BROADCAST_OP
-#VECTOR_ROW_BROADCAST_OP
-#MATRIX_NORM_OP
-#MATRIX_COLUMN_NORM_OP
-#MATRIX_ROW_NORM_OP
-#MATRIX_TRANSPOSE_OP
-#MATRIX_ABS_OP
-#MATRIX_SUM_OP
-#MATRIX_DIFF_OP
-#MATRIX_PRODUCT_OP
-#MATRIX_DIVISION_OP
-#MATRIX_MATRIX_PRODUCT_OP
-#MATRIX_MIN_OP
-#MATRIX_MAX_OP
-#MATRIX_MEAN_OP
-#MATRIX_ROW_MEAN_OP
-#MATRIX_ROW_ST_DEV_OP
-#MATRIX_ST_DEV_OP
-#MATRIX_CONST_SET_OP
-
-# noise ##########################
-#SCALAR_UNIFORM_SET_OP
+## noise ##########################
+##SCALAR_UNIFORM_SET_OP
 #SCALAR_GAUSSIAN_SET_OP
-#VECTOR_UNIFORM_SET_OP
+##VECTOR_UNIFORM_SET_OP
 #VECTOR_GAUSSIAN_SET_OP
-#MATRIX_UNIFORM_SET_OP
+##MATRIX_UNIFORM_SET_OP
 #MATRIX_GAUSSIAN_SET_OP
