@@ -247,7 +247,7 @@ void evaluate_main(TPG &tpg, mpi::communicator &world,
   // assign agents to evaluators
   int evaluator = 1;
   for (size_t task = 0; task < tasks.size(); task++) {
-    tpg.state_["active_task"] = task;
+    tpg.state_["active_task"] = tasks[task]->taskIndex;
     auto teams_to_eval = GetTeamsToEval(tpg, tasks[task]);
 
     AssignTeamsToEvaluators(tpg, world, teams_to_eval, world_size_per_task,
@@ -289,7 +289,7 @@ void evaluate_main(TPG &tpg, mpi::communicator &world,
 
 /// @brief Estimates the fitness of a team on a given task using its phylogeny
 /// @return The estimated fitness of the team
-double estimate_fitness(TPG &tpg, team *tm, int task) {
+double estimate_fitness(TPG &tpg, team *tm, TaskEnv *task) {
   std::vector<long> visited = {tm->id_};
   list<long> queue = {tm->id_};
 
@@ -301,8 +301,8 @@ double estimate_fitness(TPG &tpg, team *tm, int task) {
     // If the team has been evaluated on the task, return its fitness
     vector<double> taskFitnesses = tpg._phyloGraph[currId].taskFitnesses;
     int sizeInt = static_cast<int>(taskFitnesses.size());
-    if (task < sizeInt) {
-      return taskFitnesses[task];
+    if (task->taskIndex < sizeInt) {
+      return taskFitnesses[task->taskIndex];
     }
 
     for (long ancId : tpg._phyloGraph[currId].ancestorIds) {
@@ -320,11 +320,11 @@ double estimate_fitness(TPG &tpg, team *tm, int task) {
 /// @brief Estimates the fitness of all teams on a given set of tasks
 /// @param tpg The TPG instance with all the teams
 /// @param taskSet The set of tasks
-void estimate_main(TPG &tpg, vector<int> &taskSet)
+void estimate_main(TPG &tpg, vector<TaskEnv *> &tasks)
 {
   // Loop through tasks
   for (size_t task = 0; task < taskSet.size(); task++) {
-    tpg.state_["active_task"] = taskSet[task];
+    tpg.state_["active_task"] = taskSet[task]->taskIndex;
     auto teams_to_eval = GetTeamsToEval(tpg);
 
     // Loop through teams
@@ -336,7 +336,7 @@ void estimate_main(TPG &tpg, vector<int> &taskSet)
       vector<double> r_runTimeStats(4);
       r_runTimeStats[0] = est_fit;
       vector<int> r_runTimeInts(4);
-      r_runTimeInts[POINT_AUX_INT_TASK] = taskSet[task];
+      r_runTimeInts[POINT_AUX_INT_TASK] = taskSet[task]->taskIndex;
       r_runTimeInts[POINT_AUX_INT_PHASE] = tpg.GetState("phase");
 
       for (int i = 0; i < tpg._numStoredOutcomesPerHost[tpg.GetState("active_task")][tpg.GetState("phase")]; i++) {

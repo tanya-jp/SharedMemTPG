@@ -15,6 +15,7 @@ using namespace std;
 
 class TaskEnv {
  public:
+  int taskIndex;
   string eval_type_;
   vector<double> state;     // state variables
   vector<double> state_po;  // state variables (partially observable)
