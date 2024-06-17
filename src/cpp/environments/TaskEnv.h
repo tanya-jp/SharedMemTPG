@@ -28,6 +28,9 @@ class TaskEnv {
   int step;
   int max_step;
   bool terminalState;
+  // A min reward is useful for filtering very bad or infinitely bad rewards
+  // in time series tasks
+  double min_reward_;
   vector<deque<double> > actionTrace;
   struct Results {
     double r1;

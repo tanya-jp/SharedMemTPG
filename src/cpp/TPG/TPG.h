@@ -22,8 +22,7 @@ class TPG {
   ~TPG();
 
   void InitMemory() {
-    for (auto p : _L)
-      p.second->ClearWorking();
+    for (auto p : _L) p.second->ClearWorking();
   }
   void AddProgram(program *p);
   void removeProgram(program *p, bool updateLids);
@@ -64,7 +63,7 @@ class TPG {
   program *getAction(team *tm, state *s, bool updateActive,
                      set<team *, teamIdComp> &visitedTeams,
                      long &decisionInstructions, int timeStep,
-                     vector<team *> &teamPath, mt19937 &rng, bool& verbose);
+                     vector<team *> &teamPath, mt19937 &rng, bool &verbose);
 
   program *getAction(
       team *tm, state *s, bool updateActive,
@@ -72,7 +71,7 @@ class TPG {
       int timeStep, vector<program *> &allPrograms,
       vector<program *> &winningPrograms, vector<set<long>> &decisionFeatures,
       vector<set<memoryEigen *, memoryEigenIdComp>> &decisionMemories,
-      vector<team *> &teamPath, mt19937 &rng, bool& verbose);
+      vector<team *> &teamPath, mt19937 &rng, bool &verbose);
   void GetAllNodes(team *tm, set<team *, teamIdComp> &teams,
                    set<program *, programIdComp> &programs);
   void GetAllNodes(team *tm, set<team *, teamIdComp> &teams,
@@ -80,8 +79,8 @@ class TPG {
                    set<memoryEigen *, memoryEigenIdComp> &memories);
   team *getBestTeam();
   // map<long, team *> GetTeams(bool) const;
-  vector<team*> GetTeamsInVec(bool) const;
-  map<long, team*> GetTeamsInMap(bool) const;
+  vector<team *> GetTeamsInVec(bool) const;
+  map<long, team *> GetTeamsInMap(bool) const;
   void getTeams(vector<team *> &t, bool roots) const;     // weed out
   void getTeams(map<long, team *> &t, bool roots) const;  // weed out
   void InitTeams();
@@ -101,15 +100,17 @@ class TPG {
   //                        set<team *, teamIdComp> &visitedTeamsAllTasks,
   //                        vector<map<long, double>> &teamUseMapPerTask);
   void printGraphDotGPTPXXI(long rootTeamID,
-                         set<team *, teamIdComp> &visitedTeamsAllTasks,
-                         vector<map<long, double>> &teamUseMapPerTask, vector<int>& steps_per_task);
+                            set<team *, teamIdComp> &visitedTeamsAllTasks,
+                            vector<map<long, double>> &teamUseMapPerTask,
+                            vector<int> &steps_per_task);
   // void printGraphDotGPEMAnimate(long rootTeamId, size_t frame, int episode,
   //                               int step, size_t depth,
   //                               vector<program *> allPrograms,
   //                               vector<program *> winningPrograms,
-  //                               set<team *, teamIdComp> &visitedTeamsAllTasks,
-  //                               vector<map<long, double>> &teamUseMapPerTask,
-  //                               vector<team *> teamPath);
+  //                               set<team *, teamIdComp>
+  //                               &visitedTeamsAllTasks, vector<map<long,
+  //                               double>> &teamUseMapPerTask, vector<team *>
+  //                               teamPath);
   void printHostGraphsDFS(long, long);
   void printHostGraphsHostsOnly(long, long);
   void printPhyloGraphDot(team *);
@@ -127,10 +128,13 @@ class TPG {
   inline void resetOutcomes(int phase, bool roots);
   void selTeams(long, bool, int);
   void UpdateTeamPhyloData(team *tm);
-  void FindSingleTaskElites(vector<vector<double>>& mins, vector<vector<double>>& maxs);
-  vector <team*> NormalizeScoresAndRankTeams(vector<int>& set, vector<vector<double>>& min_scores, vector<vector<double>>& max_scores);
+  void FindSingleTaskFitnessRange(vector<vector<double>> &mins,
+                                  vector<vector<double>> &maxs);
+  vector<team *> NormalizeScoresAndRankTeams(
+      vector<int> &set, vector<vector<double>> &min_scores,
+      vector<vector<double>> &max_scores);
   void FindMultiTaskElites(vector<vector<double>> &min_scores,
-    vector<vector<double>> &max_scores);
+                           vector<vector<double>> &max_scores);
   void SetEliteTeams(bool);
   void setOutcome(team *tm, string behav, vector<double> &rewards,
                   vector<int> &ints, long gtime);
@@ -178,8 +182,9 @@ class TPG {
   map<string, deque<double>> _eliteTestScoresMQ;
   vector<mt19937> rngs_;
   vector<uint_fast32_t> seeds_;
-  vector<long> _numStoredOutcomesPerHost;
-  ostringstream oss;  // logging, reporting
+  vector<vector<long>> _numStoredOutcomesPerHost;  // [task][phase]
+  vector<int> n_input_;  // number of inputs per task
+  ostringstream oss;                               // logging, reporting
   vector<size_t> _numEliteTeamsCurrent;
 
   uniform_real_distribution<> real_dist_;  // random reals in [0,1]

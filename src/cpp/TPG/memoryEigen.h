@@ -26,7 +26,7 @@ class memoryEigen {
     ostringstream oss;
     const static IOFormat CPFormat(StreamPrecision, DontAlignCols, ":", ":");
     oss << "memoryEigen:" << id_ << ":" << type_ << ":" << memoryIndices_ << ":"
-        << memoryRows_ << ":" << memoryCols_ << ":" << nrefs_;
+        << memory_size_ << ":" << ":" << nrefs_;
     for (auto &m : const_memory_) {
       oss << ":" << m.format(CPFormat);
     }
@@ -78,8 +78,6 @@ class memoryEigen {
     for (size_t i = 0; i < memoryIndices_; i++)
       if (active_(i, 0)) v[i] = write_time_(i, 0);
   }
-  inline size_t memoryRows() { return memoryRows_; }  // always square
-  inline size_t memoryCols() { return memoryCols_; }
   inline int refs() { return nrefs_; }
   inline void refs(int i) { nrefs_ = i; }
   inline int refDec() { return --nrefs_; }
@@ -95,11 +93,11 @@ class memoryEigen {
         working_memory_[i].resize(1, 1);
         const_memory_[i].resize(1, 1);
       } else if (type_ == VECTOR_TYPE) {
-        working_memory_[i].resize(memoryRows_, 1);
-        const_memory_[i].resize(memoryRows_, 1);
+        working_memory_[i].resize(memory_size_, 1);
+        const_memory_[i].resize(memory_size_, 1);
       } else if (type_ == MATRIX_TYPE) {
-        working_memory_[i].resize(memoryRows_, memoryCols_);
-        const_memory_[i].resize(memoryRows_, memoryCols_);
+        working_memory_[i].resize(memory_size_, memory_size_);
+        const_memory_[i].resize(memory_size_, memory_size_);
       }
     }
     active_.resize(memoryIndices_, 1);
@@ -109,14 +107,12 @@ class memoryEigen {
   inline int type() { return type_; }
   inline void type(int t) { type_ = t; }
 
-  memoryEigen(long i, int type, size_t memoryIndices, size_t memoryRows,
-              size_t memoryCols) {
+  memoryEigen(long i, int type, size_t memoryIndices, size_t memory_size) {
     id_ = i;
     nrefs_ = 0;
     type_ = type;
     memoryIndices_ = memoryIndices;
-    memoryRows_ = memoryRows;
-    memoryCols_ = memoryCols;
+    memory_size_ = memory_size;
     resizeMemory();
     ClearWorking();
     ClearConst();
@@ -131,8 +127,7 @@ class memoryEigen {
     nrefs_ = 0;
     type_ = type;
     memoryIndices_ = std::any_cast<int>(params["memory_indices"]);
-    memoryRows_ = std::any_cast<int>(params["memory_rows"]);
-    memoryCols_ = std::any_cast<int>(params["memory_cols"]);
+    memory_size_ = std::any_cast<int>(params["memory_size"]);
     resizeMemory();
     ClearWorking();
     ClearConst();
@@ -141,14 +136,12 @@ class memoryEigen {
     ClearWriteTime();
   }
 
-  memoryEigen(long i, int type, size_t memoryIndices, size_t memoryRows,
-              size_t memoryCols, int nr) {
+  memoryEigen(long i, int type, size_t memoryIndices, size_t memory_size, int nr) {
     id_ = i;
     nrefs_ = nr;
     type_ = type;
     memoryIndices_ = memoryIndices;
-    memoryRows_ = memoryRows;
-    memoryCols_ = memoryCols;
+    memory_size_ = memory_size;
     resizeMemory();
     ClearWorking();
     ClearConst();
@@ -162,8 +155,7 @@ class memoryEigen {
     nrefs_ = m->refs();
     type_ = m->type();
     memoryIndices_ = m->indexSize();
-    memoryRows_ = m->memoryRows();
-    memoryCols_ = m->memoryCols();
+    memory_size_ = m->memory_size_;
     resizeMemory();
     ClearWorking();
     ClearConst();
@@ -179,8 +171,7 @@ class memoryEigen {
   long id_;
   int type_;
   size_t memoryIndices_;
-  size_t memoryRows_;
-  size_t memoryCols_;
+  size_t memory_size_;
   std::vector<Matrix<double, Dynamic, Dynamic> > working_memory_;
   std::vector<Matrix<double, Dynamic, Dynamic> > const_memory_;
   Matrix<bool, Dynamic, 1> active_;

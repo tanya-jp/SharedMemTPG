@@ -468,7 +468,7 @@ int team::numOutcomes(int phase, int task) {
          ouiter1++)
       numOut += ouiter1->second[phase].size();
   else
-    numOut = outcomes_[task][phase].size();
+      numOut = outcomes_[task][phase].size();
   return numOut;
 }
 

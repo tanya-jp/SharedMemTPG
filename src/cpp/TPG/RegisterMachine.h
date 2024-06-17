@@ -36,7 +36,7 @@ class RegisterMachine : public program {
              uniform_real_distribution<> &,
              std::vector<bool>
                  &); 
-  void SetupMemory(size_t, size_t, size_t);
+  void SetupMemory(size_t, size_t);
   inline int Size() { return bid_.size(); }
   inline int SizeEffective() { return bidEffective_.size(); }
 };

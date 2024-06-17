@@ -94,11 +94,11 @@ if [ $mode -eq 1 ]; then
    echo "Fitness:$bestScore Generation:$t_pickup Team:$tm"
    
    mpirun --oversubscribe -np 1 \
-     $TPG_PATH/build/release/cpp/experiments/TPGExperimentMPI -R $tm -r $replay_task -C $phase \
+     $TPG_PATH/build/release/cpp/experiments/TPGExperimentMPI -a -R $tm -r $replay_task -C $phase \
      -p $t_pickup -s $seed -g $seed \
      1> tpg.$seed.replay.std 2> tpg.$seed.replay.err &
    
-  # #  echo "COMMAND: mpirun --oversubscribe -np 2 xterm -hold -e gdb -ex run --args $TPG_PATH/build/release/cpp/experiments/TPGExperimentMPI -a -R $tm -C $phase -p $t_pickup -s $seed -g $seed 1> tpg.$seed.replay.std 2> tpg.$seed.replay.err &"
+  #  echo "COMMAND: mpirun --oversubscribe -np 2 xterm -hold -e gdb -ex run --args $TPG_PATH/build/release/cpp/experiments/TPGExperimentMPI -a -R $tm -C $phase -p $t_pickup -s $seed -g $seed 1> tpg.$seed.replay.std 2> tpg.$seed.replay.err &"
   #  replay with debugger
   #  mpirun --oversubscribe -np 1 xterm -hold -e gdb -ex run --args \
   #    $TPG_PATH/build/release/cpp/experiments/TPGExperimentMPI -R $tm -r $replay_task -C $phase \

@@ -5,7 +5,7 @@ string RegisterMachine::checkpoint(bool all) {
   ostringstream oss;
 
   oss << "RegisterMachine:" << id_ << ":" << gtime_ << ":" << action_ << ":"
-      << stateful_ << ":" << num_input_ << ":" << nrefs_;
+      << stateful_ << ":" << nrefs_;
   for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
     oss << ":" << sharedMemory_[mem_t]->id();
   }
@@ -28,9 +28,7 @@ RegisterMachine::RegisterMachine(
     long gtime, long action, std::unordered_map<std::string, std::any> &params,
     long id, mt19937 &rng, std::vector<bool> &legalOps) {
   action_ = action;
-  num_input_ = std::any_cast<int>(params["n_input"]);
-  memoryRows_ = std::any_cast<int>(params["memory_rows"]);
-  memoryCols_ = std::any_cast<int>(params["memory_cols"]);
+  memory_size_ = std::any_cast<int>(params["memory_size"]);
   stateful_ = std::any_cast<int>(params["stateful"]);
   gtime_ = gtime;
   id_ = id;
@@ -52,8 +50,7 @@ RegisterMachine::RegisterMachine(
     bid_.push_back(in);
   }
   op_counts_.resize(instruction::NUM_OP);
-  SetupMemory(std::any_cast<int>(params["memory_indices"]), memoryRows_,
-              memoryCols_);
+  SetupMemory(std::any_cast<int>(params["memory_indices"]), memory_size_);
 }
 
 /******************************************************************************
@@ -63,9 +60,7 @@ RegisterMachine::RegisterMachine(
     long gtime, RegisterMachine &plr,
     std::unordered_map<std::string, std::any> &params, long id) {
   action_ = plr.action();
-  num_input_ = plr.num_input_;
-  memoryRows_ = plr.memoryRows_;
-  memoryCols_ = plr.memoryCols_;
+  memory_size_ = plr.memory_size_;
   gtime_ = gtime;
   id_ = id;
   key_ = plr.key();
@@ -79,20 +74,16 @@ RegisterMachine::RegisterMachine(
     bid_.push_back(new instruction(**initer));
 
   op_counts_.resize(instruction::NUM_OP);
-  SetupMemory(std::any_cast<int>(params["memory_indices"]), memoryRows_,
-              memoryCols_);
-}
-
+  SetupMemory(std::any_cast<int>(params["memory_indices"]), memory_size_);
+    }
 /******************************************************************************
  * Create RegisterMachine from checkpoint file
  */
-RegisterMachine::RegisterMachine(
-    long gtime, long action, int stateful,
+RegisterMachine::RegisterMachine(long gtime, long action, int stateful,
     std::unordered_map<std::string, std::any> &params, long id, long nrefs,
     std::vector<instruction *> bid) {
   action_ = action;
   bid_ = bid;
-  num_input_ = std::any_cast<int>(params["n_input"]);
   gtime_ = gtime;
   id_ = id;
   key_ = 0;
@@ -104,8 +95,7 @@ RegisterMachine::RegisterMachine(
   op_counts_.resize(instruction::NUM_OP);
 
   SetupMemory(std::any_cast<int>(params["memory_indices"]),
-              std::any_cast<int>(params["memory_rows"]),
-              std::any_cast<int>(params["memory_cols"]));
+              std::any_cast<int>(params["memory_size"]));
 }
 
 /******************************************************************************/
@@ -132,14 +122,16 @@ void RegisterMachine::MarkFeatures(instruction *istr, int in) {
     features_.insert(istr->inIdx(in));
   } else if (istr->inType(in) == memoryEigen::VECTOR_TYPE) {
     for (size_t f = istr->inIdx(in), row = 0;
-         row < istr->inMem(in)->memoryRows(); row++) {
-      features_.insert(f++ % num_input_);  // toroidal
+         row < istr->inMem(in)->memory_size_; row++) {
+      // features_.insert(f++ % num_input_);  // toroidal
+      features_.insert(f++);
     }
   } else if (istr->inType(in) == memoryEigen::MATRIX_TYPE) {
     for (size_t f = istr->inIdx(in), row = 0;
-         row < istr->inMem(in)->memoryRows(); row++) {
-      for (size_t col = 0; col < istr->inMem(in)->memoryCols(); col++) {
-        features_.insert(f++ % num_input_);  // toroidal
+         row < istr->inMem(in)->memory_size_; row++) {
+      for (size_t col = 0; col < istr->inMem(in)->memory_size_; col++) {
+        // features_.insert(f++ % num_input_);  // toroidal
+        features_.insert(f++);
       }
     }
   }
@@ -250,25 +242,26 @@ void RegisterMachine::MuBid(std::unordered_map<std::string, std::any> &params,
   }
 }
 
-void RegisterMachine::CopyInputToMemory(instruction *istr, state *obs,
-                                        size_t in) {
-  // in this case inMem(in) will be inputMemory_ and we use index 0
+void RegisterMachine::CopyInputToMemory(instruction *istr, state *obs, size_t in) {
+  // In this case inMem(in) will be inputMemory_ and we use index 0
+  // Indices to input memory are mod by obs->dim_ to support environments
+  // with different number of scalar observation variables
   size_t idx = 0;
   if (istr->inType(in) == memoryEigen::SCALAR_TYPE) {
     istr->inMem(in)->working_memory_[idx](0, 0) =
-        obs->stateValueAtIndex(istr->inIdx(in));
+        obs->stateValueAtIndex(istr->inIdx(in) % obs->dim_);
   } else if (istr->inType(in) == memoryEigen::VECTOR_TYPE) {
     for (size_t f = istr->inIdx(in), row = 0;
-         row < istr->inMem(in)->memoryRows(); row++) {
+         row < istr->inMem(in)->memory_size_; row++) {
       istr->inMem(in)->working_memory_[idx](row, 0) =
-          obs->stateValueAtIndex(f++ % num_input_);
+          obs->stateValueAtIndex(f++ % obs->dim_);
     }
   } else if (istr->inType(in) == memoryEigen::MATRIX_TYPE) {
     for (size_t f = istr->inIdx(in), row = 0;
-         row < istr->inMem(in)->memoryRows(); row++) {
-      for (size_t col = 0; col < istr->inMem(in)->memoryCols(); col++) {
+         row < istr->inMem(in)->memory_size_; row++) {
+      for (size_t col = 0; col < istr->inMem(in)->memory_size_; col++) {
         istr->inMem(in)->working_memory_[idx](row, col) =
-            obs->stateValueAtIndex(f++ % num_input_);
+            obs->stateValueAtIndex(f++ % obs->dim_);
       }
     }
   }
@@ -314,16 +307,15 @@ double RegisterMachine::Run(state *obs, int &time_step,
 }
 
 /******************************************************************************/
-void RegisterMachine::SetupMemory(size_t memoryIndices, size_t memoryRows,
-                                  size_t memoryCols) {
+void RegisterMachine::SetupMemory(size_t memoryIndices, size_t memory_size) {
   inputMemoryPointers_.resize(2);  // for in1 and in2
   for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
     privateMemory_.push_back(
-        new memoryEigen(-1, mem_t, memoryIndices, memoryRows, memoryCols));
+        new memoryEigen(-1, mem_t, memoryIndices, memory_size));
     inputMemoryPointers_[0].push_back(
-        new memoryEigen(-1, mem_t, memoryIndices, memoryRows, memoryCols));
+        new memoryEigen(-1, mem_t, memoryIndices, memory_size));
     inputMemoryPointers_[1].push_back(
-        new memoryEigen(-1, mem_t, memoryIndices, memoryRows, memoryCols));
+        new memoryEigen(-1, mem_t, memoryIndices, memory_size));
   }
   sharedMemory_.resize(memoryEigen::NUM_MEMORY_TYPES);
 }

@@ -85,9 +85,9 @@ class instruction {
   static const int NUM_OP = 71;
 
   static const vector<double> constants_;
-  int num_input_;  // number of observation variables
   mt19937 rng_;
 
+  // Mutable instruction parameters
   int in1Src_ = 0;   // 0,1,2 - private, shared, input (2024-04-29 limit to
                      // private or input)
   int in2Src_ = 0;   // 0,1,2 - private, shared, input (2024-04-29 limit to
@@ -95,7 +95,9 @@ class instruction {
   int outSrc_ = 0;   // 0,1 - private, shared (2024-04-29 limit to private)
   int outIdx_ = 0;   // index to memory
   int op_ = 0;       // operation
-  int in1Idx_ = 0;   // index to memory or feature
+  // Index to memory or feature
+  // Range: (0 -> memIndices - 1) sometimes moded by obs size
+  int in1Idx_ = 0;   // index to memory or feature (range: memory_size * memory_size )
   int in1IdxE_ = 0;  // idx for features stored in tmp memoryEign* TODO(skelly)
                      // what is this?
   int in2Idx_ = 0;   // index to memory or feature
@@ -106,8 +108,7 @@ class instruction {
   memoryEigen* out_;
   memoryEigen* in1_;
   memoryEigen* in2_;
-  int memoryRows_ = 0;
-  int memoryCols_ = 0;
+  int memory_size_ = 0;
 
   // maps operations to memory types for out, in1, in2
   static vector<vector<size_t> > op_mem_types_;
@@ -325,7 +326,7 @@ class instruction {
 
   inline void ExecuteVectorHeavisideOp(bool dbg) {
     const double* in = out_->working_memory_[in1IdxE_].data();
-    const double* in_end = in + memoryCols_;
+    const double* in_end = in + memory_size_;
     double* out = out_->working_memory_[outIdx_].data();
     while (in != in_end) {
       *out = *in > 0.0 ? 1.0 : 0.0;
@@ -339,7 +340,7 @@ class instruction {
   inline void ExecuteMatrixHeavisideOp(bool dbg) {
     const double* ind = in1_->working_memory_[in1IdxE_].data();
     const double* ind_end =
-        ind + memoryRows_ * memoryCols_;  // all matices will be same size
+        ind + memory_size_ * memory_size_;  // all matices will be same size
     double* outd = out_->working_memory_[outIdx_].data();
     while (ind != ind_end) {
       *outd = *ind > 0.0 ? 1.0 : 0.0;
@@ -359,7 +360,7 @@ class instruction {
 
   inline void ExecuteScalarBroadcastOp(bool dbg) {
     out_->working_memory_[outIdx_] =
-        in1_->working_memory_[in1IdxE_](0, 0) * MatrixXd::Ones(memoryRows_, 1);
+        in1_->working_memory_[in1IdxE_](0, 0) * MatrixXd::Ones(memory_size_, 1);
     if (dbg) {
     }
   }
@@ -679,7 +680,7 @@ class instruction {
   inline void ExecuteVectorConstSetOp(bool dbg) {
     out_->working_memory_[outIdx_] = in1_->const_memory_[in1IdxE_];
     // out_->working_memory_[outIdx_] = constants_[in1Idx_ % constants_.size()] *
-                                    //  MatrixXd::Ones(memoryRows_, 1);
+                                    //  MatrixXd::Ones(memory_size_, 1);
     if (dbg) {
     }
   }
@@ -687,7 +688,7 @@ class instruction {
   inline void ExecuteMatrixConstSetOp(bool dbg) {
     out_->working_memory_[outIdx_] = in1_->const_memory_[in1IdxE_];
     // out_->working_memory_[outIdx_] = constants_[in1Idx_ % constants_.size()] *
-                                    //  MatrixXd::Ones(memoryRows_, memoryCols_);
+                                    //  MatrixXd::Ones(memory_size_, memory_size_);
     if (dbg) {
     }
   }

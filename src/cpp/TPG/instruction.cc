@@ -362,19 +362,16 @@ void instruction::SetupOps() {
 // constructor
 instruction::instruction(std::unordered_map<string, std::any> &params,
                          mt19937 &rng) {
-  memoryRows_ = std::any_cast<int>(params["memory_rows"]);
-  memoryCols_ = std::any_cast<int>(params["memory_cols"]);
+  memory_size_ = std::any_cast<int>(params["memory_size"]);
   memIndices_ = std::any_cast<int>(params["memory_indices"]);
-  num_input_ = std::any_cast<int>(params["n_input"]);
   rng_ = rng;
 }
 
 // copy construction
 instruction::instruction(instruction &i) {
-  memoryRows_ = i.memoryRows_;
-  memoryCols_ = i.memoryCols_;
+  memory_size_ = i.memory_size_;
+  memory_size_ = i.memory_size_;
   memIndices_ = i.memIndices_;
-  num_input_ = i.num_input_;
   out_ = i.out_;
   in1_ = i.in1_;
   in2_ = i.in2_;
@@ -411,10 +408,8 @@ void instruction::mutate(bool uniform, vector<bool> &legal_ops, mt19937 &rng) {
       op_ = dis(rng);
     } while (!legal_ops[op_]);
     dis = std::uniform_int_distribution<>(
-        0, (in1Src_ > 1 ? num_input_ - 1 : memIndices_ - 1));
+        0, memIndices_ - 1);
     in1Idx_ = in1IdxE_ = dis(rng);
-    // dis = std::uniform_int_distribution<>(
-        // 0, (in2Src_ > 1 ? num_input_ - 1 : memIndices_ - 1));
     in2Idx_ = in2IdxE_ = dis(rng);
   } else {  // randomly change one part of this instruction
     int prev;
@@ -458,19 +453,18 @@ void instruction::mutate(bool uniform, vector<bool> &legal_ops, mt19937 &rng) {
         } while ((nOp > 1 && op_ == prev) || !legal_ops[op_]);
         break;
       case 4:  // change in1 index
-        if (num_input_ < 2) break;
+        // if (num_input_ < 2) break;
         prev = in1Idx_;
         dis = std::uniform_int_distribution<>(
-            0, (in1Src_ > 1 ? num_input_ - 1 : memIndices_ - 1));
+            0, memIndices_ - 1);  
         do {
           in1Idx_ = in1IdxE_ = dis(rng);
         } while (in1Idx_ == prev);
         break;
       case 5:  // change in2 index
-        if (num_input_ < 2) break;
+        // if (num_input_ < 2) break;
         prev = in2Idx_;
-        dis = std::uniform_int_distribution<>(
-            0, (in2Src_ > 1 ? num_input_ - 1 : memIndices_ - 1));
+        dis = std::uniform_int_distribution<>(0, memIndices_ - 1);
         do {
           in2Idx_ = in2IdxE_ = dis(rng);
         } while (in2Idx_ == prev);
