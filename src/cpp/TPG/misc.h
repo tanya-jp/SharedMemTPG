@@ -239,8 +239,8 @@ inline void SplitSet(std::vector<T> S, std::vector<T> &A, std::vector<T> &B, int
 {
    std::shuffle(S.begin(), S.end(), g);
 
-   A = std::vector<int>(S.begin(), S.begin() + n);
-   B = std::vector<int>(S.begin() + n, S.end());
+   A = std::vector<T>(S.begin(), S.begin() + n);
+   B = std::vector<T>(S.begin() + n, S.end());
 }
 
 inline double RoundTo(double value, double precision = 1.0)

@@ -67,6 +67,11 @@ int main(int argc, char** argv) {
       exit(1);
     }
   }
+
+  // Create task indices vector
+  vector<int> taskIndices;
+  for (int i = 0; i < (int)tasks.size(); i++) taskIndices.push_back(i);
+
   // Read number of inpts per task from parameters
   ss.clear();
   ss.str(tpg.GetParam<string>("n_input"));
@@ -153,16 +158,16 @@ int main(int argc, char** argv) {
         if (tpg.GetState("t_current") > tpg.GetParam<int>("t_start")) {
           // Split tasks into evaluated and estimated
           vector<int> evalTasks, estTasks;
-          SplitSet(tasks, evalTasks, estTasks, tpg.GetParam<int>("n_sampled_tasks_for_eval"), tpg.rngs_[TPG_SEED]);
+          SplitSet(taskIndices, evalTasks, estTasks, tpg.GetParam<int>("n_sampled_tasks_for_eval"), tpg.rngs_[TPG_SEED]);
 
           // Evaluate tasks
-          evaluate_main(tpg, world, evalTasks);
+          evaluate_main(tpg, world, tasks, evalTasks);
 
           // Estimate remaining tasks with phylogeny
-          estimate_main(tpg, estTasks);
+          estimate_main(tpg, tasks, estTasks);
         } else {
           // If first generation, evaluate on all tasks
-          evaluate_main(tpg, world, tasks);
+          evaluate_main(tpg, world, tasks, taskIndices);
         }
 
         endEval = chrono::system_clock::now() - startEval;
@@ -181,12 +186,12 @@ int main(int argc, char** argv) {
           
           // validation
           tpg.state_["phase"] = _VALIDATION_PHASE;
-          evaluate_main(tpg, world, tasks);
+          evaluate_main(tpg, world, tasks, taskIndices);
           tpg.SetEliteTeams(tasks);
 
           // test
           tpg.state_["phase"] = _TEST_PHASE;
-          evaluate_main(tpg, world, tasks);
+          evaluate_main(tpg, world, tasks, taskIndices);
           tpg.SetEliteTeams(tasks);
 
           tpg.state_["phase"] = _TRAIN_PHASE;

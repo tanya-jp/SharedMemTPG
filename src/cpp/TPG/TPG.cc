@@ -926,7 +926,7 @@ void TPG::FindMultiTaskElites(vector<TaskEnv *> &tasks,
           _phyloGraph[tm->id_].fitness = tm->fit_;
 
           _phyloGraph[tm->id_].taskFitnesses.clear();
-          for (int task = 0; task < GetParam<int>("n_task"); task++) {
+          for (int task = 0; task < GetState("n_task"); task++) {
             _phyloGraph[tm->id_].taskFitnesses.push_back(tm->getQuickMean(task, GetState("fitMode"), GetState("phase")));
           }
         }
