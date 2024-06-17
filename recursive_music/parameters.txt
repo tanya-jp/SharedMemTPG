@@ -50,7 +50,7 @@ mu_internal 0
 n_discrete_action 3
 
 # initial team size
-initial_team_size 10
+max_initial_team_size 10
 
 # max team size
 max_team_size 20
