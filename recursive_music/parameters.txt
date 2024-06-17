@@ -126,6 +126,9 @@ memory_indices 8
 # number of elite teams
 n_elite 1008
 
+# multiplier for # new teams to generate each generation
+n_elite_mul 5
+
 # number of training outcome to store
 n_stored_outcomes_TRAIN 17
 

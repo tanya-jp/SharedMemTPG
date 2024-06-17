@@ -324,7 +324,6 @@ void estimate_main(TPG &tpg, vector<int> &taskSet)
   for (size_t task = 0; task < taskSet.size(); task++) {
     tpg.state_["active_task"] = taskSet[task];
     auto teams_to_eval = GetTeamsToEval(tpg);
-    cerr << "Active task: " << taskSet[task] << endl;
 
     // Loop through teams
     for (auto tm : teams_to_eval) {
@@ -338,10 +337,10 @@ void estimate_main(TPG &tpg, vector<int> &taskSet)
       r_runTimeInts[POINT_AUX_INT_TASK] = taskSet[task];
       r_runTimeInts[POINT_AUX_INT_PHASE] = tpg.GetState("phase");
 
-      for (long i = 0; i < tpg._numStoredOutcomesPerHost[tpg.GetState("phase")]; i++) {
+      for (int i = 0; i < tpg._numStoredOutcomesPerHost[tpg.GetState("active_task")][tpg.GetState("phase")]; i++) {
+        r_runTimeInts[POINT_AUX_INT_ENVSEED] = i;
         tpg.setOutcome(tm, behavSeq, r_runTimeStats, r_runTimeInts, tpg.GetState("t_current"));
       }
-      cerr << "Team: " << tm->id_ << " Task: " << taskSet[task] << " Outcomes: " << tm->numOutcomes(tpg.GetState("phase"), taskSet[task]) << endl;
     }
   }
 }
