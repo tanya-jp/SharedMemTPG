@@ -27,7 +27,7 @@ test_mod 1
 
 # in multitask settings, which tasks are active
 # rhs should be a comma-separated list like Cartpole,Acrobot
-active_tasks Sunspots
+active_tasks Laser
 
 # number of fitness functions available
 n_fit_mode 1
