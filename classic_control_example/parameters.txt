@@ -1,8 +1,12 @@
 # start from a checkpoint file
 checkpoint 0
 
-# write checkpoints
-write_checkpoints 1
+# save checkpoints during evolution
+write_train_checkpoints 0
+write_test_checkpoints 1
+
+# save phylogenetic data
+write_phylogeny 0
 
 # re-evaluate an individual from a checkpoint file
 replay 0
@@ -125,26 +129,22 @@ bid_mu_const_stddev 0.05
 # each memory index points to a data structure (scalar, vector, or matrix)
 memory_indices 8
 
+# this is the dimensionality for vector & matrix memory
+memory_size 8
+
 # number of elite teams
 n_elite 100
 
 # multiplier for # new teams to generate each generation
 n_elite_mul 5
 
-# number of training outcomes to store per agent for each task
-n_stored_outcomes_TRAIN 20
-
-# number of test outcomes to store per agent for each task
-n_stored_outcomes_VALIDATION 50
-
-# number of validation outcomes to store per agent for each task
-n_stored_outcomes_TEST 100
-
 # fitness proportional selection
 fit_prop_select 0
 
 # which diversity mode to use, if available
 diversity_mode 0
+
+parent_select_roots_only 1
 
 # operations, uncomment to activate
 
