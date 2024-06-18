@@ -228,13 +228,18 @@ bool NotDoneAndActive(EvalStruct &eval) {
          eval.checkpointString.compare("done") != 0;
 }
 
-/*******************************************************************************
+/**
  * 1. Assign agents to evaluator procs
  *  a. Partition available processes into groups for each task
  *  b. Each process in a group evaluates a subset of agents on the task
  * 2. Wait for evals to finish
  * 3. Collect results
- ******************************************************************************/
+ * 
+ * @param tpg The TPG instance with all the teams
+ * @param world The MPI communicator object
+ * @param tasks The set of all tasks in the TPG
+ * @param evalTasks The indices of the tasks to evaluate
+*/
 void evaluate_main(TPG &tpg, mpi::communicator &world,
                    vector<TaskEnv *> &tasks, vector<int> evalTasks) {
   string my_string = "MAIN";
