@@ -130,7 +130,7 @@ memory_indices 8
 memory_size 8
 
 # number of elite teams
-n_elite 50
+n_elite 200
 
 # multiplier for # new teams to generate each generation
 n_elite_mul 5
