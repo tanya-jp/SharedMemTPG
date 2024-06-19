@@ -145,7 +145,7 @@ parent_select_roots_only 1
 
 # fitness function used for time series forecasting tasks
 # supported options: "mse" or "correlation"
-forecasting_fitness correlation
+forecasting_fitness mse
 
 # operations, uncomment to activate
 
