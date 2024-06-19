@@ -12,15 +12,9 @@ env['EBROOTOPENCV'] = os.environ.get('EBROOTOPENCV','default')
 env.Append(CPPPATH = ['../TPG', '../environments', '../genomic', '../environments/classicRL', '../environments/time_series',"$EBROOTBOOST/include",'/usr/include/hdf5/serial/','/usr/include/eigen3',"$EBROOTOPENCV/include/opencv4/","/usr/include/opencv4/","$EBROOTOPENCV/include/opencv4/opencv2"])
 
 env.Append(LIBS = ['TPG','boost_thread','boost_system','boost_mpi','boost_serialization','pthread','boost_iostreams','opencv_core','opencv_highgui','opencv_imgcodecs'])
-
-##if int(hpcc):
-##  env.Append(LIBS = [''])
-##else:
-##  env.Append(LIBS = ['glut','GLU','GL'])
-
 env.Append(LIBPATH = ['../TPG', '../environments', '/usr/lib/x86_64-linux-gnu','/usr/lib/x86_64-linux-gnu/hdf5/serial/',"$EBROOTOPENCV/lib64/"])
 
 env.Program('TPGExperimentMPI', ['TPGExperimentMPI.cc'])
-if int(think):
-    env.ParseConfig('pkg-config x11 --cflags --libs opencv4')
+# if int(think):
+#     env.ParseConfig('pkg-config x11 --cflags --libs opencv4')
 

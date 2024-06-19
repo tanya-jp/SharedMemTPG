@@ -1,0 +1,30 @@
+strict digraph G {
+ratio=0.7
+root=t_43744
+ t_43746 [shape=circle, style=wedged, fillcolor="#7fc97f;0.798658", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_43745 [shape=circle, style=wedged, fillcolor="#7fc97f;0.201342", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_43744 [shape=circle, style=wedged, fillcolor="#7fc97f;1", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_37976 [shape=circle, style=wedged, fillcolor="#7fc97f;0.201342", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_37137 [shape=circle, style=wedged, fillcolor="#7fc97f;0.751678", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_29739 [shape=circle, style=wedged, fillcolor="#7fc97f;0.751678", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_29058 [shape=circle, style=wedged, fillcolor="#7fc97f;0.201342", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_24804 [shape=circle, style=wedged, fillcolor="#7fc97f;0.624161", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_24438 [shape=circle, style=wedged, fillcolor="#7fc97f;0.604027", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_23422 [shape=circle, style=wedged, fillcolor="#7fc97f;0.161074", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_19910 [shape=circle, style=wedged, fillcolor="#7fc97f;0.563758", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_15143 [shape=circle, style=wedged, fillcolor="#7fc97f;0.161074", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_12407 [shape=circle, style=wedged, fillcolor="#7fc97f;0.147651", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_43746->t_37137 [arrowsize=3, penwidth=1 color=black];
+ t_43745->t_37976 [arrowsize=3, penwidth=1 color=black];
+ t_43744->t_43745 [arrowsize=3, penwidth=1 color=black];
+ t_43744->t_24804 [arrowsize=3, penwidth=1 color=black];
+ t_43744->t_43746 [arrowsize=3, penwidth=1 color=black];
+ t_37976->t_29058 [arrowsize=3, penwidth=1 color=black];
+ t_37137->t_29739 [arrowsize=3, penwidth=1 color=black];
+ t_29739->t_24804 [arrowsize=3, penwidth=1 color=black];
+ t_29058->t_23422 [arrowsize=3, penwidth=1 color=black];
+ t_24804->t_24438 [arrowsize=3, penwidth=1 color=black];
+ t_24438->t_19910 [arrowsize=3, penwidth=1 color=black];
+ t_23422->t_15143 [arrowsize=3, penwidth=1 color=black];
+ t_15143->t_12407 [arrowsize=3, penwidth=1 color=black];
+}

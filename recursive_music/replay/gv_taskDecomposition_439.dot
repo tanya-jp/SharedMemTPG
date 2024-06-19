@@ -1,0 +1,5 @@
+strict digraph G {
+ratio=0.7
+root=t_439
+ t_439 [shape=circle, style=wedged, fillcolor="#7fc97f;1", label="", fontsize=84, regular=1, width=4,penwidth=0]
+}

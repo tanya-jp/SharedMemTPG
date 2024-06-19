@@ -64,7 +64,7 @@ class TPG {
   program *getAction(team *tm, state *s, bool updateActive,
                      set<team *, teamIdComp> &visitedTeams,
                      long &decisionInstructions, int timeStep,
-                     vector<team *> &teamPath, mt19937 &rng, bool &verbose);
+                     vector<team *> &teamPath, mt19937 &rng, bool verbose);
 
   program *getAction(
       team *tm, state *s, bool updateActive,
@@ -72,7 +72,7 @@ class TPG {
       int timeStep, vector<program *> &allPrograms,
       vector<program *> &winningPrograms, vector<set<long>> &decisionFeatures,
       vector<set<memoryEigen *, memoryEigenIdComp>> &decisionMemories,
-      vector<team *> &teamPath, mt19937 &rng, bool &verbose);
+      vector<team *> &teamPath, mt19937 &rng, bool verbose);
   void GetAllNodes(team *tm, set<team *, teamIdComp> &teams,
                    set<program *, programIdComp> &programs);
   void GetAllNodes(team *tm, set<team *, teamIdComp> &teams,

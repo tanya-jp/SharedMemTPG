@@ -110,7 +110,7 @@ void TPG::clearMemory() {
 program *TPG::getAction(team *tm, state *s, bool updateActive,
                         set<team *, teamIdComp> &visitedTeams,
                         long &decisionInstructions, int timeStep,
-                        vector<team *> &teamPath, mt19937 &rng, bool &verbose) {
+                        vector<team *> &teamPath, mt19937 &rng, bool verbose) {
   visitedTeams.clear();
   decisionInstructions = 0;
   teamPath.clear();
@@ -125,7 +125,7 @@ program *TPG::getAction(
     int timeStep, vector<program *> &allPrograms,
     vector<program *> &winningPrograms, vector<set<long>> &decisionFeatures,
     vector<set<memoryEigen *, memoryEigenIdComp>> &decisionMemories,
-    vector<team *> &teamPath, mt19937 &rng, bool &verbose) {
+    vector<team *> &teamPath, mt19937 &rng, bool verbose) {
   allPrograms.clear();
   winningPrograms.clear();
   decisionInstructions = 0;
@@ -401,16 +401,24 @@ void TPG::ReadParameters(string file_name,
     if (outcome_fields[0] == "SCALAR_SQRT_OP")
       _ops[instruction::SCALAR_SQRT_OP_] = true;
 
-    if (outcome_fields[0] == "active_tasks" || outcome_fields[0] == "n_input" ||
+    // TODO(skelly): make types part of parameter file
+    // string parameters are "hard coded" here
+    if (outcome_fields[0] == "active_tasks" || 
+        outcome_fields[0] == "n_input" ||
         outcome_fields[0] == "n_stored_outcomes_TRAIN" ||
         outcome_fields[0] == "n_stored_outcomes_VALIDATION" ||
-        outcome_fields[0] == "n_stored_outcomes_TEST")
+        outcome_fields[0] == "n_stored_outcomes_TEST" ||
+        outcome_fields[0] == "forecasting_fitness") {
       params[outcome_fields[0]] = outcome_fields[1];
-    else if (outcome_fields[1].find('.') !=
-             std::string::npos)  // found double parameter
+    }
+    // double parameters are identified by a decimal place
+    else if (outcome_fields[1].find('.') != std::string::npos) {  
       params[outcome_fields[0]] = stringToDouble(outcome_fields[1]);
-    else  // found int parameter
+    }
+    // otherwise we store the parameter as an integer 
+    else {
       params[outcome_fields[0]] = stringToInt(outcome_fields[1]);
+    }
   }
 }
 

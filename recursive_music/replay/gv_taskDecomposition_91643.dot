@@ -1,0 +1,40 @@
+strict digraph G {
+ratio=0.7
+root=t_91643
+ t_91643 [shape=circle, style=wedged, fillcolor="#7fc97f;1", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_85597 [shape=circle, style=wedged, fillcolor="#7fc97f;0.986577", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_83687 [shape=circle, style=wedged, fillcolor="#7fc97f;0.986577", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_67847 [shape=circle, style=wedged, fillcolor="#7fc97f;0.406711", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_61257 [shape=circle, style=wedged, fillcolor="#7fc97f;0.406711", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_59002 [shape=circle, style=wedged, fillcolor="#7fc97f;0.406711", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_55171 [shape=circle, style=wedged, fillcolor="#7fc97f;0.0295302", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_54559 [shape=circle, style=wedged, fillcolor="#7fc97f;0.0295302", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_53028 [shape=circle, style=wedged, fillcolor="#7fc97f;0.377181", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_44981 [shape=circle, style=wedged, fillcolor="#7fc97f;0.609396", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_38859 [shape=circle, style=wedged, fillcolor="#7fc97f;0.609396", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_19333 [shape=circle, style=wedged, fillcolor="#7fc97f;0.37047", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_18242 [shape=circle, style=wedged, fillcolor="#7fc97f;0.253691", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_16480 [shape=circle, style=wedged, fillcolor="#7fc97f;0.37047", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_7977 [shape=circle, style=wedged, fillcolor="#7fc97f;0.00671141", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_6064 [shape=circle, style=wedged, fillcolor="#7fc97f;0.355705", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_5028 [shape=circle, style=wedged, fillcolor="#7fc97f;0.177181", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_3335 [shape=circle, style=wedged, fillcolor="#7fc97f;0.177181", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_91643->t_85597 [arrowsize=3, penwidth=1 color=black];
+ t_85597->t_83687 [arrowsize=3, penwidth=1 color=black];
+ t_83687->t_44981 [arrowsize=3, penwidth=1 color=black];
+ t_83687->t_67847 [arrowsize=3, penwidth=1 color=black];
+ t_67847->t_61257 [arrowsize=3, penwidth=1 color=black];
+ t_61257->t_59002 [arrowsize=3, penwidth=1 color=black];
+ t_59002->t_53028 [arrowsize=3, penwidth=1 color=black];
+ t_59002->t_55171 [arrowsize=3, penwidth=1 color=black];
+ t_55171->t_54559 [arrowsize=3, penwidth=1 color=black];
+ t_54559->t_44981 [arrowsize=3, penwidth=1 color=black];
+ t_53028->t_19333 [arrowsize=3, penwidth=1 color=black];
+ t_53028->t_7977 [arrowsize=3, penwidth=1 color=black];
+ t_44981->t_38859 [arrowsize=3, penwidth=1 color=black];
+ t_38859->t_18242 [arrowsize=3, penwidth=1 color=black];
+ t_38859->t_6064 [arrowsize=3, penwidth=1 color=black];
+ t_19333->t_16480 [arrowsize=3, penwidth=1 color=black];
+ t_16480->t_5028 [arrowsize=3, penwidth=1 color=black];
+ t_5028->t_3335 [arrowsize=3, penwidth=1 color=black];
+}

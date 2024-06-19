@@ -15,7 +15,9 @@ class RecursiveUnivar : public TaskEnv {
   int num_samples_prime_;
   // number of samples for training, validation, test
   int num_samples_predict_[3];
-  
+
+  bool discrete_actions_;
+
   class CSVReader {
     const string filename;
     const int dim;
@@ -40,10 +42,8 @@ class RecursiveUnivar : public TaskEnv {
 
   RecursiveUnivar(string task) {
     eval_type_ = "RecursiveForecast";
-    state.reserve(DIM);
-    state.resize(DIM);
+    discrete_actions_ = false;
     PrepareData(task);
-    min_reward_ = -1000;
   }
 
   ~RecursiveUnivar() {}
@@ -66,13 +66,15 @@ class RecursiveUnivar : public TaskEnv {
       reader = new CSVReader("./datasets/ali_offset_diff.csv", DIM);
     else if (task == "Duration")
       reader = new CSVReader("./datasets/ali_duration.csv", DIM);
-    else  // task == "Pitch"
+    else {  // task == "Pitch"
       reader = new CSVReader("./datasets/ali_pitch.csv", DIM);
+      // discrete_actions_ = true;
+    }
     data = reader->ReadData();
     delete reader;
 
+    // normalize data in [0,1]
     if (task != "Music") {
-      // normalize data in [0,1]
       double maxFeature = numeric_limits<double>::lowest();
       double minFeature = numeric_limits<double>::max();
       for (size_t sample = 0; sample < data.size(); sample++) {
@@ -92,14 +94,13 @@ class RecursiveUnivar : public TaskEnv {
       }
     }
 
-    t_start.resize(3);  // train, validate, test
+    num_samples_prime_ = 50;
+    num_samples_predict_[0] = 50;   // train
+    num_samples_predict_[1] = 100;  // validate
+    num_samples_predict_[2] = 100;  // test
+    t_start.resize(3);              // train, validate, test
 
     if (task == "Audio") {
-      num_samples_prime_ = 50;
-      num_samples_predict_[0] = 50;   // train
-      num_samples_predict_[1] = 100;  // validate
-      num_samples_predict_[2] = 100;  // test
-
       // train
       t_start[0].insert(t_start[0].begin(), {0, 1000, 2000, 3000, 4000, 5000,
                                              6000, 7000, 8000, 9000});
@@ -109,36 +110,40 @@ class RecursiveUnivar : public TaskEnv {
       // test
       t_start[2].insert(t_start[2].begin(), {1000});
     } else if (task == "Sunspots" || task == "Mackey" || task == "Laser") {
-      num_samples_prime_ = 50;
-      num_samples_predict_[0] = 50;   // train
-      num_samples_predict_[1] = 100;  // validate
-      num_samples_predict_[2] = 100;  // test
-      
       // train (original, 19 start points)
-      for (int s = 0; s <= 900; s+=50) {
-        t_start[0].push_back(s);
-      }  
+      for (int s = 0; s <= 900; s += 50) t_start[0].push_back(s);
 
-      // validation (original, 9 start points)  
-      for (int s = 50; s <= 850; s+=100) {
-        t_start[1].push_back(s);
-      }   
-      
+      // validation (original, 9 start points)
+      for (int s = 50; s <= 850; s += 100) t_start[1].push_back(s);
+
       // test (original single start point)
       t_start[2].insert(t_start[2].begin(), {950});
-                                        
+
     } else if (task == "Offset" || task == "Duration" || task == "Pitch") {
-      num_samples_prime_ = 50;
-      num_samples_predict_[0] = 50;   // train
-      num_samples_predict_[1] = 100;  // validate
-      num_samples_predict_[2] = 100;  // test
+      num_samples_prime_ = 5;
+      num_samples_predict_[0] = 5;   // train
+      num_samples_predict_[1] = 10;  // validate
+      num_samples_predict_[2] = 10;  // test
+
+      // // train
+      // for (int s = 0; s <= 800; s += 100) t_start[0].push_back(s);
+      // // extra train slices
+      // for (int s = 25; s <= 825; s += 100) t_start[0].push_back(s);
+
+      // // validate
+      // for (int s = 0; s <= 750; s += 150) t_start[1].push_back(s);
+
+      // // test
+      // for (int s = 50; s <= 800; s += 150) t_start[2].push_back(s);
+
       // train
-      for (int s = 0; s <= 800; s += 100) t_start[0].push_back(s);
-      for (int s = 25; s <= 825; s += 100) t_start[0].push_back(s);
+      for (int s = 0; s <= 275; s += 5) t_start[0].push_back(s);
+
       // validate
-      for (int s = 0; s <= 750; s += 150) t_start[1].push_back(s);
+      t_start[1].insert(t_start[2].begin(), {0, 50, 100, 150, 250});
+
       // test
-      for (int s = 50; s <= 800; s += 150) t_start[2].push_back(s);
+      t_start[2].insert(t_start[2].begin(), {90, 190, 290});
     }
   }
 
@@ -146,9 +151,8 @@ class RecursiveUnivar : public TaskEnv {
 
   Results update(int sample, double prediction, mt19937 & /*rng*/) {
     step++;
-    double se = pow(prediction - data[sample + 1][0], 2);
-    double ae = abs(prediction - data[sample + 1][0]);
-    return {-se, -ae};
+    // just return the target and prediction
+    return {data[sample + 1][0], prediction};  // target, prediction
   }
 };
 #endif

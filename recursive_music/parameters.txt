@@ -27,7 +27,7 @@ test_mod 1
 
 # in multitask settings, which tasks are active
 # rhs should be a comma-separated list like Cartpole,Acrobot
-active_tasks Mackey
+active_tasks Pitch
 
 # number of fitness functions available
 n_fit_mode 1
@@ -63,7 +63,7 @@ max_team_size 1000000
 max_teams_per_graph 100
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 1.0
+p_atomic 0.9
 
 # team mutation: probability of deleting program from team
 pmd 0.5
@@ -93,7 +93,7 @@ pmx_p 0.3
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 32
+n_input 3
 
 # max initial program size
 max_initial_prog_size 10
@@ -142,6 +142,10 @@ fit_prop_select 0
 diversity_mode 0
 
 parent_select_roots_only 1
+
+# fitness function used for time series forecasting tasks
+# supported options: "mse" or "correlation"
+forecasting_fitness correlation
 
 # operations, uncomment to activate
 

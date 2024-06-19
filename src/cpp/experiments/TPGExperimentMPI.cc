@@ -14,9 +14,10 @@
 #include "tpg_arg_parse.h"
 #include "tpg_eval_mpi.h"
 #define CHECKPOINT_MOD 1000000
-#define PRINT_MOD 10
-// rawfitness,  mean visitedTeams, decisionInstructions, meanAbsoluteError
-#define NUM_POINT_AUX_DOUBLE 4
+#define PRINT_MOD 1
+// rawfitness,  mean visitedTeams, decisionInstructions
+#define NUM_POINT_AUX_DOUBLE 3
+// task, phase, environment seed, internal test node id
 #define NUM_POINT_AUX_INT 4
 #define MODES_T 1000000000
 
@@ -134,8 +135,8 @@ int main(int argc, char** argv) {
     tpg.state_["t_current"] = 0;  // tpg.GetParam<int>("t_start");
     tpg.state_["phase"] = _TRAIN_PHASE;
     if (tpg.GetParam<int>("replay")) {
+      tpg.state_["phase"] = _TEST_PHASE;
       tpg.state_["active_task"] = tpg.state_["replay_task"];
-      // replayer(tpg, tasks);
       replayer_viz(tpg, tasks);
     } else {
       while (tpg.GetState("t_current") <= tpg.GetParam<int>("n_generations")) {

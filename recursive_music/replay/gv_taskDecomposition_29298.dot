@@ -1,0 +1,15 @@
+strict digraph G {
+ratio=0.7
+root=t_29298
+ t_29298 [shape=circle, style=wedged, fillcolor="#7fc97f;1", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_22825 [shape=circle, style=wedged, fillcolor="#7fc97f;0.84698", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_22270 [shape=circle, style=wedged, fillcolor="#7fc97f;0.778523", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_20993 [shape=circle, style=wedged, fillcolor="#7fc97f;0.778523", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_20412 [shape=circle, style=wedged, fillcolor="#7fc97f;0.777181", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_12407 [shape=circle, style=wedged, fillcolor="#7fc97f;0.777181", label="", fontsize=84, regular=1, width=4,penwidth=0]
+ t_29298->t_22825 [arrowsize=3, penwidth=1 color=black];
+ t_22825->t_22270 [arrowsize=3, penwidth=1 color=black];
+ t_22270->t_20993 [arrowsize=3, penwidth=1 color=black];
+ t_20993->t_20412 [arrowsize=3, penwidth=1 color=black];
+ t_20412->t_12407 [arrowsize=3, penwidth=1 color=black];
+}
