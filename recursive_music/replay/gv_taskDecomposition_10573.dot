@@ -1,9 +1,0 @@
-strict digraph G {
-ratio=0.7
-root=t_10573
- t_10574 [shape=circle, style=wedged, fillcolor="#7fc97f;0.734899", label="", fontsize=84, regular=1, width=4,penwidth=0]
- t_10573 [shape=circle, style=wedged, fillcolor="#7fc97f;1", label="", fontsize=84, regular=1, width=4,penwidth=0]
- t_7485 [shape=circle, style=wedged, fillcolor="#7fc97f;0.734899", label="", fontsize=84, regular=1, width=4,penwidth=0]
- t_10574->t_7485 [arrowsize=3, penwidth=1 color=black];
- t_10573->t_10574 [arrowsize=3, penwidth=1 color=black];
-}
