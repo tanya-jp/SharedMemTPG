@@ -38,9 +38,10 @@ class RecursiveUnivar : public TaskEnv {
     }
   };
 
-  RecursiveUnivar(string task) {
+  RecursiveUnivar(string task, bool normalize) {
     eval_type_ = "RecursiveForecast";
     PrepareData(task);
+    if (normalize) Normalize();
   }
 
   ~RecursiveUnivar() {}
@@ -118,10 +119,10 @@ class RecursiveUnivar : public TaskEnv {
       for (int s = 0; s <= 275; s += 5) t_start[0].push_back(s);
 
       // validate
-      t_start[1].insert(t_start[2].begin(), {0, 50, 100, 150, 250});
+      for (int s = 0; s <= 275; s += 25) t_start[1].push_back(s);
 
       // test
-      t_start[2].insert(t_start[2].begin(), {90, 190, 290});
+      t_start[2].insert(t_start[2].begin(), {40,90, 140, 190, 240, 290});
     }
   }
 

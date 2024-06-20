@@ -63,7 +63,7 @@ max_team_size 1000000
 max_teams_per_graph 100
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 0.9
+p_atomic 0.99
 
 # team mutation: probability of deleting program from team
 pmd 0.5
@@ -147,9 +147,12 @@ parent_select_roots_only 1
 # supported options: "mse" or "correlation"
 forecasting_fitness mse
 
-# whether or not to use discrete actions for forecasting
+# whether to use discrete actions for forecasting
 # must also set n_discrete_action
 forecasting_discrete 1
+
+# whether to normalize forecasting dataset in [0,1]
+forecast_normalize_data 0
 
 # operations, uncomment to activate
 

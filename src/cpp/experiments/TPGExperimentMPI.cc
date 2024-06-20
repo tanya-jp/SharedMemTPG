@@ -51,17 +51,17 @@ int main(int argc, char** argv) {
     else if (substr == "MountainCarContinuous")
       tasks.push_back(new MountainCarContinuous());
     else if (substr == "Sunspots")
-      tasks.push_back(new RecursiveUnivar("Sunspots"));
+      tasks.push_back(new RecursiveUnivar("Sunspots", tpg.GetParam<int>("forecast_normalize_data")));
     else if (substr == "Mackey")
-      tasks.push_back(new RecursiveUnivar("Mackey"));
+      tasks.push_back(new RecursiveUnivar("Mackey", tpg.GetParam<int>("forecast_normalize_data")));
     else if (substr == "Laser")
-      tasks.push_back(new RecursiveUnivar("Laser"));
+      tasks.push_back(new RecursiveUnivar("Laser", tpg.GetParam<int>("forecast_normalize_data")));
     else if (substr == "Offset")
-      tasks.push_back(new RecursiveUnivar("Offset"));
+      tasks.push_back(new RecursiveUnivar("Offset", tpg.GetParam<int>("forecast_normalize_data")));
     else if (substr == "Duration")
-      tasks.push_back(new RecursiveUnivar("Duration"));
+      tasks.push_back(new RecursiveUnivar("Duration", tpg.GetParam<int>("forecast_normalize_data")));
     else if (substr == "Pitch")
-      tasks.push_back(new RecursiveUnivar("Pitch"));
+      tasks.push_back(new RecursiveUnivar("Pitch", tpg.GetParam<int>("forecast_normalize_data")));
     else {
       cout << "Unrecognised task:" << substr << endl;
       exit(1);
