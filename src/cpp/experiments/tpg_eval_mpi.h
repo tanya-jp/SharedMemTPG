@@ -320,8 +320,9 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
   }
   // predict
   double action, action_prev;
+  bool discrete_actions = tpg.GetParam<int>("forecasting_discrete");
   for (int i = 0; i < game->num_samples_predict_[tpg.GetState("phase")]; i++) {
-    if (game->discrete_actions_)
+    if (discrete_actions)
       action_prev = WrapDiscreteAction(eval);
     else
       action_prev = WrapContinuousActionSigmoid(eval);
@@ -333,7 +334,7 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
     eval.leafProgram = tpg.getAction(
         eval.tm, obs, true, eval.visitedTeams, eval.decision_instructions,
         game->getStep(), eval.teamPath, tpg.rngs_[AUX_SEED], false);
-   if (game->discrete_actions_)
+   if (discrete_actions)
       action = WrapDiscreteAction(eval);
     else
       action = WrapContinuousActionSigmoid(eval);
@@ -487,10 +488,11 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
   }
   // predict
   double action, action_prev;
+  bool discrete_actions = tpg.GetParam<int>("forecasting_discrete");
   for (int i = 0;
        i < game->num_samples_predict_[tpg.GetParam<int>("checkpoint_in_phase")];
        i++) {
-    if (game->discrete_actions_)
+    if (discrete_actions)
       action_prev = WrapDiscreteAction(eval);
     else
       action_prev = WrapContinuousActionSigmoid(eval);
@@ -502,7 +504,7 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
     eval.leafProgram = tpg.getAction(
         eval.tm, obs, true, eval.visitedTeams, eval.decision_instructions,
         game->getStep(), eval.teamPath, tpg.rngs_[AUX_SEED], false);
-    if (game->discrete_actions_)
+    if (discrete_actions)
       action = WrapDiscreteAction(eval);
     else
       action = WrapContinuousActionSigmoid(eval);

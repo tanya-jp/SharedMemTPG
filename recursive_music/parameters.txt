@@ -51,7 +51,7 @@ n_generations 1000000
 mu_internal 0
 
 # number of discrete actions
-n_discrete_action 3
+n_discrete_action 128
 
 # initial team size
 max_initial_team_size 10
@@ -146,6 +146,10 @@ parent_select_roots_only 1
 # fitness function used for time series forecasting tasks
 # supported options: "mse" or "correlation"
 forecasting_fitness mse
+
+# whether or not to use discrete actions for forecasting
+# must also set n_discrete_action
+forecasting_discrete 1
 
 # operations, uncomment to activate
 

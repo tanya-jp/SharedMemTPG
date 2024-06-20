@@ -16,8 +16,6 @@ class RecursiveUnivar : public TaskEnv {
   // number of samples for training, validation, test
   int num_samples_predict_[3];
 
-  bool discrete_actions_;
-
   class CSVReader {
     const string filename;
     const int dim;
@@ -42,7 +40,6 @@ class RecursiveUnivar : public TaskEnv {
 
   RecursiveUnivar(string task) {
     eval_type_ = "RecursiveForecast";
-    discrete_actions_ = false;
     PrepareData(task);
   }
 
@@ -73,32 +70,13 @@ class RecursiveUnivar : public TaskEnv {
     data = reader->ReadData();
     delete reader;
 
-    // normalize data in [0,1]
-    if (task != "Music") {
-      double maxFeature = numeric_limits<double>::lowest();
-      double minFeature = numeric_limits<double>::max();
-      for (size_t sample = 0; sample < data.size(); sample++) {
-        maxFeature =
-            max(maxFeature,
-                *(max_element(data[sample].begin(), data[sample].end())));
-        minFeature =
-            min(minFeature,
-                *(min_element(data[sample].begin(), data[sample].end())));
-      }
-      for (size_t sample = 0; sample < data.size(); sample++) {
-        for (size_t feature = 0; feature < data[sample].size(); feature++) {
-          data[sample][feature] =
-              (data[sample][feature] - minFeature) / (maxFeature - minFeature);
-          // cerr << data[sample][feature] << endl;
-        }
-      }
-    }
-
     num_samples_prime_ = 50;
     num_samples_predict_[0] = 50;   // train
     num_samples_predict_[1] = 100;  // validate
     num_samples_predict_[2] = 100;  // test
-    t_start.resize(3);              // train, validate, test
+
+    // start steps for priming, for each phase (train, validate, test)
+    t_start.resize(3); 
 
     if (task == "Audio") {
       // train
@@ -144,6 +122,25 @@ class RecursiveUnivar : public TaskEnv {
 
       // test
       t_start[2].insert(t_start[2].begin(), {90, 190, 290});
+    }
+  }
+
+  void Normalize() {
+    // normalize data in [0,1]
+    double maxFeature = numeric_limits<double>::lowest();
+    double minFeature = numeric_limits<double>::max();
+    for (size_t sample = 0; sample < data.size(); sample++) {
+      maxFeature = max(
+          maxFeature, *(max_element(data[sample].begin(), data[sample].end())));
+      minFeature = min(
+          minFeature, *(min_element(data[sample].begin(), data[sample].end())));
+    }
+    for (size_t sample = 0; sample < data.size(); sample++) {
+      for (size_t feature = 0; feature < data[sample].size(); feature++) {
+        data[sample][feature] =
+            (data[sample][feature] - minFeature) / (maxFeature - minFeature);
+        // cerr << data[sample][feature] << endl;
+      }
     }
   }
 
