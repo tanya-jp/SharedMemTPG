@@ -65,8 +65,13 @@ class RecursiveUnivar : public TaskEnv {
       reader = new CSVReader("./datasets/ali_offset_diff.csv", DIM);
     else if (task_ == "Duration")
       reader = new CSVReader("./datasets/ali_duration.csv", DIM);
-    else {  // task_ == "Pitch"
+    else if (task_ == "Pitch")
       reader = new CSVReader("./datasets/ali_pitch.csv", DIM);
+    else if (task_ == "PitchBach")
+      reader = new CSVReader("./datasets/ali_bach_pitch.csv", DIM);
+    else {
+      std::cerr << "Unrecognised RecursiveForecast task" << std::endl;
+      exit(1);
     }
     data = reader->ReadData();
     delete reader;
@@ -93,11 +98,8 @@ class RecursiveUnivar : public TaskEnv {
       // test (original single start point)
       t_start[2].insert(t_start[2].begin(), {950});
 
-    } else if (task_ == "Offset" || task_ == "Duration" || task_ == "Pitch") {
-      // num_samples_prime_ = 10;
-      // num_samples_predict_[0] = 10;    // train
-      // num_samples_predict_[1] = 20;   // validate
-      // num_samples_predict_[2] = 20;  // test
+    } else if (task_ == "Offset" || task_ == "Duration" || task_ == "Pitch" ||
+               task_ == "PitchBach") {
 
       // // train
       // for (int s = 0; s <= 800; s += 100) t_start[0].push_back(s);
@@ -120,13 +122,13 @@ class RecursiveUnivar : public TaskEnv {
       for (size_t s = 0;
            s < data.size() - (num_samples_prime_ + num_samples_predict_[1]);
            s += 20)
-        t_start[1].push_back(s);  
+        t_start[1].push_back(s);
 
       // test
       for (size_t s = 0;
            s < data.size() - (num_samples_prime_ + num_samples_predict_[2]);
            s += 50)
-        t_start[2].push_back(s);   
+        t_start[2].push_back(s);
     }
     cout << "time series train slices: " << t_start[0].size() << endl;
     cout << "time series validation slices: " << t_start[1].size() << endl;

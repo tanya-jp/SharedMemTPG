@@ -62,6 +62,8 @@ int main(int argc, char **argv) {
       tasks.push_back(new RecursiveUnivar("Duration"));
     else if (substr == "Pitch")
       tasks.push_back(new RecursiveUnivar("Pitch"));
+    else if (substr == "PitchBach")
+      tasks.push_back(new RecursiveUnivar("PitchBach"));  
     else {
       cout << "Unrecognised task:" << substr << endl;
       exit(1);
