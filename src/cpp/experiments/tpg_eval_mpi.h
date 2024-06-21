@@ -198,10 +198,10 @@ void FinalizeStepStats(TPG &tpg, EvalStruct &eval) {
         eval.sequence_targ, eval.sequence_pred);
     if (tpg.GetParam<string>("forecasting_fitness") == "mse") {
       eval.runTimeStats[REWARD1_IDX] = -mse;
-      eval.runTimeStats[REWARD1_IDX] = corr;
+      eval.runTimeStats[REWARD2_IDX] = corr;
     } else if (tpg.GetParam<string>("forecasting_fitness") == "correlation") {
       eval.runTimeStats[REWARD1_IDX] = corr;
-      eval.runTimeStats[REWARD1_IDX] = -mse;
+      eval.runTimeStats[REWARD2_IDX] = -mse;
     } else {
       die(__FILE__, __FUNCTION__, __LINE__,
           "Unsupported forecasting fitness function");
