@@ -113,13 +113,13 @@ class RecursiveUnivar : public TaskEnv {
       // train
       for (size_t s = 0;
            s < data.size() - (num_samples_prime_ + num_samples_predict_[0]);
-           s += 5)
+           s += 10)
         t_start[0].push_back(s);
 
       // validate
       for (size_t s = 0;
            s < data.size() - (num_samples_prime_ + num_samples_predict_[1]);
-           s += 10)
+           s += 20)
         t_start[1].push_back(s);
 
       // test
