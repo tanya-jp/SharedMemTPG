@@ -113,21 +113,24 @@ class RecursiveUnivar : public TaskEnv {
       // train
       for (size_t s = 0;
            s < data.size() - (num_samples_prime_ + num_samples_predict_[0]);
-           s += 10)
+           s += 20)
         t_start[0].push_back(s);
 
       // validate
       for (size_t s = 0;
            s < data.size() - (num_samples_prime_ + num_samples_predict_[1]);
            s += 20)
-        t_start[1].push_back(s);
+        t_start[1].push_back(s);  
 
       // test
       for (size_t s = 0;
            s < data.size() - (num_samples_prime_ + num_samples_predict_[2]);
-           s += 25)
-        t_start[2].push_back(s);
+           s += 50)
+        t_start[2].push_back(s);   
     }
+    cout << "time series train slices: " << t_start[0].size() << endl;
+    cout << "time series validation slices: " << t_start[1].size() << endl;
+    cout << "time series test slices: " << t_start[2].size() << endl;
   }
 
   void Normalize() {

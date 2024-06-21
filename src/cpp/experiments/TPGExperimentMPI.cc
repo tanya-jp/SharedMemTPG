@@ -15,8 +15,8 @@
 #include "tpg_eval_mpi.h"
 #define CHECKPOINT_MOD 1000000
 #define PRINT_MOD 1
-// rawfitness,  mean visitedTeams, decisionInstructions, correlation
-#define NUM_POINT_AUX_DOUBLE 4
+// rawfitness,  mean visitedTeams, decisionInstructions
+#define NUM_POINT_AUX_DOUBLE 3
 // task, phase, environment seed, internal test node id
 #define NUM_POINT_AUX_INT 4
 #define MODES_T 1000000000

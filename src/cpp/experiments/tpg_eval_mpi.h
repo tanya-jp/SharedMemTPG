@@ -193,15 +193,13 @@ double MeanSquaredError(vector<double> targets, vector<double> predictions) {
 
 void FinalizeStepStats(TPG &tpg, EvalStruct &eval) {
   if (eval.game->eval_type_ == "RecursiveForecast") {
-    auto mse = MeanSquaredError(eval.sequence_targ, eval.sequence_pred);
-    auto corr = boost::math::statistics::correlation_coefficient(
-        eval.sequence_targ, eval.sequence_pred);
     if (tpg.GetParam<string>("forecasting_fitness") == "mse") {
+      auto mse = MeanSquaredError(eval.sequence_targ, eval.sequence_pred);
       eval.runTimeStats[REWARD1_IDX] = -mse;
-      eval.runTimeStats[REWARD2_IDX] = corr;
     } else if (tpg.GetParam<string>("forecasting_fitness") == "correlation") {
+      auto corr = boost::math::statistics::correlation_coefficient(
+        eval.sequence_targ, eval.sequence_pred);
       eval.runTimeStats[REWARD1_IDX] = corr;
-      eval.runTimeStats[REWARD2_IDX] = -mse;
     } else {
       die(__FILE__, __FUNCTION__, __LINE__,
           "Unsupported forecasting fitness function");
