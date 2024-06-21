@@ -144,7 +144,6 @@ class RecursiveUnivar : public TaskEnv {
       for (size_t feature = 0; feature < data[sample].size(); feature++) {
         data[sample][feature] =
             (data[sample][feature] - minFeature) / (maxFeature - minFeature);
-        // cerr << data[sample][feature] << endl;
       }
     }
   }

@@ -69,9 +69,6 @@ int main(int argc, char **argv) {
     if (tasks[tasks.size() - 1]->eval_type_ == "RecursiveForecast") {
       RecursiveUnivar *task =
           dynamic_cast<RecursiveUnivar *>(tasks[tasks.size() - 1]);
-      if (tpg.GetParam<int>("forecast_normalize_data")) {
-        task->Normalize();
-      }
       task->num_samples_prime_ = tpg.GetParam<int>("forecast_prime_steps");
       task->num_samples_predict_[0] =
           tpg.GetParam<int>("forecast_horizon_train");
@@ -79,6 +76,9 @@ int main(int argc, char **argv) {
       task->num_samples_predict_[2] =
           tpg.GetParam<int>("forecast_horizon_test");
       task->PrepareData();
+      if (tpg.GetParam<int>("forecast_normalize_data")) {
+        task->Normalize();
+      }
     }
   }
   // Read number of inputs per task from parameters
