@@ -93,7 +93,7 @@ pmx_p 0.5
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 3
+n_input 1
 
 # max initial program size
 max_initial_prog_size 10
@@ -154,10 +154,10 @@ forecasting_discrete 0
 # whether to normalize forecasting dataset in [0,1]
 forecast_normalize_data 1
 
-forecast_prime_steps 10
-forecast_horizon_train 10
-forecast_horizon_val 20
-forecast_horizon_test 20
+forecast_prime_steps 50
+forecast_horizon_train 50
+forecast_horizon_val 100
+forecast_horizon_test 100
 
 # operations, uncomment to activate
 
