@@ -21,6 +21,7 @@
 #define REWARD1_IDX 0
 #define VISITED_TEAMS_IDX 1
 #define INSTRUCTIONS_IDX 2
+#define REWARD2_IDX 3
 
 namespace mpi = boost::mpi;
 
@@ -182,20 +183,28 @@ void AccumulateStepStats(EvalStruct &eval) {
   eval.runTimeStats[INSTRUCTIONS_IDX] += eval.decision_instructions;
 }
 
+double MeanSquaredError(vector<double> targets, vector<double> predictions) {
+  double err = 0;
+  for (size_t i = 0; i < targets.size(); i++) {
+    err += pow(targets[i] - predictions[i], 2);
+  }
+  return err / targets.size();
+}
+
 void FinalizeStepStats(TPG &tpg, EvalStruct &eval) {
   if (eval.game->eval_type_ == "RecursiveForecast") {
+    auto mse = MeanSquaredError(eval.sequence_targ, eval.sequence_pred);
+    auto corr = boost::math::statistics::correlation_coefficient(
+        eval.sequence_targ, eval.sequence_pred);
     if (tpg.GetParam<string>("forecasting_fitness") == "mse") {
-    double err = 0;
-    for (size_t i = 0; i < eval.sequence_targ.size(); i++)
-      err += pow(eval.sequence_targ[i] - eval.sequence_pred[i], 2);
-    eval.runTimeStats[REWARD1_IDX] = -(err / eval.sequence_targ.size());
-    } else if (tpg.GetParam<string>("forecasting_fitness") == "correlation"){
-    eval.runTimeStats[REWARD1_IDX] =
-        boost::math::statistics::correlation_coefficient(eval.sequence_targ,
-                                                         eval.sequence_pred);
+      eval.runTimeStats[REWARD1_IDX] = -mse;
+      eval.runTimeStats[REWARD1_IDX] = corr;
+    } else if (tpg.GetParam<string>("forecasting_fitness") == "correlation") {
+      eval.runTimeStats[REWARD1_IDX] = corr;
+      eval.runTimeStats[REWARD1_IDX] = -mse;
     } else {
       die(__FILE__, __FUNCTION__, __LINE__,
-        "Unsupported forecasting fitness function");
+          "Unsupported forecasting fitness function");
     }
     if (!isfinite(eval.runTimeStats[REWARD1_IDX]))
       eval.runTimeStats[REWARD1_IDX] = eval.game->min_reward_;
@@ -334,7 +343,7 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
     eval.leafProgram = tpg.getAction(
         eval.tm, obs, true, eval.visitedTeams, eval.decision_instructions,
         game->getStep(), eval.teamPath, tpg.rngs_[AUX_SEED], false);
-   if (discrete_actions)
+    if (discrete_actions)
       action = WrapDiscreteAction(eval);
     else
       action = WrapContinuousActionSigmoid(eval);

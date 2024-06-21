@@ -16,6 +16,8 @@ class RecursiveUnivar : public TaskEnv {
   // number of samples for training, validation, test
   int num_samples_predict_[3];
 
+  string task_;
+
   class CSVReader {
     const string filename;
     const int dim;
@@ -38,48 +40,41 @@ class RecursiveUnivar : public TaskEnv {
     }
   };
 
-  RecursiveUnivar(string task, bool normalize) {
+  RecursiveUnivar(string task) {
     eval_type_ = "RecursiveForecast";
-    PrepareData(task);
-    if (normalize) Normalize();
+    task_ = task;
   }
 
   ~RecursiveUnivar() {}
 
   int GetNumEval(int phase) { return static_cast<int>(t_start[phase].size()); }
 
-  void PrepareData(string task) {
+  void PrepareData() {
     // import data
     CSVReader *reader;
-    if (task == "Sunspots")
+    if (task_ == "Sunspots")
       reader =
           new CSVReader("./datasets/SN_ms_tot_V2.0_Nov1834-June1926.csv", DIM);
-    else if (task == "Mackey")
+    else if (task_ == "Mackey")
       reader = new CSVReader("./datasets/Mackey-1100.csv", DIM);
-    else if (task == "Laser")
+    else if (task_ == "Laser")
       reader = new CSVReader("./datasets/Laser-10000-1000-2100.csv", DIM);
-    else if (task == "Audio")
+    else if (task_ == "Audio")
       reader = new CSVReader("./datasets/2024-05-22-ali-10sec.dat", DIM);
-    else if (task == "Offset")
+    else if (task_ == "Offset")
       reader = new CSVReader("./datasets/ali_offset_diff.csv", DIM);
-    else if (task == "Duration")
+    else if (task_ == "Duration")
       reader = new CSVReader("./datasets/ali_duration.csv", DIM);
-    else {  // task == "Pitch"
+    else {  // task_ == "Pitch"
       reader = new CSVReader("./datasets/ali_pitch.csv", DIM);
-      // discrete_actions_ = true;
     }
     data = reader->ReadData();
     delete reader;
 
-    num_samples_prime_ = 50;
-    num_samples_predict_[0] = 50;   // train
-    num_samples_predict_[1] = 100;  // validate
-    num_samples_predict_[2] = 100;  // test
-
     // start steps for priming, for each phase (train, validate, test)
-    t_start.resize(3); 
+    t_start.resize(3);
 
-    if (task == "Audio") {
+    if (task_ == "Audio") {
       // train
       t_start[0].insert(t_start[0].begin(), {0, 1000, 2000, 3000, 4000, 5000,
                                              6000, 7000, 8000, 9000});
@@ -88,7 +83,7 @@ class RecursiveUnivar : public TaskEnv {
                                              6500, 7500, 8500, 9500});
       // test
       t_start[2].insert(t_start[2].begin(), {1000});
-    } else if (task == "Sunspots" || task == "Mackey" || task == "Laser") {
+    } else if (task_ == "Sunspots" || task_ == "Mackey" || task_ == "Laser") {
       // train (original, 19 start points)
       for (int s = 0; s <= 900; s += 50) t_start[0].push_back(s);
 
@@ -98,11 +93,11 @@ class RecursiveUnivar : public TaskEnv {
       // test (original single start point)
       t_start[2].insert(t_start[2].begin(), {950});
 
-    } else if (task == "Offset" || task == "Duration" || task == "Pitch") {
-      num_samples_prime_ = 5;
-      num_samples_predict_[0] = 5;   // train
-      num_samples_predict_[1] = 10;  // validate
-      num_samples_predict_[2] = 10;  // test
+    } else if (task_ == "Offset" || task_ == "Duration" || task_ == "Pitch") {
+      // num_samples_prime_ = 10;
+      // num_samples_predict_[0] = 10;    // train
+      // num_samples_predict_[1] = 20;   // validate
+      // num_samples_predict_[2] = 20;  // test
 
       // // train
       // for (int s = 0; s <= 800; s += 100) t_start[0].push_back(s);
@@ -116,13 +111,22 @@ class RecursiveUnivar : public TaskEnv {
       // for (int s = 50; s <= 800; s += 150) t_start[2].push_back(s);
 
       // train
-      for (int s = 0; s <= 275; s += 5) t_start[0].push_back(s);
+      for (size_t s = 0;
+           s < data.size() - (num_samples_prime_ + num_samples_predict_[0]);
+           s += 5)
+        t_start[0].push_back(s);
 
       // validate
-      for (int s = 0; s <= 275; s += 25) t_start[1].push_back(s);
+      for (size_t s = 0;
+           s < data.size() - (num_samples_prime_ + num_samples_predict_[1]);
+           s += 10)
+        t_start[1].push_back(s);
 
       // test
-      t_start[2].insert(t_start[2].begin(), {40,90, 140, 190, 240, 290});
+      for (size_t s = 0;
+           s < data.size() - (num_samples_prime_ + num_samples_predict_[2]);
+           s += 25)
+        t_start[2].push_back(s);
     }
   }
 

@@ -15,13 +15,13 @@
 #include "tpg_eval_mpi.h"
 #define CHECKPOINT_MOD 1000000
 #define PRINT_MOD 1
-// rawfitness,  mean visitedTeams, decisionInstructions
-#define NUM_POINT_AUX_DOUBLE 3
+// rawfitness,  mean visitedTeams, decisionInstructions, correlation
+#define NUM_POINT_AUX_DOUBLE 4
 // task, phase, environment seed, internal test node id
 #define NUM_POINT_AUX_INT 4
 #define MODES_T 1000000000
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   mpi::environment env(argc, argv);
   mpi::communicator world;
   TPG tpg;
@@ -32,8 +32,8 @@ int main(int argc, char** argv) {
   ostringstream os;  // logging
 
   /****************************************************************************/
-  // Read task sets from parameters and create environments. 
-  vector<TaskEnv*> tasks;
+  // Read task sets from parameters and create environments.
+  vector<TaskEnv *> tasks;
   stringstream ss(tpg.GetParam<string>("active_tasks"));
   while (ss.good()) {
     string substr;
@@ -51,20 +51,34 @@ int main(int argc, char** argv) {
     else if (substr == "MountainCarContinuous")
       tasks.push_back(new MountainCarContinuous());
     else if (substr == "Sunspots")
-      tasks.push_back(new RecursiveUnivar("Sunspots", tpg.GetParam<int>("forecast_normalize_data")));
+      tasks.push_back(new RecursiveUnivar("Sunspots"));
     else if (substr == "Mackey")
-      tasks.push_back(new RecursiveUnivar("Mackey", tpg.GetParam<int>("forecast_normalize_data")));
+      tasks.push_back(new RecursiveUnivar("Mackey"));
     else if (substr == "Laser")
-      tasks.push_back(new RecursiveUnivar("Laser", tpg.GetParam<int>("forecast_normalize_data")));
+      tasks.push_back(new RecursiveUnivar("Laser"));
     else if (substr == "Offset")
-      tasks.push_back(new RecursiveUnivar("Offset", tpg.GetParam<int>("forecast_normalize_data")));
+      tasks.push_back(new RecursiveUnivar("Offset"));
     else if (substr == "Duration")
-      tasks.push_back(new RecursiveUnivar("Duration", tpg.GetParam<int>("forecast_normalize_data")));
+      tasks.push_back(new RecursiveUnivar("Duration"));
     else if (substr == "Pitch")
-      tasks.push_back(new RecursiveUnivar("Pitch", tpg.GetParam<int>("forecast_normalize_data")));
+      tasks.push_back(new RecursiveUnivar("Pitch"));
     else {
       cout << "Unrecognised task:" << substr << endl;
       exit(1);
+    }
+    if (tasks[tasks.size() - 1]->eval_type_ == "RecursiveForecast") {
+      RecursiveUnivar *task =
+          dynamic_cast<RecursiveUnivar *>(tasks[tasks.size() - 1]);
+      if (tpg.GetParam<int>("forecast_normalize_data")) {
+        task->Normalize();
+      }
+      task->num_samples_prime_ = tpg.GetParam<int>("forecast_prime_steps");
+      task->num_samples_predict_[0] =
+          tpg.GetParam<int>("forecast_horizon_train");
+      task->num_samples_predict_[1] = tpg.GetParam<int>("forecast_horizon_val");
+      task->num_samples_predict_[2] =
+          tpg.GetParam<int>("forecast_horizon_test");
+      task->PrepareData();
     }
   }
   // Read number of inputs per task from parameters
@@ -90,9 +104,9 @@ int main(int argc, char** argv) {
   }
 
   // placeholders for logging stats only
-  set<team*, teamIdComp> visitedTeamsAll;
-  vector<set<team*, teamIdComp>> visitedTeamsAllPerTask;
-  set<team*, teamIdComp> visitedTeamsAllTasks;
+  set<team *, teamIdComp> visitedTeamsAll;
+  vector<set<team *, teamIdComp>> visitedTeamsAllPerTask;
+  set<team *, teamIdComp> visitedTeamsAllTasks;
   map<long, double>
       teamUseMap;  // maps team to frequency of use for a particular task;
   vector<map<long, double>> teamUseMapPerTask;
@@ -164,7 +178,6 @@ int main(int argc, char** argv) {
         /* accounting and reporting ******************************************/
         startReport = chrono::system_clock::now();
         if (tpg.GetState("t_current") % tpg.GetParam<int>("test_mod") == 0) {
-          
           // validation
           tpg.state_["phase"] = _VALIDATION_PHASE;
           evaluate_main(tpg, world, tasks);
@@ -194,7 +207,7 @@ int main(int argc, char** argv) {
                               false);  // checkpoint entire pop
         }
         if (tpg.GetParam<int>("write_phylogeny")) {
-            tpg.printPhyloGraphDot(tpg.getBestTeam());
+          tpg.printPhyloGraphDot(tpg.getBestTeam());
         }
         endChkp = chrono::system_clock::now() - startChkp;
         endGen = chrono::system_clock::now() - startGen;
