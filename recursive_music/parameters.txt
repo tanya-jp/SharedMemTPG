@@ -51,7 +51,7 @@ n_generations 1000000
 mu_internal 0
 
 # number of discrete actions
-n_discrete_action 128
+n_discrete_action 3
 
 # initial team size
 max_initial_team_size 10
@@ -84,10 +84,10 @@ pms 0.1
 pmw 0.1
 
 # team variation: probability of team crossover
-pmx 0.5
+pmx 0.0
 
 # team variation: probability of team crossover adding each parent prog to child
-pmx_p 0.5
+pmx_p 0.3
 
 # enable continuous outputs
 continuous_output 1
