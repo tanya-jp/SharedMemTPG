@@ -1,0 +1,167 @@
+#ifndef sequence_comparisons_h
+#define sequence_comparisons_h
+
+#include <boost/math/statistics/bivariate_statistics.hpp>
+#include <bzlib.h>
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+
+/******************************************************************************/
+double MeanSquaredError(std::vector<double> targets,
+                        std::vector<double> predictions) {
+  double err = 0;
+  for (size_t i = 0; i < targets.size(); i++)
+     err += pow(targets[i] - predictions[i], 2);
+  return err / targets.size();
+}
+
+/******************************************************************************/
+double PearsonCorrelation(std::vector<double> targets,
+                          std::vector<double> predictions) {
+  return boost::math::statistics::correlation_coefficient(targets, predictions);
+}
+
+/******************************************************************************/
+double EuclideanDistSqrd(double *x, double *y, int dim) {
+  double dist = 0;
+  for (int i = 0; i < dim; i++) dist += (x[i] - y[i]) * (x[i] - y[i]);
+  return dist;
+}
+
+/******************************************************************************/
+double EuclideanDistSqrd(vector<double> &x, vector<double> &y) {
+  double dist = 0;
+  vector<double>::iterator xiter, yiter, enditer;
+  for (xiter = x.begin(), yiter = y.begin(), enditer = x.end();
+       xiter != enditer; xiter++, yiter++)
+    dist += (*xiter - *yiter) * (*xiter - *yiter);
+  return dist;
+}
+
+/******************************************************************************/
+double EuclideanDistSqrdNorm(vector<double> &x, vector<double> &y) {
+  double dist = 0;
+  int numFeatures = 0;
+  vector<double>::iterator xiter, yiter, enditer;
+  for (xiter = x.begin(), yiter = y.begin(), enditer = x.end();
+       xiter != enditer; xiter++, yiter++) {
+    dist += (*xiter - *yiter) * (*xiter - *yiter);
+    numFeatures++;
+  }
+  return dist / numFeatures;
+}
+
+/******************************************************************************/
+double EuclideanDist(vector<double> &x, vector<double> &y) {
+  double dist = 0;
+  vector<double>::iterator xiter, yiter, enditer;
+  for (xiter = x.begin(), yiter = y.begin(), enditer = x.end();
+       xiter != enditer; xiter++, yiter++)
+    dist += (*xiter - *yiter) * (*xiter - *yiter);
+
+  return (double)sqrt(dist);
+}
+
+/******************************************************************************/
+int hammingDist(vector<int> &x, vector<int> &y) {
+  int dist = 0;
+  vector<int>::iterator xiter, yiter, enditer;
+  for (xiter = x.begin(), yiter = y.begin(), enditer = x.end();
+       xiter != enditer; xiter++, yiter++)
+    dist += *xiter == *yiter ? 0 : 1;
+  return dist;
+}
+
+/******************************************************************************/
+int compressedLength(char * source){
+   ostringstream oss;
+   int blockSize100k = 9;
+   int verbosity = 0;
+   int workFactor = 30; // 0 = USE THE DEFAULT VALUE
+   unsigned int sourceLength = strlen(source);
+   unsigned int destLength = 1.01 * sourceLength + 600;    
+   // Official formula, Big enough to hold output.  Will change to real size. 
+   char *dest = (char*)malloc(destLength); int returnCode = BZ2_bzBuffToBuffCompress(
+   dest, &destLength, source, sourceLength, blockSize100k, verbosity,
+   workFactor );
+
+   if (returnCode == BZ_OK)
+   {
+      free(dest);
+      return destLength;
+   }
+   else
+   {
+      free(dest);
+      cout << " Can't get compressed length. " << "Error code:" <<
+      returnCode; return returnCode;
+   }
+}
+
+/******************************************************************************/
+string decompressString(std::string& data)
+{
+  namespace bio = boost::iostreams;
+
+  std::stringstream compressed(data);
+  std::stringstream decompressed;
+
+  bio::filtering_streambuf<bio::input> out;
+  out.push(bio::gzip_decompressor());
+  out.push(compressed);
+  bio::copy(out, decompressed);
+
+  return decompressed.str();
+}
+
+/******************************************************************************/
+string compressString(std::string& data)
+{
+  namespace bio = boost::iostreams;
+
+  std::stringstream compressed;
+  std::stringstream origin(data);
+
+  bio::filtering_streambuf<bio::input> out;
+  out.push(bio::gzip_compressor(bio::gzip_params(bio::gzip::best_compression)));
+  out.push(origin);
+  bio::copy(out, compressed);
+
+  //return compressed.str();
+  string decomp = compressed.str();
+  return decompressString(decomp);
+}
+
+/******************************************************************************/
+double normalizedCompressionDistance(vector<int>& v1, vector<int>& v2){
+   if (v1 == v2)
+      return 0;
+   ostringstream o;
+   o << vecToStrNoSpace(v1);
+   int Zx = compressedLength((char*) o.str().c_str());
+   o.str("");
+   o << vecToStrNoSpace(v2);
+   int Zy = compressedLength((char*) o.str().c_str());
+   o.str("");
+   o << vecToStrNoSpace(v1) << vecToStrNoSpace(v2);
+   int Zxy = compressedLength((char*) o.str().c_str());
+   o.str("");
+   int nom = Zxy-min(Zx,Zy);
+   int denom = max(Zx,Zy);
+   return ((double)nom/denom)/MAX_NCD;
+}
+
+/******************************************************************************/
+double normalizedCompressionDistance(string& v1, string& v2){
+   if (v1 == v2)
+      return 0;
+   int Zx = compressedLength((char*) v1.c_str());
+   int Zy = compressedLength((char*) v2.c_str());
+   int Zxy = compressedLength((char*) (v1+v2).c_str());
+   int nom = Zxy-min(Zx,Zy);
+   int denom = max(Zx,Zy);
+   return ((double)nom/denom)/MAX_NCD;
+}
+
+#endif
