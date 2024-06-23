@@ -13,5 +13,5 @@ df = pd.read_csv(file,header=None)
 
 # df.set_index('Step').plot()
 df.plot()
-
+plt.legend(['Target', 'Prediction'])
 plt.show()

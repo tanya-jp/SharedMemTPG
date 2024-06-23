@@ -4,7 +4,7 @@
 #include <MountainCar.h>
 #include <MountainCarContinuous.h>
 #include <Pendulum.h>
-#include <RecursiveUnivar.h>
+#include <RecursiveForecast.h>
 #include <TPG.h>
 
 #include <algorithm>
@@ -51,33 +51,35 @@ int main(int argc, char **argv) {
     else if (substr == "MountainCarContinuous")
       tasks.push_back(new MountainCarContinuous());
     else if (substr == "Sunspots")
-      tasks.push_back(new RecursiveUnivar("Sunspots"));
+      tasks.push_back(new RecursiveForecast("Sunspots"));
     else if (substr == "Mackey")
-      tasks.push_back(new RecursiveUnivar("Mackey"));
+      tasks.push_back(new RecursiveForecast("Mackey"));
     else if (substr == "Laser")
-      tasks.push_back(new RecursiveUnivar("Laser"));
+      tasks.push_back(new RecursiveForecast("Laser"));
     else if (substr == "Offset")
-      tasks.push_back(new RecursiveUnivar("Offset"));
+      tasks.push_back(new RecursiveForecast("Offset"));
     else if (substr == "Duration")
-      tasks.push_back(new RecursiveUnivar("Duration"));
+      tasks.push_back(new RecursiveForecast("Duration"));
     else if (substr == "Pitch")
-      tasks.push_back(new RecursiveUnivar("Pitch"));
+      tasks.push_back(new RecursiveForecast("Pitch"));
     else if (substr == "PitchBach")
-      tasks.push_back(new RecursiveUnivar("PitchBach"));  
+      tasks.push_back(new RecursiveForecast("PitchBach"));  
     else {
       cout << "Unrecognised task:" << substr << endl;
       exit(1);
     }
     if (tasks[tasks.size() - 1]->eval_type_ == "RecursiveForecast") {
-      RecursiveUnivar *task =
-          dynamic_cast<RecursiveUnivar *>(tasks[tasks.size() - 1]);
-      task->num_samples_prime_ = tpg.GetParam<int>("forecast_prime_steps");
-      task->num_samples_predict_[0] =
+      RecursiveForecast *task =
+          dynamic_cast<RecursiveForecast *>(tasks[tasks.size() - 1]);
+      task->n_prime_ = tpg.GetParam<int>("forecast_prime_steps");
+      task->n_predict_[0] =
           tpg.GetParam<int>("forecast_horizon_train");
-      task->num_samples_predict_[1] = tpg.GetParam<int>("forecast_horizon_val");
-      task->num_samples_predict_[2] =
+      task->n_predict_[1] = tpg.GetParam<int>("forecast_horizon_val");
+      task->n_predict_[2] =
           tpg.GetParam<int>("forecast_horizon_test");
-      task->PrepareData();
+      task->n_eval_train_ = tpg.GetParam<int>("forecast_n_eval_train");
+      task->n_eval_val_ = tpg.GetParam<int>("forecast_n_eval_val");    
+      task->PrepareData(tpg.rngs_[TPG_SEED]);
       if (tpg.GetParam<int>("forecast_normalize_data")) {
         task->Normalize();
       }

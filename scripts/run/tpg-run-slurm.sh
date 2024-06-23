@@ -8,9 +8,9 @@
 # #SBATCH --time=0-0:30  # time (DD-HH:MM)
 
 # cpus anywhere
-#SBATCH --ntasks=5               
+#SBATCH --ntasks=21               
 #SBATCH --mem-per-cpu=2G      
-#SBATCH --time=0-3:00  # time (DD-HH:MM)
+#SBATCH --time=0-12:00  # time (DD-HH:MM)
 
 #defaults
 mode=0 #Train:0, Replay:1, Debug:2

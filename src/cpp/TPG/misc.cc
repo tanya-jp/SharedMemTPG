@@ -1,66 +1,6 @@
 #include "misc.h"
 
-///***********************************************************************************************************/
-//int compressedLength(char * source){
-//   ostringstream oss;
-//   int blockSize100k = 9;
-//   int verbosity = 0;
-//   int workFactor = 30; // 0 = USE THE DEFAULT VALUE
-//   unsigned int sourceLength = strlen(source);
-//   unsigned int destLength = 1.01 * sourceLength + 600;    // Official formula, Big enough to hold output.  Will change to real size.
-//   char *dest = (char*)malloc(destLength);
-//   int returnCode = BZ2_bzBuffToBuffCompress( dest, &destLength, source, sourceLength, blockSize100k, verbosity, workFactor );
-//
-//   if (returnCode == BZ_OK)
-//   {
-//      free(dest);
-//      return destLength;
-//   }
-//   else
-//   {
-//      free(dest);
-//      cout << " Can't get compressed length. " << "Error code:" << returnCode;
-//      return returnCode;
-//   }
-//}
-
-///***********************************************************************************************************/
-//
-//string compressString(std::string& data)
-//{
-//   namespace bio = boost::iostreams;
-//
-//   std::stringstream compressed;
-//   std::stringstream origin(data);
-//
-//   bio::filtering_streambuf<bio::input> out;
-//   out.push(bio::gzip_compressor(bio::gzip_params(bio::gzip::best_compression)));
-//   out.push(origin);
-//   bio::copy(out, compressed);
-//
-//   //return compressed.str();
-//   string decomp = compressed.str();
-//   return decompressString(decomp);
-//}
-//
-///***********************************************************************************************************/
-//
-//string decompressString(std::string& data)
-//{
-//   namespace bio = boost::iostreams;
-//
-//   std::stringstream compressed(data);
-//   std::stringstream decompressed;
-//
-//   bio::filtering_streambuf<bio::input> out;
-//   out.push(bio::gzip_decompressor());
-//   out.push(compressed);
-//   bio::copy(out, decompressed);
-//
-//   return decompressed.str();
-//}
-//
-/***********************************************************************************************************/
+/******************************************************************************/
 
 void die(const char *file, 
       const char *func,
@@ -72,77 +12,7 @@ void die(const char *file,
    abort();
 }
 
-/***********************************************************************************************************/
-double EuclideanDistSqrd(double *x,
-      double *y,
-      int dim)
-{
-   double dist = 0;
-
-   for(int i = 0; i < dim; i++)
-      dist += (x[i] - y[i]) * (x[i] - y[i]);
-
-   return dist;
-}
-
-/***********************************************************************************************************/
-double EuclideanDistSqrd(vector < double > &x,
-      vector < double > &y)
-{
-   double dist = 0;
-   vector < double > :: iterator xiter, yiter, enditer;
-
-   for(xiter = x.begin(), yiter = y.begin(), enditer = x.end();
-         xiter != enditer; xiter++, yiter++)
-      dist += (*xiter - *yiter) * (*xiter - *yiter);
-
-   return dist;
-}
-
-/***********************************************************************************************************/
-double EuclideanDistSqrdNorm(vector < double > &x,
-      vector < double > &y)
-{
-   double dist = 0;
-   int numFeatures = 0;
-   vector < double > :: iterator xiter, yiter, enditer;
-
-   for(xiter = x.begin(), yiter = y.begin(), enditer = x.end();
-         xiter != enditer; xiter++, yiter++){
-      dist += (*xiter - *yiter) * (*xiter - *yiter);
-      numFeatures++;
-   }
-   return dist/numFeatures;
-}
-
-/***********************************************************************************************************/
-double EuclideanDist(vector < double > &x,
-      vector < double > &y)
-{
-   double dist = 0;
-   vector < double > :: iterator xiter, yiter, enditer;
-
-   for(xiter = x.begin(), yiter = y.begin(), enditer = x.end(); xiter != enditer; xiter++, yiter++)
-      dist += (*xiter - *yiter) * (*xiter - *yiter);
-
-   return (double)sqrt(dist);
-}
-
-/***********************************************************************************************************/
-int hammingDist(vector < int > &x, 
-      vector < int > &y)
-{
-   int dist = 0;
-   vector < int > :: iterator xiter, yiter, enditer;
-
-   for(xiter = x.begin(), yiter = y.begin(), enditer = x.end();
-         xiter != enditer; xiter++, yiter++)
-      dist += *xiter == *yiter? 0 : 1;
-
-   return dist;
-}
-
-/***********************************************************************************************************/
+/******************************************************************************/
 bool isEqual(vector < int > &x, 
       vector < int > &y)
 {
@@ -157,7 +27,7 @@ bool isEqual(vector < int > &x,
    return true;
 }
 
-/***********************************************************************************************************/
+/******************************************************************************/
 bool isEqual(vector < double > &x,
       vector < double > &y,
       double e)
@@ -173,7 +43,7 @@ bool isEqual(vector < double > &x,
    return true;
 }
 
-/***********************************************************************************************************/
+/******************************************************************************/
    template<class T>
 bool isEqual(vector < T > &x, vector < T > &y, double e)
 {
@@ -188,38 +58,7 @@ bool isEqual(vector < T > &x, vector < T > &y, double e)
    return true;
 }
 
-///***********************************************************************************************************/
-//double normalizedCompressionDistance(vector<int>&v1,vector<int>&v2){
-//   if (v1 == v2)
-//      return 0;
-//   ostringstream o;
-//   o << vecToStrNoSpace(v1);
-//   int Zx = compressedLength((char*) o.str().c_str());
-//   o.str("");
-//   o << vecToStrNoSpace(v2);
-//   int Zy = compressedLength((char*) o.str().c_str());
-//   o.str("");
-//   o << vecToStrNoSpace(v1) << vecToStrNoSpace(v2);
-//   int Zxy = compressedLength((char*) o.str().c_str());
-//   o.str("");
-//   int nom = Zxy-min(Zx,Zy);
-//   int denom = max(Zx,Zy);
-//   return ((double)nom/denom)/MAX_NCD;
-//}
-//
-///***********************************************************************************************************/
-//double normalizedCompressionDistance(string&v1, string&v2){
-//   if (v1 == v2)
-//      return 0;
-//   int Zx = compressedLength((char*) v1.c_str());
-//   int Zy = compressedLength((char*) v2.c_str());
-//   int Zxy = compressedLength((char*) (v1+v2).c_str());
-//   int nom = Zxy-min(Zx,Zy);
-//   int denom = max(Zx,Zy);
-//   return ((double)nom/denom)/MAX_NCD;
-//}
-
-/***********************************************************************************************************/
+/******************************************************************************/
 int readMap(string fileName, 
       map < string, string > &args)
 {
@@ -249,26 +88,7 @@ int readMap(string fileName,
    return pairs;
 }
 
-///***********************************************************************************************************/
-//void ReadParameters(string file_name, std::unordered_map<string, std::any> &params)
-//{
-//   std::ifstream infile(file_name);
-//   string oneline;
-//   vector < string > outcome_fields;
-//   while (std::getline(infile, oneline)) {
-//	   if (oneline.find('#') != std::string::npos) continue;  // skip comment lines
-//	   splitString(oneline,' ',outcome_fields);
-//	   //cout << "param: " << vecToStr(outcome_fields) << endl;
-//	   if (outcome_fields[1].find('.') != std::string::npos) // found double parameter
-//             params[outcome_fields[0]] = stringToDouble(outcome_fields[1]);
-//	   else  // found int parameter
-//	     params[outcome_fields[0]] = stringToInt(outcome_fields[1]);
-//	   if (outcome_fields[0].at(0) == '_' && outcome_fields[1] == '1')
-//		   _ops[outcome_fields[0]
-//   }
-//}
-
-/***********************************************************************************************************/
+/******************************************************************************/
 int stringToInt(string s)
 {
    istringstream buffer(s);
@@ -280,7 +100,7 @@ int stringToInt(string s)
    return i;
 }
 
-/***********************************************************************************************************/
+/******************************************************************************/
 long stringToLong(string s)
 {
    istringstream buffer(s);
@@ -292,7 +112,7 @@ long stringToLong(string s)
    return l;
 }
 
-/***********************************************************************************************************/
+/******************************************************************************/
 double stringToDouble(string s)
 {
    istringstream buffer(s);
@@ -304,7 +124,7 @@ double stringToDouble(string s)
    return d;
 }
 
-/***********************************************************************************************************/
+/******************************************************************************/
 double stdDev(vector<double> vec){
    double sum = std::accumulate(vec.begin(), vec.end(), 0.0);
    double mean = sum / vec.size();
@@ -316,7 +136,7 @@ double stdDev(vector<double> vec){
    return stdev;
 }
 
-/***********************************************************************************************************/
+/******************************************************************************/
 vector<string> &splitString(const string &s, char delim, vector<string> &elems) {
    elems.clear();
    stringstream ss(s);
@@ -327,14 +147,14 @@ vector<string> &splitString(const string &s, char delim, vector<string> &elems) 
    return elems;
 }
 
-/***********************************************************************************************************/
+/******************************************************************************/
 vector<string> splitString(const string &s, char delim) {
    vector<string> elems;
    splitString(s, delim, elems);
    return elems;
 }
 
-/***********************************************************************************************************/
+/******************************************************************************/
 double vecMedian(vector<double> vec)
 {
    typedef vector<double>::size_type vec_sz;
@@ -351,7 +171,7 @@ double vecMedian(vector<double> vec)
    return size % 2 == 0 ? (vec[mid] + vec[mid-1]) / 2 : vec[mid];
 }
 
-/***********************************************************************************************************/
+/******************************************************************************/
 int vecMedian(vector<int> vec)
 {
    typedef vector<int>::size_type vec_sz;
@@ -368,7 +188,7 @@ int vecMedian(vector<int> vec)
    return size % 2 == 0 ? (vec[mid] + vec[mid-1]) / 2 : vec[mid];
 }
 
-/***********************************************************************************************************/
+/******************************************************************************/
 double vecMean(vector<double> vec)
 {
    typedef vector<double>::size_type vec_sz;
@@ -383,7 +203,7 @@ double vecMean(vector<double> vec)
    return sum/size;
 }
 
-/***********************************************************************************************************/
+/******************************************************************************/
 double vecMean(vector<int> vec)
 {
    typedef vector<int>::size_type vec_sz;

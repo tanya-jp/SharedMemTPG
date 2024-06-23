@@ -155,9 +155,13 @@ forecasting_discrete 0
 forecast_normalize_data 1
 
 forecast_prime_steps 50
+
 forecast_horizon_train 50
 forecast_horizon_val 100
 forecast_horizon_test 100
+
+forecast_n_eval_train 40
+forecast_n_eval_val 10
 
 # operations, uncomment to activate
 

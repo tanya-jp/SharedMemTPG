@@ -63,7 +63,7 @@ class TaskEnv {
   virtual bool discreteActions() const { return true; }
   virtual double minActionContinuous() const { return 0.0; }
   virtual double maxActionContinuous() const { return 0.0; }
-  virtual void reset(mt19937 &) = 0;
+  virtual void reset(mt19937 &) { step = 0; }
   int maxStep() { return max_step; }
   void maxStep(int i) { max_step = i; }
   virtual Results update(int, double, mt19937 &) { return {0.0, 0.0}; };

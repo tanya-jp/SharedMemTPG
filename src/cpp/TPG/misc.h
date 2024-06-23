@@ -11,14 +11,10 @@
 #include <unordered_map>
 #include <algorithm>
 #include <numeric>
-// #include <bzlib.h>
 #include <deque>
 #include <chrono>
 #include <sstream>
 #include <any>
-// #include <boost/iostreams/filtering_streambuf.hpp>
-// #include <boost/iostreams/copy.hpp>
-// #include <boost/iostreams/filter/gzip.hpp>
 #include <iomanip>
 
 using namespace std;
@@ -46,18 +42,16 @@ inline double discretize(double f, double min, double max, int steps)
    return d > steps ? steps - 1 : d;
 }
 void die(const char *, const char *, const int, const char *);
-double EuclideanDistSqrd(double *, double *, int);
-double EuclideanDistSqrd(std::vector<double> &, std::vector<double> &);
-double EuclideanDistSqrdNorm(std::vector<double> &, std::vector<double> &);
-double EuclideanDist(std::vector<double> &, std::vector<double> &);
+// double EuclideanDistSqrd(double *, double *, int);
+// double EuclideanDistSqrd(std::vector<double> &, std::vector<double> &);
+// double EuclideanDistSqrdNorm(std::vector<double> &, std::vector<double> &);
+// double EuclideanDist(std::vector<double> &, std::vector<double> &);
 
 inline bool fileExists(const char *fileName)
 {
    ifstream infile(fileName);
    return infile.good();
 }
-
-int hammingDist(std::vector<int> &, std::vector<int> &);
 
 inline bool isEqual(double x, double y)
 {
@@ -94,8 +88,6 @@ struct modesRecord
       runTimeComplexityIns = 0;
    }
 };
-// double normalizedCompressionDistance(std::vector<int>&v1,std::vector<int>&v2);
-// double normalizedCompressionDistance(string&v1, string&v2);
 
 struct noveltyDescriptor
 {
@@ -150,14 +142,6 @@ inline double sas(double s1, double s2, double a)
 std::vector<string> &splitString(const string &s, char delim, std::vector<string> &elems);
 std::vector<string> splitString(const string &s, char delim);
 
-// template < class ptype > struct lessThan : public binary_function < ptype *, ptype *, bool >
-// {
-//    bool operator() (ptype *lhs, ptype *rhs) { return lhs->key() < rhs->key(); }
-// };
-// template < class ptype > struct greaterThan : public binary_function < ptype *, ptype *, bool >
-// {
-//    bool operator() (ptype *lhs, ptype *rhs) { return lhs->key() > rhs->key(); }
-// };
 template <class vtype>
 string vecToStr(std::vector<vtype> &v)
 {
@@ -197,9 +181,6 @@ double vecMedian(std::vector<double>);
 int vecMedian(std::vector<int>);
 double vecMean(std::vector<double>);
 double vecMean(std::vector<int>);
-
-// string compressString(std::string& data);
-// string decompressString(std::string& data);
 
 // Function to generate power set PS of given set S
 inline void FindPowerSet(std::vector<int> const &S, std::vector<int> &set, std::vector<std::vector<int>> &PS, size_t n, size_t minSubsetSize)
@@ -258,32 +239,5 @@ inline double RoundTo(double value, double precision = 1.0)
 {
     return std::round(value / precision) * precision;
 }
-
-// class CSVReader
-// {
-//    string fileName;
-//    string delimiter;
-//    int dim;
-//    public:
-//    CSVReader(string fname, int d, string delm = " "){
-//       fileName = fname;
-//       delimiter = delm;
-//       dim = d;
-//    }
-//    std::vector < std::vector <double> > getData()
-//    {
-//       ifstream file(fileName);
-//       std::vector < std::vector <double> > dataVec;
-//       string line = "";
-//       while (getline(file, line))
-//       {
-//          std::vector<double> doubleValues(dim);//features
-//          doubleValues[0] = stod(line.c_str());
-//          dataVec.push_back(doubleValues);
-//       }
-//       file.close();
-//       return dataVec;
-//    }
-// };
 
 #endif

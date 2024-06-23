@@ -3,23 +3,14 @@ AddOption('--opt', action='append_const', dest='cflags', const='-Os')
 
 import os
 common_env=Environment(ENV=os.environ)
-
-acenet = ARGUMENTS.get('acenet', 0)
 ccanada = ARGUMENTS.get('ccanada', 0)
-think = ARGUMENTS.get('think', 0)
-
 common_env.Replace(CXX='mpic++')
-
-if int(acenet):
-    common_env.Replace(CXX='/usr/local/gcc-4.8.3/bin/g++')
-    common_env.Replace(CC='/usr/local/gcc-4.8.3/bin/gcc')
-    common_env.Append(CPPDEFINES=['NOSDL'])
 
 if int(ccanada):
     common_env.Append(CPPDEFINES=['CCANADA'])
-else:
-    common_env.Append(CCFLAGS = ['-std=c++23', '-Wno-deprecated', '-Wall', '-Werror', '-Wextra', '-Wno-unused-parameter'])
-# '-DARMA_USE_BLAS', '-DARMA_USE_LAPACK', '-DARMA_USE_HDF5' '-DARMA_DONT_USE_WRAPPER
+
+common_env.Append(CCFLAGS = ['-std=c++23', '-Wno-deprecated', '-Wall',
+                                 '-Werror', '-Wextra', '-Wno-unused-parameter'])
 
 common_env.MergeFlags(GetOption('cflags'))
 common_env.Append(CPPDEFINES={'VERSION': 1})
