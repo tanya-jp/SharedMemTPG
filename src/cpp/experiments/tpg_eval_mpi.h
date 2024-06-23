@@ -308,7 +308,7 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
   // Prime
   int sample = game->t_start[tpg.GetState("phase")][eval.episode];
   for (int i = 0; i < game->n_prime_ - 1; i++) {
-    //Prepare observation
+    // Prepare observation
     obs_list.push_back(game->GetSampleUnivar(sample));
     obs_list.pop_front();
     std::copy(obs_list.begin(), obs_list.end(), obs_vec.begin());
@@ -318,7 +318,7 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
     eval.leafProgram = tpg.getAction(
         eval.tm, obs, true, eval.visitedTeams, eval.decision_instructions,
         eval.game->step, eval.teamPath, tpg.rngs_[AUX_SEED], false);
-    game->step++;    
+    game->step++;
     sample++;
   }
   // Predict
@@ -334,10 +334,10 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
     obs->Set(obs_vec);
 
     // Execute graph
-    eval.leafProgram = tpg.getAction(
-        eval.tm, obs, true, eval.visitedTeams, eval.decision_instructions,
-        game->step, eval.teamPath, tpg.rngs_[AUX_SEED], false);
-    
+    eval.leafProgram = tpg.getAction(eval.tm, obs, true, eval.visitedTeams,
+                                     eval.decision_instructions, game->step,
+                                     eval.teamPath, tpg.rngs_[AUX_SEED], false);
+
     // Save targets and predistions
     eval.sequence_targ[i] = game->GetSampleUnivar(sample);
     if (discrete_actions)
@@ -475,7 +475,7 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
     eval.leafProgram = tpg.getAction(
         eval.tm, obs, true, eval.visitedTeams, eval.decision_instructions,
         eval.game->getStep(), eval.teamPath, tpg.rngs_[AUX_SEED], false);
-    
+
     // Team user per task stats TODO(skelly): move to accumulator?
     for (auto tm : eval.visitedTeams) {
       if (teamUseMapPerTask[tpg.state_["active_task"]].find(tm->id_) ==
@@ -506,10 +506,10 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
     obs->Set(obs_vec);
 
     // Execute graph
-    eval.leafProgram = tpg.getAction(
-        eval.tm, obs, true, eval.visitedTeams, eval.decision_instructions,
-        game->step, eval.teamPath, tpg.rngs_[AUX_SEED], false);
-    
+    eval.leafProgram = tpg.getAction(eval.tm, obs, true, eval.visitedTeams,
+                                     eval.decision_instructions, game->step,
+                                     eval.teamPath, tpg.rngs_[AUX_SEED], false);
+
     // Team user per task stats TODO(skelly): move to accumulator?
     for (auto tm : eval.visitedTeams) {
       if (teamUseMapPerTask[tpg.state_["active_task"]].find(tm->id_) ==
@@ -530,12 +530,18 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
       eval.sequence_pred[i] = WrapContinuousActionSigmoid(eval);
     sample++;
     game->step++;
-    steps++;  
-    // Print in csv format for quick plotting
-    cerr << std::fixed << eval.sequence_targ[i] << "," << eval.sequence_pred[i] << endl;
+    steps++;
     AccumulateStepStats(eval);
   }
   delete obs;
+  // Print csv format for quick plotting
+  ofstream test_file;
+  test_file.open("test_" + to_string(eval.episode) + ".csv");
+  for (size_t i = 0; i < eval.sequence_targ.size(); i++)
+    test_file << std::fixed << eval.sequence_targ[i] << ","
+              << eval.sequence_pred[i] << endl;
+  test_file << endl;
+  test_file.close();
 }
 
 /******************************************************************************/

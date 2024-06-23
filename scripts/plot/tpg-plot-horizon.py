@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import sys
-print ('argument list', sys.argv)
+# print ('argument list', sys.argv)
 file = sys.argv[1]
 
 plt.rcParams["figure.figsize"] = [7.50, 3.50]
@@ -14,4 +14,5 @@ df = pd.read_csv(file,header=None)
 # df.set_index('Step').plot()
 df.plot()
 plt.legend(['Target', 'Prediction'])
-plt.show()
+plt.ylim(0,1)
+plt.savefig(file + ".png")
