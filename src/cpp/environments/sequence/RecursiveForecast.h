@@ -115,7 +115,8 @@ class RecursiveForecast : public TaskEnv {
       for (int i = 0; i < n_eval_train_; i++)
         t_start[0].push_back(DisTrain(rng));
 
-      for (int i = 0; i < n_eval_val_; i+=100) t_start[1].push_back(i);
+      int s = 0;
+      for (int i = 0; i < n_eval_val_; i++) t_start[1].push_back(s+=100);
 
       t_start[2] = t_start[1]; // TODO(spkelly): test==val, fix
     }
