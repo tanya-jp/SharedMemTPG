@@ -29,6 +29,9 @@ test_mod 100
 # rhs should be a comma-separated list like Cartpole,Acrobot
 active_tasks Cartpole
 
+# Number of tasks used each selection for evaluation. The rest are estimated with phylogeny.
+n_sampled_tasks_for_eval 1
+
 # number of fitness functions available
 n_fit_mode 1
 
@@ -85,6 +88,9 @@ pmw 0.1
 
 # team variation: probability of team crossover
 pmx 0.2
+
+# team variation: probability of team crossover adding each parent prog to child
+pmx_p 0.5
 
 # team variation: probability of team crossover adding each parent prog to child
 pmx_p 0.5

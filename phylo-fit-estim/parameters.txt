@@ -1,14 +1,18 @@
 # start from a checkpoint file
 checkpoint 0
 
-# write checkpoints
-write_checkpoints 1
+# save checkpoints during evolution
+write_train_checkpoints 0
+write_test_checkpoints 1
+
+# save phylogenetic data
+write_phylogeny 0
 
 # re-evaluate an individual from a checkpoint file
 replay 0
 
 # use the partially-observable version of a task, if available
-partially_observable 1
+partially_observable 0
 
 # re-evaluate an individual from a checkpoint file and animate behaviour, if available
 animate 0
@@ -19,11 +23,14 @@ animate 0
 stateful 1
 
 # how frequently to run test procedure
-test_mod 1000
+test_mod 100
 
 # in multitask settings, which tasks are active
 # rhs should be a comma-separated list like Cartpole,Acrobot
-active_tasks Cartpole,Pendulum,Sunspots,Mackey
+active_tasks Cartpole,Acrobot
+
+# Number of tasks used each selection for evaluation. The rest are estimated with phylogeny.
+n_sampled_tasks_for_eval 1
 
 # number of fitness functions available
 n_fit_mode 1
@@ -41,7 +48,7 @@ skip_introns 1
 seed_aux 42
 
 # max number of generations
-n_generations 1000000
+n_generations 100
 
 # allow mutation of internal teams (i.e. non-root teams (in-progress)
 mu_internal 0
@@ -62,10 +69,10 @@ max_teams_per_graph 1000000
 p_atomic 0.95
 
 # team mutation: probability of deleting program from team
-pmd 0.7
+pmd 0.5
 
 # team mtation: probability of adding program to team
-pma 0.6
+pma 0.4
 
 # team mutation: probability of mutating a program
 pmm 0.2
@@ -81,6 +88,9 @@ pmw 0.1
 
 # team variation: probability of team crossover
 pmx 0.2
+
+# team variation: probability of team crossover adding each parent prog to child
+pmx_p 0.5
 
 # team variation: probability of team crossover adding each parent prog to child
 pmx_p 0.5
@@ -119,36 +129,25 @@ p_bid_xover 0.0
 bid_mu_const_stddev 0.05
 
 # memory size: number of memory indices
-# each memory index points to a data structure with some number of rows and columns
-# more the 4 indicies breaks introns removal for continus output???
+# each memory index points to a data structure (scalar, vector, or matrix)
 memory_indices 8
 
-# memory size: number of rows
-memory_rows 2
-
-# memory size: number of columns
-memory_cols 2
+# this is the dimensionality for vector & matrix memory
+memory_size 8
 
 # number of elite teams
-n_elite 945
+n_elite 100
 
 # multiplier for # new teams to generate each generation
 n_elite_mul 5
-
-# number of training outcome to store
-n_stored_outcomes_TRAIN 19
-
-# number of test outcomes to store
-n_stored_outcomes_VALIDATION 9
-
-# number of validation outcomes to store
-n_stored_outcomes_TEST 1
 
 # fitness proportional selection
 fit_prop_select 0
 
 # which diversity mode to use, if available
 diversity_mode 0
+
+parent_select_roots_only 1
 
 # operations, uncomment to activate
 
@@ -179,24 +178,24 @@ SCALAR_CONST_SET_OP
 SCALAR_MIN_OP
 SCALAR_MAX_OP
 
-# vector #########################
-VECTOR_HEAVYSIDE_OP
-MATRIX_HEAVYSIDE_OP
-SCALAR_VECTOR_PRODUCT_OP
-SCALAR_BROADCAST_OP
-VECTOR_RECIPROCAL_OP
-VECTOR_NORM_OP
-VECTOR_ABS_OP
-VECTOR_SUM_OP
-VECTOR_DIFF_OP
-VECTOR_PRODUCT_OP
-VECTOR_DIVISION_OP
-VECTOR_INNER_PRODUCT_OP
-VECTOR_MIN_OP
-VECTOR_MAX_OP
-VECTOR_MEAN_OP
-VECTOR_ST_DEV_OP
-VECTOR_CONST_SET_OP
+## vector #########################
+#VECTOR_HEAVYSIDE_OP
+#MATRIX_HEAVYSIDE_OP
+#SCALAR_VECTOR_PRODUCT_OP
+#SCALAR_BROADCAST_OP
+#VECTOR_RECIPROCAL_OP
+#VECTOR_NORM_OP
+#VECTOR_ABS_OP
+#VECTOR_SUM_OP
+#VECTOR_DIFF_OP
+#VECTOR_PRODUCT_OP
+#VECTOR_DIVISION_OP
+#VECTOR_INNER_PRODUCT_OP
+#VECTOR_MIN_OP
+#VECTOR_MAX_OP
+#VECTOR_MEAN_OP
+#VECTOR_ST_DEV_OP
+#VECTOR_CONST_SET_OP
 
 ## matrix #########################
 #VECTOR_OUTER_PRODUCT_OP
