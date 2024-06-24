@@ -462,7 +462,7 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
   list<double> obs_list(tpg.n_input_[tpg.GetState("active_task")], 0.0);
   vector<double> obs_vec(tpg.n_input_[tpg.GetState("active_task")], 0.0);
   // Prime
-  vector<double>prime_samples_plot;
+  vector<double> prime_samples_plot;
   int sample =
       game->t_start[tpg.GetParam<int>("checkpoint_in_phase")][eval.episode];
   for (int i = 0; i < game->n_prime_ - 1; i++) {
@@ -538,9 +538,12 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
   delete obs;
   // Print csv format for quick plotting
   ofstream test_file;
-  test_file.open("test_" + to_string(eval.episode) + ".csv");
+  test_file.open("test_t" +
+                 to_string(game->t_start[tpg.GetParam<int>(
+                     "checkpoint_in_phase")][eval.episode]) +
+                 ".csv");
   for (size_t i = 0; i < prime_samples_plot.size(); i++)
-     test_file << prime_samples_plot[i] << "," << endl;
+    test_file << prime_samples_plot[i] << "," << endl;
   for (size_t i = 0; i < eval.sequence_targ.size(); i++)
     test_file << std::fixed << eval.sequence_targ[i] << ","
               << eval.sequence_pred[i] << endl;

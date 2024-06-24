@@ -8,17 +8,18 @@
 #include <boost/iostreams/filter/gzip.hpp>
 
 /******************************************************************************/
-double MeanSquaredError(std::vector<double> targets,
-                        std::vector<double> predictions) {
+double MeanSquaredError(std::vector<double>& targets,
+                        std::vector<double>& predictions) {
   double err = 0;
-  for (size_t i = 0; i < targets.size(); i++)
+  for (size_t i = 0; i < targets.size(); i++) {
      err += pow(targets[i] - predictions[i], 2);
+  }
   return err / targets.size();
 }
 
 /******************************************************************************/
-double PearsonCorrelation(std::vector<double> targets,
-                          std::vector<double> predictions) {
+double PearsonCorrelation(std::vector<double>& targets,
+                          std::vector<double>& predictions) {
   return boost::math::statistics::correlation_coefficient(targets, predictions);
 }
 
