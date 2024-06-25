@@ -75,18 +75,19 @@ int hammingDist(vector<int> &x, vector<int> &y) {
 }
 
 /******************************************************************************/
-double TheilsStatistic(const std::vector<double>& targets, const std::vector<double>& predictions) {
-    double epsilon = 1e-10;
-    double numerator = 0; 
-    double denominator = 0;
-    for (size_t i = 0; i < predictions.size() - 1; i++) {
-        numerator += pow(predictions[i] - targets[i], 2);
-        denominator += pow(targets[i] - targets[i + 1], 2);
-    }
+double TheilsStatistic(const std::vector<double> &targets,
+                       const std::vector<double> &predictions) {
+  double epsilon = 1e-10;
+  double numerator = 0;
+  double denominator = 0;
+  for (size_t i = 0; i < predictions.size() - 1; i++) {
+    numerator += pow(predictions[i] - targets[i], 2);
+    denominator += pow(targets[i] - targets[i + 1], 2);
+  }
 
-    denominator = (denominator == 0) ? epsilon : denominator;
+  denominator = (denominator == 0) ? epsilon : denominator;
 
-    return numerator / denominator;
+  return numerator / denominator;
 }
 
 /******************************************************************************/

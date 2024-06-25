@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import pathlib
 import sys
-# print ('argument list', sys.argv)
+
 file = sys.argv[1]
 p = pathlib.Path(file)
 
@@ -11,7 +11,6 @@ plt.rcParams["figure.autolayout"] = True
 
 df = pd.read_csv(p,header=None)
 
-# df.set_index('Step').plot()
 df.plot()
 plt.legend(['Target', 'Prediction'])
 plt.ylim(0,1)

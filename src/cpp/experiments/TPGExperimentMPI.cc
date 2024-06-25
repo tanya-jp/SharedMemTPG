@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
     else if (substr == "Pitch")
       tasks.push_back(new RecursiveForecast("Pitch"));
     else if (substr == "PitchBach")
-      tasks.push_back(new RecursiveForecast("PitchBach"));  
+      tasks.push_back(new RecursiveForecast("PitchBach"));
     else {
       cout << "Unrecognised task:" << substr << endl;
       exit(1);
@@ -73,13 +73,11 @@ int main(int argc, char **argv) {
       RecursiveForecast *task =
           dynamic_cast<RecursiveForecast *>(tasks[tasks.size() - 1]);
       task->n_prime_ = tpg.GetParam<int>("forecast_prime_steps");
-      task->n_predict_[0] =
-          tpg.GetParam<int>("forecast_horizon_train");
+      task->n_predict_[0] = tpg.GetParam<int>("forecast_horizon_train");
       task->n_predict_[1] = tpg.GetParam<int>("forecast_horizon_val");
-      task->n_predict_[2] =
-          tpg.GetParam<int>("forecast_horizon_test");
+      task->n_predict_[2] = tpg.GetParam<int>("forecast_horizon_test");
       task->n_eval_train_ = tpg.GetParam<int>("forecast_n_eval_train");
-      task->n_eval_val_ = tpg.GetParam<int>("forecast_n_eval_val");    
+      task->n_eval_val_ = tpg.GetParam<int>("forecast_n_eval_val");
       task->PrepareData(tpg.rngs_[TPG_SEED]);
       if (tpg.GetParam<int>("forecast_normalize_data")) {
         task->Normalize();
@@ -177,7 +175,9 @@ int main(int argc, char **argv) {
         if (tpg.GetState("t_current") > tpg.GetParam<int>("t_start")) {
           // Split tasks into evaluated and estimated
           vector<int> evalTasks, estTasks;
-          SplitSet(taskIndices, evalTasks, estTasks, tpg.GetParam<int>("n_sampled_tasks_for_eval"), tpg.rngs_[TPG_SEED]);
+          SplitSet(taskIndices, evalTasks, estTasks,
+                   tpg.GetParam<int>("n_sampled_tasks_for_eval"),
+                   tpg.rngs_[TPG_SEED]);
 
           // Evaluate tasks
           evaluate_main(tpg, world, tasks, evalTasks);
