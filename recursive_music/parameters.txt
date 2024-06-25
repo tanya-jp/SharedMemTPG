@@ -134,7 +134,7 @@ memory_indices 8
 memory_size 8
 
 # number of elite teams
-n_elite 200
+n_elite 100
 
 # multiplier for # new teams to generate each generation
 n_elite_mul 5
@@ -149,7 +149,7 @@ parent_select_roots_only 1
 
 # fitness function used for time series forecasting tasks
 # supported options: "mse", "correlation", "theils", "pearson"
-forecasting_fitness correlation
+forecasting_fitness theils
 
 # whether to use discrete actions for forecasting
 # must also set n_discrete_action
