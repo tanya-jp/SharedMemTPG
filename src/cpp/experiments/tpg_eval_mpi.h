@@ -201,6 +201,9 @@ void FinalizeStepStats(TPG &tpg, EvalStruct &eval) {
       auto mse = MeanSquaredError(eval.sequence_targ, eval.sequence_pred);
       eval.runTimeStats[REWARD1_IDX] = -mse;
     } else if (tpg.GetParam<string>("forecasting_fitness") == "correlation") {
+      auto corr = Correlation(eval.sequence_targ, eval.sequence_pred);
+      eval.runTimeStats[REWARD1_IDX] = corr;
+    } else if (tpg.GetParam<string>("forecasting_fitness") == "pearson") {
       auto corr = PearsonCorrelation(eval.sequence_targ, eval.sequence_pred);
       eval.runTimeStats[REWARD1_IDX] = corr;
     } else if (tpg.GetParam<string>("forecasting_fitness") == "theils") {

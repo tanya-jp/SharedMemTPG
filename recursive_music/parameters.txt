@@ -148,8 +148,8 @@ diversity_mode 0
 parent_select_roots_only 1
 
 # fitness function used for time series forecasting tasks
-# supported options: "mse", "correlation", "theils"
-forecasting_fitness theils
+# supported options: "mse", "correlation", "theils", "pearson"
+forecasting_fitness correlation
 
 # whether to use discrete actions for forecasting
 # must also set n_discrete_action
