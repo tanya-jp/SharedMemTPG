@@ -1,3 +1,8 @@
+# comet experiment tracking
+workspace_name genetic-programming
+project_name tpg
+experiment_name first-experiment
+
 # start from a checkpoint file
 checkpoint 0
 
