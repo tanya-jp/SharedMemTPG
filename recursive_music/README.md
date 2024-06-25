@@ -30,7 +30,7 @@ scons --opt
 ```
 
 ### Run an experiment
-To run an experiment using 4 parallel MPI processes, make tpg/classic_control_example your working directory and run:
+To run an experiment using 4 parallel MPI processes, make tpg/recursive_music your working directory and run:
 ```
 tpg-run-mpi.sh -n 4
 ```
@@ -41,7 +41,7 @@ Generate a pdf with various statistics from training (for test stats use "-p 2")
 tpg-plot-stats.sh -p 0
 ```
 
-### Test best policy
+### Test the best policy
 This will reload the single best test policy from the repeat with seed 42 and run it on the test data.
 A .csv file containing targets and predictions for each test will be produced.
 ```
