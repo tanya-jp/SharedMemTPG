@@ -73,7 +73,7 @@ p_atomic 1.0
 pmd 0.5
 
 # team mtation: probability of adding program to team
-pma 0.4
+pma 0.25
 
 # team mutation: probability of mutating a program
 pmm 1.0
@@ -91,7 +91,7 @@ pmw 0.1
 pmx 0.5
 
 # team variation: probability of team crossover adding each parent prog to child
-pmx_p 0.3
+pmx_p 0.5
 
 # enable continuous outputs
 continuous_output 1
@@ -115,7 +115,7 @@ p_bid_swap 0.5
 p_bid_delete 0.5
 
 # program variation: probability of adding an instruction
-p_bid_add 0.4
+p_bid_add 0.25
 
 # program variation: probability of linear crossover with another team
 p_bid_xover 0.0
@@ -240,10 +240,10 @@ MATRIX_ROW_ST_DEV_OP
 MATRIX_ST_DEV_OP
 MATRIX_CONST_SET_OP
 
-## noise ##########################
-##SCALAR_UNIFORM_SET_OP
-#SCALAR_GAUSSIAN_SET_OP
-##VECTOR_UNIFORM_SET_OP
-#VECTOR_GAUSSIAN_SET_OP
-##MATRIX_UNIFORM_SET_OP
-#MATRIX_GAUSSIAN_SET_OP
+# noise ##########################
+#SCALAR_UNIFORM_SET_OP
+SCALAR_GAUSSIAN_SET_OP
+#VECTOR_UNIFORM_SET_OP
+VECTOR_GAUSSIAN_SET_OP
+#MATRIX_UNIFORM_SET_OP
+MATRIX_GAUSSIAN_SET_OP
