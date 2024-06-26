@@ -3,7 +3,7 @@
 
 # cpus anywhere
 #SBATCH --ntasks=21               
-#SBATCH --mem-per-cpu=4G      
+#SBATCH --mem-per-cpu=2G      
 #SBATCH --time=0-1:00  # time (DD-HH:MM)
 
 #defaults

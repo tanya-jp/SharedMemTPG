@@ -73,7 +73,7 @@ p_atomic 1.0
 pmd 0.5
 
 # team mtation: probability of adding program to team
-pma 0.25
+pma 0.4
 
 # team mutation: probability of mutating a program
 pmm 1.0
@@ -115,7 +115,7 @@ p_bid_swap 0.5
 p_bid_delete 0.5
 
 # program variation: probability of adding an instruction
-p_bid_add 0.25
+p_bid_add 0.4
 
 # program variation: probability of linear crossover with another team
 p_bid_xover 0.0
@@ -149,7 +149,7 @@ parent_select_roots_only 1
 
 # fitness function used for time series forecasting tasks
 # supported options: "mse", "correlation", "theils", "pearson"
-forecasting_fitness theils
+forecasting_fitness pearson
 
 # whether to use discrete actions for forecasting
 # must also set n_discrete_action
