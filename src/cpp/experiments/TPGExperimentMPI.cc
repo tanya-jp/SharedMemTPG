@@ -11,9 +11,12 @@
 #include <algorithm>
 #include <boost/mpi.hpp>
 #include <chrono>
+#include <cstdlib>
 
 #include "tpg_arg_parse.h"
 #include "tpg_eval_mpi.h"
+#include "api_client.h"
+
 #define CHECKPOINT_MOD 1000000
 #define PRINT_MOD 1
 // rawfitness,  mean visitedTeams, decisionInstructions
@@ -29,6 +32,8 @@ int main(int argc, char **argv) {
   tpg.params_["id"] = -1;  // remove later
   tpg.setParams();
   tpg_arg_parse(tpg, argc, argv);
+
+  APIClient client(getenv("COMET_API_KEY"), tpg.GetParam<string>("workspace_name"), tpg.GetParam<string>("project_name"));
 
   ostringstream os;  // logging
 
