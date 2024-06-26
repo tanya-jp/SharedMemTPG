@@ -248,9 +248,11 @@ int main(int argc, char **argv) {
 
         /* print generation timing *******************************************/
         if (trackExperiment) {
-          apiClient->LogMetric("evl", std::to_string(endEval.count()));
+          std::string gen = to_string(tpg.GetState("t_current"));
+
+          apiClient->LogMetric("evl", std::to_string(endEval.count()), "", gen);
         }
-        
+
         os << setprecision(5) << fixed;
         os << "gTime t " << tpg.GetState("t_current");
         os << " sec " << endGen.count();

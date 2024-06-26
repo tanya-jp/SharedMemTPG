@@ -100,7 +100,11 @@ std::string APIClient::VectorToJSON(const std::vector<std::vector<std::string>>&
 }
 
 void APIClient::LogMetric(const std::string &metricName,
-                          const std::string &metricValue)
+                          const std::string &metricValue,
+                          const std::string &context,
+                          const std::string &step,
+                          const std::string &epoch,
+                          const std::string &timestamp)
 {
     std::string url = _baseUrl + "/api/rest/v2/write/experiment/metric";
 
@@ -109,6 +113,18 @@ void APIClient::LogMetric(const std::string &metricName,
         {"metricName", metricName},
         {"metricValue",  metricValue}
     };
+    if (!context.empty()) {
+        bodyVec.push_back({"context", context});
+    }
+    if (!step.empty()) {
+        bodyVec.push_back({"step", step});
+    }
+    if (!epoch.empty()) {
+        bodyVec.push_back({"epoch", epoch});
+    }
+    if (!timestamp.empty()) {
+        bodyVec.push_back({"timestamp", timestamp});
+    }
     std::string body = VectorToJSON(bodyVec);
 
     std::vector<std::string> headers = {

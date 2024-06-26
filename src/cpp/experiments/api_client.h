@@ -16,10 +16,14 @@ public:
                             const std::string &body,
                             const std::vector<std::string> &headers);
 
-    std::string VectorToJSON(const std::vector<std::vector<std::string>>& vec);
+    std::string VectorToJSON(const std::vector<std::vector<std::string>> &vec);
 
     void LogMetric(const std::string &metricName,
-                   const std::string &metricValue);
+                   const std::string &metricValue,
+                   const std::string &context = "",
+                   const std::string &step = "",
+                   const std::string &epoch = "",
+                   const std::string &timestamp = "");
 
 private:
     std::string _baseUrl = "https://www.comet.com";
