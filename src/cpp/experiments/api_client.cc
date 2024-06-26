@@ -86,18 +86,35 @@ std::string APIClient::MakeRequest(const std::string &url, const std::string &me
     return readBuffer;
 }
 
+std::string APIClient::VectorToJSON(const std::vector<std::vector<std::string>>& vec) {
+    std::ostringstream jsonStream;
+    jsonStream << "{";
+    for (size_t i = 0; i < vec.size(); ++i) {
+        jsonStream << "\"" << vec[i][0] << "\": \"" << vec[i][1] << "\"";
+        if (i < vec.size() - 1) {
+            jsonStream << ", ";
+        }
+    }
+    jsonStream << "}";
+    return jsonStream.str();
+}
+
 void APIClient::LogMetric(const std::string &metricName,
                           const std::string &metricValue)
 {
     std::string url = _baseUrl + "/api/rest/v2/write/experiment/metric";
-    std::ostringstream body;
-    body << "{\"experimentKey\": \"" << _experimentKey << "\", "
-        << "\"metricName\": \"" << metricName << "\", "
-        << "\"metricValue\": \"" << metricValue << "\"}";
+
+    std::vector<std::vector<std::string>> bodyVec = {
+        {"experimentKey", _experimentKey},
+        {"metricName", metricName},
+        {"metricValue",  metricValue}
+    };
+    std::string body = VectorToJSON(bodyVec);
+
     std::vector<std::string> headers = {
         "Authorization: " + _apiToken,
         "Content-Type: application/json"
     };
 
-    std::string res = MakeRequest(url, "POST", body.str(), headers);
+    std::string res = MakeRequest(url, "POST", body, headers);
 }

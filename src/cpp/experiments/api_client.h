@@ -16,6 +16,8 @@ public:
                             const std::string &body,
                             const std::vector<std::string> &headers);
 
+    std::string VectorToJSON(const std::vector<std::vector<std::string>>& vec);
+
     void LogMetric(const std::string &metricName,
                    const std::string &metricValue);
 

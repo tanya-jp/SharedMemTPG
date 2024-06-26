@@ -33,7 +33,12 @@ int main(int argc, char **argv) {
   tpg.setParams();
   tpg_arg_parse(tpg, argc, argv);
 
-  APIClient apiClient(getenv("COMET_API_KEY"), tpg.GetParam<string>("experiment_key"));
+  std::unique_ptr<APIClient> apiClient;
+  bool trackExperiment = tpg.HaveParam("experiment_key");
+  if (trackExperiment) {
+    // Only instantiate APIClient if trackExperiment is true
+    apiClient = std::make_unique<APIClient>(getenv("COMET_API_KEY"), tpg.GetParam<std::string>("experiment_key"));
+  }
 
   ostringstream os;  // logging
 
@@ -114,8 +119,6 @@ int main(int argc, char **argv) {
   if (world.rank() == 0) {
     os << "world_size " << world.size() << endl;
     os << "n_task " << tpg.GetState("n_task") << endl;
-
-    apiClient.LogMetric("world_size", std::to_string(world.size()));
   }
 
   // placeholders for logging stats only
@@ -244,6 +247,10 @@ int main(int argc, char **argv) {
         endGen = chrono::system_clock::now() - startGen;
 
         /* print generation timing *******************************************/
+        if (trackExperiment) {
+          apiClient->LogMetric("evl", std::to_string(endEval.count()));
+        }
+        
         os << setprecision(5) << fixed;
         os << "gTime t " << tpg.GetState("t_current");
         os << " sec " << endGen.count();
