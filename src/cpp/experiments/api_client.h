@@ -8,8 +8,7 @@ class APIClient
 {
 public:
     APIClient(const std::string &apiToken,
-              const std::string &workspaceName,
-              const std::string &projectName);
+              const std::string &experimentKey);
 
     static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp);
 
@@ -17,13 +16,12 @@ public:
                             const std::string &body,
                             const std::vector<std::string> &headers);
 
-    void CreateExperiment(const std::string &experimentName);
+    void LogMetric(const std::string &metricName,
+                   const std::string &metricValue);
 
 private:
     std::string _baseUrl = "https://www.comet.com";
     std::string _apiToken;
-    std::string _workspaceName;
-    std::string _projectName;
     std::string _experimentKey;
 };
 

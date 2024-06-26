@@ -3,17 +3,13 @@
 #include <string>
 #include <vector>
 #include <curl/curl.h>
-#include <nlohmann/json.hpp>
-
-using json = nlohmann::json;
+#include <sstream>
 
 APIClient::APIClient(const std::string &apiToken,
-                     const std::string &workspaceName,
-                     const std::string &projectName)
+                     const std::string &experimentKey)
 {
     _apiToken = apiToken;
-    _workspaceName = workspaceName;
-    _projectName = projectName;
+    _experimentKey = experimentKey;
 }
 
 // Callback function to handle data received from the server
@@ -90,19 +86,18 @@ std::string APIClient::MakeRequest(const std::string &url, const std::string &me
     return readBuffer;
 }
 
-void APIClient::CreateExperiment(const std::string &experimentName)
+void APIClient::LogMetric(const std::string &metricName,
+                          const std::string &metricValue)
 {
-    std::string url = _baseUrl + "/api/rest/v2/write/experiment/create";
-    json body = {
-        {"workspaceName: required", "someTeamName"},
-        {"projectName: required", "someProjectName"},
-        {"experimentName, optional", "someExperimentName"}};
+    std::string url = _baseUrl + "/api/rest/v2/write/experiment/metric";
+    std::ostringstream body;
+    body << "{\"experimentKey\": \"" << _experimentKey << "\", "
+        << "\"metricName\": \"" << metricName << "\", "
+        << "\"metricValue\": \"" << metricValue << "\"}";
     std::vector<std::string> headers = {
         "Authorization: " + _apiToken,
-        "Workspace: " + _workspaceName,
-        "Project: " + _projectName,
-        "Content-Type: application/json"};
+        "Content-Type: application/json"
+    };
 
-    std::string res = MakeRequest(url, "POST", body.dump(), headers);
-    std::cout << res << std::endl;
+    std::string res = MakeRequest(url, "POST", body.str(), headers);
 }

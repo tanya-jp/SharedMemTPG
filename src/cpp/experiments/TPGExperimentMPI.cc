@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
   tpg.setParams();
   tpg_arg_parse(tpg, argc, argv);
 
-  APIClient client(getenv("COMET_API_KEY"), tpg.GetParam<string>("workspace_name"), tpg.GetParam<string>("project_name"));
+  APIClient apiClient(getenv("COMET_API_KEY"), tpg.GetParam<string>("experiment_key"));
 
   ostringstream os;  // logging
 
@@ -114,6 +114,8 @@ int main(int argc, char **argv) {
   if (world.rank() == 0) {
     os << "world_size " << world.size() << endl;
     os << "n_task " << tpg.GetState("n_task") << endl;
+
+    apiClient.LogMetric("world_size", std::to_string(world.size()));
   }
 
   // placeholders for logging stats only
