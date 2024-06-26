@@ -15,4 +15,3 @@ git
 vim
 htop
 libcurlpp-dev
-nlohmann-json3-dev
