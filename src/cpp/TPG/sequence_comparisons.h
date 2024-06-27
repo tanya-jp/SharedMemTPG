@@ -74,6 +74,49 @@ int hammingDist(vector<int> &x, vector<int> &y) {
   return dist;
 }
 
+/******************************************************************************/
+double TheilsStatistic(const std::vector<double> &targets,
+                       const std::vector<double> &predictions) {
+  double epsilon = 1e-10;
+  double numerator = 0;
+  double denominator = 0;
+  for (size_t i = 0; i < predictions.size() - 1; i++) {
+    numerator += pow(predictions[i] - targets[i], 2);
+    denominator += pow(targets[i] - targets[i + 1], 2);
+  }
+
+  denominator = (denominator == 0) ? epsilon : denominator;
+
+  return numerator / denominator;
+}
+
+/******************************************************************************/
+double Correlation(const std::vector<double> &targets,
+                   const std::vector<double> &predictions) {
+  double epsilon = 1e-10;
+
+  double mean_targets =
+      accumulate(targets.begin(), targets.end(), 0.0) / targets.size();
+  double mean_predictions =
+      accumulate(predictions.begin(), predictions.end(), 0.0) /
+      predictions.size();
+
+  double numerator = 0;
+  double denominator_1 = 0;
+  double denominator_2 = 0;
+
+  for (size_t i = 0; i < targets.size(); i++) {
+    numerator +=
+        (targets[i] - mean_targets) * (predictions[i] - mean_predictions);
+    denominator_1 += pow(targets[i] - mean_targets, 2);
+    denominator_2 += pow(predictions[i] - mean_predictions, 2);
+  }
+
+  double denominator = sqrt(denominator_1 * denominator_2);
+  denominator = (denominator == 0) ? epsilon : denominator;
+
+  return numerator / denominator;
+}
 // /******************************************************************************/
 // int compressedLength(char * source){
 //    ostringstream oss;

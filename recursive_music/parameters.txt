@@ -29,6 +29,10 @@ test_mod 1
 # rhs should be a comma-separated list like Cartpole,Acrobot
 active_tasks PitchBach
 
+# Number of tasks used each selection for evaluation. 
+# The rest are estimated with phylogeny.
+n_sampled_tasks_for_eval 1
+
 # number of fitness functions available
 n_fit_mode 1
 
@@ -84,10 +88,10 @@ pms 0.1
 pmw 0.1
 
 # team variation: probability of team crossover
-pmx 0.0
+pmx 0.5
 
 # team variation: probability of team crossover adding each parent prog to child
-pmx_p 0.3
+pmx_p 0.5
 
 # enable continuous outputs
 continuous_output 1
@@ -144,8 +148,8 @@ diversity_mode 0
 parent_select_roots_only 1
 
 # fitness function used for time series forecasting tasks
-# supported options: "mse" or "correlation"
-forecasting_fitness mse
+# supported options: "mse", "correlation", "theils", "pearson"
+forecasting_fitness theils
 
 # whether to use discrete actions for forecasting
 # must also set n_discrete_action
@@ -160,7 +164,7 @@ forecast_horizon_train 50
 forecast_horizon_val 100
 forecast_horizon_test 100
 
-forecast_n_eval_train 50
+forecast_n_eval_train 100
 forecast_n_eval_val 10
 
 # operations, uncomment to activate
@@ -236,10 +240,10 @@ MATRIX_ROW_ST_DEV_OP
 MATRIX_ST_DEV_OP
 MATRIX_CONST_SET_OP
 
-## noise ##########################
-##SCALAR_UNIFORM_SET_OP
-#SCALAR_GAUSSIAN_SET_OP
-##VECTOR_UNIFORM_SET_OP
-#VECTOR_GAUSSIAN_SET_OP
-##MATRIX_UNIFORM_SET_OP
-#MATRIX_GAUSSIAN_SET_OP
+# noise ##########################
+#SCALAR_UNIFORM_SET_OP
+SCALAR_GAUSSIAN_SET_OP
+#VECTOR_UNIFORM_SET_OP
+VECTOR_GAUSSIAN_SET_OP
+#MATRIX_UNIFORM_SET_OP
+MATRIX_GAUSSIAN_SET_OP

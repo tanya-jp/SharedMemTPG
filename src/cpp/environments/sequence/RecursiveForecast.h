@@ -112,12 +112,15 @@ class RecursiveForecast : public TaskEnv {
       uniform_int_distribution<int> DisVal(
           0, data.size() - (n_prime_ + n_predict_[1]));
 
+      // Train
       for (int i = 0; i < n_eval_train_; i++)
         t_start[0].push_back(DisTrain(rng));
 
+      // Validation
       int s = 0;
       for (int i = 0; i < n_eval_val_; i++) t_start[1].push_back(s+=100);
 
+      // Test
       t_start[2] = t_start[1]; // TODO(spkelly): test==val, fix
     }
     cout << "time series train slices: " << t_start[0].size() << endl;

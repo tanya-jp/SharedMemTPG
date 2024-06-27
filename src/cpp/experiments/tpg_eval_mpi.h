@@ -201,8 +201,14 @@ void FinalizeStepStats(TPG &tpg, EvalStruct &eval) {
       auto mse = MeanSquaredError(eval.sequence_targ, eval.sequence_pred);
       eval.runTimeStats[REWARD1_IDX] = -mse;
     } else if (tpg.GetParam<string>("forecasting_fitness") == "correlation") {
+      auto corr = Correlation(eval.sequence_targ, eval.sequence_pred);
+      eval.runTimeStats[REWARD1_IDX] = corr;
+    } else if (tpg.GetParam<string>("forecasting_fitness") == "pearson") {
       auto corr = PearsonCorrelation(eval.sequence_targ, eval.sequence_pred);
       eval.runTimeStats[REWARD1_IDX] = corr;
+    } else if (tpg.GetParam<string>("forecasting_fitness") == "theils") {
+      auto theils = TheilsStatistic(eval.sequence_targ, eval.sequence_pred);
+      eval.runTimeStats[REWARD1_IDX] = -theils;
     } else {
       die(__FILE__, __FUNCTION__, __LINE__,
           "Unsupported forecasting fitness function");
@@ -382,8 +388,8 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
   RecursiveForecast *game = dynamic_cast<RecursiveForecast *>(eval.game);
   game->reset(tpg.rngs_[AUX_SEED]);
   state *obs = new state(tpg.n_input_[tpg.GetState("active_task")]);
-  list<double> obs_list(tpg.n_input_[tpg.GetState("active_task")], 0.0);
-  vector<double> obs_vec(tpg.n_input_[tpg.GetState("active_task")], 0.0);
+  list<double> obs_list(tpg.n_input_[tpg.GetState("active_task")], 1.0);
+  vector<double> obs_vec(tpg.n_input_[tpg.GetState("active_task")], 1.0);
   // Prime
   int sample = game->t_start[tpg.GetState("phase")][eval.episode];
   for (int i = 0; i < game->n_prime_ - 1; i++) {
@@ -538,8 +544,8 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
   eval.sequence_targ.resize(game->n_predict_[tpg.GetState("phase")]);
   eval.sequence_pred.resize(game->n_predict_[tpg.GetState("phase")]);
   state *obs = new state(tpg.n_input_[tpg.GetState("active_task")]);
-  list<double> obs_list(tpg.n_input_[tpg.GetState("active_task")], 0.0);
-  vector<double> obs_vec(tpg.n_input_[tpg.GetState("active_task")], 0.0);
+  list<double> obs_list(tpg.n_input_[tpg.GetState("active_task")], 1.0);
+  vector<double> obs_vec(tpg.n_input_[tpg.GetState("active_task")], 1.0);
   // Prime
   vector<double> prime_samples_plot;
   int sample =
@@ -617,14 +623,17 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
   delete obs;
   // Print csv format for quick plotting
   ofstream test_file;
-  test_file.open("test_t" +
+  test_file.open("tpg_" + to_string(tpg.seeds_[TPG_SEED]) + "_test_t" +
                  to_string(game->t_start[tpg.GetParam<int>(
                      "checkpoint_in_phase")][eval.episode]) +
                  ".csv");
+  test_file << "Time,Target,Prediction" << endl;
+  int t_start =
+      game->t_start[tpg.GetParam<int>("checkpoint_in_phase")][eval.episode];
   for (size_t i = 0; i < prime_samples_plot.size(); i++)
-    test_file << prime_samples_plot[i] << "," << endl;
+    test_file << t_start++ << "," << prime_samples_plot[i] << "," << endl;
   for (size_t i = 0; i < eval.sequence_targ.size(); i++)
-    test_file << std::fixed << eval.sequence_targ[i] << ","
+    test_file << t_start++ << "," << std::fixed << eval.sequence_targ[i] << ","
               << eval.sequence_pred[i] << endl;
   test_file << endl;
   test_file.close();
