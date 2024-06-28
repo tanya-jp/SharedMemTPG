@@ -58,22 +58,22 @@ mu_internal 0
 n_discrete_action 3
 
 # initial team size
-max_initial_team_size 5
+max_initial_team_size 10
 
 # max team size
-max_team_size 32
+max_team_size 1000000
 
 # max teams per graph
 max_teams_per_graph 100
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 0.999
+p_atomic 1.0
 
 # team mutation: probability of deleting program from team
-pmd 0.2
+pmd 0.5
 
 # team mtation: probability of adding program to team
-pma 0.1
+pma 0.4
 
 # team mutation: probability of mutating a program
 pmm 1.0
@@ -103,19 +103,19 @@ n_input 50
 max_initial_prog_size 10
 
 # max program size
-max_prog_size 100
+max_prog_size 1000000
 
 # program variation: probability of changing the program
 p_bid_mutate 1.0
 
 # program variation: probability of swaping the position of two instructions
-p_bid_swap 0.1
+p_bid_swap 0.5
 
 # program variation: probability of deleting an instruction
-p_bid_delete 0.2
+p_bid_delete 0.5
 
 # program variation: probability of adding an instruction
-p_bid_add 0.1
+p_bid_add 0.4
 
 # program variation: probability of linear crossover with another team
 p_bid_xover 0.0
@@ -149,7 +149,7 @@ parent_select_roots_only 1
 
 # fitness function used for time series forecasting tasks
 # supported options: "mse", "correlation", "theils", "pearson"
-forecasting_fitness pearson
+forecasting_fitness theils
 
 # whether to use discrete actions for forecasting
 # must also set n_discrete_action
@@ -240,10 +240,10 @@ MATRIX_ROW_ST_DEV_OP
 MATRIX_ST_DEV_OP
 MATRIX_CONST_SET_OP
 
-# noise ##########################
-#SCALAR_UNIFORM_SET_OP
-SCALAR_GAUSSIAN_SET_OP
-#VECTOR_UNIFORM_SET_OP
-VECTOR_GAUSSIAN_SET_OP
-#MATRIX_UNIFORM_SET_OP
-MATRIX_GAUSSIAN_SET_OP
+## noise ##########################
+##SCALAR_UNIFORM_SET_OP
+#SCALAR_GAUSSIAN_SET_OP
+##VECTOR_UNIFORM_SET_OP
+#VECTOR_GAUSSIAN_SET_OP
+##MATRIX_UNIFORM_SET_OP
+#MATRIX_GAUSSIAN_SET_OP
