@@ -1,26 +1,29 @@
 #ifndef sequence_comparisons_h
 #define sequence_comparisons_h
 
-#include <boost/math/statistics/bivariate_statistics.hpp>
 #include <bzlib.h>
-#include <boost/iostreams/filtering_streambuf.hpp>
+
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/math/statistics/bivariate_statistics.hpp>
 
 /******************************************************************************/
-double MeanSquaredError(std::vector<double>& targets,
-                        std::vector<double>& predictions) {
+double MeanSquaredError(std::vector<double> &targets,
+                        std::vector<double> &predictions) {
   double err = 0;
   for (size_t i = 0; i < targets.size(); i++) {
-     err += pow(targets[i] - predictions[i], 2);
+    err += pow(targets[i] - predictions[i], 2);
   }
   return err / targets.size();
 }
 
 /******************************************************************************/
-double PearsonCorrelation(std::vector<double>& targets,
-                          std::vector<double>& predictions) {
-  return boost::math::statistics::correlation_coefficient(targets, predictions);
+double PearsonCorrelation(std::vector<double> &targets,
+                          std::vector<double> &predictions) {
+  double cc =
+      boost::math::statistics::correlation_coefficient(targets, predictions);
+  return !std::isfinite(cc) ? cc : 0;
 }
 
 /******************************************************************************/
@@ -124,11 +127,11 @@ double Correlation(const std::vector<double> &targets,
 //    int verbosity = 0;
 //    int workFactor = 30; // 0 = USE THE DEFAULT VALUE
 //    unsigned int sourceLength = strlen(source);
-//    unsigned int destLength = 1.01 * sourceLength + 600;    
-//    // Official formula, Big enough to hold output.  Will change to real size. 
-//    char *dest = (char*)malloc(destLength); int returnCode = BZ2_bzBuffToBuffCompress(
-//    dest, &destLength, source, sourceLength, blockSize100k, verbosity,
-//    workFactor );
+//    unsigned int destLength = 1.01 * sourceLength + 600;
+//    // Official formula, Big enough to hold output.  Will change to real size.
+//    char *dest = (char*)malloc(destLength); int returnCode =
+//    BZ2_bzBuffToBuffCompress( dest, &destLength, source, sourceLength,
+//    blockSize100k, verbosity, workFactor );
 
 //    if (returnCode == BZ_OK)
 //    {

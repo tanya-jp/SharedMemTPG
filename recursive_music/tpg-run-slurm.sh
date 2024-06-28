@@ -2,9 +2,9 @@
 #SBATCH --account=def-skelly
 
 # cpus anywhere
-#SBATCH --ntasks=21               
+#SBATCH --ntasks=41               
 #SBATCH --mem-per-cpu=2G      
-#SBATCH --time=0-1:00  # time (DD-HH:MM)
+#SBATCH --time=0-3:00  # time (DD-HH:MM)
 
 #defaults
 mode=0 #Train:0, Replay:1, Debug:2
