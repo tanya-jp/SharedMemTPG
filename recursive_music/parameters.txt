@@ -67,7 +67,7 @@ max_team_size 1000000
 max_teams_per_graph 100
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 1.0
+p_atomic 0.99
 
 # team mutation: probability of deleting program from team
 pmd 0.5
