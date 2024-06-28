@@ -23,7 +23,7 @@ double PearsonCorrelation(std::vector<double> &targets,
                           std::vector<double> &predictions) {
   double cc =
       boost::math::statistics::correlation_coefficient(targets, predictions);
-  return !std::isfinite(cc) && cc >= -1.0 && cc <= 1.0 ? cc : -1.0;
+  return std::isfinite(cc) && cc >= -1.0 && cc <= 1.0 ? cc : -1.0;
 }
 
 /******************************************************************************/
