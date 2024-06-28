@@ -92,52 +92,23 @@ class RecursiveForecast : public TaskEnv {
 
     } else if (task_ == "Offset" || task_ == "Duration" || task_ == "Pitch" ||
                task_ == "PitchBach") {
-      // // train
-      // for (size_t s = 0; s < data.size() - (n_prime_ + n_predict_[0]); s +=
-      // 40)
-      //   t_start[0].push_back(s);
 
-      // // validate
-      // for (size_t s = 0; s < data.size() - (n_prime_ + n_predict_[1]); s +=
-      // 40)
-      //   t_start[1].push_back(s);
+      uniform_int_distribution<int> DisTrain(
+          0, data.size() - (n_prime_ + n_predict_[0]));
+      uniform_int_distribution<int> DisVal(
+          0, data.size() - (n_prime_ + n_predict_[1]));
 
-      // // test
-      // for (size_t s = 0; s < data.size() - (n_prime_ + n_predict_[2]); s +=
-      // 50)
-      //   t_start[2].push_back(s);
+      // Train
+      for (int i = 0; i < n_eval_train_; i++)
+        t_start[0].push_back(DisTrain(rng));  
 
-
-
-      // //BEST
-      // uniform_int_distribution<int> DisTrain(
-      //     0, data.size() - (n_prime_ + n_predict_[0]));
-      // uniform_int_distribution<int> DisVal(
-      //     0, data.size() - (n_prime_ + n_predict_[1]));
-
-      // // Train
-      // for (int i = 0; i < n_eval_train_; i++)
-      //   t_start[0].push_back(DisTrain(rng));
-
-      // int s = 0;
-      // for (int i = 0; i < n_eval_val_; i++) t_start[0].push_back(s+=100);  
-
-      // // Validation
-      // int s = 0;
-      // for (int i = 0; i < n_eval_val_; i++) t_start[1].push_back(s+=100);
-
-      // // Test
-      // t_start[2] = t_start[1]; // TODO(spkelly): test==val, fix
-
-      
-
-
-
+      // Validation
       int s = 0;
-      for (int i = 0; i < n_eval_val_; i++) t_start[0].push_back(s+=100);  
+      for (int i = 0; i < n_eval_val_; i++) t_start[1].push_back(s+=100);
 
-      t_start[1] = t_start[0];
-      t_start[2] = t_start[0]; 
+      // Test
+      t_start[2] = t_start[1]; // TODO(spkelly): test==val, fix
+
     }
     cout << "time series train slices: " << t_start[0].size() << endl;
     cout << "time series validation slices: " << t_start[1].size() << endl;

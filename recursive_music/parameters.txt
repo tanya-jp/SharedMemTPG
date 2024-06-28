@@ -91,7 +91,7 @@ pmw 0.1
 pmx 0.5
 
 # team variation: probability of team crossover adding each parent prog to child
-pmx_p 0.5
+pmx_p 0.4
 
 # enable continuous outputs
 continuous_output 1
