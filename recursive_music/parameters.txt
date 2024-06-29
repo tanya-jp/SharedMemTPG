@@ -61,13 +61,13 @@ n_discrete_action 3
 max_initial_team_size 10
 
 # max team size
-max_team_size 1000000
+max_team_size 20
 
 # max teams per graph
 max_teams_per_graph 100
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 1.0
+p_atomic 0.99
 
 # team mutation: probability of deleting program from team
 pmd 0.5
@@ -91,7 +91,7 @@ pmw 0.1
 pmx 0.5
 
 # team variation: probability of team crossover adding each parent prog to child
-pmx_p 0.4
+pmx_p 0.5
 
 # enable continuous outputs
 continuous_output 1
@@ -103,7 +103,7 @@ n_input 50
 max_initial_prog_size 10
 
 # max program size
-max_prog_size 1000000
+max_prog_size 100
 
 # program variation: probability of changing the program
 p_bid_mutate 1.0
@@ -134,7 +134,7 @@ memory_indices 8
 memory_size 8
 
 # number of elite teams
-n_elite 100
+n_elite 20
 
 # multiplier for # new teams to generate each generation
 n_elite_mul 5
@@ -147,7 +147,11 @@ diversity_mode 0
 
 parent_select_roots_only 1
 
-# fitness function used for time series forecasting tasks
+################################################################################
+## Parameters Specific to Recursive Forecasting ################################
+################################################################################
+
+# fitness function
 # supported options: "mse", "correlation", "theils", "pearson"
 forecasting_fitness theils
 
@@ -164,10 +168,12 @@ forecast_horizon_train 50
 forecast_horizon_val 100
 forecast_horizon_test 100
 
-forecast_n_eval_train 50
+forecast_n_eval_train 100
 forecast_n_eval_val 10
 
-# operations, uncomment to activate
+################################################################################
+# Operations, uncomment to activate ############################################
+################################################################################
 
 # scalar ######################
 SCALAR_SUM_OP
