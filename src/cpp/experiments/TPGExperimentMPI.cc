@@ -82,6 +82,10 @@ int main(int argc, char **argv) {
       if (tpg.GetParam<int>("forecast_normalize_data")) {
         task->Normalize();
       }
+      if (tpg.GetParam<int>("forecast_discrete")) {
+        tpg.params_["n_discrete_action"] =
+            int(task->uniq_discrete_univars_.size());
+      }
     }
   }
 

@@ -178,10 +178,10 @@ forecast_fitness theils
 
 # whether to use discrete actions for forecasting
 # must also set n_discrete_action
-forecast_discrete 0
+forecast_discrete 1
 
 # whether to normalize forecasting dataset in [0,1]
-forecast_normalize_data 1
+forecast_normalize_data 0
 
 forecast_prime_steps 50
 
@@ -193,7 +193,7 @@ forecast_n_eval_train 100
 forecast_n_eval_val 10
 
 ################################################################################
-## Operations, uncomment to activate ###########################################
+# Operations, uncomment to activate ############################################
 ################################################################################
 
 # scalar ######################

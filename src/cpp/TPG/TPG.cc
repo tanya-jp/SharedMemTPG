@@ -408,7 +408,7 @@ void TPG::ReadParameters(string file_name,
         outcome_fields[0] == "n_stored_outcomes_TRAIN" ||
         outcome_fields[0] == "n_stored_outcomes_VALIDATION" ||
         outcome_fields[0] == "n_stored_outcomes_TEST" ||
-        outcome_fields[0] == "forecasting_fitness") {
+        outcome_fields[0] == "forecast_fitness") {
       params[outcome_fields[0]] = outcome_fields[1];
     }
     // double parameters are identified by a decimal place
