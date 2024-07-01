@@ -19,6 +19,16 @@ double MeanSquaredError(std::vector<double> &targets,
 }
 
 /******************************************************************************/
+double MeanAbsoluteError(const std::vector<double>& targets, 
+                         const std::vector<double>& predictions) {
+    double err = 0;
+    for (size_t i = 0; i < targets.size(); i++) {
+        err += abs(targets[i] - predictions[i]);
+    }
+    return err / targets.size();
+}
+
+/******************************************************************************/
 double PearsonCorrelation(std::vector<double> &targets,
                           std::vector<double> &predictions) {
   double cc =
@@ -120,7 +130,61 @@ double Correlation(const std::vector<double> &targets,
 
   return numerator / denominator;
 }
-// /******************************************************************************/
+
+double calculateTheils_Multi(const std::vector<double> &targets, const std::vector<double> &predictions) {
+    int8_t num_variables = 3;
+    size_t num_elements = targets.size() / num_variables;
+
+    double numerator_offset = 0, denominator_offset = 0;
+    double numerator_duration = 0, denominator_duration = 0;
+    double numerator_pitch = 0, denominator_pitch = 0;
+
+    double epsilon = 1e-10;
+
+    for (size_t i = 0; i < num_elements - 1; i++) {
+        numerator_offset += pow(predictions[i * num_variables] - targets[i * num_variables], 2);
+        denominator_offset += pow(targets[i * num_variables] - targets[(i + 1) * num_variables], 2);
+
+        numerator_duration += pow(predictions[i * num_variables + 1] - targets[i * num_variables + 1], 2);
+        denominator_duration += pow(targets[i * num_variables + 1] - targets[(i + 1) * num_variables + 1], 2);
+
+        numerator_pitch += pow(predictions[i * num_variables + 2] - targets[i * num_variables + 2], 2);
+        denominator_pitch += pow(targets[i * num_variables + 2] - targets[(i + 1) * num_variables + 2], 2);
+    }
+
+    denominator_offset = (denominator_offset == 0) ? epsilon : denominator_offset;
+    denominator_duration = (denominator_duration == 0) ? epsilon : denominator_duration;
+    denominator_pitch = (denominator_pitch == 0) ? epsilon : denominator_pitch;
+
+    double theils_u1 = numerator_offset / denominator_offset;
+    double theils_u2 = numerator_duration / denominator_duration;
+    double theils_u3 = numerator_pitch / denominator_pitch;
+    return theils_u1 + theils_u2 + theils_u3;
+}
+
+/******************************************************************************/
+double calculateMSE_Multi(const std::vector<double> &targets, const std::vector<double> &predictions) {
+    int8_t num_variables = 3;
+    size_t num_elements = targets.size() / num_variables;
+
+    double mse_offset = 0;
+    double mse_duration = 0;
+    double mse_pitch = 0;
+
+    for (size_t i = 0; i < num_elements; i++) {
+        mse_offset += pow(predictions[i * num_variables] - targets[i * num_variables], 2);
+        mse_duration += pow(predictions[i * num_variables + 1] - targets[i * num_variables + 1], 2);
+        mse_pitch += pow(predictions[i * num_variables + 2] - targets[i * num_variables + 2], 2);
+    }
+
+    mse_offset /= num_elements;
+    mse_duration /= num_elements;
+    mse_pitch /= num_elements;
+
+    return mse_offset + mse_duration + mse_pitch; // Multiply by weights if needed
+}
+/******************************************************************************/
+
 // int compressedLength(char * source){
 //    ostringstream oss;
 //    int blockSize100k = 9;

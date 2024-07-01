@@ -82,6 +82,14 @@ double WrapContinuousActionSigmoid(EvalStruct &eval) {
   return 1 / (1 + exp(-p));
 }
 
+vector<double> WrapVectorActionSigmoid(EvalStruct &eval) {
+  auto mat = eval.leafProgram->privateMemory_[memoryEigen::VECTOR_TYPE]
+                 ->working_memory_[0];
+  vector<double> vec(mat.data(), mat.data() + mat.rows() * mat.cols());
+  for (auto &v : vec) v = sigmoid(v);  // TODO(skelly): better/faster way?
+  return vec;
+}
+
 vector<team *> GetTeamsToEval(TPG &tpg, TaskEnv *task) {
   auto root_teams = tpg.GetTeamsInVec(true);
   vector<team *> teams_to_eval;
@@ -114,11 +122,13 @@ vector<team *> GetTeamsToEval(TPG &tpg, TaskEnv *task) {
 /**
  * Parameters:
  * - tpg: TPG instance
- * - world: MPI communicator object, which represents a group of processes that can communicate with each other
+ * - world: MPI communicator object, which represents a group of processes that
+ * can communicate with each other
  * - teams_to_eval: teams to evaluate
- * - world_size_per_task: number of processors available to evaluate on this task
+ * - world_size_per_task: number of processors available to evaluate on this
+ * task
  * - evaluator: keeps track of current processor
-*/
+ */
 void AssignTeamsToEvaluators(TPG &tpg, mpi::communicator &world,
                              vector<team *> &teams_to_eval,
                              int world_size_per_task, int &evaluator) {
@@ -127,7 +137,8 @@ void AssignTeamsToEvaluators(TPG &tpg, mpi::communicator &world,
   vector<team *> teams;
 
   for (auto it = teams_to_eval.begin(); it != teams_to_eval.end(); it++) {
-    // Assign teams_per_evaluator teams to each of world_size_per_task processors
+    // Assign teams_per_evaluator teams to each of world_size_per_task
+    // processors
     teams.push_back(*it);
     if ((remainder > 0 && teams.size() == teams_per_evaluator + 1) ||
         (remainder == 0 && teams.size() == teams_per_evaluator) ||
@@ -201,8 +212,8 @@ void AccumulateStepStats(EvalStruct &eval) {
 void FinalizeStepStats(TPG &tpg, EvalStruct &eval) {
   if (eval.task->eval_type_ == "RecursiveForecast") {
     if (tpg.GetParam<string>("forecast_fitness") == "mse") {
-      auto mse = MeanSquaredError(eval.sequence_targ, eval.sequence_pred);
-      eval.runTimeStats[REWARD1_IDX] = -mse;
+      auto err = MeanSquaredError(eval.sequence_targ, eval.sequence_pred);
+      eval.runTimeStats[REWARD1_IDX] = -err;
     } else if (tpg.GetParam<string>("forecast_fitness") == "correlation") {
       auto corr = Correlation(eval.sequence_targ, eval.sequence_pred);
       eval.runTimeStats[REWARD1_IDX] = corr;
@@ -210,8 +221,14 @@ void FinalizeStepStats(TPG &tpg, EvalStruct &eval) {
       auto corr = PearsonCorrelation(eval.sequence_targ, eval.sequence_pred);
       eval.runTimeStats[REWARD1_IDX] = corr;
     } else if (tpg.GetParam<string>("forecast_fitness") == "theils") {
-      auto theils = TheilsStatistic(eval.sequence_targ, eval.sequence_pred);
-      eval.runTimeStats[REWARD1_IDX] = -theils;
+      auto err = TheilsStatistic(eval.sequence_targ, eval.sequence_pred);
+      eval.runTimeStats[REWARD1_IDX] = -err;
+    } else if (tpg.GetParam<string>("forecast_fitness") == "mse_multivar") {
+      auto err = calculateMSE_Multi(eval.sequence_targ, eval.sequence_pred);
+      eval.runTimeStats[REWARD1_IDX] = -err;
+    } else if (tpg.GetParam<string>("forecast_fitness") == "theils_multivar") {
+      auto err = calculateTheils_Multi(eval.sequence_targ, eval.sequence_pred);
+      eval.runTimeStats[REWARD1_IDX] = -err;
     } else {
       die(__FILE__, __FUNCTION__, __LINE__,
           "Unsupported forecast fitness function");
@@ -247,14 +264,14 @@ bool NotDoneAndActive(EvalStruct &eval) {
  *  b. Each process in a group evaluates a subset of agents on the task
  * 2. Wait for evals to finish
  * 3. Collect results
- * 
+ *
  * @param tpg The TPG instance with all the teams
  * @param world The MPI communicator object
  * @param tasks The set of all tasks in the TPG
  * @param evalTasks The indices of the tasks to evaluate
-*/
-void evaluate_main(TPG &tpg, mpi::communicator &world,
-                   vector<TaskEnv *> &tasks, vector<int> evalTasks) {
+ */
+void evaluate_main(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks,
+                   vector<int> evalTasks) {
   string my_string = "MAIN";
   vector<team *> teams_this_eval;
   vector<string> all_strings;
@@ -339,8 +356,7 @@ double estimate_fitness(TPG &tpg, team *tm, int task) {
 /// @param tpg The TPG instance with all the teams
 /// @param tasks The set of all tasks in the TPG
 /// @param estTasks Task indices to estimate fitness on
-void estimate_main(TPG &tpg, vector<TaskEnv *> &tasks, vector<int> estTasks)
-{
+void estimate_main(TPG &tpg, vector<TaskEnv *> &tasks, vector<int> estTasks) {
   // Loop through tasks
   for (int task : estTasks) {
     tpg.state_["active_task"] = task;
@@ -360,7 +376,8 @@ void estimate_main(TPG &tpg, vector<TaskEnv *> &tasks, vector<int> estTasks)
 
       for (int i = 0; i < tasks[task]->GetNumEval(tpg.GetState("phase")); i++) {
         r_runTimeInts[POINT_AUX_INT_ENVSEED] = i;
-        tpg.setOutcome(tm, behavSeq, r_runTimeStats, r_runTimeInts, tpg.GetState("t_current"));
+        tpg.setOutcome(tm, behavSeq, r_runTimeStats, r_runTimeInts,
+                       tpg.GetState("t_current"));
       }
     }
   }
@@ -376,7 +393,7 @@ void EvalControl(TPG &tpg, EvalStruct &eval) {
     eval.leafProgram = tpg.getAction(
         eval.tm, obs, true, eval.visitedTeams, eval.decision_instructions,
         eval.task->step, eval.teamPath, tpg.rngs_[AUX_SEED], false);
-    eval.n_prediction++;    
+    eval.n_prediction++;
     MaybeAnimateStep(eval);
     TaskEnv::Results r =
         eval.task->update(WrapDiscreteAction(eval), WrapContinuousAction(eval),
@@ -399,11 +416,14 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
   int sample = task->t_start[tpg.GetState("phase")][eval.episode];
   for (int i = 0; i < task->n_prime_ - 1; i++) {
     // Prepare observation
-    obs_list.push_back(task->GetSampleUnivar(sample));
-    obs_list.pop_front();
-    std::copy(obs_list.begin(), obs_list.end(), obs_vec.begin());
-    obs->Set(obs_vec);
-
+    if (tpg.GetParam<int>("forecast_univar")) {
+      obs_list.push_back(task->data[sample][0]);
+      obs_list.pop_front();
+      std::copy(obs_list.begin(), obs_list.end(), obs_vec.begin());
+      obs->Set(obs_vec);
+    } else {
+      obs->Set(task->data[sample]);
+    }
     // Execute graph
     eval.leafProgram = tpg.getAction(
         eval.tm, obs, true, eval.visitedTeams, eval.decision_instructions,
@@ -414,15 +434,20 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
   bool discrete_actions = tpg.GetParam<int>("forecast_discrete");
   for (int i = 0; i < task->n_predict_[tpg.GetState("phase")]; i++) {
     // Prepare observation
-    if (discrete_actions) {
-      int action = WrapDiscreteAction(eval);
-      obs_list.push_back(task->uniq_discrete_univars_[action]);  // Prev action
+    if (tpg.GetParam<int>("forecast_univar")) {
+      if (discrete_actions) {
+        int action = WrapDiscreteAction(eval);
+        obs_list.push_back(
+            task->uniq_discrete_univars_[action]);  // Prev action
+      } else
+        obs_list.push_back(WrapContinuousActionSigmoid(eval));  // Prev action
+      obs_list.pop_front();
+      std::copy(obs_list.begin(), obs_list.end(), obs_vec.begin());
+      obs->Set(obs_vec);
+    } else {
+      auto v = WrapVectorActionSigmoid(eval);  // Prev action
+      obs->Set(v);
     }
-    else
-      obs_list.push_back(WrapContinuousActionSigmoid(eval));  // Prev action
-    obs_list.pop_front();
-    std::copy(obs_list.begin(), obs_list.end(), obs_vec.begin());
-    obs->Set(obs_vec);
 
     // Execute graph
     eval.leafProgram = tpg.getAction(eval.tm, obs, true, eval.visitedTeams,
@@ -431,14 +456,20 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
     eval.n_prediction++;
 
     // Save targets and predictions
-    eval.sequence_targ[i] = task->GetSampleUnivar(sample);
-    if (discrete_actions) {
-      int action = WrapDiscreteAction(eval);
-      eval.sequence_pred[i] = task->uniq_discrete_univars_[action];
+    if (tpg.GetParam<int>("forecast_univar")) {
+      eval.sequence_targ[i] = task->data[sample + 1][0];
+      if (discrete_actions) {
+        int action = WrapDiscreteAction(eval);
+        eval.sequence_pred[i] = task->uniq_discrete_univars_[action];
+      } else
+        eval.sequence_pred[i] = WrapContinuousActionSigmoid(eval);
+    } else {
+      auto act = WrapVectorActionSigmoid(eval);
+      for (size_t var = 0; var < act.size(); var++) {
+        eval.sequence_targ[i * act.size() + var] = task->data[sample + 1][var];
+        eval.sequence_pred[i * act.size() + var] = act[var];
+      }
     }
-    else
-      eval.sequence_pred[i] = WrapContinuousActionSigmoid(eval);
-    
     sample++;
     AccumulateStepStats(eval);
   }
@@ -463,8 +494,15 @@ void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
 
       if (eval.task->eval_type_ == "RecursiveForecast") {
         RecursiveForecast *task = dynamic_cast<RecursiveForecast *>(eval.task);
-        eval.sequence_targ.resize(task->n_predict_[tpg.GetState("phase")]);
-        eval.sequence_pred.resize(task->n_predict_[tpg.GetState("phase")]);
+        if (tpg.GetParam<int>("forecast_univar")) {
+          eval.sequence_targ.resize(task->n_predict_[tpg.GetState("phase")]);
+          eval.sequence_pred.resize(task->n_predict_[tpg.GetState("phase")]);
+        } else {
+          eval.sequence_targ.resize(task->n_predict_[tpg.GetState("phase")] *
+                                    tpg.n_input_[tpg.GetState("active_task")]);
+          eval.sequence_pred.resize(task->n_predict_[tpg.GetState("phase")] *
+                                    tpg.n_input_[tpg.GetState("active_task")]);
+        }
       }
       eval.evalResult = "";
       for (auto tm : eval.teams) {
@@ -516,7 +554,7 @@ void EvalControlViz(TPG &tpg, EvalStruct &eval,
     eval.leafProgram = tpg.getAction(
         eval.tm, obs, true, eval.visitedTeams, eval.decision_instructions,
         eval.task->step, eval.teamPath, tpg.rngs_[AUX_SEED], false);
-    eval.n_prediction++;    
+    eval.n_prediction++;
     for (auto tm : eval.visitedTeams) {
       if (teamUseMapPerTask[tpg.state_["active_task"]].find(tm->id_) ==
           teamUseMapPerTask[tpg.state_["active_task"]].end()) {
@@ -561,8 +599,8 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
       task->t_start[tpg.GetParam<int>("checkpoint_in_phase")][eval.episode];
   for (int i = 0; i < task->n_prime_ - 1; i++) {
     // Prepare observation
-    obs_list.push_back(task->GetSampleUnivar(sample));
-    prime_samples_plot.push_back(task->GetSampleUnivar(sample));
+    obs_list.push_back(task->data[sample][0]);
+    prime_samples_plot.push_back(task->data[sample][0]);
     obs_list.pop_front();
     std::copy(obs_list.begin(), obs_list.end(), obs_vec.begin());
     obs->Set(obs_vec);
@@ -595,10 +633,9 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
     if (discrete_actions) {
       int action = WrapDiscreteAction(eval);
       obs_list.push_back(task->uniq_discrete_univars_[action]);  // Prev action
-    }
-    else
-      obs_list.push_back(WrapContinuousActionSigmoid(eval));  // Prev action  
-      
+    } else
+      obs_list.push_back(WrapContinuousActionSigmoid(eval));  // Prev action
+
     obs_list.pop_front();
     std::copy(obs_list.begin(), obs_list.end(), obs_vec.begin());
     obs->Set(obs_vec);
@@ -621,13 +658,12 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
     visitedTeamsAllTasks.insert(eval.visitedTeams.begin(),
                                 eval.visitedTeams.end());
     // Save targets and predistions
-    eval.sequence_targ[i] = task->GetSampleUnivar(sample);
+    eval.sequence_targ[i] = task->data[sample + 1][0];
     if (discrete_actions) {
       int action = WrapDiscreteAction(eval);
       eval.sequence_pred[i] = task->uniq_discrete_univars_[action];
-    }
-    else
-      eval.sequence_pred[i] = WrapContinuousActionSigmoid(eval);  
+    } else
+      eval.sequence_pred[i] = WrapContinuousActionSigmoid(eval);
     sample++;
     steps++;
     AccumulateStepStats(eval);
