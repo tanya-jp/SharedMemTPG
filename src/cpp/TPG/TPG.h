@@ -36,6 +36,7 @@ class TPG {
   team *getTeamByID(long id);
   bool haveEliteTeam(string taskset, int fitMode, int phase);
   void Seed(size_t i, uint_fast32_t s);
+  void InitExperimentTracking(APIClient *apiClient);
 
   /*****************************************************************************
    * Methods to implement the TPG algorithm.
@@ -120,6 +121,7 @@ class TPG {
   void printOss();
   void printOss(ostringstream &o);
   void printTeamInfo(long, int, bool, long teamId = -1);
+  void trackTeamInfo(long, int, bool, long teamId = -1);
   void programCrossover(RegisterMachine *p1, RegisterMachine *p2,
                         RegisterMachine **c1, RegisterMachine **c2, mt19937 &);
   void readCheckpoint(long, int, int, bool, const string &);
@@ -195,7 +197,8 @@ class TPG {
   uniform_real_distribution<> real_dist_;  // random reals in [0,1]
 
   // API client for tracking experiments
-  APIClient api_client_;
+  bool track_experiment_ = false;
+  APIClient *api_client_;
  public:
   std::unordered_map<std::string, std::any> params_;
   template <typename T>

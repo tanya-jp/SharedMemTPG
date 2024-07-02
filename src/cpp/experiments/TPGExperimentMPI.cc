@@ -54,6 +54,9 @@ int main(int argc, char **argv) {
 
       apiClient->LogParameter(param.first, value);
     }
+
+    // Add experiment tracking to TPG
+    tpg.InitExperimentTracking(apiClient.get());
   }
 
   ostringstream os;  // logging

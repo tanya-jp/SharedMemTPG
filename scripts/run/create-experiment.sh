@@ -4,5 +4,5 @@ curl -X POST https://www.comet.com/api/rest/v2/write/experiment/create \
      -d '{
             "workspaceName": "genetic-programming",
             "projectName": "tpg",
-            "experimentName": "test-experiment"
+            "experimentName": "team-info"
         }'
