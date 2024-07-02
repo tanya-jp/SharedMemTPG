@@ -270,7 +270,7 @@ int main(int argc, char **argv) {
                                 endSetEliteTeams.count() + endSelTeams.count() +
                                 endChkp.count() + endReport.count());
 
-        if (tpg.GetParam<int>("track_experiments")) {
+        if (tpg.GetParam<int>("track_experiments") && tpg.GetState("t_current") % tpg.GetParam<int>("track_mod") == 0) {
           std::string gen = to_string(tpg.GetState("t_current"));
           apiClient->LogMetric("sec", std::to_string(endGen.count()), "", gen);
           apiClient->LogMetric("evl", std::to_string(endEval.count()), "", gen);
