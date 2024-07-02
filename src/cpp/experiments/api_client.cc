@@ -27,7 +27,7 @@ std::string APIClient::MakeRequest(const std::string &url, const std::string &me
     CURL *curl;
     CURLcode res;
     std::string readBuffer;
-
+    
     curl_global_init(CURL_GLOBAL_DEFAULT);
     curl = curl_easy_init();
     if (curl)
@@ -99,6 +99,34 @@ std::string APIClient::VectorToJSON(const std::vector<std::vector<std::string>>&
     return jsonStream.str();
 }
 
+void APIClient::LogParameter(const std::string &parameterName,
+                             const std::string &parameterValue,
+                             const std::string &step,
+                             const std::string &timestamp)
+{
+    std::string url = _baseUrl + "/api/rest/v2/write/experiment/parameter";
+
+    std::vector<std::vector<std::string>> bodyVec = {
+        {"experimentKey", _experimentKey},
+        {"parameterName", parameterName},
+        {"parameterValue", parameterValue}};
+    if (!step.empty())
+    {
+        bodyVec.push_back({"step", step});
+    }
+    if (!timestamp.empty())
+    {
+        bodyVec.push_back({"timestamp", timestamp});
+    }
+    std::string body = VectorToJSON(bodyVec);
+
+    std::vector<std::string> headers = {
+        "Authorization: " + _apiToken,
+        "Content-Type: application/json"};
+
+    std::string res = MakeRequest(url, "POST", body, headers);
+}
+
 void APIClient::LogMetric(const std::string &metricName,
                           const std::string &metricValue,
                           const std::string &context,
@@ -111,26 +139,28 @@ void APIClient::LogMetric(const std::string &metricName,
     std::vector<std::vector<std::string>> bodyVec = {
         {"experimentKey", _experimentKey},
         {"metricName", metricName},
-        {"metricValue",  metricValue}
-    };
-    if (!context.empty()) {
+        {"metricValue", metricValue}};
+    if (!context.empty())
+    {
         bodyVec.push_back({"context", context});
     }
-    if (!step.empty()) {
+    if (!step.empty())
+    {
         bodyVec.push_back({"step", step});
     }
-    if (!epoch.empty()) {
+    if (!epoch.empty())
+    {
         bodyVec.push_back({"epoch", epoch});
     }
-    if (!timestamp.empty()) {
+    if (!timestamp.empty())
+    {
         bodyVec.push_back({"timestamp", timestamp});
     }
     std::string body = VectorToJSON(bodyVec);
 
     std::vector<std::string> headers = {
         "Authorization: " + _apiToken,
-        "Content-Type: application/json"
-    };
+        "Content-Type: application/json"};
 
     std::string res = MakeRequest(url, "POST", body, headers);
 }

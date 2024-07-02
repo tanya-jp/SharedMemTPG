@@ -12,6 +12,7 @@
 #include "point.h"
 #include "state.h"
 #include "team.h"
+#include "api_client.h"
 
 #define NUM_RNG 2
 #define TPG_SEED 0
@@ -192,6 +193,9 @@ class TPG {
   vector<size_t> _numEliteTeamsCurrent;
 
   uniform_real_distribution<> real_dist_;  // random reals in [0,1]
+
+  // API client for tracking experiments
+  APIClient api_client_;
  public:
   std::unordered_map<std::string, std::any> params_;
   template <typename T>

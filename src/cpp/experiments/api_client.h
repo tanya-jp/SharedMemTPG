@@ -18,6 +18,11 @@ public:
 
     std::string VectorToJSON(const std::vector<std::vector<std::string>> &vec);
 
+    void LogParameter(const std::string &parameterName,
+                      const std::string &parameterValue,
+                      const std::string &step = "",
+                      const std::string &timestamp = "");
+
     void LogMetric(const std::string &metricName,
                    const std::string &metricValue,
                    const std::string &context = "",
