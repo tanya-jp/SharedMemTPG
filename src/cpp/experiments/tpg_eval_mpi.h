@@ -233,12 +233,13 @@ void FinalizeStepStats(TPG &tpg, EvalStruct &eval) {
       auto corr =
           calculatePearson_Multi(eval.sequence_targ, eval.sequence_pred);
       eval.runTimeStats[REWARD1_IDX] = corr;
+      if (!isfinite(eval.runTimeStats[REWARD1_IDX]))
+      eval.runTimeStats[REWARD1_IDX] = 0;
     } else {
       die(__FILE__, __FUNCTION__, __LINE__,
           "Unsupported forecast fitness function");
     }
-    if (!isfinite(eval.runTimeStats[REWARD1_IDX]))
-      eval.runTimeStats[REWARD1_IDX] = eval.task->min_reward_;
+    
   }
   eval.runTimeStats[VISITED_TEAMS_IDX] /= eval.n_prediction;
   eval.runTimeStats[INSTRUCTIONS_IDX] /= eval.n_prediction;
