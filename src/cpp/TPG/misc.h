@@ -146,14 +146,14 @@ std::vector<string> &splitString(const string &s, char delim, std::vector<string
 std::vector<string> splitString(const string &s, char delim);
 
 template <class vtype>
-string vecToStr(std::vector<vtype> &v)
+string vecToStr(std::vector<vtype> &v, string delim = " ")
 {
    ostringstream oss; // oss.precision(numeric_limits<double>::digits10+1);
    for (size_t i = 0; i < v.size(); i++)
    {
       oss << v[i];
       if (i < v.size() - 1)
-         oss << " ";
+         oss << delim;
    }
    return oss.str();
 }

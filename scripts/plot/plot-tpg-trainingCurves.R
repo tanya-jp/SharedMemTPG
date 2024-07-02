@@ -23,7 +23,7 @@ if (maxy > 0){
    rangey <- range(0,maxy)
 } else  {
    rangey <- range(min(tbl_m,na.rm=TRUE),max(tbl_m,na.rm=TRUE))
-   #rangey <- range(-0.06,max(tbl_m,na.rm=TRUE))
+   # rangey <- range(-100,0)
    #rangey <- range(min(medians,na.rm=TRUE),max(tbl_m,na.rm=TRUE))
 }
 # rangey = range(-1, 0.2)

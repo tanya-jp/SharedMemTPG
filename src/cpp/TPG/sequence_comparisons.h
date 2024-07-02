@@ -183,6 +183,32 @@ double calculateMSE_Multi(const std::vector<double> &targets, const std::vector<
 
     return mse_offset + mse_duration + mse_pitch; // Multiply by weights if needed
 }
+
+/******************************************************************************/
+double calculatePearson_Multi(const std::vector<double> &targets,
+                              const std::vector<double> &predictions) {
+  int8_t num_variables = 3;
+  size_t num_elements = targets.size() / num_variables;
+
+  vector<vector<double>> x(num_variables);
+  vector<vector<double>> y(num_variables);
+  for (auto &v : x) v.resize(num_elements);
+  for (auto &v : y) v.resize(num_elements);
+
+  for (size_t i = 0; i < num_elements; i++) {
+    for (int j = 0; j < num_variables; j++) {
+      x[j][i] = targets[i * num_variables + j];
+      y[j][i] = predictions[i * num_variables + j];
+    }
+  }
+  
+  double corr = 0;
+  for (int j = 0; j < num_variables; j++) {
+    corr += boost::math::statistics::correlation_coefficient(x[j], y[j]);
+  }
+  return corr;
+}
+
 /******************************************************************************/
 
 // int compressedLength(char * source){

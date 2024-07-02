@@ -49,7 +49,7 @@ n_generations 1000000
 mu_internal 0
 
 # number of elite teams
-n_elite 200
+n_elite 100
 
 # multiplier for # new teams to generate each generation
 n_elite_mul 5
@@ -176,8 +176,8 @@ forecast_univar 0
 
 # fitness function
 # supported options: 
-# "mse", "correlation", "theils", "pearson", "mse_multivar", "theils_multivar"
-forecast_fitness theils_multivar
+# "mse", "correlation", "theils", "pearson", "mse_multivar", "theils_multivar", "pearson_multivar"
+forecast_fitness pearson_multivar
 
 # whether to use discrete actions for forecasting
 # must also set n_discrete_action

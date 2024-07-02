@@ -229,6 +229,10 @@ void FinalizeStepStats(TPG &tpg, EvalStruct &eval) {
     } else if (tpg.GetParam<string>("forecast_fitness") == "theils_multivar") {
       auto err = calculateTheils_Multi(eval.sequence_targ, eval.sequence_pred);
       eval.runTimeStats[REWARD1_IDX] = -err;
+    } else if (tpg.GetParam<string>("forecast_fitness") == "pearson_multivar") {
+      auto corr =
+          calculatePearson_Multi(eval.sequence_targ, eval.sequence_pred);
+      eval.runTimeStats[REWARD1_IDX] = corr;
     } else {
       die(__FILE__, __FUNCTION__, __LINE__,
           "Unsupported forecast fitness function");
@@ -581,6 +585,39 @@ void EvalControlViz(TPG &tpg, EvalStruct &eval,
   delete obs;
 }
 
+void PrintRecursizeForecast(string filename, int t_start, int n_var,
+                            vector<double> prime_samples,
+                            vector<double> targets,
+                            vector<double> predictions) {
+  // Print csv format for quick plotting
+  ofstream test_file;
+  test_file.open(filename);
+  // Print header
+  test_file << "Time";
+  for (int i = 0; i < n_var; i++) test_file << ",x" << to_string(i);
+  for (int i = 0; i < n_var; i++) test_file << ",y" << to_string(i);
+  test_file << endl;
+
+  for (size_t i = 0; i < prime_samples.size() / n_var; i++) {
+    test_file << t_start++;
+    for (int var = 0; var < n_var; var++) {
+      test_file << "," << prime_samples[i * n_var + var];
+    }
+    test_file << endl;
+  }
+  for (size_t i = 0; i < targets.size() / n_var; i++) {
+    test_file << t_start++;
+    for (int var = 0; var < n_var; var++) {
+      test_file << std::fixed << "," << targets[i * n_var + var];
+    }
+    for (int var = 0; var < n_var; var++) {
+      test_file << std::fixed << "," << predictions[i * n_var + var];
+    }
+    test_file << endl;
+  }
+  test_file.close();
+}
+
 /******************************************************************************/
 void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
                               vector<map<long, double>> &teamUseMapPerTask,
@@ -588,8 +625,15 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
                               int &steps) {
   RecursiveForecast *task = dynamic_cast<RecursiveForecast *>(eval.task);
   eval.n_prediction = 0;
-  eval.sequence_targ.resize(task->n_predict_[tpg.GetState("phase")]);
-  eval.sequence_pred.resize(task->n_predict_[tpg.GetState("phase")]);
+  if (tpg.GetParam<int>("forecast_univar")) {
+    eval.sequence_targ.resize(task->n_predict_[tpg.GetState("phase")]);
+    eval.sequence_pred.resize(task->n_predict_[tpg.GetState("phase")]);
+  } else {
+    eval.sequence_targ.resize(task->n_predict_[tpg.GetState("phase")] *
+                              tpg.n_input_[tpg.GetState("active_task")]);
+    eval.sequence_pred.resize(task->n_predict_[tpg.GetState("phase")] *
+                              tpg.n_input_[tpg.GetState("active_task")]);
+  }
   state *obs = new state(tpg.n_input_[tpg.GetState("active_task")]);
   list<double> obs_list(tpg.n_input_[tpg.GetState("active_task")], 1.0);
   vector<double> obs_vec(tpg.n_input_[tpg.GetState("active_task")], 1.0);
@@ -599,11 +643,18 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
       task->t_start[tpg.GetParam<int>("checkpoint_in_phase")][eval.episode];
   for (int i = 0; i < task->n_prime_ - 1; i++) {
     // Prepare observation
-    obs_list.push_back(task->data[sample][0]);
-    prime_samples_plot.push_back(task->data[sample][0]);
-    obs_list.pop_front();
-    std::copy(obs_list.begin(), obs_list.end(), obs_vec.begin());
-    obs->Set(obs_vec);
+    if (tpg.GetParam<int>("forecast_univar")) {
+      obs_list.push_back(task->data[sample][0]);
+      prime_samples_plot.push_back(task->data[sample][0]);
+      obs_list.pop_front();
+      std::copy(obs_list.begin(), obs_list.end(), obs_vec.begin());
+      obs->Set(obs_vec);
+    } else {
+      obs->Set(task->data[sample]);
+      prime_samples_plot.insert(prime_samples_plot.end(),
+                                task->data[sample].begin(),
+                                task->data[sample].end());
+    }
 
     // Execute graph
     eval.leafProgram = tpg.getAction(
@@ -630,15 +681,20 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
   for (int i = 0;
        i < task->n_predict_[tpg.GetParam<int>("checkpoint_in_phase")]; i++) {
     // Prepare observation
-    if (discrete_actions) {
-      int action = WrapDiscreteAction(eval);
-      obs_list.push_back(task->uniq_discrete_univars_[action]);  // Prev action
-    } else
-      obs_list.push_back(WrapContinuousActionSigmoid(eval));  // Prev action
-
-    obs_list.pop_front();
-    std::copy(obs_list.begin(), obs_list.end(), obs_vec.begin());
-    obs->Set(obs_vec);
+    if (tpg.GetParam<int>("forecast_univar")) {
+      if (discrete_actions) {
+        int action = WrapDiscreteAction(eval);
+        obs_list.push_back(
+            task->uniq_discrete_univars_[action]);  // Prev action
+      } else
+        obs_list.push_back(WrapContinuousActionSigmoid(eval));  // Prev action
+      obs_list.pop_front();
+      std::copy(obs_list.begin(), obs_list.end(), obs_vec.begin());
+      obs->Set(obs_vec);
+    } else {
+      auto v = WrapVectorActionSigmoid(eval);  // Prev action
+      obs->Set(v);
+    }
 
     // Execute graph
     eval.leafProgram = tpg.getAction(eval.tm, obs, true, eval.visitedTeams,
@@ -657,34 +713,35 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
     // teamUseMapPerTask[tpg.state_["active_task"]][eval.tm->id_] += 1.0;
     visitedTeamsAllTasks.insert(eval.visitedTeams.begin(),
                                 eval.visitedTeams.end());
-    // Save targets and predistions
-    eval.sequence_targ[i] = task->data[sample + 1][0];
-    if (discrete_actions) {
-      int action = WrapDiscreteAction(eval);
-      eval.sequence_pred[i] = task->uniq_discrete_univars_[action];
-    } else
-      eval.sequence_pred[i] = WrapContinuousActionSigmoid(eval);
+    // Save targets and predictions
+    if (tpg.GetParam<int>("forecast_univar")) {
+      eval.sequence_targ[i] = task->data[sample + 1][0];
+      if (discrete_actions) {
+        int action = WrapDiscreteAction(eval);
+        eval.sequence_pred[i] = task->uniq_discrete_univars_[action];
+      } else
+        eval.sequence_pred[i] = WrapContinuousActionSigmoid(eval);
+    } else {
+      auto act = WrapVectorActionSigmoid(eval);
+      for (size_t var = 0; var < act.size(); var++) {
+        eval.sequence_targ[i * act.size() + var] = task->data[sample + 1][var];
+        eval.sequence_pred[i * act.size() + var] = act[var];
+      }
+    }
     sample++;
     steps++;
     AccumulateStepStats(eval);
   }
   delete obs;
-  // Print csv format for quick plotting
-  ofstream test_file;
-  test_file.open("tpg_" + to_string(tpg.seeds_[TPG_SEED]) + "_test_t" +
-                 to_string(task->t_start[tpg.GetParam<int>(
-                     "checkpoint_in_phase")][eval.episode]) +
-                 ".csv");
-  test_file << "Time,Target,Prediction" << endl;
-  int t_start =
-      task->t_start[tpg.GetParam<int>("checkpoint_in_phase")][eval.episode];
-  for (size_t i = 0; i < prime_samples_plot.size(); i++)
-    test_file << t_start++ << "," << prime_samples_plot[i] << "," << endl;
-  for (size_t i = 0; i < eval.sequence_targ.size(); i++)
-    test_file << t_start++ << "," << std::fixed << eval.sequence_targ[i] << ","
-              << eval.sequence_pred[i] << endl;
-  test_file << endl;
-  test_file.close();
+
+  PrintRecursizeForecast(
+      "tpg_" + to_string(tpg.seeds_[TPG_SEED]) + "_test_t" +
+          to_string(task->t_start[tpg.GetParam<int>("checkpoint_in_phase")]
+                                 [eval.episode]) +
+          ".csv",
+      task->t_start[tpg.GetParam<int>("checkpoint_in_phase")][eval.episode],
+      tpg.n_input_[tpg.GetState("active_task")], prime_samples_plot,
+      eval.sequence_targ, eval.sequence_pred);
 }
 
 /******************************************************************************/
