@@ -176,7 +176,8 @@ forecast_univar 0
 
 # fitness function
 # supported options: 
-# "mse", "correlation", "theils", "pearson", "mse_multivar", "theils_multivar", "pearson_multivar"
+#  "mse", "correlation", "theils", "pearson", "mse_multivar", "theils_multivar", 
+#  "pearson_multivar"
 forecast_fitness pearson_multivar
 
 # whether to use discrete actions for forecasting
@@ -192,7 +193,7 @@ forecast_horizon_train 50
 forecast_horizon_val 100
 forecast_horizon_test 100
 
-forecast_n_eval_train 20
+forecast_n_eval_train 100
 forecast_n_eval_val 10
 
 ################################################################################
