@@ -34,11 +34,11 @@ int main(int argc, char **argv) {
   tpg.setParams();
   tpg_arg_parse(tpg, argc, argv);
 
-  std::unique_ptr<APIClient> apiClient;
-  bool trackExperiment = tpg.HaveParam("experiment_key");
-  if (trackExperiment) {
+  APIClient *apiClient = nullptr;
+
+  if (tpg.GetParam<int>("track_experiments")) {
     // Only instantiate APIClient if trackExperiment is true
-    apiClient = std::make_unique<APIClient>(getenv("COMET_API_KEY"), tpg.GetParam<std::string>("experiment_key"));
+    apiClient = new APIClient(getenv("COMET_API_KEY"), tpg.GetParam<std::string>("experiment_key"));
 
     // Track run parameters
     for (auto &param : tpg.params_) {
@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
     }
 
     // Add experiment tracking to TPG
-    tpg.InitExperimentTracking(apiClient.get());
+    tpg.InitExperimentTracking(apiClient);
   }
 
   ostringstream os;  // logging
@@ -270,7 +270,7 @@ int main(int argc, char **argv) {
                                 endSetEliteTeams.count() + endSelTeams.count() +
                                 endChkp.count() + endReport.count());
 
-        if (trackExperiment) {
+        if (tpg.GetParam<int>("track_experiments")) {
           std::string gen = to_string(tpg.GetState("t_current"));
           apiClient->LogMetric("sec", std::to_string(endGen.count()), "", gen);
           apiClient->LogMetric("evl", std::to_string(endEval.count()), "", gen);

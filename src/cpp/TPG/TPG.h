@@ -197,7 +197,6 @@ class TPG {
   uniform_real_distribution<> real_dist_;  // random reals in [0,1]
 
   // API client for tracking experiments
-  bool track_experiment_ = false;
   APIClient *api_client_;
  public:
   std::unordered_map<std::string, std::any> params_;

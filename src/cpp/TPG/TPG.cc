@@ -96,7 +96,6 @@ void TPG::Seed(size_t i, uint_fast32_t s) {
 
 void TPG::InitExperimentTracking(APIClient *apiClient) {
   api_client_ = apiClient;
-  track_experiment_ = true;
 }
 
 /******************************************************************************/
@@ -986,7 +985,7 @@ void TPG::SetEliteTeams(vector<TaskEnv *> &tasks) {
           << " ";
       printTeamInfo(GetState("t_current"), GetState("phase"), false, elite_id);
 
-      if (track_experiment_) trackTeamInfo(GetState("t_current"), GetState("phase"), false, elite_id);
+      if (GetParam<int>("track_experiments")) trackTeamInfo(GetState("t_current"), GetState("phase"), false, elite_id);
     }
     if (set.size() == (size_t)GetState("n_task") &&
         haveEliteTeam(vecToStrNoSpace(set), GetState("fitMode"),
@@ -1000,7 +999,7 @@ void TPG::SetEliteTeams(vector<TaskEnv *> &tasks) {
           << " ";
       printTeamInfo(GetState("t_current"), GetState("phase"), false, elite_id);
 
-      if (track_experiment_) trackTeamInfo(GetState("t_current"), GetState("phase"), false, elite_id);
+      if (GetParam<int>("track_experiments")) trackTeamInfo(GetState("t_current"), GetState("phase"), false, elite_id);
 
       // Keep track of elite team history and only save test checkpoints when we
       // have a new test champion for the full set (all tasks)
