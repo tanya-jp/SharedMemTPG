@@ -114,11 +114,13 @@ vector<team *> GetTeamsToEval(TPG &tpg, TaskEnv *task) {
 /**
  * Parameters:
  * - tpg: TPG instance
- * - world: MPI communicator object, which represents a group of processes that can communicate with each other
+ * - world: MPI communicator object, which represents a group of processes that
+ * can communicate with each other
  * - teams_to_eval: teams to evaluate
- * - world_size_per_task: number of processors available to evaluate on this task
+ * - world_size_per_task: number of processors available to evaluate on this
+ * task
  * - evaluator: keeps track of current processor
-*/
+ */
 void AssignTeamsToEvaluators(TPG &tpg, mpi::communicator &world,
                              vector<team *> &teams_to_eval,
                              int world_size_per_task, int &evaluator) {
@@ -127,7 +129,8 @@ void AssignTeamsToEvaluators(TPG &tpg, mpi::communicator &world,
   vector<team *> teams;
 
   for (auto it = teams_to_eval.begin(); it != teams_to_eval.end(); it++) {
-    // Assign teams_per_evaluator teams to each of world_size_per_task processors
+    // Assign teams_per_evaluator teams to each of world_size_per_task
+    // processors
     teams.push_back(*it);
     if ((remainder > 0 && teams.size() == teams_per_evaluator + 1) ||
         (remainder == 0 && teams.size() == teams_per_evaluator) ||
@@ -241,20 +244,11 @@ bool NotDoneAndActive(EvalStruct &eval) {
          eval.checkpointString.compare("done") != 0;
 }
 
-/**
- * 1. Assign agents to evaluator procs
- *  a. Partition available processes into groups for each task
- *  b. Each process in a group evaluates a subset of agents on the task
- * 2. Wait for evals to finish
- * 3. Collect results
- * 
- * @param tpg The TPG instance with all the teams
- * @param world The MPI communicator object
- * @param tasks The set of all tasks in the TPG
- * @param evalTasks The indices of the tasks to evaluate
-*/
-void evaluate_main(TPG &tpg, mpi::communicator &world,
-                   vector<TaskEnv *> &tasks, vector<int> evalTasks) {
+// Evaluates all teams on a given set of tasks.
+// `tasks` is the set of all tasks in the TPG.
+// `evalTasks` is the indices of the tasks to evaluate.
+void evaluate_main(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks,
+                   vector<int> evalTasks) {
   string my_string = "MAIN";
   vector<team *> teams_this_eval;
   vector<string> all_strings;
@@ -305,8 +299,7 @@ void evaluate_main(TPG &tpg, mpi::communicator &world,
   }
 }
 
-/// @brief Estimates the fitness of a team on a given task using its phylogeny
-/// @return The estimated fitness of the team
+/// Returns the fitness of a team on a given task using its phylogeny
 double estimate_fitness(TPG &tpg, team *tm, int task) {
   std::vector<long> visited = {tm->id_};
   list<long> queue = {tm->id_};
@@ -335,12 +328,10 @@ double estimate_fitness(TPG &tpg, team *tm, int task) {
   return 0;
 }
 
-/// @brief Estimates the fitness of all teams on a given set of tasks
-/// @param tpg The TPG instance with all the teams
-/// @param tasks The set of all tasks in the TPG
-/// @param estTasks Task indices to estimate fitness on
-void estimate_main(TPG &tpg, vector<TaskEnv *> &tasks, vector<int> estTasks)
-{
+/// Estimates the fitness of all teams on a given set of tasks
+/// `tasks` is the set of all tasks in the TPG
+/// `estTasks` are the task indices to estimate fitness on
+void estimate_main(TPG &tpg, vector<TaskEnv *> &tasks, vector<int> estTasks) {
   // Loop through tasks
   for (int task : estTasks) {
     tpg.state_["active_task"] = task;
@@ -360,7 +351,8 @@ void estimate_main(TPG &tpg, vector<TaskEnv *> &tasks, vector<int> estTasks)
 
       for (int i = 0; i < tasks[task]->GetNumEval(tpg.GetState("phase")); i++) {
         r_runTimeInts[POINT_AUX_INT_ENVSEED] = i;
-        tpg.setOutcome(tm, behavSeq, r_runTimeStats, r_runTimeInts, tpg.GetState("t_current"));
+        tpg.setOutcome(tm, behavSeq, r_runTimeStats, r_runTimeInts,
+                       tpg.GetState("t_current"));
       }
     }
   }
@@ -376,7 +368,7 @@ void EvalControl(TPG &tpg, EvalStruct &eval) {
     eval.leafProgram = tpg.getAction(
         eval.tm, obs, true, eval.visitedTeams, eval.decision_instructions,
         eval.task->step, eval.teamPath, tpg.rngs_[AUX_SEED], false);
-    eval.n_prediction++;    
+    eval.n_prediction++;
     MaybeAnimateStep(eval);
     TaskEnv::Results r =
         eval.task->update(WrapDiscreteAction(eval), WrapContinuousAction(eval),
@@ -417,8 +409,7 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
     if (discrete_actions) {
       int action = WrapDiscreteAction(eval);
       obs_list.push_back(task->uniq_discrete_univars_[action]);  // Prev action
-    }
-    else
+    } else
       obs_list.push_back(WrapContinuousActionSigmoid(eval));  // Prev action
     obs_list.pop_front();
     std::copy(obs_list.begin(), obs_list.end(), obs_vec.begin());
@@ -435,10 +426,9 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
     if (discrete_actions) {
       int action = WrapDiscreteAction(eval);
       eval.sequence_pred[i] = task->uniq_discrete_univars_[action];
-    }
-    else
+    } else
       eval.sequence_pred[i] = WrapContinuousActionSigmoid(eval);
-    
+
     sample++;
     AccumulateStepStats(eval);
   }
@@ -516,7 +506,7 @@ void EvalControlViz(TPG &tpg, EvalStruct &eval,
     eval.leafProgram = tpg.getAction(
         eval.tm, obs, true, eval.visitedTeams, eval.decision_instructions,
         eval.task->step, eval.teamPath, tpg.rngs_[AUX_SEED], false);
-    eval.n_prediction++;    
+    eval.n_prediction++;
     for (auto tm : eval.visitedTeams) {
       if (teamUseMapPerTask[tpg.state_["active_task"]].find(tm->id_) ==
           teamUseMapPerTask[tpg.state_["active_task"]].end()) {
@@ -595,10 +585,9 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
     if (discrete_actions) {
       int action = WrapDiscreteAction(eval);
       obs_list.push_back(task->uniq_discrete_univars_[action]);  // Prev action
-    }
-    else
-      obs_list.push_back(WrapContinuousActionSigmoid(eval));  // Prev action  
-      
+    } else
+      obs_list.push_back(WrapContinuousActionSigmoid(eval));  // Prev action
+
     obs_list.pop_front();
     std::copy(obs_list.begin(), obs_list.end(), obs_vec.begin());
     obs->Set(obs_vec);
@@ -625,9 +614,8 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
     if (discrete_actions) {
       int action = WrapDiscreteAction(eval);
       eval.sequence_pred[i] = task->uniq_discrete_univars_[action];
-    }
-    else
-      eval.sequence_pred[i] = WrapContinuousActionSigmoid(eval);  
+    } else
+      eval.sequence_pred[i] = WrapContinuousActionSigmoid(eval);
     sample++;
     steps++;
     AccumulateStepStats(eval);
