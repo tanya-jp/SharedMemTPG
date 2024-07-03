@@ -34,6 +34,10 @@ To run an experiment using 4 parallel MPI processes, make tpg/recursive_music yo
 ```
 tpg-run-mpi.sh -n 4
 ```
+The experiment will run until it finishes or you kill it with:
+```
+tpg-kill.sh
+```
 
 ### Plot results
 Generate a pdf with various statistics from training (for test stats use "-p 2"):

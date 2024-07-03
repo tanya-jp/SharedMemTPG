@@ -1,4 +1,17 @@
 ################################################################################
+## Experiment Tracking Parameters ##############################################
+################################################################################
+
+# whether to track experiments in comet
+track_experiments 0
+
+# comet experiment key
+experiment_key 7ac170bcf3e64f6fb3a29646c316ba7e
+
+# how frequently to track experiment metrics (in generations)
+track_mod 20
+
+################################################################################
 ## Experiment Type Parameters ##################################################
 ################################################################################
 
@@ -49,7 +62,7 @@ n_generations 1000000
 mu_internal 0
 
 # number of elite teams
-n_elite 200
+n_elite 10
 
 # multiplier for # new teams to generate each generation
 n_elite_mul 5
