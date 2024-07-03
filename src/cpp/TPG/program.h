@@ -42,7 +42,8 @@ class program {
 
   inline int action() { return action_; }
   inline void action(int a) { action_ = a; }
-  virtual double Run(state *s, int& time_step, const size_t& graph_depth, bool& verbose) = 0;
+  virtual double Run(state *s, int &time_step, const size_t &graph_depth,
+                     bool &verbose) = 0;
   inline double bidVal() { return bid_val_; }
   inline void bidVal(double b) { bid_val_ = b; }
   virtual string checkpoint(bool) = 0;
@@ -59,24 +60,19 @@ class program {
   virtual ~program(){};
 
   virtual void MarkIntrons(std::unordered_map<std::string, std::any> &) = 0;
-  
-  inline void MemGet(size_t type, memoryEigen *&m) {
-    m = sharedMemory_[type];
-  }
+
+  inline void MemGet(size_t type, memoryEigen *&m) { m = sharedMemory_[type]; }
 
   inline void MemSet(uint8_t type, memoryEigen *m) {
     sharedMemory_[type] = m;
     m->refInc();
   }
 
-  inline memoryEigen *MemGet(uint8_t type) {
-    return sharedMemory_[type];
-  }
+  inline memoryEigen *MemGet(uint8_t type) { return sharedMemory_[type]; }
 
   inline void CopySharedConstToWorking() {
     for (size_t i = 0; i < sharedMemory_.size(); i++) {
-      privateMemory_[i]->working_memory_ =
-          sharedMemory_[i]->const_memory_;
+      privateMemory_[i]->working_memory_ = sharedMemory_[i]->const_memory_;
     }
   }
 
@@ -91,16 +87,12 @@ class program {
     long a = action_;
     action_ = action;
     return a != action;
-  } 
+  }
   // Mutate bid, return true if any changes occured
-  virtual void MuBid(
-      std::unordered_map<std::string, std::any> &, mt19937 &,
-      uniform_real_distribution<> &,
-      vector<bool> &) = 0;  
+  virtual void MuBid(std::unordered_map<std::string, std::any> &, mt19937 &,
+                     uniform_real_distribution<> &, vector<bool> &) = 0;
   // Not counting introns
-  inline long numFeatures() {
-    return features_.size();
-  }  
+  inline long numFeatures() { return features_.size(); }
   inline void op_counts(vector<int> &v) { v = op_counts_; }
   inline void setId(long id) { id_ = id; }
   inline void setProfile(vector<double> &p) { profile_ = p; }
@@ -132,7 +124,7 @@ struct ProgramBidLexicalCompare {
       return l1->bidVal() > l2->bidVal();
     }
     ////program size post intron removal, smaller is better (assumes MarkIntrons
-    ///is up to date)
+    /// is up to date)
     // else if (l1->esize() != l2->esize()) {
     //    l1->lastCompareFactor(1);
     //    l2->lastCompareFactor(1);

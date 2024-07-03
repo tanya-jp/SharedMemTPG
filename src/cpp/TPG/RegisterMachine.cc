@@ -75,11 +75,12 @@ RegisterMachine::RegisterMachine(
 
   op_counts_.resize(instruction::NUM_OP);
   SetupMemory(std::any_cast<int>(params["memory_indices"]), memory_size_);
-    }
+}
 /******************************************************************************
  * Create RegisterMachine from checkpoint file
  */
-RegisterMachine::RegisterMachine(long gtime, long action, int stateful,
+RegisterMachine::RegisterMachine(
+    long gtime, long action, int stateful,
     std::unordered_map<std::string, std::any> &params, long id, long nrefs,
     std::vector<instruction *> bid) {
   action_ = action;
@@ -242,7 +243,8 @@ void RegisterMachine::MuBid(std::unordered_map<std::string, std::any> &params,
   }
 }
 
-void RegisterMachine::CopyInputToMemory(instruction *istr, state *obs, size_t in) {
+void RegisterMachine::CopyInputToMemory(instruction *istr, state *obs,
+                                        size_t in) {
   // In this case inMem(in) will be inputMemory_ and we use index 0
   // Indices to input memory are mod by obs->dim_ to support environments
   // with different number of scalar observation variables
@@ -270,7 +272,7 @@ void RegisterMachine::CopyInputToMemory(instruction *istr, state *obs, size_t in
 
 /******************************************************************************/
 double RegisterMachine::Run(state *obs, int &time_step,
-                            const size_t &graph_depth, bool& verbose) {
+                            const size_t &graph_depth, bool &verbose) {
   bool dbg = verbose;
   // reset memory
   if (!stateful_) CopySharedConstToWorking();

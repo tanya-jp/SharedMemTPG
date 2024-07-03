@@ -2,219 +2,204 @@
 
 /******************************************************************************/
 
-void die(const char *file, 
-      const char *func,
-      const int line,
-      const char *msg)
-{
-   cerr << "error in file " << string(file) << " function " << string(func);
-   cerr << " line " << line << ": " << string(msg) << "... exiting" << endl;
-   abort();
+void die(const char *file, const char *func, const int line, const char *msg) {
+  cerr << "error in file " << string(file) << " function " << string(func);
+  cerr << " line " << line << ": " << string(msg) << "... exiting" << endl;
+  abort();
 }
 
 /******************************************************************************/
-bool isEqual(vector < int > &x, 
-      vector < int > &y)
-{
-   if(x.size() != y.size()) return false;
+bool isEqual(vector<int> &x, vector<int> &y) {
+  if (x.size() != y.size()) return false;
 
-   vector < int > :: iterator xiter, yiter, enditer;
+  vector<int>::iterator xiter, yiter, enditer;
 
-   for(xiter = x.begin(), yiter = y.begin(), enditer = x.end();
-         xiter != enditer; xiter++, yiter++)
-      if(*xiter != *yiter) return false;
+  for (xiter = x.begin(), yiter = y.begin(), enditer = x.end();
+       xiter != enditer; xiter++, yiter++)
+    if (*xiter != *yiter) return false;
 
-   return true;
+  return true;
 }
 
 /******************************************************************************/
-bool isEqual(vector < double > &x,
-      vector < double > &y,
-      double e)
-{
-   if(x.size() != y.size()) return false;
+bool isEqual(vector<double> &x, vector<double> &y, double e) {
+  if (x.size() != y.size()) return false;
 
-   vector < double > :: iterator xiter, yiter, enditer;
+  vector<double>::iterator xiter, yiter, enditer;
 
-   for(xiter = x.begin(), yiter = y.begin(), enditer = x.end();
-         xiter != enditer; xiter++, yiter++)
-      if(isEqual(*xiter, *yiter, e) == false) return false;
+  for (xiter = x.begin(), yiter = y.begin(), enditer = x.end();
+       xiter != enditer; xiter++, yiter++)
+    if (isEqual(*xiter, *yiter, e) == false) return false;
 
-   return true;
+  return true;
 }
 
 /******************************************************************************/
-   template<class T>
-bool isEqual(vector < T > &x, vector < T > &y, double e)
-{
-   if(x.size() != y.size()) return false;
+template <class T>
+bool isEqual(vector<T> &x, vector<T> &y, double e) {
+  if (x.size() != y.size()) return false;
 
-   typename vector < T > :: iterator xiter, yiter, enditer;
+  typename vector<T>::iterator xiter, yiter, enditer;
 
-   for(xiter = x.begin(), yiter = y.begin(), enditer = x.end();
-         xiter != enditer; xiter++, yiter++)
-      if(isEqual(*xiter, *yiter, e) == false) return false;
+  for (xiter = x.begin(), yiter = y.begin(), enditer = x.end();
+       xiter != enditer; xiter++, yiter++)
+    if (isEqual(*xiter, *yiter, e) == false) return false;
 
-   return true;
+  return true;
 }
 
 /******************************************************************************/
-int readMap(string fileName, 
-      map < string, string > &args)
-{
-   ostringstream o;
-   o << "cannot open map file: " << fileName;
-   int pairs = 0;
+int readMap(string fileName, map<string, string> &args) {
+  ostringstream o;
+  o << "cannot open map file: " << fileName;
+  int pairs = 0;
 
-   ifstream infile(fileName.c_str(), ios::in);
+  ifstream infile(fileName.c_str(), ios::in);
 
-   if(!infile)
-      die(__FILE__, __FUNCTION__, __LINE__, o.str().c_str());
+  if (!infile) die(__FILE__, __FUNCTION__, __LINE__, o.str().c_str());
 
-   do
-   {
-      string key, value;
+  do {
+    string key, value;
 
-      if(infile) infile >> key; else break;
-      if(infile) infile >> value; else break;
+    if (infile)
+      infile >> key;
+    else
+      break;
+    if (infile)
+      infile >> value;
+    else
+      break;
 
-      args.insert(map < string, string > :: value_type(key, value));
-      pairs++;
+    args.insert(map<string, string>::value_type(key, value));
+    pairs++;
 
-   } while(true);
+  } while (true);
 
-   infile.close();
+  infile.close();
 
-   return pairs;
+  return pairs;
 }
 
 /******************************************************************************/
-int stringToInt(string s)
-{
-   istringstream buffer(s);
+int stringToInt(string s) {
+  istringstream buffer(s);
 
-   int i;
+  int i;
 
-   buffer >> i;
+  buffer >> i;
 
-   return i;
+  return i;
 }
 
 /******************************************************************************/
-long stringToLong(string s)
-{
-   istringstream buffer(s);
+long stringToLong(string s) {
+  istringstream buffer(s);
 
-   long l;
+  long l;
 
-   buffer >> l;
+  buffer >> l;
 
-   return l;
+  return l;
 }
 
 /******************************************************************************/
-double stringToDouble(string s)
-{
-   istringstream buffer(s);
+double stringToDouble(string s) {
+  istringstream buffer(s);
 
-   double d;
+  double d;
 
-   buffer >> d;
+  buffer >> d;
 
-   return d;
+  return d;
 }
 
 /******************************************************************************/
-double stdDev(vector<double> vec){
-   double sum = std::accumulate(vec.begin(), vec.end(), 0.0);
-   double mean = sum / vec.size();
-   vector<double> diff(vec.size());
-   transform(vec.begin(), vec.end(), diff.begin(),
-         bind2nd(std::minus<double>(), mean));
-   double sq_sum = inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
-   double stdev = sqrt(sq_sum / (vec.size()-1));
-   return stdev;
+double stdDev(vector<double> vec) {
+  double sum = std::accumulate(vec.begin(), vec.end(), 0.0);
+  double mean = sum / vec.size();
+  vector<double> diff(vec.size());
+  transform(vec.begin(), vec.end(), diff.begin(),
+            bind2nd(std::minus<double>(), mean));
+  double sq_sum = inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
+  double stdev = sqrt(sq_sum / (vec.size() - 1));
+  return stdev;
 }
 
 /******************************************************************************/
-vector<string> &splitString(const string &s, char delim, vector<string> &elems) {
-   elems.clear();
-   stringstream ss(s);
-   string item;
-   while (getline(ss, item, delim)) {
-      elems.push_back(item);
-   }
-   return elems;
+vector<string> &splitString(const string &s, char delim,
+                            vector<string> &elems) {
+  elems.clear();
+  stringstream ss(s);
+  string item;
+  while (getline(ss, item, delim)) {
+    elems.push_back(item);
+  }
+  return elems;
 }
 
 /******************************************************************************/
 vector<string> splitString(const string &s, char delim) {
-   vector<string> elems;
-   splitString(s, delim, elems);
-   return elems;
+  vector<string> elems;
+  splitString(s, delim, elems);
+  return elems;
 }
 
 /******************************************************************************/
-double vecMedian(vector<double> vec)
-{
-   typedef vector<double>::size_type vec_sz;
+double vecMedian(vector<double> vec) {
+  typedef vector<double>::size_type vec_sz;
 
-   vec_sz size = vec.size();
+  vec_sz size = vec.size();
 
-   if (size == 0)
-      die(__FILE__, __FUNCTION__, __LINE__, "trying to get median of empty vector");
+  if (size == 0)
+    die(__FILE__, __FUNCTION__, __LINE__,
+        "trying to get median of empty vector");
 
-   sort(vec.begin(), vec.end());
+  sort(vec.begin(), vec.end());
 
-   vec_sz mid = size/2;
+  vec_sz mid = size / 2;
 
-   return size % 2 == 0 ? (vec[mid] + vec[mid-1]) / 2 : vec[mid];
+  return size % 2 == 0 ? (vec[mid] + vec[mid - 1]) / 2 : vec[mid];
 }
 
 /******************************************************************************/
-int vecMedian(vector<int> vec)
-{
-   typedef vector<int>::size_type vec_sz;
+int vecMedian(vector<int> vec) {
+  typedef vector<int>::size_type vec_sz;
 
-   vec_sz size = vec.size();
+  vec_sz size = vec.size();
 
-   if (size == 0)
-      die(__FILE__, __FUNCTION__, __LINE__, "trying to get median of empty vector");
+  if (size == 0)
+    die(__FILE__, __FUNCTION__, __LINE__,
+        "trying to get median of empty vector");
 
-   sort(vec.begin(), vec.end());
+  sort(vec.begin(), vec.end());
 
-   vec_sz mid = size/2;
+  vec_sz mid = size / 2;
 
-   return size % 2 == 0 ? (vec[mid] + vec[mid-1]) / 2 : vec[mid];
+  return size % 2 == 0 ? (vec[mid] + vec[mid - 1]) / 2 : vec[mid];
 }
 
 /******************************************************************************/
-double vecMean(vector<double> vec)
-{
-   typedef vector<double>::size_type vec_sz;
+double vecMean(vector<double> vec) {
+  typedef vector<double>::size_type vec_sz;
 
-   vec_sz size = vec.size();
+  vec_sz size = vec.size();
 
-   if (size == 0)
-      return 0.0;
+  if (size == 0) return 0.0;
 
-   double sum = accumulate(vec.begin(), vec.end(), 0.0);
+  double sum = accumulate(vec.begin(), vec.end(), 0.0);
 
-   return sum/size;
+  return sum / size;
 }
 
 /******************************************************************************/
-double vecMean(vector<int> vec)
-{
-   typedef vector<int>::size_type vec_sz;
+double vecMean(vector<int> vec) {
+  typedef vector<int>::size_type vec_sz;
 
-   vec_sz size = vec.size();
+  vec_sz size = vec.size();
 
-   if (size == 0)
-      return 0.0;
+  if (size == 0) return 0.0;
 
-   double sum = accumulate(vec.begin(), vec.end(), 0.0);
+  double sum = accumulate(vec.begin(), vec.end(), 0.0);
 
-   return sum/size;
+  return sum / size;
 }
-

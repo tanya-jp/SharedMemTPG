@@ -2,9 +2,10 @@
 #define instruction_h
 
 #include <bitset>
+#include <iomanip>
 #include <random>
 #include <vector>
-#include <iomanip>
+
 #include "memoryEigen.h"
 
 class instruction {
@@ -88,16 +89,17 @@ class instruction {
   mt19937 rng_;
 
   // Mutable instruction parameters
-  int in1Src_ = 0;   // 0,1,2 - private, shared, input (2024-04-29 limit to
-                     // private or input)
-  int in2Src_ = 0;   // 0,1,2 - private, shared, input (2024-04-29 limit to
-                     // private or input)
-  int outSrc_ = 0;   // 0,1 - private, shared (2024-04-29 limit to private)
-  int outIdx_ = 0;   // index to memory
-  int op_ = 0;       // operation
+  int in1Src_ = 0;  // 0,1,2 - private, shared, input (2024-04-29 limit to
+                    // private or input)
+  int in2Src_ = 0;  // 0,1,2 - private, shared, input (2024-04-29 limit to
+                    // private or input)
+  int outSrc_ = 0;  // 0,1 - private, shared (2024-04-29 limit to private)
+  int outIdx_ = 0;  // index to memory
+  int op_ = 0;      // operation
   // Index to memory or feature
   // Range: (0 -> memIndices - 1) sometimes moded by obs size
-  int in1Idx_ = 0;   // index to memory or feature (range: memory_size * memory_size )
+  int in1Idx_ =
+      0;  // index to memory or feature (range: memory_size * memory_size )
   int in1IdxE_ = 0;  // idx for features stored in tmp memoryEign* TODO(skelly)
                      // what is this?
   int in2Idx_ = 0;   // index to memory or feature
@@ -121,7 +123,7 @@ class instruction {
   static vector<operation> op_list_;
   inline void exec(bool dbg) {
     (this->*op_list_[op_])(dbg);
- 
+
     // will get a lot of nan without this
     out_->working_memory_[outIdx_].array() =
         out_->working_memory_[outIdx_].array().unaryExpr(
@@ -130,10 +132,9 @@ class instruction {
     // TODO(skelly): remove this
     out_->working_memory_[outIdx_].array() =
         out_->working_memory_[outIdx_].array().unaryExpr(
-            [](double v) { return isEqual(v,0.0) ? 0.0 : v; });            
-             
-    if (dbg)
-       cerr << out_->working_memory_[outIdx_](0, 0) << endl;   
+            [](double v) { return isEqual(v, 0.0) ? 0.0 : v; });
+
+    if (dbg) cerr << out_->working_memory_[outIdx_](0, 0) << endl;
   }
 
   inline int inIdx(int i) const { return i == 0 ? in1Idx_ : in2Idx_; }
@@ -178,9 +179,9 @@ class instruction {
         in1_->working_memory_[in1IdxE_](0, 0) -
         in2_->working_memory_[in2IdxE_](0, 0);
     if (dbg) {
-      cerr << std::setprecision (std::numeric_limits<double>::digits10 + 1)
-       << std::fixed << "s" << outIdx_ << " = s" << in1IdxE_ << " - "
-           << "s" << in2IdxE_ << " | ";
+      cerr << std::setprecision(std::numeric_limits<double>::digits10 + 1)
+           << std::fixed << "s" << outIdx_ << " = s" << in1IdxE_ << " - " << "s"
+           << in2IdxE_ << " | ";
       cerr << std::fixed << in1_->working_memory_[in1IdxE_](0, 0) << " - "
            << in2_->working_memory_[in2IdxE_](0, 0) << " = "
            << out_->working_memory_[outIdx_](0, 0) << endl;
@@ -192,9 +193,9 @@ class instruction {
         in1_->working_memory_[in1IdxE_](0, 0) *
         in2_->working_memory_[in2IdxE_](0, 0);
     if (dbg) {
-      cerr << std::setprecision (std::numeric_limits<double>::digits10 + 1)
-      << std::fixed << "s" << outIdx_ << " = s" << in1IdxE_ << " * "
-           << "s" << in2IdxE_ << " | ";
+      cerr << std::setprecision(std::numeric_limits<double>::digits10 + 1)
+           << std::fixed << "s" << outIdx_ << " = s" << in1IdxE_ << " * " << "s"
+           << in2IdxE_ << " | ";
       cerr << std::fixed << in1_->working_memory_[in1IdxE_](0, 0) << " * "
            << in2_->working_memory_[in2IdxE_](0, 0) << " = "
            << out_->working_memory_[outIdx_](0, 0) << endl;
@@ -206,14 +207,14 @@ class instruction {
     if (isEqual(in2_->working_memory_[in2IdxE_](0, 0), 0.0)) {
       out_->working_memory_[outIdx_](0, 0) = 0;
     } else {
-    out_->working_memory_[outIdx_](0, 0) =
-        in1_->working_memory_[in1IdxE_](0, 0) /
-        in2_->working_memory_[in2IdxE_](0, 0);
+      out_->working_memory_[outIdx_](0, 0) =
+          in1_->working_memory_[in1IdxE_](0, 0) /
+          in2_->working_memory_[in2IdxE_](0, 0);
     }
     if (dbg) {
-      cerr << std::setprecision (std::numeric_limits<double>::digits10 + 1)
-      << std::fixed  << "s" << outIdx_ << " = s" << in1IdxE_ << " / "
-           << "s" << in2IdxE_ << " | ";
+      cerr << std::setprecision(std::numeric_limits<double>::digits10 + 1)
+           << std::fixed << "s" << outIdx_ << " = s" << in1IdxE_ << " / " << "s"
+           << in2IdxE_ << " | ";
       cerr << std::fixed << in1_->working_memory_[in1IdxE_](0, 0) << " / "
            << in2_->working_memory_[in2IdxE_](0, 0) << " = "
            << out_->working_memory_[outIdx_](0, 0) << endl;
@@ -679,16 +680,18 @@ class instruction {
 
   inline void ExecuteVectorConstSetOp(bool dbg) {
     out_->working_memory_[outIdx_] = in1_->const_memory_[in1IdxE_];
-    // out_->working_memory_[outIdx_] = constants_[in1Idx_ % constants_.size()] *
-                                    //  MatrixXd::Ones(memory_size_, 1);
+    // out_->working_memory_[outIdx_] = constants_[in1Idx_ % constants_.size()]
+    // *
+    //  MatrixXd::Ones(memory_size_, 1);
     if (dbg) {
     }
   }
 
   inline void ExecuteMatrixConstSetOp(bool dbg) {
     out_->working_memory_[outIdx_] = in1_->const_memory_[in1IdxE_];
-    // out_->working_memory_[outIdx_] = constants_[in1Idx_ % constants_.size()] *
-                                    //  MatrixXd::Ones(memory_size_, memory_size_);
+    // out_->working_memory_[outIdx_] = constants_[in1Idx_ % constants_.size()]
+    // *
+    //  MatrixXd::Ones(memory_size_, memory_size_);
     if (dbg) {
     }
   }
