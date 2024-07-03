@@ -14,3 +14,4 @@ mpi
 git
 vim
 htop
+libcurlpp-dev

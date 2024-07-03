@@ -8,12 +8,16 @@
 #include <TPG.h>
 #include <misc.h>
 
+#include <any>
 #include <algorithm>
 #include <boost/mpi.hpp>
 #include <chrono>
+#include <cstdlib>
 
 #include "tpg_arg_parse.h"
 #include "tpg_eval_mpi.h"
+#include "api_client.h"
+
 #define CHECKPOINT_MOD 1000000
 #define PRINT_MOD 1
 // rawfitness,  mean visitedTeams, decisionInstructions
@@ -29,6 +33,32 @@ int main(int argc, char **argv) {
   tpg.params_["id"] = -1;  // remove later
   tpg.setParams();
   tpg_arg_parse(tpg, argc, argv);
+
+  APIClient *apiClient = nullptr;
+
+  if (tpg.GetParam<int>("track_experiments")) {
+    // Only instantiate APIClient if trackExperiment is true
+    apiClient = new APIClient(getenv("COMET_API_KEY"), tpg.GetParam<std::string>("experiment_key"));
+
+    // Track run parameters
+    cout << "Tracking experiment parameters" << endl;
+    for (auto &param : tpg.params_) {
+      std::string value;
+
+      if (param.second.type() == typeid(int)) {
+        value = std::to_string(std::any_cast<int>(param.second));
+      } else if (param.second.type() == typeid(double)) {
+        value = std::to_string(std::any_cast<double>(param.second));
+      } else {
+        value = std::any_cast<std::string>(param.second);
+      }
+
+      apiClient->LogParameter(param.first, value);
+    }
+
+    // Add experiment tracking to TPG
+    tpg.InitExperimentTracking(apiClient);
+  }
 
   ostringstream os;  // logging
 
@@ -68,7 +98,7 @@ int main(int argc, char **argv) {
     else if (substr == "Bach")
       tasks.push_back(new RecursiveForecast("Bach"));  
     else {
-      cout << "Unrecognised task:" << substr << endl;
+      cerr << "Unrecognised task:" << substr << endl;
       exit(1);
     }
     if (tasks[tasks.size() - 1]->eval_type_ == "RecursiveForecast") {
@@ -243,6 +273,23 @@ int main(int argc, char **argv) {
         endGen = chrono::system_clock::now() - startGen;
 
         /* print generation timing *******************************************/
+        double lost = endGen.count() - (endEval.count() + endGenTeams.count() +
+                                endSetEliteTeams.count() + endSelTeams.count() +
+                                endChkp.count() + endReport.count());
+
+        if (tpg.GetParam<int>("track_experiments") && tpg.GetState("t_current") % tpg.GetParam<int>("track_mod") == 0) {
+          std::string gen = to_string(tpg.GetState("t_current"));
+          apiClient->LogMetric("sec", std::to_string(endGen.count()), "", gen);
+          apiClient->LogMetric("evl", std::to_string(endEval.count()), "", gen);
+          apiClient->LogMetric("gTms", std::to_string(endGenTeams.count()), "", gen);
+          apiClient->LogMetric("elTms", std::to_string(endSetEliteTeams.count()), "", gen);
+          apiClient->LogMetric("sTms", std::to_string(endSelTeams.count()), "", gen);
+          apiClient->LogMetric("chkp", std::to_string(endChkp.count()), "", gen);
+          apiClient->LogMetric("rprt", std::to_string(endReport.count()), "", gen);
+          apiClient->LogMetric("MDS", std::to_string(endMODES.count()), "", gen);
+          apiClient->LogMetric("lost", std::to_string(lost), "", gen);
+        }
+
         os << setprecision(5) << fixed;
         os << "gTime t " << tpg.GetState("t_current");
         os << " sec " << endGen.count();
@@ -253,10 +300,7 @@ int main(int argc, char **argv) {
         os << " chkp " << endChkp.count();
         os << " rprt " << endReport.count();
         os << " MDS " << endMODES.count();
-        os << " lost ";
-        os << endGen.count() - (endEval.count() + endGenTeams.count() +
-                                endSetEliteTeams.count() + endSelTeams.count() +
-                                endChkp.count() + endReport.count());
+        os << " lost " << lost;
         os << endl;
         tpg.printOss(os);
 

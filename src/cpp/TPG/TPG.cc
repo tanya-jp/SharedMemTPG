@@ -94,6 +94,10 @@ void TPG::Seed(size_t i, uint_fast32_t s) {
   rngs_[i].seed(seeds_[i]);
 }
 
+void TPG::InitExperimentTracking(APIClient *apiClient) {
+  api_client_ = apiClient;
+}
+
 /******************************************************************************/
 void TPG::clearMemory() {
   for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
@@ -409,7 +413,7 @@ void TPG::ReadParameters(string file_name,
         outcome_fields[0] == "n_stored_outcomes_VALIDATION" ||
         outcome_fields[0] == "n_stored_outcomes_TEST" ||
         outcome_fields[0] == "forecast_fitness" ||
-        outcome_fields[0] == "action_dim") {
+        outcome_fields[0] == "experiment_key") {
       params[outcome_fields[0]] = outcome_fields[1];
     }
     // double parameters are identified by a decimal place
@@ -980,6 +984,10 @@ void TPG::SetEliteTeams(vector<TaskEnv *> &tasks) {
                              ->fit_
           << " ";
       printTeamInfo(GetState("t_current"), GetState("phase"), false, elite_id);
+
+      if (GetParam<int>("track_experiments") && GetState("t_current") % GetParam<int>("track_mod") == 0) {
+        trackTeamInfo(GetState("t_current"), GetState("phase"), false, elite_id);
+      }
     }
     if (set.size() == (size_t)GetState("n_task") &&
         haveEliteTeam(vecToStrNoSpace(set), GetState("fitMode"),
@@ -992,6 +1000,11 @@ void TPG::SetEliteTeams(vector<TaskEnv *> &tasks) {
                              ->fit_
           << " ";
       printTeamInfo(GetState("t_current"), GetState("phase"), false, elite_id);
+
+      if (GetParam<int>("track_experiments") && GetState("t_current") % GetParam<int>("track_mod") == 0) {
+        trackTeamInfo(GetState("t_current"), GetState("phase"), false, elite_id);
+      }
+
       // Keep track of elite team history and only save test checkpoints when we
       // have a new test champion for the full set (all tasks)
       // TODO(skelly): debug this
@@ -2138,6 +2151,81 @@ void TPG::printTeamInfo(long t, int phase, bool singleBest, long teamId) {
       // for (auto iter = bins.begin(); iter != bins.end(); iter++)
       //    oss << ":" << (*iter).first << "-" << (*iter).second;
       oss << endl;
+    }
+  }
+}
+
+void TPG::trackTeamInfo(long t, int phase, bool singleBest, long teamId) {
+  string gen = std::to_string(t);
+
+  team *bestTeam = *(_Mroot.begin());
+  if (singleBest && teamId == -1) bestTeam = getBestTeam();
+  ostringstream tmposs;
+  map<point *, double, pointLexicalLessThan> allOutcomes;
+  // map < point *, double > :: iterator myoiter;
+  vector<int> behaviourSequence;
+  set<team *, teamIdComp> visitedTeams;
+  for (auto teiter = _M.begin(); teiter != _M.end(); teiter++) {
+    if ((!singleBest && (*teiter)->root() && teamId == -1) ||  // all root teams
+        (!singleBest && (*teiter)->id_ == teamId) ||           // specific team
+        (singleBest &&
+         (*teiter)->id_ == bestTeam->id_))  // singleBest root team
+    {
+      api_client_->LogMetric("teamInfo/root", ((*teiter)->root() ? "1" : "0"), "", gen);
+      api_client_->LogMetric("teamInfo/sz", std::to_string((*teiter)->size()), "", gen);
+      api_client_->LogMetric("teamInfo/age", std::to_string(t - (*teiter)->gtime_), "", gen);
+      api_client_->LogMetric("teamInfo/nOutTrain", std::to_string((*teiter)->numOutcomes(_TRAIN_PHASE, -1)), "", gen);
+      api_client_->LogMetric("teamInfo/nOutTest", std::to_string((*teiter)->numOutcomes(_TEST_PHASE, -1)), "", gen);
+      api_client_->LogMetric("teamInfo/fit", std::to_string((*teiter)->fit_), "", gen);
+
+      visitedTeams.clear();
+      vector<int> programInstructionCounts, effectiveProgramInstructionCounts;
+      (*teiter)->policyInstructions(_teamMap, visitedTeams,
+                                    programInstructionCounts,
+                                    effectiveProgramInstructionCounts);
+
+      int pIns = accumulate(programInstructionCounts.begin(), programInstructionCounts.end(), 0);
+      double mnProgIns = vecMean(programInstructionCounts);
+      int ePIns= accumulate(effectiveProgramInstructionCounts.begin(),
+                        effectiveProgramInstructionCounts.end(), 0);
+      double mnEProgIns = vecMean(effectiveProgramInstructionCounts);
+      api_client_->LogMetric("teamInfo/pIns", std::to_string(pIns), "", gen);
+      api_client_->LogMetric("teamInfo/mnProgIns", std::to_string(mnProgIns), "", gen);
+      api_client_->LogMetric("teamInfo/ePIns", std::to_string(ePIns), "", gen);
+      api_client_->LogMetric("teamInfo/mnEProgIns", std::to_string(mnEProgIns), "", gen);
+
+      set<program *, programIdComp> programs;
+      set<memoryEigen *, memoryEigenIdComp> memories;
+      set<team *, teamIdComp> visitedTeams2;
+      (*teiter)->GetAllNodes(_teamMap, visitedTeams2, programs, memories);
+      api_client_->LogMetric("teamInfo/nP", std::to_string(programs.size()), "", gen);
+      api_client_->LogMetric("teamInfo/nT", std::to_string(visitedTeams2.size()), "", gen);
+      api_client_->LogMetric("teamInfo/nM", std::to_string(memories.size()), "", gen);
+
+      vector<int> op_countsSingle;
+      vector<int> op_countsTally;
+      op_countsTally.resize(instruction::NUM_OP);
+
+      fill(op_countsTally.begin(), op_countsTally.end(), 0);
+      for (auto it = programs.begin(); it != programs.end(); it++) {
+        (*it)->op_counts(op_countsSingle);
+        for (size_t i = 0; i < op_countsSingle.size(); i++)
+          op_countsTally[i] += op_countsSingle[i];
+      }
+
+      api_client_->LogMetric("teamInfo/nOp", vecToStr(op_countsTally), "", gen);
+
+      vector<int> tmSizesRoot, tmSizesSub;
+      tmSizesRoot.push_back((*teiter)->size());
+      for (auto teiter2 = visitedTeams2.begin(); teiter2 != visitedTeams2.end();
+           teiter2++)
+        if ((*teiter2)->id_ != (*teiter)->id_)  // not the root of this policy
+          tmSizesSub.push_back((*teiter2)->size());
+
+      double mnTmSzR = vecMean(tmSizesRoot);
+      int mnTmSzS = (tmSizesSub.size() > 0 ? vecMean(tmSizesSub) : 0);
+      api_client_->LogMetric("teamInfo/mnTmSzR", std::to_string(mnTmSzR), "", gen);
+      api_client_->LogMetric("teamInfo/mnTmSzS", std::to_string(mnTmSzS), "", gen);
     }
   }
 }
