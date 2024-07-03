@@ -41,6 +41,7 @@ int main(int argc, char **argv) {
     apiClient = new APIClient(getenv("COMET_API_KEY"), tpg.GetParam<std::string>("experiment_key"));
 
     // Track run parameters
+    cout << "Tracking experiment parameters" << endl;
     for (auto &param : tpg.params_) {
       std::string value;
 
