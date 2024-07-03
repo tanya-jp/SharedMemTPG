@@ -130,7 +130,7 @@ class instruction {
     // TODO(skelly): remove this
     out_->working_memory_[outIdx_].array() =
         out_->working_memory_[outIdx_].array().unaryExpr(
-            [](double v) { return isEqual(v,0.0) ? 0.0 : v; });    
+            [](double v) { return isEqual(v,0.0) ? 0.0 : v; });            
              
     if (dbg)
        cerr << out_->working_memory_[outIdx_](0, 0) << endl;   

@@ -95,6 +95,8 @@ int main(int argc, char **argv) {
       tasks.push_back(new RecursiveForecast("Pitch"));
     else if (substr == "PitchBach")
       tasks.push_back(new RecursiveForecast("PitchBach"));
+    else if (substr == "Bach")
+      tasks.push_back(new RecursiveForecast("Bach"));  
     else {
       cerr << "Unrecognised task:" << substr << endl;
       exit(1);

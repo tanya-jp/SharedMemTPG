@@ -33,10 +33,10 @@ typedef void (*EvaluatorFunction)(TPG &, EvalStruct &);
 // TODO(spkelly): put this in TPG.h
 struct EvalStruct {
   int episode;
+  int sample;
   int n_prediction;
   int saveFrame = 0;
-  vector<double> sequence_targ;
-  vector<double> sequence_pred;
+
   vector<double> runTimeStats;
   vector<int> runTimeInts;
   vector<int> behavSeq;
@@ -52,6 +52,16 @@ struct EvalStruct {
   program *leafProgram;
   bool animate;
   bool partially_observable;
+
+  // only for recursive forecasting
+  vector<double> sequence_targ;
+  vector<double> sequence_pred;
+
+  state *obs;  // = new state(tpg.n_input_[tpg.GetState("active_task")]);
+  list<double> obs_list;   //(tpg.n_input_[tpg.GetState("active_task")], 1.0);
+  vector<double> obs_vec;  //(tpg.n_input_[tpg.GetState("active_task")], 1.0);
+
+  //////////////////////////////////////////////////////////////////////////////
 
   EvalStruct(TPG &tpg) {
     // runTimeStats.reserve(tpg.GetParam<int>("n_point_aux_double"));
@@ -80,6 +90,14 @@ double WrapContinuousActionSigmoid(EvalStruct &eval) {
   double p = eval.leafProgram->privateMemory_[memoryEigen::SCALAR_TYPE]
                  ->working_memory_[1](0, 0);
   return 1 / (1 + exp(-p));
+}
+
+vector<double> WrapVectorActionSigmoid(EvalStruct &eval) {
+  auto mat = eval.leafProgram->privateMemory_[memoryEigen::VECTOR_TYPE]
+                 ->working_memory_[0];
+  vector<double> vec(mat.data(), mat.data() + mat.rows() * mat.cols());
+  for (auto &v : vec) v = sigmoid(v);  // TODO(skelly): better/faster way?
+  return vec;
 }
 
 vector<team *> GetTeamsToEval(TPG &tpg, TaskEnv *task) {
@@ -114,11 +132,13 @@ vector<team *> GetTeamsToEval(TPG &tpg, TaskEnv *task) {
 /**
  * Parameters:
  * - tpg: TPG instance
- * - world: MPI communicator object, which represents a group of processes that can communicate with each other
+ * - world: MPI communicator object, which represents a group of processes that
+ * can communicate with each other
  * - teams_to_eval: teams to evaluate
- * - world_size_per_task: number of processors available to evaluate on this task
+ * - world_size_per_task: number of processors available to evaluate on this
+ * task
  * - evaluator: keeps track of current processor
-*/
+ */
 void AssignTeamsToEvaluators(TPG &tpg, mpi::communicator &world,
                              vector<team *> &teams_to_eval,
                              int world_size_per_task, int &evaluator) {
@@ -127,7 +147,8 @@ void AssignTeamsToEvaluators(TPG &tpg, mpi::communicator &world,
   vector<team *> teams;
 
   for (auto it = teams_to_eval.begin(); it != teams_to_eval.end(); it++) {
-    // Assign teams_per_evaluator teams to each of world_size_per_task processors
+    // Assign teams_per_evaluator teams to each of world_size_per_task
+    // processors
     teams.push_back(*it);
     if ((remainder > 0 && teams.size() == teams_per_evaluator + 1) ||
         (remainder == 0 && teams.size() == teams_per_evaluator) ||
@@ -201,8 +222,8 @@ void AccumulateStepStats(EvalStruct &eval) {
 void FinalizeStepStats(TPG &tpg, EvalStruct &eval) {
   if (eval.task->eval_type_ == "RecursiveForecast") {
     if (tpg.GetParam<string>("forecast_fitness") == "mse") {
-      auto mse = MeanSquaredError(eval.sequence_targ, eval.sequence_pred);
-      eval.runTimeStats[REWARD1_IDX] = -mse;
+      auto err = MeanSquaredError(eval.sequence_targ, eval.sequence_pred);
+      eval.runTimeStats[REWARD1_IDX] = -err;
     } else if (tpg.GetParam<string>("forecast_fitness") == "correlation") {
       auto corr = Correlation(eval.sequence_targ, eval.sequence_pred);
       eval.runTimeStats[REWARD1_IDX] = corr;
@@ -210,14 +231,24 @@ void FinalizeStepStats(TPG &tpg, EvalStruct &eval) {
       auto corr = PearsonCorrelation(eval.sequence_targ, eval.sequence_pred);
       eval.runTimeStats[REWARD1_IDX] = corr;
     } else if (tpg.GetParam<string>("forecast_fitness") == "theils") {
-      auto theils = TheilsStatistic(eval.sequence_targ, eval.sequence_pred);
-      eval.runTimeStats[REWARD1_IDX] = -theils;
+      auto err = TheilsStatistic(eval.sequence_targ, eval.sequence_pred);
+      eval.runTimeStats[REWARD1_IDX] = -err;
+    } else if (tpg.GetParam<string>("forecast_fitness") == "mse_multivar") {
+      auto err = calculateMSE_Multi(eval.sequence_targ, eval.sequence_pred);
+      eval.runTimeStats[REWARD1_IDX] = -err;
+    } else if (tpg.GetParam<string>("forecast_fitness") == "theils_multivar") {
+      auto err = calculateTheils_Multi(eval.sequence_targ, eval.sequence_pred);
+      eval.runTimeStats[REWARD1_IDX] = -err;
+    } else if (tpg.GetParam<string>("forecast_fitness") == "pearson_multivar") {
+      auto corr =
+          calculatePearson_Multi(eval.sequence_targ, eval.sequence_pred);
+      eval.runTimeStats[REWARD1_IDX] = corr;
+      if (!isfinite(eval.runTimeStats[REWARD1_IDX]))
+        eval.runTimeStats[REWARD1_IDX] = 0;
     } else {
       die(__FILE__, __FUNCTION__, __LINE__,
           "Unsupported forecast fitness function");
     }
-    if (!isfinite(eval.runTimeStats[REWARD1_IDX]))
-      eval.runTimeStats[REWARD1_IDX] = eval.task->min_reward_;
   }
   eval.runTimeStats[VISITED_TEAMS_IDX] /= eval.n_prediction;
   eval.runTimeStats[INSTRUCTIONS_IDX] /= eval.n_prediction;
@@ -247,14 +278,14 @@ bool NotDoneAndActive(EvalStruct &eval) {
  *  b. Each process in a group evaluates a subset of agents on the task
  * 2. Wait for evals to finish
  * 3. Collect results
- * 
+ *
  * @param tpg The TPG instance with all the teams
  * @param world The MPI communicator object
  * @param tasks The set of all tasks in the TPG
  * @param evalTasks The indices of the tasks to evaluate
-*/
-void evaluate_main(TPG &tpg, mpi::communicator &world,
-                   vector<TaskEnv *> &tasks, vector<int> evalTasks) {
+ */
+void evaluate_main(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks,
+                   vector<int> evalTasks) {
   string my_string = "MAIN";
   vector<team *> teams_this_eval;
   vector<string> all_strings;
@@ -339,8 +370,7 @@ double estimate_fitness(TPG &tpg, team *tm, int task) {
 /// @param tpg The TPG instance with all the teams
 /// @param tasks The set of all tasks in the TPG
 /// @param estTasks Task indices to estimate fitness on
-void estimate_main(TPG &tpg, vector<TaskEnv *> &tasks, vector<int> estTasks)
-{
+void estimate_main(TPG &tpg, vector<TaskEnv *> &tasks, vector<int> estTasks) {
   // Loop through tasks
   for (int task : estTasks) {
     tpg.state_["active_task"] = task;
@@ -360,7 +390,8 @@ void estimate_main(TPG &tpg, vector<TaskEnv *> &tasks, vector<int> estTasks)
 
       for (int i = 0; i < tasks[task]->GetNumEval(tpg.GetState("phase")); i++) {
         r_runTimeInts[POINT_AUX_INT_ENVSEED] = i;
-        tpg.setOutcome(tm, behavSeq, r_runTimeStats, r_runTimeInts, tpg.GetState("t_current"));
+        tpg.setOutcome(tm, behavSeq, r_runTimeStats, r_runTimeInts,
+                       tpg.GetState("t_current"));
       }
     }
   }
@@ -376,7 +407,7 @@ void EvalControl(TPG &tpg, EvalStruct &eval) {
     eval.leafProgram = tpg.getAction(
         eval.tm, obs, true, eval.visitedTeams, eval.decision_instructions,
         eval.task->step, eval.teamPath, tpg.rngs_[AUX_SEED], false);
-    eval.n_prediction++;    
+    eval.n_prediction++;
     MaybeAnimateStep(eval);
     TaskEnv::Results r =
         eval.task->update(WrapDiscreteAction(eval), WrapContinuousAction(eval),
@@ -388,61 +419,119 @@ void EvalControl(TPG &tpg, EvalStruct &eval) {
   delete obs;
 }
 
+void SaveRecursiveForecast(TPG &tpg, EvalStruct &eval) {
+  RecursiveForecast *task = dynamic_cast<RecursiveForecast *>(eval.task);
+  bool discrete_actions = tpg.GetParam<int>("forecast_discrete");
+  if (tpg.GetParam<int>("forecast_univar")) {
+    eval.sequence_targ[eval.n_prediction] = task->data[eval.sample + 1][0];
+    if (discrete_actions) {
+      int action = WrapDiscreteAction(eval);
+      eval.sequence_pred[eval.n_prediction] =
+          task->uniq_discrete_univars_[action];
+    } else
+      eval.sequence_pred[eval.n_prediction] = WrapContinuousActionSigmoid(eval);
+  } else {
+    if (tpg.GetParam<string>("action_dim") == "1x3") {
+      auto targ = task->data[eval.sample + 1];
+      auto act = WrapVectorActionSigmoid(eval);
+      for (size_t var = 0; var < act.size(); var++) {
+        eval.sequence_targ[eval.n_prediction * act.size() + var] = targ[var];
+        eval.sequence_pred[eval.n_prediction * act.size() + var] = targ[var];
+      }
+    } else {  // if (tpg.GetParam<string>("action_dim") == "1x1"){
+      auto targ = task->data[eval.sample + 1];
+      size_t y = size_t(tpg.GetParam<int>("predict_var"));
+      for (size_t var = 0; var < targ.size(); var++) {
+        eval.sequence_targ[eval.n_prediction * targ.size() + var] = targ[var];
+        if (var == y) {
+          eval.sequence_pred[eval.n_prediction * targ.size() + var] =
+              WrapContinuousActionSigmoid(eval);
+        } else {
+          eval.sequence_pred[eval.n_prediction * targ.size() + var] = targ[var];
+        }
+      }
+    }
+  }
+}
+
+void InitRecusiveForecastObs(TPG &tpg, EvalStruct &eval) {
+  eval.obs = new state(tpg.n_input_[tpg.GetState("active_task")]);
+  eval.obs_list.assign(tpg.n_input_[tpg.GetState("active_task")], 1.0);
+  eval.obs_vec.assign(tpg.n_input_[tpg.GetState("active_task")], 1.0);
+}
+
+void PrepareRecusiveForecastObs(TPG &tpg, EvalStruct &eval, bool prime) {
+  RecursiveForecast *task = dynamic_cast<RecursiveForecast *>(eval.task);
+  bool discrete_actions = tpg.GetParam<int>("forecast_discrete");
+  if (prime) {  // prime
+    if (tpg.GetParam<int>("forecast_univar")) {
+      eval.obs_list.push_back(task->data[eval.sample][0]);
+      eval.obs_list.pop_front();
+      std::copy(eval.obs_list.begin(), eval.obs_list.end(),
+                eval.obs_vec.begin());
+      eval.obs->Set(eval.obs_vec);
+    } else {
+      eval.obs->Set(task->data[eval.sample]);
+    }
+  } else {  // predict
+    if (tpg.GetParam<int>("forecast_univar")) {
+      if (discrete_actions) {
+        int action = WrapDiscreteAction(eval);
+        eval.obs_list.push_back(
+            task->uniq_discrete_univars_[action]);  // Prev action
+      } else
+        eval.obs_list.push_back(
+            WrapContinuousActionSigmoid(eval));  // Prev action
+      eval.obs_list.pop_front();
+      std::copy(eval.obs_list.begin(), eval.obs_list.end(),
+                eval.obs_vec.begin());
+      eval.obs->Set(eval.obs_vec);
+    } else {
+      std::vector<double> v;
+      if (tpg.GetParam<string>("action_dim") == "1x3") {
+        v = WrapVectorActionSigmoid(eval);  // Prev action
+      } else {  // if (tpg.GetParam<string>("action_dim") == "1x1"){
+        v = eval.n_prediction == 0 ? task->data[eval.sample - 1]
+                                   : task->data[eval.sample];
+        v[tpg.GetParam<int>("predict_var")] =
+            WrapContinuousActionSigmoid(eval);  // Prev action
+      }
+      eval.obs->Set(v);
+    }
+  }
+}
+
 /******************************************************************************/
 void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
   RecursiveForecast *task = dynamic_cast<RecursiveForecast *>(eval.task);
   eval.n_prediction = 0;
-  state *obs = new state(tpg.n_input_[tpg.GetState("active_task")]);
-  list<double> obs_list(tpg.n_input_[tpg.GetState("active_task")], 1.0);
-  vector<double> obs_vec(tpg.n_input_[tpg.GetState("active_task")], 1.0);
-  // Prime
-  int sample = task->t_start[tpg.GetState("phase")][eval.episode];
-  for (int i = 0; i < task->n_prime_ - 1; i++) {
-    // Prepare observation
-    obs_list.push_back(task->GetSampleUnivar(sample));
-    obs_list.pop_front();
-    std::copy(obs_list.begin(), obs_list.end(), obs_vec.begin());
-    obs->Set(obs_vec);
+  InitRecusiveForecastObs(tpg, eval);
 
+  // Prime
+  eval.sample = task->t_start[tpg.GetState("phase")][eval.episode];
+  for (int i = 0; i < task->n_prime_ - 1; i++) {
+    PrepareRecusiveForecastObs(tpg, eval, true);
     // Execute graph
     eval.leafProgram = tpg.getAction(
-        eval.tm, obs, true, eval.visitedTeams, eval.decision_instructions,
+        eval.tm, eval.obs, true, eval.visitedTeams, eval.decision_instructions,
         eval.task->step, eval.teamPath, tpg.rngs_[AUX_SEED], false);
-    sample++;
+    eval.sample++;
   }
   // Predict
-  bool discrete_actions = tpg.GetParam<int>("forecast_discrete");
-  for (int i = 0; i < task->n_predict_[tpg.GetState("phase")]; i++) {
-    // Prepare observation
-    if (discrete_actions) {
-      int action = WrapDiscreteAction(eval);
-      obs_list.push_back(task->uniq_discrete_univars_[action]);  // Prev action
-    }
-    else
-      obs_list.push_back(WrapContinuousActionSigmoid(eval));  // Prev action
-    obs_list.pop_front();
-    std::copy(obs_list.begin(), obs_list.end(), obs_vec.begin());
-    obs->Set(obs_vec);
-
+  for (eval.n_prediction = 0;
+       eval.n_prediction < task->n_predict_[tpg.GetState("phase")];
+       eval.n_prediction++) {
+    PrepareRecusiveForecastObs(tpg, eval, false);
     // Execute graph
-    eval.leafProgram = tpg.getAction(eval.tm, obs, true, eval.visitedTeams,
+    eval.leafProgram = tpg.getAction(eval.tm, eval.obs, true, eval.visitedTeams,
                                      eval.decision_instructions, task->step,
                                      eval.teamPath, tpg.rngs_[AUX_SEED], false);
-    eval.n_prediction++;
 
-    // Save targets and predictions
-    eval.sequence_targ[i] = task->GetSampleUnivar(sample);
-    if (discrete_actions) {
-      int action = WrapDiscreteAction(eval);
-      eval.sequence_pred[i] = task->uniq_discrete_univars_[action];
-    }
-    else
-      eval.sequence_pred[i] = WrapContinuousActionSigmoid(eval);
-    
-    sample++;
+    SaveRecursiveForecast(tpg, eval);
+    eval.sample++;
     AccumulateStepStats(eval);
   }
-  delete obs;
+  delete eval.obs;
 }
 
 /*******************************************************************************
@@ -463,8 +552,15 @@ void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
 
       if (eval.task->eval_type_ == "RecursiveForecast") {
         RecursiveForecast *task = dynamic_cast<RecursiveForecast *>(eval.task);
-        eval.sequence_targ.resize(task->n_predict_[tpg.GetState("phase")]);
-        eval.sequence_pred.resize(task->n_predict_[tpg.GetState("phase")]);
+        if (tpg.GetParam<int>("forecast_univar")) {
+          eval.sequence_targ.resize(task->n_predict_[tpg.GetState("phase")]);
+          eval.sequence_pred.resize(task->n_predict_[tpg.GetState("phase")]);
+        } else {
+          eval.sequence_targ.resize(task->n_predict_[tpg.GetState("phase")] *
+                                    tpg.n_input_[tpg.GetState("active_task")]);
+          eval.sequence_pred.resize(task->n_predict_[tpg.GetState("phase")] *
+                                    tpg.n_input_[tpg.GetState("active_task")]);
+        }
       }
       eval.evalResult = "";
       for (auto tm : eval.teams) {
@@ -516,7 +612,7 @@ void EvalControlViz(TPG &tpg, EvalStruct &eval,
     eval.leafProgram = tpg.getAction(
         eval.tm, obs, true, eval.visitedTeams, eval.decision_instructions,
         eval.task->step, eval.teamPath, tpg.rngs_[AUX_SEED], false);
-    eval.n_prediction++;    
+    eval.n_prediction++;
     for (auto tm : eval.visitedTeams) {
       if (teamUseMapPerTask[tpg.state_["active_task"]].find(tm->id_) ==
           teamUseMapPerTask[tpg.state_["active_task"]].end()) {
@@ -543,6 +639,39 @@ void EvalControlViz(TPG &tpg, EvalStruct &eval,
   delete obs;
 }
 
+void PrintRecursizeForecast(string filename, int t_start, int n_var,
+                            vector<double> prime_samples,
+                            vector<double> targets,
+                            vector<double> predictions) {
+  // Print csv format for quick plotting
+  ofstream test_file;
+  test_file.open(filename);
+  // Print header
+  test_file << "Time";
+  for (int i = 0; i < n_var; i++) test_file << ",x" << to_string(i);
+  for (int i = 0; i < n_var; i++) test_file << ",y" << to_string(i);
+  test_file << endl;
+
+  for (size_t i = 0; i < prime_samples.size() / n_var; i++) {
+    test_file << t_start++;
+    for (int var = 0; var < n_var; var++) {
+      test_file << "," << prime_samples[i * n_var + var];
+    }
+    test_file << endl;
+  }
+  for (size_t i = 0; i < targets.size() / n_var; i++) {
+    test_file << t_start++;
+    for (int var = 0; var < n_var; var++) {
+      test_file << std::fixed << "," << targets[i * n_var + var];
+    }
+    for (int var = 0; var < n_var; var++) {
+      test_file << std::fixed << "," << predictions[i * n_var + var];
+    }
+    test_file << endl;
+  }
+  test_file.close();
+}
+
 /******************************************************************************/
 void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
                               vector<map<long, double>> &teamUseMapPerTask,
@@ -550,26 +679,36 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
                               int &steps) {
   RecursiveForecast *task = dynamic_cast<RecursiveForecast *>(eval.task);
   eval.n_prediction = 0;
-  eval.sequence_targ.resize(task->n_predict_[tpg.GetState("phase")]);
-  eval.sequence_pred.resize(task->n_predict_[tpg.GetState("phase")]);
-  state *obs = new state(tpg.n_input_[tpg.GetState("active_task")]);
-  list<double> obs_list(tpg.n_input_[tpg.GetState("active_task")], 1.0);
-  vector<double> obs_vec(tpg.n_input_[tpg.GetState("active_task")], 1.0);
+  if (tpg.GetParam<int>("forecast_univar")) {
+    eval.sequence_targ.resize(task->n_predict_[tpg.GetState("phase")]);
+    eval.sequence_pred.resize(task->n_predict_[tpg.GetState("phase")]);
+  } else {
+    eval.sequence_targ.resize(task->n_predict_[tpg.GetState("phase")] *
+                              tpg.n_input_[tpg.GetState("active_task")]);
+    eval.sequence_pred.resize(task->n_predict_[tpg.GetState("phase")] *
+                              tpg.n_input_[tpg.GetState("active_task")]);
+  }
+
+  InitRecusiveForecastObs(tpg, eval);
+
   // Prime
   vector<double> prime_samples_plot;
-  int sample =
+  eval.sample =
       task->t_start[tpg.GetParam<int>("checkpoint_in_phase")][eval.episode];
   for (int i = 0; i < task->n_prime_ - 1; i++) {
-    // Prepare observation
-    obs_list.push_back(task->GetSampleUnivar(sample));
-    prime_samples_plot.push_back(task->GetSampleUnivar(sample));
-    obs_list.pop_front();
-    std::copy(obs_list.begin(), obs_list.end(), obs_vec.begin());
-    obs->Set(obs_vec);
+    PrepareRecusiveForecastObs(tpg, eval, true);
+
+    if (tpg.GetParam<int>("forecast_univar")) {
+      prime_samples_plot.push_back(task->data[eval.sample][0]);
+    } else {
+      prime_samples_plot.insert(prime_samples_plot.end(),
+                                task->data[eval.sample].begin(),
+                                task->data[eval.sample].end());
+    }
 
     // Execute graph
     eval.leafProgram = tpg.getAction(
-        eval.tm, obs, true, eval.visitedTeams, eval.decision_instructions,
+        eval.tm, eval.obs, true, eval.visitedTeams, eval.decision_instructions,
         eval.task->step, eval.teamPath, tpg.rngs_[AUX_SEED], false);
 
     // Team user per task stats TODO(skelly): move to accumulator?
@@ -584,30 +723,20 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
     // teamUseMapPerTask[tpg.state_["active_task"]][eval.tm->id_] += 1.0;
     visitedTeamsAllTasks.insert(eval.visitedTeams.begin(),
                                 eval.visitedTeams.end());
-    sample++;
+    eval.sample++;
     steps++;
   }
   // Predict
-  bool discrete_actions = tpg.GetParam<int>("forecast_discrete");
-  for (int i = 0;
-       i < task->n_predict_[tpg.GetParam<int>("checkpoint_in_phase")]; i++) {
-    // Prepare observation
-    if (discrete_actions) {
-      int action = WrapDiscreteAction(eval);
-      obs_list.push_back(task->uniq_discrete_univars_[action]);  // Prev action
-    }
-    else
-      obs_list.push_back(WrapContinuousActionSigmoid(eval));  // Prev action  
-      
-    obs_list.pop_front();
-    std::copy(obs_list.begin(), obs_list.end(), obs_vec.begin());
-    obs->Set(obs_vec);
+  for (eval.n_prediction = 0;
+       eval.n_prediction <
+       task->n_predict_[tpg.GetParam<int>("checkpoint_in_phase")];
+       eval.n_prediction++) {
+    PrepareRecusiveForecastObs(tpg, eval, false);
 
     // Execute graph
-    eval.leafProgram = tpg.getAction(eval.tm, obs, true, eval.visitedTeams,
+    eval.leafProgram = tpg.getAction(eval.tm, eval.obs, true, eval.visitedTeams,
                                      eval.decision_instructions, task->step,
                                      eval.teamPath, tpg.rngs_[AUX_SEED], false);
-    eval.n_prediction++;
     // Team user per task stats TODO(skelly): move to accumulator?
     for (auto tm : eval.visitedTeams) {
       if (teamUseMapPerTask[tpg.state_["active_task"]].find(tm->id_) ==
@@ -620,35 +749,22 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
     // teamUseMapPerTask[tpg.state_["active_task"]][eval.tm->id_] += 1.0;
     visitedTeamsAllTasks.insert(eval.visitedTeams.begin(),
                                 eval.visitedTeams.end());
-    // Save targets and predistions
-    eval.sequence_targ[i] = task->GetSampleUnivar(sample);
-    if (discrete_actions) {
-      int action = WrapDiscreteAction(eval);
-      eval.sequence_pred[i] = task->uniq_discrete_univars_[action];
-    }
-    else
-      eval.sequence_pred[i] = WrapContinuousActionSigmoid(eval);  
-    sample++;
+
+    SaveRecursiveForecast(tpg, eval);
+    eval.sample++;
     steps++;
     AccumulateStepStats(eval);
   }
-  delete obs;
-  // Print csv format for quick plotting
-  ofstream test_file;
-  test_file.open("tpg_" + to_string(tpg.seeds_[TPG_SEED]) + "_test_t" +
-                 to_string(task->t_start[tpg.GetParam<int>(
-                     "checkpoint_in_phase")][eval.episode]) +
-                 ".csv");
-  test_file << "Time,Target,Prediction" << endl;
-  int t_start =
-      task->t_start[tpg.GetParam<int>("checkpoint_in_phase")][eval.episode];
-  for (size_t i = 0; i < prime_samples_plot.size(); i++)
-    test_file << t_start++ << "," << prime_samples_plot[i] << "," << endl;
-  for (size_t i = 0; i < eval.sequence_targ.size(); i++)
-    test_file << t_start++ << "," << std::fixed << eval.sequence_targ[i] << ","
-              << eval.sequence_pred[i] << endl;
-  test_file << endl;
-  test_file.close();
+  delete eval.obs;
+
+  PrintRecursizeForecast(
+      "tpg_" + to_string(tpg.seeds_[TPG_SEED]) + "_test_t" +
+          to_string(task->t_start[tpg.GetParam<int>("checkpoint_in_phase")]
+                                 [eval.episode]) +
+          ".csv",
+      task->t_start[tpg.GetParam<int>("checkpoint_in_phase")][eval.episode],
+      tpg.n_input_[tpg.GetState("active_task")], prime_samples_plot,
+      eval.sequence_targ, eval.sequence_pred);
 }
 
 /******************************************************************************/

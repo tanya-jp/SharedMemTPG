@@ -132,6 +132,7 @@ inline void getAncestorIds(map<long, phyloRecord> &phyloGraph, set<long> &a, lon
 int readMap(string, map<string, string> &);
 void ReadParameters(string file_name, std::unordered_map<string, std::any> &params);
 inline double sigmoid(double x, double m) { return 1 / (1 + exp(-(m * x))); }
+inline double sigmoid(double x) { return 1 / (1 + exp(-x)); }
 double stdDev(std::vector<double>);
 int stringToInt(string);
 long stringToLong(string);
@@ -145,14 +146,14 @@ std::vector<string> &splitString(const string &s, char delim, std::vector<string
 std::vector<string> splitString(const string &s, char delim);
 
 template <class vtype>
-string vecToStr(std::vector<vtype> &v)
+string vecToStr(std::vector<vtype> &v, string delim = " ")
 {
    ostringstream oss; // oss.precision(numeric_limits<double>::digits10+1);
    for (size_t i = 0; i < v.size(); i++)
    {
       oss << v[i];
       if (i < v.size() - 1)
-         oss << " ";
+         oss << delim;
    }
    return oss.str();
 }
