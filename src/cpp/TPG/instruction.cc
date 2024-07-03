@@ -395,20 +395,19 @@ void instruction::mutate(bool uniform, vector<bool> &legal_ops, mt19937 &rng) {
   auto nOp = std::count(legal_ops.begin(), legal_ops.end(), true);
 
   if (uniform) {  // randomly set each part of this instruction
-    //std::uniform_int_distribution<> dis(0, 2);
+    // std::uniform_int_distribution<> dis(0, 2);
     std::uniform_int_distribution<> dis(0, 1);
-    in1Src_ = dis(rng) == 0 ? 0 : 2; // private memory or input
-    in2Src_ = dis(rng) == 0 ? 0 : 2; //private memory or input
+    in1Src_ = dis(rng) == 0 ? 0 : 2;  // private memory or input
+    in2Src_ = dis(rng) == 0 ? 0 : 2;  // private memory or input
     // dis = std::uniform_int_distribution<>(0, 1);
-    outSrc_ = 0; //dis(rng);  // only write to private
+    outSrc_ = 0;  // dis(rng);  // only write to private
     dis = std::uniform_int_distribution<>(0, memIndices_ - 1);
     outIdx_ = dis(rng);
     dis = std::uniform_int_distribution<>(0, legal_ops.size() - 1);
     do {
       op_ = dis(rng);
     } while (!legal_ops[op_]);
-    dis = std::uniform_int_distribution<>(
-        0, memIndices_ - 1);
+    dis = std::uniform_int_distribution<>(0, memIndices_ - 1);
     in1Idx_ = in1IdxE_ = dis(rng);
     in2Idx_ = in2IdxE_ = dis(rng);
   } else {  // randomly change one part of this instruction
@@ -455,8 +454,7 @@ void instruction::mutate(bool uniform, vector<bool> &legal_ops, mt19937 &rng) {
       case 4:  // change in1 index
         // if (num_input_ < 2) break;
         prev = in1Idx_;
-        dis = std::uniform_int_distribution<>(
-            0, memIndices_ - 1);  
+        dis = std::uniform_int_distribution<>(0, memIndices_ - 1);
         do {
           in1Idx_ = in1IdxE_ = dis(rng);
         } while (in1Idx_ == prev);

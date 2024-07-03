@@ -136,7 +136,8 @@ class memoryEigen {
     ClearWriteTime();
   }
 
-  memoryEigen(long i, int type, size_t memoryIndices, size_t memory_size, int nr) {
+  memoryEigen(long i, int type, size_t memoryIndices, size_t memory_size,
+              int nr) {
     id_ = i;
     nrefs_ = nr;
     type_ = type;

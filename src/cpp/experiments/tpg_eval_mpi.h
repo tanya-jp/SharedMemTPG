@@ -336,8 +336,7 @@ void evaluate_main(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks,
   }
 }
 
-/// @brief Estimates the fitness of a team on a given task using its phylogeny
-/// @return The estimated fitness of the team
+/// Returns the fitness of a team on a given task using its phylogeny
 double estimate_fitness(TPG &tpg, team *tm, int task) {
   std::vector<long> visited = {tm->id_};
   list<long> queue = {tm->id_};

@@ -194,13 +194,16 @@ class team {
     runTimeComplexityTms_ = 0;
   };
 
-  ~team() {// TODO(skelly) clean outcome data structure
-    for (auto ouiter1 = outcomes_.begin(); ouiter1 != outcomes_.end(); ouiter1++) {
-      for (auto ouiter2 = ouiter1->second.begin(); ouiter2 != ouiter1->second.end(); ouiter2++) {
-        for (auto ouiter3 = ouiter2->second.begin(); ouiter3 != ouiter2->second.end();) {
+  ~team() {  // TODO(skelly) clean outcome data structure
+    for (auto ouiter1 = outcomes_.begin(); ouiter1 != outcomes_.end();
+         ouiter1++) {
+      for (auto ouiter2 = ouiter1->second.begin();
+           ouiter2 != ouiter1->second.end(); ouiter2++) {
+        for (auto ouiter3 = ouiter2->second.begin();
+             ouiter3 != ouiter2->second.end();) {
           delete ouiter3->second;
           ouiter2->second.erase(ouiter3++);
-        }  
+        }
       }
     }
   }
@@ -313,8 +316,9 @@ struct teamFitnessLexicalCompare {
       t2->lastCompareFactor_ = 7;
       // cout << "teamLexComp lcf 7 " << t1->id_ << " (>) " << t2->id_ << endl;
       // return t1->id_ > t2->id_;  // younger is better
-      // older is better TODO(skelly): potential dramatic effect on neutrality & evolution!
-      return t1->id_ < t2->id_;  
+      // older is better TODO(skelly): potential dramatic effect on neutrality &
+      // evolution!
+      return t1->id_ < t2->id_;
     }
   }
 };

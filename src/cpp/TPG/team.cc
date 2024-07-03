@@ -9,7 +9,7 @@ void team::AddProgram(program *prog, int position) {
   advance(it, position);
   members_.insert(it, prog);
   if (prog->action() < 0) n_atomic_++;
-  members_run_.resize(members_.size());  //put in mark introns
+  members_run_.resize(members_.size());  // put in mark introns
   prog->nrefs_++;
 }
 
@@ -27,8 +27,7 @@ string team::checkpoint(bool fitnessBins, long id) const {
     //      for (int s = 0; s < _evalSeeds.size(); s++)
     //	     oss << ":" << _evalSeeds[s];
     // oss << ":" << task_code_;
-    for (auto prog : members_)
-      oss << ":" << prog->id_;
+    for (auto prog : members_) oss << ":" << prog->id_;
     oss << endl;
     if (incomingPrograms_.size() > 0 && id == -1) {
       oss << "teamIncoming:" << idToWrite;
@@ -62,23 +61,23 @@ void team::InitMemory(map<long, team *> &teamMap, bool use_evolved_const) {
   //   for (auto p : programs) {
   //     if (use_evolved_const)
   //       p->CopySharedConstToWorking();
-  //     else 
+  //     else
   //       p->ClearWorking();
   //   }
   // // }
 
-      for (auto p : programs) {
-      if (use_evolved_const)
-        p->CopySharedConstToWorking();
-      else 
-        p->ClearWorking();
-    }
+  for (auto p : programs) {
+    if (use_evolved_const)
+      p->CopySharedConstToWorking();
+    else
+      p->ClearWorking();
+  }
 }
 
 /******************************************************************************/
 void team::clone(map<long, phyloRecord> &phyloGraph, team **tm) {
   phyloGraph[(*tm)->id_].ancestorIds.insert(id_);
-    for (auto prog : members_) {
+  for (auto prog : members_) {
     (*tm)->AddProgram(prog);
   }
   (*tm)->fitnessBins(fitnessBins_);
@@ -91,8 +90,7 @@ void team::features(set<long> &F) const {
   if (F.empty() == false)
     die(__FILE__, __FUNCTION__, __LINE__, "feature set not empty");
 
-  for (auto prog : members_)
-    prog->features(F);
+  for (auto prog : members_) prog->features(F);
 }
 
 /******************************************************************************/
@@ -187,7 +185,7 @@ void team::GetAllNodes(map<long, team *> &teamMap,
              teamMap[prog->action()]) == visitedTeams.end() &&
         prog->action() != stopId)
       teamMap[prog->action()]->GetAllNodes(teamMap, visitedTeams, stopId,
-                                                skipRoot);
+                                           skipRoot);
   }
 }
 
@@ -202,8 +200,7 @@ void team::GetAllNodes(map<long, team *> &teamMap,
     if ((prog)->action() >= 0 &&
         find(visitedTeams.begin(), visitedTeams.end(),
              teamMap[(prog)->action()]) == visitedTeams.end())
-      teamMap[(prog)->action()]->GetAllNodes(teamMap, visitedTeams,
-                                                programs);
+      teamMap[(prog)->action()]->GetAllNodes(teamMap, visitedTeams, programs);
   }
 }
 
@@ -214,15 +211,15 @@ void team::GetAllNodes(map<long, team *> &teamMap,
                        set<memoryEigen *, memoryEigenIdComp> &memories) const {
   visitedTeams.insert(teamMap[id_]);
   for (auto prog : members_) {
-      programs.insert(prog);
-      for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-        memories.insert(prog->MemGet(mem_t));
-      }
-      if (prog->action() >= 0 &&
-          find(visitedTeams.begin(), visitedTeams.end(),
-               teamMap[prog->action()]) == visitedTeams.end())
-        teamMap[prog->action()]->GetAllNodes(
-            teamMap, visitedTeams, programs, memories);
+    programs.insert(prog);
+    for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+      memories.insert(prog->MemGet(mem_t));
+    }
+    if (prog->action() >= 0 &&
+        find(visitedTeams.begin(), visitedTeams.end(),
+             teamMap[prog->action()]) == visitedTeams.end())
+      teamMap[prog->action()]->GetAllNodes(teamMap, visitedTeams, programs,
+                                           memories);
   }
 }
 
@@ -237,8 +234,7 @@ void team::updatePolicyRoot(map<long, team *> &teamMap,
     if (prog->action() >= 0 &&
         find(visitedTeams.begin(), visitedTeams.end(),
              teamMap[prog->action()]) == visitedTeams.end())
-      teamMap[prog->action()]->updatePolicyRoot(teamMap, visitedTeams,
-                                                     rootId);
+      teamMap[prog->action()]->updatePolicyRoot(teamMap, visitedTeams, rootId);
   }
 }
 
@@ -316,11 +312,14 @@ double team::getMeanOutcome(int phase, int task, int auxDouble, bool allPhase,
 
   //}
 
-  for (auto ouiter1 = outcomes_.begin(); ouiter1 != outcomes_.end(); ouiter1++) {  // task
+  for (auto ouiter1 = outcomes_.begin(); ouiter1 != outcomes_.end();
+       ouiter1++) {  // task
     if (ouiter1->first != task && !allTask) continue;
-    for (auto ouiter2 = ouiter1->second.begin(); ouiter2 != ouiter1->second.end(); ouiter2++) {  // phase
+    for (auto ouiter2 = ouiter1->second.begin();
+         ouiter2 != ouiter1->second.end(); ouiter2++) {  // phase
       if (ouiter2->first != phase && !allPhase) continue;
-      for (auto ouiter3 = ouiter2->second.begin(); ouiter3 != ouiter2->second.end(); ouiter3++)  // points
+      for (auto ouiter3 = ouiter2->second.begin();
+           ouiter3 != ouiter2->second.end(); ouiter3++)  // points
         outcomes.push_back(ouiter3->second->auxDouble(auxDouble));
     }
   }
@@ -467,7 +466,7 @@ int team::numOutcomes(int phase, int task) {
          ouiter1++)
       numOut += ouiter1->second[phase].size();
   else
-      numOut = outcomes_[task][phase].size();
+    numOut = outcomes_[task][phase].size();
   return numOut;
 }
 
@@ -566,7 +565,8 @@ void team::setOutcome(point *pt) {
       quickSums_[pt->task()][pt->key()][pt->phase()] /
       numOutcomes(pt->phase(), pt->task());
 
-  // cerr << "set_out id " << id_ << " qm " << quickMeans_[pt->task()][pt->key()][pt->phase()] << endl;
+  // cerr << "set_out id " << id_ << " qm " <<
+  // quickMeans_[pt->task()][pt->key()][pt->phase()] << endl;
 }
 
 /******************************************************************************/
@@ -574,13 +574,14 @@ program *team::getAction(state *s, map<long, team *> &teamMap,
                          bool updateActive,
                          set<team *, teamIdComp> &visitedTeams,
                          long &decisionInstructions, int timeStep,
-                         vector<team *> &teamPath, mt19937 &rng, bool& verbose) {
+                         vector<team *> &teamPath, mt19937 &rng,
+                         bool &verbose) {
   //_depthSum += visitedTeams.size(); _visitedCount++;
   visitedTeams.insert(teamMap[id_]);
   teamPath.push_back(teamMap[id_]);
 
   int l = 0;
-    for (auto prog : members_) {
+  for (auto prog : members_) {
     prog->bidVal(prog->Run(s, timeStep, visitedTeams.size(), verbose));
     members_run_[l++] = prog;
     decisionInstructions += prog->SizeEffective();
@@ -609,7 +610,7 @@ program *team::getAction(
     int timeStep, vector<program *> &allPrograms,
     vector<program *> &winningPrograms, vector<set<long> > &decisionFeatures,
     vector<set<memoryEigen *, memoryEigenIdComp> > &decisionMemories,
-    vector<team *> &teamPath, mt19937 &rng, bool& verbose) {
+    vector<team *> &teamPath, mt19937 &rng, bool &verbose) {
   //_depthSum += visitedTeams.size(); _visitedCount++;
   visitedTeams.insert(teamMap[id_]);
   teamPath.push_back(teamMap[id_]);

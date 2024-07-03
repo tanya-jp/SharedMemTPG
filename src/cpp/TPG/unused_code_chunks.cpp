@@ -1,102 +1,103 @@
-  /****************************************************************************/
-  // // linear crossover with two parent programs (i.e. two teams with one program
-  // // each)
-  // if (crossover && GetParam<double>("p_atomic") == 1.0 && pm1->size() == 1 &&
-  //     pm2->size() == 1 &&
-  //     real_dist_(_rngs[TPG_SEED]) <
-  //         GetParam<double>("p_bid_xover")) {
-  //   _phyloGraph[(*cm)->id_].ancestorIds.insert(pm2->id_);
-  //   (*cm)->addAncestorId(pm2->id_);
+/****************************************************************************/
+// // linear crossover with two parent programs (i.e. two teams with one program
+// // each)
+// if (crossover && GetParam<double>("p_atomic") == 1.0 && pm1->size() == 1 &&
+//     pm2->size() == 1 &&
+//     real_dist_(_rngs[TPG_SEED]) <
+//         GetParam<double>("p_bid_xover")) {
+//   _phyloGraph[(*cm)->id_].ancestorIds.insert(pm2->id_);
+//   (*cm)->addAncestorId(pm2->id_);
 
-  //   linearCrossover = true;
-  //   vector<program *> pm1Programs;
-  //   pm1->members(pm1Programs);
-  //   vector<program *> pm2Programs;
-  //   pm1->members(pm2Programs);
-  //   linearM *c1;  // = NULL;
-  //   linearM *c2;  // = NULL;
-  //   programCrossover(dynamic_cast<linearM *>(pm1Programs[0]),
-  //                    dynamic_cast<linearM *>(pm2Programs[0]), &c1, &c2,
-  //                    _rngs[TPG_SEED]);
+//   linearCrossover = true;
+//   vector<program *> pm1Programs;
+//   pm1->members(pm1Programs);
+//   vector<program *> pm2Programs;
+//   pm1->members(pm2Programs);
+//   linearM *c1;  // = NULL;
+//   linearM *c2;  // = NULL;
+//   programCrossover(dynamic_cast<linearM *>(pm1Programs[0]),
+//                    dynamic_cast<linearM *>(pm2Programs[0]), &c1, &c2,
+//                    _rngs[TPG_SEED]);
 
-  //   cm2 = new team(GetState("t_current"), state_["team_count"]++);
-  //   numNewTeams++;
+//   cm2 = new team(GetState("t_current"), state_["team_count"]++);
+//   numNewTeams++;
 
-  //   _phyloGraph[(cm2)->id_].ancestorIds.insert(pm1->id_);
-  //   (cm2)->addAncestorId(pm1->id_);
-  //   _phyloGraph[(cm2)->id_].ancestorIds.insert(pm2->id_);
-  //   (cm2)->addAncestorId(pm2->id_);
+//   _phyloGraph[(cm2)->id_].ancestorIds.insert(pm1->id_);
+//   (cm2)->addAncestorId(pm1->id_);
+//   _phyloGraph[(cm2)->id_].ancestorIds.insert(pm2->id_);
+//   (cm2)->addAncestorId(pm2->id_);
 
-  //   if (real_dist_(_rngs[TPG_SEED]) < 0.5) {
-  //     (*cm)->addProgram(c1);
-  //     (cm2)->addProgram(c2);
-  //   } else {
-  //     (*cm)->addProgram(c2);
-  //     (cm2)->addProgram(c1);
-  //   }
+//   if (real_dist_(_rngs[TPG_SEED]) < 0.5) {
+//     (*cm)->addProgram(c1);
+//     (cm2)->addProgram(c2);
+//   } else {
+//     (*cm)->addProgram(c2);
+//     (cm2)->addProgram(c1);
+//   }
 
-  //   addTeam(cm2);
-  //   _Mroot.insert(cm2);
-  //   _phyloGraph.insert(pair<long, phyloRecord>(cm2->id_, phyloRecord()));
-  //   _phyloGraph[cm2->id_].gtime = GetState("t_current");
-  //   _phyloGraph[cm2->id_].root = true;
-  // }
-  /****************************************************************************/
+//   addTeam(cm2);
+//   _Mroot.insert(cm2);
+//   _phyloGraph.insert(pair<long, phyloRecord>(cm2->id_, phyloRecord()));
+//   _phyloGraph[cm2->id_].gtime = GetState("t_current");
+//   _phyloGraph[cm2->id_].root = true;
+// }
+/****************************************************************************/
 
-  /****************************************************************************/
-  // // team crossover
-  // if (crossover && (pm1->size() > 1 || pm2->size() > 1)) {
-  //   _phyloGraph[(*cm)->id_].ancestorIds.insert(pm2->id_);
-  //   (*cm)->addAncestorId(pm2->id_);
+/****************************************************************************/
+// // team crossover
+// if (crossover && (pm1->size() > 1 || pm2->size() > 1)) {
+//   _phyloGraph[(*cm)->id_].ancestorIds.insert(pm2->id_);
+//   (*cm)->addAncestorId(pm2->id_);
 
-  //   pm2->getMembersRef(p2programs);
-  //   auto p2liter = p2programs->begin();
-  //   while (p1liter != p1programs->end() || p2liter != p2programs->end()) {
-  //     if (p1liter != p1programs->end() &&
-  //         (int)(*cm)->size() < GetParam<int>("max_team_size") &&
-  //         (((*p1liter)->action() < 0 && (*cm)->numAtomic_ < 1) ||
-  //          find(p2programs->begin(), p2programs->end(), *p1liter) !=
-  //              p2programs->end()))
-  //       (*cm)->addProgram(*p1liter);
-  //     else if ((int)(*cm)->size() < GetParam<int>("max_team_size") &&
-  //              p1liter != p1programs->end() &&
-  //              real_dist_(_rngs[TPG_SEED]) < 0.5)
-  //       (*cm)->addProgram(*p1liter);
-  //     if ((int)(*cm)->size() < GetParam<int>("max_team_size") &&
-  //         p2liter != p2programs->end() &&
-  //         real_dist_(_rngs[TPG_SEED]) < 0.5)
-  //       (*cm)->addProgram(*p2liter);
-  //     if (p1liter != p1programs->end()) p1liter++;
-  //     if (p2liter != p2programs->end()) p2liter++;
-  //   }
-  //   if ((*cm)->numAtomic_ < 1)
-  //     die(__FILE__, __FUNCTION__, __LINE__,
-  //         "Crossover must leave the fail-safe atomic program!");
-  // } else
-  //   for (p1liter = p1programs->begin(); p1liter != p1programs->end(); p1liter++)
-  //     (*cm)->addProgram(*p1liter);
-  /****************************************************************************/
+//   pm2->getMembersRef(p2programs);
+//   auto p2liter = p2programs->begin();
+//   while (p1liter != p1programs->end() || p2liter != p2programs->end()) {
+//     if (p1liter != p1programs->end() &&
+//         (int)(*cm)->size() < GetParam<int>("max_team_size") &&
+//         (((*p1liter)->action() < 0 && (*cm)->numAtomic_ < 1) ||
+//          find(p2programs->begin(), p2programs->end(), *p1liter) !=
+//              p2programs->end()))
+//       (*cm)->addProgram(*p1liter);
+//     else if ((int)(*cm)->size() < GetParam<int>("max_team_size") &&
+//              p1liter != p1programs->end() &&
+//              real_dist_(_rngs[TPG_SEED]) < 0.5)
+//       (*cm)->addProgram(*p1liter);
+//     if ((int)(*cm)->size() < GetParam<int>("max_team_size") &&
+//         p2liter != p2programs->end() &&
+//         real_dist_(_rngs[TPG_SEED]) < 0.5)
+//       (*cm)->addProgram(*p2liter);
+//     if (p1liter != p1programs->end()) p1liter++;
+//     if (p2liter != p2programs->end()) p2liter++;
+//   }
+//   if ((*cm)->numAtomic_ < 1)
+//     die(__FILE__, __FUNCTION__, __LINE__,
+//         "Crossover must leave the fail-safe atomic program!");
+// } else
+//   for (p1liter = p1programs->begin(); p1liter != p1programs->end();
+//   p1liter++)
+//     (*cm)->addProgram(*p1liter);
+/****************************************************************************/
 
-    // if (bid_.size() != bidEffective_.size()) {
-  //   cerr << endl << "dbg Mark bid_s " << bid_.size() << " bidE_s "
-  //        << bidEffective_.size() << endl;
+// if (bid_.size() != bidEffective_.size()) {
+//   cerr << endl << "dbg Mark bid_s " << bid_.size() << " bidE_s "
+//        << bidEffective_.size() << endl;
 
-  //   cerr << "bid_ exec" << endl;
-  //   for (auto i : bid_) {
-  //     i->exec(true);
-  //     cerr << endl;
-  //   }
-  //   cerr << "exec done" << endl;
+//   cerr << "bid_ exec" << endl;
+//   for (auto i : bid_) {
+//     i->exec(true);
+//     cerr << endl;
+//   }
+//   cerr << "exec done" << endl;
 
-  //   cerr << "bidE_ exec" << endl;
-  //   for (auto i : bidEffective_) {
-  //     i->exec(true);
-  //     cerr << endl;
-  //   }
-  //   cerr << "exec done" << endl;
-  // }
+//   cerr << "bidE_ exec" << endl;
+//   for (auto i : bidEffective_) {
+//     i->exec(true);
+//     cerr << endl;
+//   }
+//   cerr << "exec done" << endl;
+// }
 
-  /******************************************************************************/
+/******************************************************************************/
 double linearM::run(state *obs, int timeStep, int graphDepth, mt19937 &rng) {
   (void)rng;
   bool dbg = false;
@@ -106,13 +107,8 @@ double linearM::run(state *obs, int timeStep, int graphDepth, mt19937 &rng) {
   // reset memory
   if (!stateful_) CopySharedConstToWorking();
 
-
-  privateMemory_[memoryEigen::SCALAR_TYPE]
-      ->working_memory_[0]
-      .setZero();
-  privateMemory_[memoryEigen::SCALAR_TYPE]
-      ->working_memory_[1]
-      .setZero();
+  privateMemory_[memoryEigen::SCALAR_TYPE]->working_memory_[0].setZero();
+  privateMemory_[memoryEigen::SCALAR_TYPE]->working_memory_[1].setZero();
 
   for (auto istr : bidEffective_) {
     // read inputs
@@ -138,18 +134,18 @@ double linearM::run(state *obs, int timeStep, int graphDepth, mt19937 &rng) {
                 istr->inMem(in)->working_memory_[idx](row, col) =
                     obs->stateValueAtIndex(f++ % num_input_);
           istr->inIdxE(in, idx);  // reset inIdxE to zero for input ref
-        } else {               // this input is a memory ref
+        } else {                  // this input is a memory ref
           // if (dbg) dbg_file << "in" << in << " mRef ";
           // track read time for temporal memory
-            istr->inMem(in)->getReadTimeE()(istr->inIdx(in), 0) =
-                timeStep + (graphDepth / MAX_GRAPH_DEPTH);
+          istr->inMem(in)->getReadTimeE()(istr->inIdx(in), 0) =
+              timeStep + (graphDepth / MAX_GRAPH_DEPTH);
         }
       }
     }
     // if (dbg) dbg_file << endl;
     // track write times for temporal memory
-      istr->out_->getWriteTimeE()(istr->outIdx_, 0) =
-          timeStep + (graphDepth / MAX_GRAPH_DEPTH);
+    istr->out_->getWriteTimeE()(istr->outIdx_, 0) =
+        timeStep + (graphDepth / MAX_GRAPH_DEPTH);
 
     istr->exec(dbg);
   }

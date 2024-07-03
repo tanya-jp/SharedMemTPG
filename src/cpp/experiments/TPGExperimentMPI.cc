@@ -8,15 +8,15 @@
 #include <TPG.h>
 #include <misc.h>
 
-#include <any>
 #include <algorithm>
+#include <any>
 #include <boost/mpi.hpp>
 #include <chrono>
 #include <cstdlib>
 
+#include "api_client.h"
 #include "tpg_arg_parse.h"
 #include "tpg_eval_mpi.h"
-#include "api_client.h"
 
 #define CHECKPOINT_MOD 1000000
 #define PRINT_MOD 1
@@ -38,7 +38,8 @@ int main(int argc, char **argv) {
 
   if (tpg.GetParam<int>("track_experiments")) {
     // Only instantiate APIClient if trackExperiment is true
-    apiClient = new APIClient(getenv("COMET_API_KEY"), tpg.GetParam<std::string>("experiment_key"));
+    apiClient = new APIClient(getenv("COMET_API_KEY"),
+                              tpg.GetParam<std::string>("experiment_key"));
 
     // Track run parameters
     cout << "Tracking experiment parameters" << endl;
@@ -96,7 +97,7 @@ int main(int argc, char **argv) {
     else if (substr == "PitchBach")
       tasks.push_back(new RecursiveForecast("PitchBach"));
     else if (substr == "Bach")
-      tasks.push_back(new RecursiveForecast("Bach"));  
+      tasks.push_back(new RecursiveForecast("Bach"));
     else {
       cerr << "Unrecognised task:" << substr << endl;
       exit(1);
@@ -273,20 +274,28 @@ int main(int argc, char **argv) {
         endGen = chrono::system_clock::now() - startGen;
 
         /* print generation timing *******************************************/
-        double lost = endGen.count() - (endEval.count() + endGenTeams.count() +
-                                endSetEliteTeams.count() + endSelTeams.count() +
-                                endChkp.count() + endReport.count());
+        double lost =
+            endGen.count() -
+            (endEval.count() + endGenTeams.count() + endSetEliteTeams.count() +
+             endSelTeams.count() + endChkp.count() + endReport.count());
 
-        if (tpg.GetParam<int>("track_experiments") && tpg.GetState("t_current") % tpg.GetParam<int>("track_mod") == 0) {
+        if (tpg.GetParam<int>("track_experiments") &&
+            tpg.GetState("t_current") % tpg.GetParam<int>("track_mod") == 0) {
           std::string gen = to_string(tpg.GetState("t_current"));
           apiClient->LogMetric("sec", std::to_string(endGen.count()), "", gen);
           apiClient->LogMetric("evl", std::to_string(endEval.count()), "", gen);
-          apiClient->LogMetric("gTms", std::to_string(endGenTeams.count()), "", gen);
-          apiClient->LogMetric("elTms", std::to_string(endSetEliteTeams.count()), "", gen);
-          apiClient->LogMetric("sTms", std::to_string(endSelTeams.count()), "", gen);
-          apiClient->LogMetric("chkp", std::to_string(endChkp.count()), "", gen);
-          apiClient->LogMetric("rprt", std::to_string(endReport.count()), "", gen);
-          apiClient->LogMetric("MDS", std::to_string(endMODES.count()), "", gen);
+          apiClient->LogMetric("gTms", std::to_string(endGenTeams.count()), "",
+                               gen);
+          apiClient->LogMetric(
+              "elTms", std::to_string(endSetEliteTeams.count()), "", gen);
+          apiClient->LogMetric("sTms", std::to_string(endSelTeams.count()), "",
+                               gen);
+          apiClient->LogMetric("chkp", std::to_string(endChkp.count()), "",
+                               gen);
+          apiClient->LogMetric("rprt", std::to_string(endReport.count()), "",
+                               gen);
+          apiClient->LogMetric("MDS", std::to_string(endMODES.count()), "",
+                               gen);
           apiClient->LogMetric("lost", std::to_string(lost), "", gen);
         }
 

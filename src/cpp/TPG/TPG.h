@@ -7,12 +7,12 @@
 #include <random>
 
 #include "RegisterMachine.h"
+#include "api_client.h"
 #include "instruction.h"
 #include "memoryEigen.h"
 #include "point.h"
 #include "state.h"
 #include "team.h"
-#include "api_client.h"
 
 #define NUM_RNG 2
 #define TPG_SEED 0
@@ -130,7 +130,7 @@ class TPG {
   void TeamSizesMatchProgRefs();  // Sanity check.
   inline void resetOutcomes(int phase, bool roots);
   void SelectTeams();
-  team* TeamXover(vector<team *>& parents);
+  team *TeamXover(vector<team *> &parents);
   void UpdateTeamPhyloData(team *tm);
   void FindSingleTaskFitnessRange(vector<TaskEnv *> &tasks,
                                   vector<vector<double>> &mins,
@@ -195,6 +195,7 @@ class TPG {
 
   // API client for tracking experiments
   APIClient *api_client_;
+
  public:
   std::unordered_map<std::string, std::any> params_;
   template <typename T>

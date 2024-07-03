@@ -48,7 +48,7 @@ class Acrobot : public TaskEnv {
   const int n_eval_test_ = 100;
 
  public:
-   Acrobot() {
+  Acrobot() {
     disReset = uniform_real_distribution<>(-0.1, 0.1);
     actionsDiscrete.push_back(-1.0);
     actionsDiscrete.push_back(0.0);
