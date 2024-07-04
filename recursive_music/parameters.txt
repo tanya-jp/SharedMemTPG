@@ -194,7 +194,7 @@ predict_var 2
 # supported options: 
 #  "mse", "correlation", "theils", "pearson", "mse_multivar", "theils_multivar", 
 #  "pearson_multivar"
-forecast_fitness pearson_multivar
+forecast_fitness mse_multivar
 
 # whether to use discrete actions for forecasting
 # must also set n_discrete_action
