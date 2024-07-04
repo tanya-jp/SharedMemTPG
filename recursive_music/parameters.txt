@@ -125,13 +125,13 @@ pmx_p 0.5
 stateful 1
 
 # skip introns during evaluation
-skip_introns 1
+skip_introns 0
 
 # enable continuous outputs
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 3
+n_input 50
 
 # max initial program size
 max_initial_prog_size 10
@@ -173,7 +173,7 @@ memory_size 3
 
 # which tasks are active
 # rhs should be a single task name or a comma-separated list
-active_tasks Bach
+active_tasks PitchBach
 
 # use the partially-observable version of a task, if available
 partially_observable 1
@@ -185,7 +185,7 @@ n_discrete_action 3
 ## Parameters Specific to Recursive Forecasting ################################
 ################################################################################
 
-forecast_univar 0
+forecast_univar 1
 # if action_dim == 1x1 and we have multivariate input, must specific predict_var
 action_dim 1x1
 predict_var 2
@@ -194,7 +194,7 @@ predict_var 2
 # supported options: 
 #  "mse", "correlation", "theils", "pearson", "mse_multivar", "theils_multivar", 
 #  "pearson_multivar"
-forecast_fitness mse_multivar
+forecast_fitness theils
 
 # whether to use discrete actions for forecasting
 # must also set n_discrete_action
@@ -209,7 +209,7 @@ forecast_horizon_train 50
 forecast_horizon_val 100
 forecast_horizon_test 100
 
-forecast_n_eval_train 100
+forecast_n_eval_train 50
 forecast_n_eval_val 10
 
 ################################################################################
