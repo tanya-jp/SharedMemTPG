@@ -166,11 +166,10 @@ double calculateTheils_Multi(const std::vector<double> &targets,
       (denominator_duration == 0) ? epsilon : denominator_duration;
   denominator_pitch = (denominator_pitch == 0) ? epsilon : denominator_pitch;
 
-  // double theils_u1 = numerator_offset / denominator_offset;
-  // double theils_u2 = numerator_duration / denominator_duration;
+  double theils_u1 = numerator_offset / denominator_offset;
+  double theils_u2 = numerator_duration / denominator_duration;
   double theils_u3 = numerator_pitch / denominator_pitch;
-  // return theils_u1 + theils_u2 + theils_u3;
-  return theils_u3;
+  return theils_u1 + theils_u2 + theils_u3;
 }
 
 /******************************************************************************/
@@ -196,9 +195,8 @@ double calculateMSE_Multi(const std::vector<double> &targets,
   mse_duration /= num_elements;
   mse_pitch /= num_elements;
 
-  // return mse_offset + mse_duration +
-        //  mse_pitch;  // Multiply by weights if needed
-  return mse_pitch;       
+  return mse_offset + mse_duration +
+         mse_pitch;  // Multiply by weights if needed    
 }
 
 /******************************************************************************/
