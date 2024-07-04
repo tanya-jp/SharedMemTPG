@@ -12,7 +12,7 @@ plt.rcParams["figure.autolayout"] = True
 df = pd.read_csv(p)
 
 # df.plot(plt.plot(df.Name, df.Marks))
-df.plot(x='Time', y=['x2', 'y2'])
+df.plot(x='Time', y=['x0', 'y0'])
 # plt.xticks(x, labels, rotation=45)
 plt.legend()#['Target', 'Prediction'])
 plt.ylim(0,1)

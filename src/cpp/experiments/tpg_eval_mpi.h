@@ -439,16 +439,20 @@ void SaveRecursiveForecast(TPG &tpg, EvalStruct &eval) {
       }
     } else {  // if (tpg.GetParam<string>("action_dim") == "1x1"){
       auto targ = task->data[eval.sample + 1];
+      vector<double> pred;
       size_t y = size_t(tpg.GetParam<int>("predict_var"));
       for (size_t var = 0; var < targ.size(); var++) {
         eval.sequence_targ[eval.n_prediction * targ.size() + var] = targ[var];
         if (var == y) {
           eval.sequence_pred[eval.n_prediction * targ.size() + var] =
               WrapContinuousActionSigmoid(eval);
+           pred.push_back(WrapContinuousActionSigmoid(eval));   
         } else {
           eval.sequence_pred[eval.n_prediction * targ.size() + var] = targ[var];
+          pred.push_back(targ[var]);
         }
       }
+      cerr << "t:" << vecToStr(targ) << " p:" << vecToStr(pred) << endl;
     }
   }
 }
@@ -756,13 +760,15 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
   }
   delete eval.obs;
 
+  // TODO(spkelly): fix hard coding
+  int n_var = tpg.GetParam<int>("forecast_univar") ? 1 : 3;  
   PrintRecursizeForecast(
       "tpg_" + to_string(tpg.seeds_[TPG_SEED]) + "_test_t" +
           to_string(task->t_start[tpg.GetParam<int>("checkpoint_in_phase")]
                                  [eval.episode]) +
           ".csv",
       task->t_start[tpg.GetParam<int>("checkpoint_in_phase")][eval.episode],
-      tpg.n_input_[tpg.GetState("active_task")], prime_samples_plot,
+      n_var, prime_samples_plot,
       eval.sequence_targ, eval.sequence_pred);
 }
 
