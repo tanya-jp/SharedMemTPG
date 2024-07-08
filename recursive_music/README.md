@@ -1,7 +1,7 @@
 # Recursive Forecasting Midi Music
 This code reproduces results from the paper: "Towards Evolving Creative Algorithms: Musical Time Series Forecasting with Tangled Program Graphs" [pdf](../2024-07-05-ALife-Data/Towards_Evolving_Creative_Algorithms.pdf)
 
-## Quick Start
+## Setup
 This code is designed to be used in Linux. If you use Windows, you can use Windows Subsystem for Linux (WSL). You can work with WSL in Visual Studio Code by following [this tutorial](https://code.visualstudio.com/docs/remote/wsl-tutorial).
 
 ### Install required software
@@ -29,6 +29,8 @@ From the tpg directory run:
 scons --opt
 ```
 
+## Experiment Quick Start
+
 ### Run 3 experiements with uniqe random seeds
 To run 3 experiments, each using 5 parallel MPI processes, make tpg/recursive_music your working directory and run:
 ```
@@ -39,13 +41,13 @@ The experiments will run until they finish or you kill them with:
 tpg-kill.sh
 ```
 
-### Plot results
+### Plot statistics
 Generate a pdf with various statistics from training (for test stats use "-p 2"):
 ```
 tpg-plot-stats.sh -p 0
 ```
 
-### Test the best policy
+### Test the best policy (used to generate Figure 3)
 This script will find the signle repeat with the best test fitness, replay that agent, and plot the result. 10 tests will be run, each generating a unique csv file. Only one test (starting at timestep 200) is potted.
 ```
 ALife2024_Figure3.sh
