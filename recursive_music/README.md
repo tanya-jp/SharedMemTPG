@@ -72,11 +72,11 @@ tpg-cleanup.sh
 ## Replay best agent with longer horizons
 Experiment data for each fitness function are as follows.
 
-Theils: tpg/2024-07-05-ALife-Data/recursive_music-2024-07-04-10-19-06-c648a57.tgz
+***Theils***: tpg/2024-07-05-ALife-Data/recursive_music-2024-07-04-10-19-06-c648a57.tgz
 
-MSE: tpg/2024-07-05-ALife-Data/recursive_music-2024-07-04-10-19-12-c648a57.tgz
+***MSE***: tpg/2024-07-05-ALife-Data/recursive_music-2024-07-04-10-19-12-c648a57.tgz
 
-Correlation: tpg/2024-07-05-ALife-Data/recursive_music-2024-07-04-10-19-16-c648a57.tgz
+***Correlation***: tpg/2024-07-05-ALife-Data/recursive_music-2024-07-04-10-19-16-c648a57.tgz
  
 By default, our test procedure uses 50 prime steps and 100 prediction steps.
 To run a test with a longer prediction horizon, unpack the directory of interest and locate ***parameters.txt***. Set the parameter "forecast_horizon_test" as desired. Then run the following script from the same directory:
