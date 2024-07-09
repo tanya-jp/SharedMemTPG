@@ -63,6 +63,11 @@ for f in $(ls *csv); do echo $f; python $TPG_PATH/scripts/plot/tpg-plot-horizon.
 ```
 ALife2024_Figure2_get_data.sh
 ```
+To generate Figure 2, we need to repeat this in 3 different experiment directories (with different fitness functions) to get a list of MSE results for each. This was done, with results stored in ***alife2024_test_mse_20repeats.csv***
+Figure 2 can be recreated like this:
+```
+python ../scripts/plot/ALife2024-Figure2_plot_scatter.py alife2024_test_mse_20repeats.csv
+```
 
 
 ### Cleanup
