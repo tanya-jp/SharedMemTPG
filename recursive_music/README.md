@@ -36,7 +36,7 @@ To run 3 experiments, each using 5 parallel MPI processes, make tpg/recursive_mu
 ```
 for seed in `seq 1 3`; do tpg-run-mpi.sh -n 5 -s $seed; done
 ```
-The experiments will run until they finish or you kill them with:
+The experiments will run until they are killed with the command below. Running for a few minutes is good enough for this demo.
 ```
 tpg-kill.sh
 ```
