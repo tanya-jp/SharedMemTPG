@@ -47,7 +47,7 @@ Generate a pdf with various statistics from training (for test stats use "-p 2")
 tpg-plot-stats.sh -p 0
 ```
 
-### Test the best policy (used to generate Figure 3)
+### Test the best agent (used to generate Figure 3)
 This script will find the signle repeat with the best test fitness, replay that agent, and plot the result. 10 tests will be run, each generating a unique csv file. Only one test (starting at timestep 200) is potted.
 ```
 ALife2024_Figure3.sh
