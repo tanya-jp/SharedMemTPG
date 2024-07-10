@@ -16,6 +16,9 @@
 mode=0 #Train:0, Replay:1, Debug:2
 seed=1
 
+# Access internet for experiment tracking
+module load httpproxy
+
 while getopts m:s: flag
 do
    case "${flag}" in
@@ -28,6 +31,8 @@ if [ $mode -eq 0 ]; then
   srun ../build/release/cpp/experiments/TPGExperimentMPI -s $seed \
   1> tpg.$seed.$$.std 2> tpg.$seed.$$.err
 fi
+
+module unload httpproxy
 
 ##pickup from checkpoint file
 #t=$(grep -iRl end checkpoints/cp.*.-1.$seed.0.rslt | cut -d '.' -f 2 | sort -n | tail -n 2 | head -n 1)
