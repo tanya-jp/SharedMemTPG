@@ -34,14 +34,14 @@ write_train_checkpoints 0
 write_test_checkpoints 1
 
 # save phylogenetic data
-write_phylogeny 0
+write_phylogeny 1
 
 # how frequently to run test procedure
 test_mod 100
 
 # Number of tasks used each selection for evaluation. 
 # The rest are estimated with phylogeny.
-n_sampled_tasks_for_eval 3
+n_sampled_tasks_for_eval 6
 
 # number of fitness functions available
 n_fit_mode 1
@@ -173,7 +173,7 @@ memory_size 8
 
 # which tasks are active
 # rhs should be a single task name or a comma-separated list
-active_tasks Cartpole,Mountaincar,Pendulum
+active_tasks Cartpole,Acrobot,CartCentering,Pendulum,Mountaincar,MountainCarContinuous
 
 # use the partially-observable version of a task, if available
 partially_observable 0

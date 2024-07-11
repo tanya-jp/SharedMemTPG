@@ -19,6 +19,7 @@
 #include "tpg_eval_mpi.h"
 
 #define CHECKPOINT_MOD 1000000
+#define PHYLO_MOD 10000
 #define PRINT_MOD 1
 // rawfitness,  mean visitedTeams, decisionInstructions
 #define NUM_POINT_AUX_DOUBLE 3
@@ -267,7 +268,8 @@ int main(int argc, char **argv) {
           tpg.writeCheckpoint(tpg.GetState("t_current"),
                               false);  // checkpoint entire pop
         }
-        if (tpg.GetParam<int>("write_phylogeny")) {
+        if (tpg.GetParam<int>("write_phylogeny") &&
+            tpg.GetState("t_current") % PHYLO_MOD == 0) {
           tpg.printPhyloGraphDot(tpg.getBestTeam());
         }
         endChkp = chrono::system_clock::now() - startChkp;
