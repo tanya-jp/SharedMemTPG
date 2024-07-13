@@ -62,10 +62,10 @@ n_generations 1000000
 mu_internal 0
 
 # number of elite teams
-n_elite 200
+n_elite 10
 
-# multiplier for # new teams to generate each generation
-n_elite_mul 5
+# n_elite * n_elite_mul new teams are created each generation
+n_elite_mul 3
 
 # fitness proportional selection
 fit_prop_select 0
@@ -83,10 +83,10 @@ parent_select_roots_only 1
 max_initial_team_size 10
 
 # max team size
-max_team_size 128
+max_team_size 1000000
 
 # max teams per graph
-max_teams_per_graph 100
+max_teams_per_graph 1000000
 
 # when changing action pointer, probability of selecting atomic action
 p_atomic 1.0

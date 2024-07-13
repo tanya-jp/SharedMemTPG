@@ -118,17 +118,17 @@ fi
 
 
 
-# # Check for memoy leaks
-# if [ $mode -eq 3 ]; then
-# ##view profile with: google-pprof ../build/release/cpp/experiments/tpgExpBlocks_MPI ./tpg.out_27134   
-# ##google-pprof --gv --focus=genTeams ../build/release/cpp/experiments/TPGExperimentMPI tpg.out_441771
-# #LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libprofiler.so CPUPROFILE=tpg.out \
-# #mpirun --oversubscribe -np $numMPIProc ../build/release/cpp/experiments/TPGExperimentMPI -w -F $numFitMode -D $dim -p -S -T $tMax -s $seedTPG -g $seedEnv -a $activeTasks -d $taskSwitchMod -f $fitMode 1> tpg.$seedTPG.$$.std 2> tpg.$seedTPG.$$.err &
+# Check for memoy leaks
+if [ $mode -eq 3 ]; then
+##view profile with: google-pprof ../build/release/cpp/experiments/tpgExpBlocks_MPI ./tpg.out_27134   
+##google-pprof --gv --focus=genTeams ../build/release/cpp/experiments/TPGExperimentMPI tpg.out_441771
+#LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libprofiler.so CPUPROFILE=tpg.out \
+#mpirun --oversubscribe -np $numMPIProc ../build/release/cpp/experiments/TPGExperimentMPI -w -F $numFitMode -D $dim -p -S -T $tMax -s $seedTPG -g $seedEnv -a $activeTasks -d $taskSwitchMod -f $fitMode 1> tpg.$seedTPG.$$.std 2> tpg.$seedTPG.$$.err &
 
-# ##valgrind
-# mpirun --oversubscribe -np $numMPIProc valgrind --leak-check=yes --show-reachable=yes --log-file=vg.%p --suppressions=/usr/share/openmpi/openmpi-valgrind.supp \
-# ../build/release/cpp/experiments/TPGExperimentMPI -s $seed 1> tpg.$seed.$$.std 2> tpg.$seed.$$.err &
-# fi
+#valgrind
+mpirun --oversubscribe -np $numMPIProc valgrind --leak-check=yes --show-reachable=yes --log-file=vg.%p --suppressions=/usr/share/openmpi/openmpi-valgrind.supp \
+../build/release/cpp/experiments/TPGExperimentMPI -s $seed 1> tpg.$seed.$$.std 2> tpg.$seed.$$.err &
+fi
 
 # #if [ $mode -eq 4 ]; then
 # ##pickup from checkpoint file

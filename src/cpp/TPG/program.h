@@ -9,12 +9,10 @@
 
 class program {
  public:
-  size_t input_buff_index_; // TODO(skelly):doc
   int action_;         // Action index
   double bid_val_;     // Most recent bid value
   static long count_;  // Next id to use
-  // TODO(skelly): do programs need to store memory_size_ since memories also store?
-  size_t memory_size_;  
+ 
   // vector<double>* feature;
 
   // Features indexed by non-introns in this program, determined in
@@ -83,10 +81,8 @@ class program {
   // }
 
   inline void ClearWorking() {
-    for (size_t i = 0; i < privateMemory_.size(); i++) {
-      privateMemory_[i]->ClearWorking();
-    }
-    input_buff_index_ = 0;  // TODO(skelly): doc
+    for (auto memory : privateMemory_) memory->ClearWorking();
+    for (auto memory : input_memory_buff_) memory->ClearWorking();
   }
 
   // Mutate action, return true if the action was actually changed
