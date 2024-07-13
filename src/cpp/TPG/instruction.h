@@ -166,7 +166,7 @@ class instruction {
   inline int GetInIdx(int i) const {
     if (i == 0)
       return in1Idx_;
-    else if (i == 2)
+    else if (i == 1)
       return in2Idx_;
     else
       return in3Idx_;
