@@ -169,15 +169,15 @@ void RegisterMachine::MarkIntrons(
     if (!skipIntrons_ || Meff[istr->GetOutType()][istr->outIdx_]) {
       bidEffective_.push_back(istr);
       op_counts_[istr->op_]++;
-      // TODO(spkelly) this is always true now, move elsewhere
+      // Setup IO memory
       istr->out_ = privateMemory_[istr->GetOutType()];
       // inputs
       for (int in = 0; in < 2; in++) {  // add in arity?
         if (istr->IsInput(in)) {
-          // istr->SetInMem(in, inputMemoryPointers_[in][istr->GetInType(in)]);
           istr->SetInMem(in, input_memory_buff_[istr->GetInType(in)]); 
           MarkFeatures(istr, in);
-        } else if (istr->IsMemoryRef(in)) {
+        } 
+        else if (istr->IsMemoryRef(in)) {
           istr->SetInMem(in, privateMemory_[istr->GetInType(in)]);
         }
       }

@@ -159,12 +159,7 @@ class instruction {
         out_->working_memory_[outIdx_].array().unaryExpr(
             [](double v) { return std::isfinite(v) ? v : 0.0; });
 
-    // // TODO(skelly): remove this
-    // out_->working_memory_[outIdx_].array() =
-    //     out_->working_memory_[outIdx_].array().unaryExpr(
-    //         [](double v) { return isEqual(v, 0.0) ? 0.0 : v; });
-
-    // Rudimentary debugging output
+    // TODO(skelly): tmp debugging output
     if (dbg) cerr << out_->working_memory_[outIdx_](0, 0) << endl;
   }
 
@@ -202,9 +197,9 @@ class instruction {
   /* Operation implementations ************************************************/
 
   inline void ExecuteScalarSumOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) =
-        (in1_->working_memory_[in1Idx_](0, 0) +
-         in2_->working_memory_[in2Idx_](0, 0));
+    out_->working_memory_[outIdx_](0, 0) = 
+        in1_->working_memory_[in1Idx_](0, 0) +
+         in2_->working_memory_[in2Idx_](0, 0);
     if (dbg) {
       cerr << std::setprecision(std::numeric_limits<double>::digits10 + 1)
            << std::fixed << "s" << outIdx_ << " = s" << in1Idx_ << " + " << "s"
