@@ -235,9 +235,10 @@ void TPG::MarkEffectiveCode(team *tm) {
     prog->skipIntrons_ = GetParam<int>("skip_introns");
     prog->stateful_ = GetParam<int>("stateful");
     prog->MarkIntrons(params_);
-    for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-      (prog->MemGet(mem_t))->RefsPolicyInc();  // TODO(skelly) ???
-    }
+    // TODO(spkelly): remove shared memory code
+    // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+    //   (prog->MemGet(mem_t))->RefsPolicyInc();
+    // }
   }
 }
 
@@ -404,6 +405,10 @@ void TPG::ReadParameters(string file_name,
       _ops[instruction::SCALAR_TANH_OP_] = true;
     if (outcome_fields[0] == "SCALAR_SQRT_OP")
       _ops[instruction::SCALAR_SQRT_OP_] = true;
+    if (outcome_fields[0] == "SCALAR_VECTOR_ASSIGN_OP")
+      _ops[instruction::SCALAR_VECTOR_ASSIGN_OP_] = true;
+    if (outcome_fields[0] == "SCALAR_MATRIX_ASSIGN_OP")
+      _ops[instruction::SCALAR_MATRIX_ASSIGN_OP_] = true;
 
     // TODO(skelly): make types part of parameter file
     // string parameters are "hard coded" here
@@ -537,28 +542,30 @@ program *TPG::CloneProgram(program *prog) {
       state_["program_count"]++);
   if (prog_clone->action() >= 0)
     _teamMap[prog_clone->action()]->AddIncomingProgram(prog_clone->id_);
-  for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-    prog_clone->MemSet(mem_t, prog->MemGet(mem_t));
-    prog_clone->MemGet(mem_t)->refInc();
-  }
+  // TODO(spkelly): remove shared memory code
+  // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+  //   prog_clone->MemSet(mem_t, prog->MemGet(mem_t));
+  //   prog_clone->MemGet(mem_t)->refInc();
+  // }
   return prog_clone;
 }
 
-void TPG::ProgramMutator_MemoryPointer(program *prog_to_mu) {
-  // change memory pointer
-  if (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pms")) {
-    uniform_int_distribution<int> disMemory(0, _Memory.size() - 1);
-    memoryEigen *memNew;
-    do {
-      memNew = _Memory[memoryEigen::SCALAR_TYPE]
-                      [_Memids[memoryEigen::SCALAR_TYPE]
-                              [disMemory(rngs_[TPG_SEED])]];
-    } while (prog_to_mu->MemGet(memoryEigen::SCALAR_TYPE)->id_ == memNew->id_);
-    prog_to_mu->MemGet(memoryEigen::SCALAR_TYPE)->refDec();
-    prog_to_mu->MemSet(memoryEigen::SCALAR_TYPE, memNew);
-    prog_to_mu->MemGet(memoryEigen::SCALAR_TYPE)->refInc();
-  }
-}
+// TODO(spkelly): remove shared memory code
+// void TPG::ProgramMutator_MemoryPointer(program *prog_to_mu) {
+//   // change memory pointer
+//   if (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pms")) {
+//     uniform_int_distribution<int> disMemory(0, _Memory.size() - 1);
+//     memoryEigen *memNew;
+//     do {
+//       memNew = _Memory[memoryEigen::SCALAR_TYPE]
+//                       [_Memids[memoryEigen::SCALAR_TYPE]
+//                               [disMemory(rngs_[TPG_SEED])]];
+//     } while (prog_to_mu->MemGet(memoryEigen::SCALAR_TYPE)->id_ ==
+//     memNew->id_); prog_to_mu->MemGet(memoryEigen::SCALAR_TYPE)->refDec();
+//     prog_to_mu->MemSet(memoryEigen::SCALAR_TYPE, memNew);
+//     prog_to_mu->MemGet(memoryEigen::SCALAR_TYPE)->refInc();
+//   }
+// }
 
 void TPG::ProgramMutator_Instructions(program *prog_to_mu) {
   prog_to_mu->MuBid(params_, rngs_[TPG_SEED], real_dist_, _ops);
@@ -731,6 +738,7 @@ void TPG::ApplyVariationOps(team *team_to_modify, int &n_new_teams) {
       team_to_modify->RemoveProgram(prog);
       program *prog_clone = CloneProgram(prog);
       ProgramMutator_Instructions(prog_clone);
+      // TODO(spkelly): remove shared memory code
       // ProgramMutator_MemoryPointer(prog_clone);
       ProgramMutator_ActionPointer(prog_clone, team_to_modify, n_new_teams);
       team_to_modify->AddProgram(prog_clone);
@@ -1203,16 +1211,18 @@ void TPG::InitTeams() {
       auto new_prog =
           new RegisterMachine(GetState("t_current"), discrete_action, params_,
                               state_["program_count"]++, rngs_[TPG_SEED], _ops);
-      // create one new memory of each type for this team
-      for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-        auto *mem = new memoryEigen(state_["memory_count"]++, mem_t, params_);
-        if (HaveParam("p_bid_mu_const")) {
-          // new_prog->privateMemory_[mem_t]->RandomizeConst();
-          mem->RandomizeConst();
-        }
-        AddMemory(mem);  // add new memory to memory population
-        new_prog->MemSet(mem_t, mem);
-      }
+
+      // TODO(spkelly): remove shared memory code
+      // // create one new memory of each type for this team
+      // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+      //   auto *mem = new memoryEigen(state_["memory_count"]++, mem_t,
+      //   params_); if (HaveParam("p_bid_mu_const")) {
+      //     // new_prog->privateMemory_[mem_t]->RandomizeConst();
+      //     mem->RandomizeConst();
+      //   }
+      //   AddMemory(mem);  // add new memory to memory population
+      //   new_prog->MemSet(mem_t, mem);
+      // }
 
       new_team->AddProgram(new_prog);
       AddProgram(new_prog);  // add program to program population
@@ -2420,8 +2430,8 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
     }
 
     else if (outcomeFields[0].compare("RegisterMachine") == 0) {
-      vector<int> memTypeIds;
-      memTypeIds.resize(memoryEigen::NUM_MEMORY_TYPES);
+      // vector<int> memTypeIds;
+      // memTypeIds.resize(memoryEigen::NUM_MEMORY_TYPES);
       program *l;
       f = 1;
       long id = atoi(outcomeFields[f++].c_str());
@@ -2430,9 +2440,9 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       long action = atoi(outcomeFields[f++].c_str());
       int stateful = atoi(outcomeFields[f++].c_str());
       int nrefs = atoi(outcomeFields[f++].c_str());
-      for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-        memTypeIds[mem_t] = atoi(outcomeFields[f++].c_str());
-      }
+      // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+      //   memTypeIds[mem_t] = atoi(outcomeFields[f++].c_str());
+      // }
 
       vector<instruction *> bid;
       for (size_t ii = f; ii < outcomeFields.size(); ii++) {
@@ -2441,20 +2451,18 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
         instruction *in = new instruction(params_, rngs_[TPG_SEED]);
         in->in1Src_ = stringToInt(instructionString[0]);
         in->in2Src_ = stringToInt(instructionString[1]);
-        in->outSrc_ = stringToInt(instructionString[2]);
-        in->outIdx_ = stringToInt(instructionString[3]);
-        in->op_ = stringToInt(instructionString[4]);
-        in->in1Idx_ = stringToInt(instructionString[5]);
-        in->in1IdxE_ = stringToInt(instructionString[6]);
-        in->in2Idx_ = stringToInt(instructionString[7]);
-        in->in2IdxE_ = stringToInt(instructionString[8]);
+        in->outIdx_ = stringToInt(instructionString[2]);
+        in->op_ = stringToInt(instructionString[3]);
+        in->in1Idx_ = stringToInt(instructionString[4]);
+        in->in2Idx_ = stringToInt(instructionString[5]);
+        in->in3Idx_ = stringToInt(instructionString[6]);
         bid.push_back(in);
       }
       l = new RegisterMachine(gtime, action, stateful, params_, id, nrefs, bid);
 
-      for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-        l->MemSet(mem_t, _Memory[mem_t][memTypeIds[mem_t]]);
-      }
+      // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+      //   l->MemSet(mem_t, _Memory[mem_t][memTypeIds[mem_t]]);
+      // }
 
       AddProgram(l);
     } else if (outcomeFields[0].compare("team") == 0) {
@@ -2625,13 +2633,14 @@ void TPG::CleanupProgramsWithNoRefs(deque<program *> &programsWithNoRefs,
         RemoveTeam(tm, programsWithNoRefs);
       }
     }
-    for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-      prog->MemGet(mem_t)->refDec();
-      if (prog->MemGet(mem_t)->refs() == 0) {
-        removeMemory(prog->MemGet(mem_t));
-        delete prog->MemGet(mem_t);
-      }
-    }
+    // TODO(spkelly): remove shared memory code
+    // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+    //   prog->MemGet(mem_t)->refDec();
+    //   if (prog->MemGet(mem_t)->refs() == 0) {
+    //     removeMemory(prog->MemGet(mem_t));
+    //     delete prog->MemGet(mem_t);
+    //   }
+    // }
     removeProgram(prog, updateLidsImmediately);
     if (!updateLidsImmediately) deletedIds.push_back(prog->id_);
     delete prog;

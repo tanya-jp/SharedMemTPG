@@ -3,7 +3,7 @@
 ################################################################################
 
 # whether to track experiments in comet
-track_experiments 1
+track_experiments 0
 
 # comet experiment key
 experiment_key 7ac170bcf3e64f6fb3a29646c316ba7e
@@ -37,11 +37,11 @@ write_test_checkpoints 1
 write_phylogeny 0
 
 # how frequently to run test procedure
-test_mod 1
+test_mod 1000000
 
 # Number of tasks used each selection for evaluation. 
 # The rest are estimated with phylogeny.
-n_sampled_tasks_for_eval 1
+#n_sampled_tasks_for_eval 1
 
 # number of fitness functions available
 n_fit_mode 1
@@ -56,13 +56,13 @@ dist_mode 0
 seed_aux 42
 
 # max number of generations
-n_generations 100
+n_generations 1000000
 
 # allow mutation of internal teams (i.e. non-root teams (in-progress))
 mu_internal 0
 
 # number of elite teams
-n_elite 20
+n_elite 100
 
 # multiplier for # new teams to generate each generation
 n_elite_mul 5
@@ -125,13 +125,13 @@ pmx_p 0.5
 stateful 1
 
 # skip introns during evaluation
-skip_introns 1
+skip_introns 0
 
 # enable continuous outputs
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 50
+n_input 2
 
 # max initial program size
 max_initial_prog_size 10
@@ -165,7 +165,7 @@ bid_mu_const_stddev 0.05
 memory_indices 8
 
 # this is the dimensionality for vector & matrix memory
-memory_size 8
+memory_size 2
 
 ################################################################################
 ## General Task Parameters #####################################################
@@ -173,7 +173,7 @@ memory_size 8
 
 # which tasks are active
 # rhs should be a single task name or a comma-separated list
-active_tasks Cartpole
+active_tasks Pendulum
 
 # use the partially-observable version of a task, if available
 partially_observable 1
@@ -254,6 +254,7 @@ VECTOR_MAX_OP
 VECTOR_MEAN_OP
 VECTOR_ST_DEV_OP
 VECTOR_CONST_SET_OP
+SCALAR_VECTOR_ASSIGN_OP
  
 # matrix #########################
 VECTOR_OUTER_PRODUCT_OP
@@ -279,6 +280,7 @@ MATRIX_ROW_MEAN_OP
 MATRIX_ROW_ST_DEV_OP
 MATRIX_ST_DEV_OP
 MATRIX_CONST_SET_OP
+SCALAR_MATRIX_ASSIGN_OP
 
 ## noise ##########################
 ##SCALAR_UNIFORM_SET_OP

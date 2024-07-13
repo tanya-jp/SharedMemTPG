@@ -173,7 +173,7 @@ class memoryEigen {
   int type_;
   size_t memoryIndices_;
   size_t memory_size_;
-  std::vector<Matrix<double, Dynamic, Dynamic> > working_memory_;
+  std::deque<Matrix<double, Dynamic, Dynamic> > working_memory_;
   std::vector<Matrix<double, Dynamic, Dynamic> > const_memory_;
   Matrix<bool, Dynamic, 1> active_;
   Matrix<double, Dynamic, 1> read_time_;

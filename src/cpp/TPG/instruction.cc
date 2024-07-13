@@ -11,13 +11,11 @@ string instruction::checkpoint() {
   ostringstream oss;
   oss << in1Src_ << "_";
   oss << in2Src_ << "_";
-  oss << outSrc_ << "_";
   oss << outIdx_ << "_";
   oss << op_ << "_";
   oss << in1Idx_ << "_";
-  oss << in1IdxE_ << "_";
   oss << in2Idx_ << "_";
-  oss << in2IdxE_;
+  oss << in3Idx_ << "_";
   return oss.str();
 }
 
@@ -357,6 +355,16 @@ void instruction::SetupOps() {
   op_mem_types_[SCALAR_SQRT_OP_] = {
       memoryEigen::SCALAR_TYPE, memoryEigen::SCALAR_TYPE, memoryEigen::NA_TYPE};
   op_list_[SCALAR_SQRT_OP_] = (&instruction::ExecuteScalarSqrtOp);
+
+  op_mem_types_[SCALAR_VECTOR_ASSIGN_OP_] = {
+      memoryEigen::SCALAR_TYPE, memoryEigen::VECTOR_TYPE, memoryEigen::NA_TYPE};
+  op_list_[SCALAR_VECTOR_ASSIGN_OP_] =
+      (&instruction::ExecuteScalarVectorAssignOp);
+
+  op_mem_types_[SCALAR_MATRIX_ASSIGN_OP_] = {
+      memoryEigen::SCALAR_TYPE, memoryEigen::MATRIX_TYPE, memoryEigen::NA_TYPE};
+  op_list_[SCALAR_MATRIX_ASSIGN_OP_] =
+      (&instruction::ExecuteScalarMatrixAssignOp);
 }
 
 // constructor
@@ -380,62 +388,65 @@ instruction::instruction(instruction &i) {
 
   in1Src_ = i.in1Src_;
   in2Src_ = i.in2Src_;
-  outSrc_ = i.outSrc_;
   outIdx_ = i.outIdx_;
   op_ = i.op_;
   in1Idx_ = i.in1Idx_;
-  in1IdxE_ = i.in1IdxE_;
   in2Idx_ = i.in2Idx_;
-  in2IdxE_ = i.in2IdxE_;
+  in3Idx_ = i.in3Idx_;
 
   rng_ = i.rng_;
 }
 
-void instruction::mutate(bool uniform, vector<bool> &legal_ops, mt19937 &rng) {
+void instruction::Mutate(bool uniform, vector<bool> &legal_ops, mt19937 &rng) {
   auto nOp = std::count(legal_ops.begin(), legal_ops.end(), true);
 
   if (uniform) {  // randomly set each part of this instruction
     // std::uniform_int_distribution<> dis(0, 2);
     std::uniform_int_distribution<> dis(0, 1);
-    in1Src_ = dis(rng) == 0 ? 0 : 2;  // private memory or input
-    in2Src_ = dis(rng) == 0 ? 0 : 2;  // private memory or input
+    in1Src_ = dis(rng) == 0 ? 0 : 1;  // private memory or input
+    in2Src_ = dis(rng) == 0 ? 0 : 1;  // private memory or input
     // dis = std::uniform_int_distribution<>(0, 1);
-    outSrc_ = 0;  // dis(rng);  // only write to private
     dis = std::uniform_int_distribution<>(0, memIndices_ - 1);
     outIdx_ = dis(rng);
     dis = std::uniform_int_distribution<>(0, legal_ops.size() - 1);
     do {
       op_ = dis(rng);
     } while (!legal_ops[op_]);
-    dis = std::uniform_int_distribution<>(0, memIndices_ - 1);
-    in1Idx_ = in1IdxE_ = dis(rng);
-    in2Idx_ = in2IdxE_ = dis(rng);
+    // TODO(skelly): better way to handle this?
+    if (op_ == SCALAR_VECTOR_ASSIGN_OP_ || op_ == SCALAR_MATRIX_ASSIGN_OP_) {
+      dis = std::uniform_int_distribution<>(0, memory_size_ - 1);
+      in2Idx_ = dis(rng);
+      in3Idx_ = dis(rng);
+    } else {
+      dis = std::uniform_int_distribution<>(0, memIndices_ - 1);
+      in1Idx_ = dis(rng);
+      in2Idx_ = dis(rng);
+    }
+    dis = std::uniform_int_distribution<>(0, memory_size_ - 1);
+    in3Idx_ = dis(rng);
   } else {  // randomly change one part of this instruction
     int prev;
-    // select which part to change
-    // std::uniform_int_distribution<> dis(0, 6);
-    std::uniform_int_distribution<> dis(0, 5);
+    std::uniform_int_distribution<> dis(0, 6);
     int i = dis(rng);
     switch (i) {
-      case 0:  // change in1 src to one of: private memory, shared memory, input
+      case 0:  // change in1 src to one of: private memory or input
         prev = in1Src_;
-        // dis = std::uniform_int_distribution<>(0, 2);
         dis = std::uniform_int_distribution<>(0, 1);
         do {
-          in1Src_ = dis(rng) == 0 ? 0 : 2;  // private memory or input
+          in1Src_ = dis(rng) == 0 ? 0 : 1;  // private memory or input
         } while (in1Src_ == prev);
         // switching from input to memory ref
-        if (prev == 2) in1Idx_ = in1IdxE_ = in1Idx_ % memIndices_;
+        if (prev == 1) in1Idx_ = in1Idx_ % memIndices_;
         break;
-      case 1:  // change in2 src to one of: private memory, shared memory, input
+      case 1:  // change in2 src to one of: private memory, or input
         prev = in2Src_;
         // dis = std::uniform_int_distribution<>(0, 2);
         dis = std::uniform_int_distribution<>(0, 1);
         do {
-          in2Src_ = dis(rng) == 0 ? 0 : 2;  // private memory or input
+          in2Src_ = dis(rng) == 0 ? 0 : 1;  // private memory or input
         } while (in2Src_ == prev);
         // switching from input to memory ref
-        if (prev == 2) in2Idx_ = in2IdxE_ = in2Idx_ % memIndices_;
+        if (prev == 1) in2Idx_ = in2Idx_ % memIndices_;
         break;
       case 2:  // change out index
         prev = outIdx_;
@@ -450,22 +461,43 @@ void instruction::mutate(bool uniform, vector<bool> &legal_ops, mt19937 &rng) {
         do {
           op_ = dis(rng);
         } while ((nOp > 1 && op_ == prev) || !legal_ops[op_]);
+        // TODO(skelly): is there a better way to handle this?
+        // In these cases in2Idx will be used as an index into vector or scalar
+        // memory
+        if (op_ == SCALAR_VECTOR_ASSIGN_OP_ ||
+            op_ == SCALAR_MATRIX_ASSIGN_OP_) {
+          dis = std::uniform_int_distribution<>(0, memory_size_ - 1);
+          in2Idx_ = dis(rng);
+          in3Idx_ = dis(rng);
+        }
         break;
       case 4:  // change in1 index
-        // if (num_input_ < 2) break;
         prev = in1Idx_;
         dis = std::uniform_int_distribution<>(0, memIndices_ - 1);
         do {
-          in1Idx_ = in1IdxE_ = dis(rng);
+          in1Idx_ = dis(rng);
         } while (in1Idx_ == prev);
         break;
       case 5:  // change in2 index
-        // if (num_input_ < 2) break;
         prev = in2Idx_;
-        dis = std::uniform_int_distribution<>(0, memIndices_ - 1);
+        // In these cases in2Idx will be used as an index into vector or scalar
+        // memory
+        if (op_ == SCALAR_VECTOR_ASSIGN_OP_ || op_ == SCALAR_MATRIX_ASSIGN_OP_)
+          dis = std::uniform_int_distribution<>(0, memory_size_ - 1);
+        else
+          dis = std::uniform_int_distribution<>(0, memIndices_ - 1);
         do {
-          in2Idx_ = in2IdxE_ = dis(rng);
+          in2Idx_ = dis(rng);
         } while (in2Idx_ == prev);
+        break;
+      case 6:  // change in3 index
+        // in3Idx_ is only used as an index into vector or matrix memory,
+        // so we mod by memory_size_
+        prev = in3Idx_;
+        dis = std::uniform_int_distribution<>(0, memory_size_ - 1);
+        do {
+          in3Idx_ = dis(rng);
+        } while (in3Idx_ == prev);
         break;
     }
   }

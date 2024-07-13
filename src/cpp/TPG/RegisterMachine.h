@@ -12,10 +12,12 @@ struct instructionDecoded;
 
 class RegisterMachine : public program {
  public:
+ size_t input_buff_index_;
   // Bid program, a list of instructions
   std::vector<instruction *> bid_;
   std::vector<instruction *> bidEffective_;
-  void CopyInputToMemory(instruction *istr, state *obs, size_t in);
+  // void CopyInputToMemory(instruction *istr, state *obs, size_t in);
+  void CopyInputToMemoryBuff(state *obs);
   void MarkFeatures(instruction *istr, int in);
   void MarkIntrons(std::unordered_map<std::string, std::any> &params_);
   double Run(state *, int &time_step, const size_t &graph_depth, bool &verbose);

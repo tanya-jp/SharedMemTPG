@@ -6,9 +6,9 @@ string RegisterMachine::checkpoint(bool all) {
 
   oss << "RegisterMachine:" << id_ << ":" << gtime_ << ":" << action_ << ":"
       << stateful_ << ":" << nrefs_;
-  for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-    oss << ":" << sharedMemory_[mem_t]->id();
-  }
+  // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+  //   oss << ":" << sharedMemory_[mem_t]->id();
+  // }
 
   if (all)
     for (size_t i = 0; i < bid_.size(); i++)
@@ -46,7 +46,7 @@ RegisterMachine::RegisterMachine(
 
   for (int i = 0; i < progSize; i++) {
     in = new instruction(params, rng);
-    in->mutate(true, legalOps, rng);
+    in->Mutate(true, legalOps, rng);
     bid_.push_back(in);
   }
   op_counts_.resize(instruction::NUM_OP);
@@ -108,29 +108,29 @@ RegisterMachine::~RegisterMachine() {
        meiter++)
     delete *meiter;
   privateMemory_.clear();
-  for (size_t mp = 0; mp < inputMemoryPointers_.size(); mp++) {
-    for (auto meiter = inputMemoryPointers_[mp].begin();
-         meiter != inputMemoryPointers_[mp].end(); meiter++)
-      delete *meiter;
-    inputMemoryPointers_[mp].clear();
-  }
-  inputMemoryPointers_.clear();
+  // for (size_t mp = 0; mp < inputMemoryPointers_.size(); mp++) {
+  //   for (auto meiter = inputMemoryPointers_[mp].begin();
+  //        meiter != inputMemoryPointers_[mp].end(); meiter++)
+  //     delete *meiter;
+  //   inputMemoryPointers_[mp].clear();
+  // }
+  // inputMemoryPointers_.clear();
 }
 
 void RegisterMachine::MarkFeatures(instruction *istr, int in) {
   features_.clear();
-  if (istr->inType(in) == memoryEigen::SCALAR_TYPE) {
-    features_.insert(istr->inIdx(in));
-  } else if (istr->inType(in) == memoryEigen::VECTOR_TYPE) {
-    for (size_t f = istr->inIdx(in), row = 0;
-         row < istr->inMem(in)->memory_size_; row++) {
+  if (istr->GetInType(in) == memoryEigen::SCALAR_TYPE) {
+    features_.insert(istr->GetInIdx(in));
+  } else if (istr->GetInType(in) == memoryEigen::VECTOR_TYPE) {
+    for (size_t f = istr->GetInIdx(in), row = 0;
+         row < istr->GetInMem(in)->memory_size_; row++) {
       // features_.insert(f++ % num_input_);  // toroidal
       features_.insert(f++);
     }
-  } else if (istr->inType(in) == memoryEigen::MATRIX_TYPE) {
-    for (size_t f = istr->inIdx(in), row = 0;
-         row < istr->inMem(in)->memory_size_; row++) {
-      for (size_t col = 0; col < istr->inMem(in)->memory_size_; col++) {
+  } else if (istr->GetInType(in) == memoryEigen::MATRIX_TYPE) {
+    for (size_t f = istr->GetInIdx(in), row = 0;
+         row < istr->GetInMem(in)->memory_size_; row++) {
+      for (size_t col = 0; col < istr->GetInMem(in)->memory_size_; col++) {
         // features_.insert(f++ % num_input_);  // toroidal
         features_.insert(f++);
       }
@@ -158,25 +158,26 @@ void RegisterMachine::MarkIntrons(
   }
   for (auto istr : bid_) {
     for (int in = 0; in < 2; in++) {
-      if (istr->IsMemoryRef(in)) Meff[istr->inType(in)][istr->inIdx(in)] = true;
+      if (istr->IsMemoryRef(in)) Meff[istr->GetInType(in)][istr->GetInIdx(in)] = true;
     }
   }
 
   bidEffective_.clear();
 
   for (auto istr : bid_) {
-    if (!skipIntrons_ || Meff[istr->outType()][istr->outIdx_]) {
+    if (!skipIntrons_ || Meff[istr->GetOutType()][istr->outIdx_]) {
       bidEffective_.push_back(istr);
       op_counts_[istr->op_]++;
       // TODO(spkelly) this is always true now, move elsewhere
-      istr->out_ = privateMemory_[istr->outType()];
+      istr->out_ = privateMemory_[istr->GetOutType()];
       // inputs
       for (int in = 0; in < 2; in++) {  // add in arity?
         if (istr->IsInput(in)) {
-          istr->inMem(in, inputMemoryPointers_[in][istr->inType(in)]);
+          // istr->SetInMem(in, inputMemoryPointers_[in][istr->GetInType(in)]);
+          istr->SetInMem(in, input_memory_buff_[istr->GetInType(in)]); 
           MarkFeatures(istr, in);
         } else if (istr->IsMemoryRef(in)) {
-          istr->inMem(in, privateMemory_[istr->inType(in)]);
+          istr->SetInMem(in, privateMemory_[istr->GetInType(in)]);
         }
       }
     }
@@ -204,7 +205,7 @@ void RegisterMachine::MuBid(std::unordered_map<std::string, std::any> &params,
     if ((int)bid_.size() < std::any_cast<int>(params["max_prog_size"]) &&
         disR(rng) < std::any_cast<double>(params["p_bid_add"])) {
       instruction *instr = new instruction(params, rng);
-      instr->mutate(true, legalOps, rng);
+      instr->Mutate(true, legalOps, rng);
       uniform_int_distribution<int> disBid(0, bid_.size());
       int i = disBid(rng);
       bid_.insert(bid_.begin() + i, instr);
@@ -215,18 +216,18 @@ void RegisterMachine::MuBid(std::unordered_map<std::string, std::any> &params,
     if (disR(rng) < std::any_cast<double>(params["p_bid_mutate"])) {
       uniform_int_distribution<int> disBid(0, bid_.size() - 1);
       int i = disBid(rng);
-      bid_[i]->mutate(false, legalOps, rng);
+      bid_[i]->Mutate(false, legalOps, rng);
       changed = true;
     }
 
-    /* Add noise to constants */
-    if (params.find("p_bid_mu_const") != params.end() &&
-        disR(rng) < std::any_cast<double>(params["p_bid_mu_const"])) {
-      for (auto m : sharedMemory_) {
-        m->NoiseToConst(rng,
-                        std::any_cast<double>(params["bid_mu_const_stddev"]));
-      }
-    }
+    // /* Add noise to constants */
+    // if (params.find("p_bid_mu_const") != params.end() &&
+    //     disR(rng) < std::any_cast<double>(params["p_bid_mu_const"])) {
+    //   for (auto m : sharedMemory_) {
+    //     m->NoiseToConst(rng,
+    //                     std::any_cast<double>(params["bid_mu_const_stddev"]));
+    //   }
+    // }
 
     /* Swap positions of two instructions. */
     if (bid_.size() > 1 &&
@@ -243,39 +244,75 @@ void RegisterMachine::MuBid(std::unordered_map<std::string, std::any> &params,
   }
 }
 
-void RegisterMachine::CopyInputToMemory(instruction *istr, state *obs,
-                                        size_t in) {
-  // In this case inMem(in) will be inputMemory_ and we use index 0
-  // Indices to input memory are mod by obs->dim_ to support environments
-  // with different number of scalar observation variables
-  size_t idx = 0;
-  if (istr->inType(in) == memoryEigen::SCALAR_TYPE) {
-    istr->inMem(in)->working_memory_[idx](0, 0) =
-        obs->stateValueAtIndex(istr->inIdx(in) % obs->dim_);
-  } else if (istr->inType(in) == memoryEigen::VECTOR_TYPE) {
-    for (size_t f = istr->inIdx(in), row = 0;
-         row < istr->inMem(in)->memory_size_; row++) {
-      istr->inMem(in)->working_memory_[idx](row, 0) =
-          obs->stateValueAtIndex(f++ % obs->dim_);
-    }
-  } else if (istr->inType(in) == memoryEigen::MATRIX_TYPE) {
-    for (size_t f = istr->inIdx(in), row = 0;
-         row < istr->inMem(in)->memory_size_; row++) {
-      for (size_t col = 0; col < istr->inMem(in)->memory_size_; col++) {
-        istr->inMem(in)->working_memory_[idx](row, col) =
-            obs->stateValueAtIndex(f++ % obs->dim_);
-      }
+// void RegisterMachine::CopyInputToMemory(instruction *istr, state *obs,
+//                                         size_t in) {
+//   // In this case GetInMem(in) will be inputMemory_ and we use index 0
+//   // Indices to input memory are mod by obs->dim_ to support environments
+//   // with different number of scalar observation variables
+//   size_t idx = 0;
+//   if (istr->GetInType(in) == memoryEigen::SCALAR_TYPE) {
+//     istr->GetInMem(in)->working_memory_[idx](0, 0) =
+//         obs->stateValueAtIndex(istr->GetInIdx(in) % obs->dim_);
+//   } else if (istr->GetInType(in) == memoryEigen::VECTOR_TYPE) {
+//     for (size_t f = istr->GetInIdx(in), row = 0;
+//          row < istr->GetInMem(in)->memory_size_; row++) {
+//       istr->GetInMem(in)->working_memory_[idx](row, 0) =
+//           obs->stateValueAtIndex(f++ % obs->dim_);
+//     }
+//   } else if (istr->GetInType(in) == memoryEigen::MATRIX_TYPE) {
+//     for (size_t f = istr->GetInIdx(in), row = 0;
+//          row < istr->GetInMem(in)->memory_size_; row++) {
+//       for (size_t col = 0; col < istr->GetInMem(in)->memory_size_; col++) {
+//         istr->GetInMem(in)->working_memory_[idx](row, col) =
+//             obs->stateValueAtIndex(f++ % obs->dim_);
+//       }
+//     }
+//   }
+//   istr->SetInIdxE(in, idx);  // reset inIdxE to zero for input ref
+// }
+
+void RegisterMachine::CopyInputToMemoryBuff(state *obs) {
+  // Copy obs to scalar memory
+  auto scalar_mem_idices =
+      input_memory_buff_[memoryEigen::SCALAR_TYPE]->memoryIndices_;
+  input_memory_buff_[memoryEigen::SCALAR_TYPE]
+      ->working_memory_[input_buff_index_ % scalar_mem_idices](0, 0) =
+      obs->stateValueAtIndex(0);
+
+  // Copy obs to vector memory
+  auto vec_mem_idices =
+      input_memory_buff_[memoryEigen::VECTOR_TYPE]->memoryIndices_;
+  for (int row = 0; row < obs->dim_; row++) {
+    input_memory_buff_[memoryEigen::VECTOR_TYPE]
+        ->working_memory_[input_buff_index_ % vec_mem_idices](row, 0) =
+        obs->stateValueAtIndex(row);
+  }
+  // Copy obs to matrix memory
+  auto mat_mem_idices =
+      input_memory_buff_[memoryEigen::MATRIX_TYPE]->memoryIndices_;
+  for (size_t row = 0;
+       row < input_memory_buff_[memoryEigen::MATRIX_TYPE]->memory_size_;
+       row++) {
+    for (size_t col = 0;
+         col < input_memory_buff_[memoryEigen::MATRIX_TYPE]->memory_size_;
+         col++) {
+      input_memory_buff_[memoryEigen::MATRIX_TYPE]
+          ->working_memory_[input_buff_index_ % mat_mem_idices](row, col) =
+          obs->stateValueAtIndex(col % obs->dim_);
     }
   }
-  istr->inIdxE(in, idx);  // reset inIdxE to zero for input ref
+  input_buff_index_++;
 }
 
 /******************************************************************************/
 double RegisterMachine::Run(state *obs, int &time_step,
                             const size_t &graph_depth, bool &verbose) {
   bool dbg = verbose;
+
+  CopyInputToMemoryBuff(obs);
+
   // reset memory
-  if (!stateful_) CopySharedConstToWorking();
+  if (!stateful_) ClearWorking(); //CopySharedConstToWorking();
 
   // Reset the output registers.
   // privateMemory_[memoryEigen::SCALAR_TYPE]->working_memory_[0].setZero();
@@ -285,12 +322,13 @@ double RegisterMachine::Run(state *obs, int &time_step,
   for (auto istr : bidEffective_) {
     // read inputs
     for (size_t in = 0; in < 2; in++) {
-      if (istr->inType(in) != memoryEigen::NA_TYPE) {
+      if (istr->GetInType(in) != memoryEigen::NA_TYPE) {
         if (istr->IsInput(in)) {
-          CopyInputToMemory(istr, obs, in);
+          // CopyInputToMemory(istr, obs, in);
+          // istr->SetInIdxE(in, 0);  // reset inIdxE to zero for input ref // TODO(skelly) this is the which buff
         } else {  // this input is a memory ref
                   // track read time for temporal memory
-          istr->inMem(in)->getReadTimeE()(istr->inIdx(in), 0) =
+          istr->GetInMem(in)->getReadTimeE()(istr->GetInIdx(in), 0) =
               time_step + (graph_depth / MAX_GRAPH_DEPTH);
         }
       }
@@ -310,14 +348,19 @@ double RegisterMachine::Run(state *obs, int &time_step,
 
 /******************************************************************************/
 void RegisterMachine::SetupMemory(size_t memoryIndices, size_t memory_size) {
-  inputMemoryPointers_.resize(2);  // for in1 and in2
+  // inputMemoryPointers_.resize(2);  // for in1 and in2
+  input_buff_index_ = 0;
   for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
     privateMemory_.push_back(
         new memoryEigen(-1, mem_t, memoryIndices, memory_size));
-    inputMemoryPointers_[0].push_back(
-        new memoryEigen(-1, mem_t, memoryIndices, memory_size));
-    inputMemoryPointers_[1].push_back(
-        new memoryEigen(-1, mem_t, memoryIndices, memory_size));
+    input_memory_buff_.push_back(
+        new memoryEigen(-1, mem_t, memoryIndices, memory_size));    
+    // // in1    
+    // inputMemoryPointers_[0].push_back(
+    //     new memoryEigen(-1, mem_t, memoryIndices, memory_size));
+    // // in2    
+    // inputMemoryPointers_[1].push_back(
+    //     new memoryEigen(-1, mem_t, memoryIndices, memory_size));
   }
-  sharedMemory_.resize(memoryEigen::NUM_MEMORY_TYPES);
+  // sharedMemory_.resize(memoryEigen::NUM_MEMORY_TYPES);
 }

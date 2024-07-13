@@ -9,6 +9,7 @@
 
 class program {
  public:
+  size_t input_buff_index_; // TODO(skelly):doc
   int action_;         // Action index
   double bid_val_;     // Most recent bid value
   static long count_;  // Next id to use
@@ -26,11 +27,15 @@ class program {
   double key_;
   int lastCompareFactor_;
 
-  vector<memoryEigen *> sharedMemory_;
+  // vector<memoryEigen *> sharedMemory_;
+  // Vector storing 1 memoryEigen* of each type (SCALAR, VECTOR, MATRIX)
   vector<memoryEigen *> privateMemory_;
 
-  // read inputs into these at runtime
-  vector<vector<memoryEigen *> > inputMemoryPointers_;
+  // Vector storing 1 memoryEigen* of each type (SCALAR, VECTOR, MATRIX)
+  vector<memoryEigen *> input_memory_buff_;
+
+  // // read inputs into these at runtime TODO(skelly): simplify this
+  // vector<vector<memoryEigen *> > inputMemoryPointers_;
 
   int nrefs_;               //  Number of references by teams
   vector<int> op_counts_;   // count for each operator over _bidEffective
@@ -61,25 +66,26 @@ class program {
 
   virtual void MarkIntrons(std::unordered_map<std::string, std::any> &) = 0;
 
-  inline void MemGet(size_t type, memoryEigen *&m) { m = sharedMemory_[type]; }
+  // inline void MemGet(size_t type, memoryEigen *&m) { m = sharedMemory_[type]; }
 
-  inline void MemSet(uint8_t type, memoryEigen *m) {
-    sharedMemory_[type] = m;
-    m->refInc();
-  }
+  // inline void MemSet(uint8_t type, memoryEigen *m) {
+  //   sharedMemory_[type] = m;
+  //   m->refInc();
+  // }
 
-  inline memoryEigen *MemGet(uint8_t type) { return sharedMemory_[type]; }
+  // inline memoryEigen *MemGet(uint8_t type) { return sharedMemory_[type]; }
 
-  inline void CopySharedConstToWorking() {
-    for (size_t i = 0; i < sharedMemory_.size(); i++) {
-      privateMemory_[i]->working_memory_ = sharedMemory_[i]->const_memory_;
-    }
-  }
+  // inline void CopySharedConstToWorking() {
+  //   for (size_t i = 0; i < sharedMemory_.size(); i++) {
+  //     privateMemory_[i]->working_memory_ = sharedMemory_[i]->const_memory_;
+  //   }
+  // }
 
   inline void ClearWorking() {
     for (size_t i = 0; i < privateMemory_.size(); i++) {
       privateMemory_[i]->ClearWorking();
     }
+    input_buff_index_ = 0;  // TODO(skelly): doc
   }
 
   // Mutate action, return true if the action was actually changed
