@@ -861,8 +861,6 @@ class instruction {
   }
 
   inline void ExecuteScalarMatrixAssignOp(bool dbg) {
-    cerr << "dbg " << outIdx_ << " " << in1Idx_ << " " << in2Idx_ << " "
-         << in3Idx_ << endl;
     out_->working_memory_[outIdx_](0, 0) =
         in1_->working_memory_[in1Idx_](in2Idx_, in3Idx_);
     if (dbg) {

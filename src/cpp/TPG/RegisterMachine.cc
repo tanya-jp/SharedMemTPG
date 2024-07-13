@@ -84,6 +84,7 @@ RegisterMachine::RegisterMachine(
     std::unordered_map<std::string, std::any> &params, long id, long nrefs,
     std::vector<instruction *> bid) {
   action_ = action;
+  memory_size_ = std::any_cast<int>(params["memory_size"]);
   bid_ = bid;
   gtime_ = gtime;
   id_ = id;
@@ -273,35 +274,30 @@ void RegisterMachine::MuBid(std::unordered_map<std::string, std::any> &params,
 
 void RegisterMachine::CopyInputToMemoryBuff(state *obs) {
   // Copy obs to scalar memory
-  auto scalar_mem_idices =
-      input_memory_buff_[memoryEigen::SCALAR_TYPE]->memoryIndices_;
-  input_memory_buff_[memoryEigen::SCALAR_TYPE]
-      ->working_memory_[input_buff_index_ % scalar_mem_idices](0, 0) =
-      obs->stateValueAtIndex(0);
+  Matrix<double, Dynamic, Dynamic> scalar_mat(1,1);
+  scalar_mat(0,0) = obs->stateValueAtIndex(0);
+  input_memory_buff_[memoryEigen::SCALAR_TYPE]->working_memory_.push_front(scalar_mat);
+  input_memory_buff_[memoryEigen::SCALAR_TYPE]->working_memory_.pop_back();
+
 
   // Copy obs to vector memory
-  auto vec_mem_idices =
-      input_memory_buff_[memoryEigen::VECTOR_TYPE]->memoryIndices_;
-  for (int row = 0; row < obs->dim_; row++) {
-    input_memory_buff_[memoryEigen::VECTOR_TYPE]
-        ->working_memory_[input_buff_index_ % vec_mem_idices](row, 0) =
-        obs->stateValueAtIndex(row);
+  Matrix<double, Dynamic, Dynamic> vector_mat(input_memory_buff_[memoryEigen::VECTOR_TYPE]->memory_size_, 1);
+  for (size_t row = 0; row < input_memory_buff_[memoryEigen::VECTOR_TYPE]->memory_size_; row++) {
+  vector_mat(row, 0) = obs->stateValueAtIndex(row);
   }
+  input_memory_buff_[memoryEigen::VECTOR_TYPE]->working_memory_.push_front(vector_mat);
+  input_memory_buff_[memoryEigen::VECTOR_TYPE]->working_memory_.pop_back();
+
+  
   // Copy obs to matrix memory
-  auto mat_mem_idices =
-      input_memory_buff_[memoryEigen::MATRIX_TYPE]->memoryIndices_;
-  for (size_t row = 0;
-       row < input_memory_buff_[memoryEigen::MATRIX_TYPE]->memory_size_;
-       row++) {
-    for (size_t col = 0;
-         col < input_memory_buff_[memoryEigen::MATRIX_TYPE]->memory_size_;
-         col++) {
-      input_memory_buff_[memoryEigen::MATRIX_TYPE]
-          ->working_memory_[input_buff_index_ % mat_mem_idices](row, col) =
-          obs->stateValueAtIndex(col % obs->dim_);
+  Matrix<double, Dynamic, Dynamic> matrix_mat(input_memory_buff_[memoryEigen::MATRIX_TYPE]->memory_size_, input_memory_buff_[memoryEigen::MATRIX_TYPE]->memory_size_);
+  for (size_t row = 0; row < input_memory_buff_[memoryEigen::MATRIX_TYPE]->memory_size_; row++) {
+    for (size_t col = 0; col < input_memory_buff_[memoryEigen::MATRIX_TYPE]->memory_size_; col++) {
+      matrix_mat(row, col) =  obs->stateValueAtIndex(col % obs->dim_);  
     }
   }
-  input_buff_index_++;
+  input_memory_buff_[memoryEigen::MATRIX_TYPE]->working_memory_.push_front(matrix_mat);
+  input_memory_buff_[memoryEigen::MATRIX_TYPE]->working_memory_.pop_back();
 }
 
 /******************************************************************************/

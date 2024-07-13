@@ -13,7 +13,8 @@ class program {
   int action_;         // Action index
   double bid_val_;     // Most recent bid value
   static long count_;  // Next id to use
-  size_t memory_size_;
+  // TODO(skelly): do programs need to store memory_size_ since memories also store?
+  size_t memory_size_;  
   // vector<double>* feature;
 
   // Features indexed by non-introns in this program, determined in

@@ -209,7 +209,8 @@ int main(int argc, char **argv) {
         /* evaluation ********************************************************/
         startEval = chrono::system_clock::now();
 
-        if (tpg.GetState("t_current") > tpg.GetParam<int>("t_start") && tpg.HaveParam("n_sampled_tasks_for_eval")) {
+        if (tpg.GetState("t_current") > tpg.GetParam<int>("t_start") &&
+            tpg.HaveParam("n_sampled_tasks_for_eval")) {
           // Split tasks into evaluated and estimated
           vector<int> evalTasks, estTasks;
           SplitSet(taskIndices, evalTasks, estTasks,

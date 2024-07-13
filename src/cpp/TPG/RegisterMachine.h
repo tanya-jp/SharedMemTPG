@@ -12,7 +12,6 @@ struct instructionDecoded;
 
 class RegisterMachine : public program {
  public:
- size_t input_buff_index_;
   // Bid program, a list of instructions
   std::vector<instruction *> bid_;
   std::vector<instruction *> bidEffective_;
