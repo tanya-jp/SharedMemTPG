@@ -391,10 +391,8 @@ void TPG::ReadParameters(string file_name,
       _ops[instruction::VECTOR_GAUSSIAN_SET_OP_] = true;
     if (outcome_fields[0] == "MATRIX_GAUSSIAN_SET_OP")
       _ops[instruction::MATRIX_GAUSSIAN_SET_OP_] = true;
-    if (outcome_fields[0] == "SCALAR_COND_A_OP")
-      _ops[instruction::SCALAR_COND_A_OP_] = true;
-    if (outcome_fields[0] == "SCALAR_COND_B_OP")
-      _ops[instruction::SCALAR_COND_B_OP_] = true;
+    if (outcome_fields[0] == "SCALAR_CONDITIONAL_OP")
+      _ops[instruction::SCALAR_CONDITIONAL_OP_] = true;
     if (outcome_fields[0] == "SCALAR_POW_OP")
       _ops[instruction::SCALAR_POW_OP_] = true;
     if (outcome_fields[0] == "SCALAR_SQR_OP")
@@ -2456,6 +2454,7 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
         in->in1Idx_ = stringToInt(instructionString[4]);
         in->in2Idx_ = stringToInt(instructionString[5]);
         in->in3Idx_ = stringToInt(instructionString[6]);
+        in->in4Idx_ = stringToInt(instructionString[7]);
         bid.push_back(in);
       }
       l = new RegisterMachine(gtime, action, stateful, params_, id, nrefs, bid);

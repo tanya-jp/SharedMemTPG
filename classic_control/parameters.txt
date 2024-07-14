@@ -37,7 +37,7 @@ write_test_checkpoints 1
 write_phylogeny 0
 
 # how frequently to run test procedure
-test_mod 1000000
+test_mod 100
 
 # Number of tasks used each selection for evaluation. 
 # The rest are estimated with phylogeny.
@@ -160,12 +160,15 @@ p_bid_xover 0.0
 # program variation: stddev of normal noise added to each const
 bid_mu_const_stddev 0.05
 
-# memory size: number of memory indices
+# number of memory indices
 # each memory index points to a data structure (scalar, vector, or matrix)
 memory_indices 8
 
-# this is the dimensionality for vector & matrix memory
+# dimensionality for vector & matrix memory
 memory_size 2
+
+# observations are stored in a buffer with this time window.
+observation_buff_size 1
 
 ################################################################################
 ## General Task Parameters #####################################################
@@ -225,8 +228,7 @@ SCALAR_ARCTAN_OP
 SCALAR_EXP_OP
 SCALAR_LOG_OP
 SCALAR_HEAVYSIDE_OP
-SCALAR_COND_A_OP
-#SCALAR_COND_B_OP
+SCALAR_CONDITIONAL_OP
 SCALAR_POW_OP
 SCALAR_SQR_OP
 SCALAR_CUBE_OP

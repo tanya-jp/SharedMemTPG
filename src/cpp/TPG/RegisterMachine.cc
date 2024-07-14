@@ -49,7 +49,9 @@ RegisterMachine::RegisterMachine(
     bid_.push_back(in);
   }
   op_counts_.resize(instruction::NUM_OP);
-  SetupMemory(std::any_cast<int>(params["memory_indices"]), std::any_cast<int>(params["memory_size"]));
+  SetupMemory(std::any_cast<int>(params["memory_indices"]),
+              std::any_cast<int>(params["observation_buff_size"]),
+              std::any_cast<int>(params["memory_size"]));
 }
 
 /******************************************************************************
@@ -72,7 +74,9 @@ RegisterMachine::RegisterMachine(
     bid_.push_back(new instruction(**initer));
 
   op_counts_.resize(instruction::NUM_OP);
-  SetupMemory(std::any_cast<int>(params["memory_indices"]), std::any_cast<int>(params["memory_size"]));
+  SetupMemory(std::any_cast<int>(params["memory_indices"]),
+              std::any_cast<int>(params["observation_buff_size"]),
+              std::any_cast<int>(params["memory_size"]));
 }
 /******************************************************************************
  * Create RegisterMachine from checkpoint file
@@ -94,6 +98,7 @@ RegisterMachine::RegisterMachine(
   op_counts_.resize(instruction::NUM_OP);
 
   SetupMemory(std::any_cast<int>(params["memory_indices"]),
+              std::any_cast<int>(params["observation_buff_size"]),
               std::any_cast<int>(params["memory_size"]));
 }
 
@@ -149,7 +154,8 @@ void RegisterMachine::MarkIntrons(
   }
   for (auto istr : bid_) {
     for (int in = 0; in < 2; in++) {
-      if (istr->IsMemoryRef(in)) Meff[istr->GetInType(in)][istr->GetInIdx(in)] = true;
+      if (istr->IsMemoryRef(in))
+        Meff[istr->GetInType(in)][istr->GetInIdx(in)] = true;
     }
   }
 
@@ -163,11 +169,10 @@ void RegisterMachine::MarkIntrons(
       istr->out_ = privateMemory_[istr->GetOutType()];
       // inputs
       for (int in = 0; in < 2; in++) {  // add in arity?
-        if (istr->IsInput(in)) {
-          istr->SetInMem(in, input_memory_buff_[istr->GetInType(in)]); 
+        if (istr->IsObs(in)) {
+          istr->SetInMem(in, input_memory_buff_[istr->GetInType(in)]);
           MarkFeatures(istr, in);
-        } 
-        else if (istr->IsMemoryRef(in)) {
+        } else if (istr->IsMemoryRef(in)) {
           istr->SetInMem(in, privateMemory_[istr->GetInType(in)]);
         }
       }
@@ -297,17 +302,19 @@ double RegisterMachine::Run(state *obs, int &time_step,
   for (auto istr : bidEffective_) {
     istr->exec(verbose);  // Execute instruction
 
-    // Track memory read times
     for (size_t in = 0; in < 2; in++) {
-      if (istr->GetInType(in) != memoryEigen::NA_TYPE) {
-        // If input is a memory ref then track read time for temporal memory
-        if (!(istr->IsInput(in))) {  
+      if (istr->GetInType(in) != memoryEigen::NA_TYPE) {  // Input is used.
+        if (istr->GetInType(in) == memoryEigen::SCALAR_TYPE) {
+          istr->SetupScalarIn(in, input_memory_buff_);
+        }
+        if (!(istr->IsObs(in))) {
+          // Input is a memory ref. Track read time for temporal memory.
           istr->GetInMem(in)->getReadTimeE()(istr->GetInIdx(in), 0) =
               time_step + (graph_depth / MAX_GRAPH_DEPTH);
         }
       }
     }
-    // Track write times for temporal memory
+    // Track write times for temporal memory.
     istr->out_->getWriteTimeE()(istr->outIdx_, 0) =
         time_step + (graph_depth / MAX_GRAPH_DEPTH);
   }
@@ -316,11 +323,13 @@ double RegisterMachine::Run(state *obs, int &time_step,
 }
 
 /******************************************************************************/
-void RegisterMachine::SetupMemory(size_t memoryIndices, size_t memory_size) {
+void RegisterMachine::SetupMemory(size_t memoryIndices,
+                                  size_t observation_buff_size,
+                                  size_t memory_size) {
   for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
     privateMemory_.push_back(
         new memoryEigen(-1, mem_t, memoryIndices, memory_size));
     input_memory_buff_.push_back(
-        new memoryEigen(-1, mem_t, memoryIndices, memory_size));
+        new memoryEigen(-1, mem_t, observation_buff_size, memory_size));
   }
 }
