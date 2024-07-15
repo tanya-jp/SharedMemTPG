@@ -205,7 +205,7 @@ class instruction {
   inline bool IsMemoryRef(int i) const {
     return !IsObs(i) && GetInType(i) != memoryEigen::NA_TYPE;
   }
-  void Mutate(bool, vector<bool>&, mt19937&);
+  void Mutate(bool randomize, vector<bool>& legal_ops, mt19937& rng);
   inline size_t GetOutType() const { return op_mem_types_[op_][0]; }
   static void SetupOps();
 

@@ -540,33 +540,11 @@ program *TPG::CloneProgram(program *prog) {
       state_["program_count"]++);
   if (prog_clone->action() >= 0)
     _teamMap[prog_clone->action()]->AddIncomingProgram(prog_clone->id_);
-  // TODO(spkelly): remove shared memory code
-  // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-  //   prog_clone->MemSet(mem_t, prog->MemGet(mem_t));
-  //   prog_clone->MemGet(mem_t)->refInc();
-  // }
   return prog_clone;
 }
 
-// TODO(spkelly): remove shared memory code
-// void TPG::ProgramMutator_MemoryPointer(program *prog_to_mu) {
-//   // change memory pointer
-//   if (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pms")) {
-//     uniform_int_distribution<int> disMemory(0, _Memory.size() - 1);
-//     memoryEigen *memNew;
-//     do {
-//       memNew = _Memory[memoryEigen::SCALAR_TYPE]
-//                       [_Memids[memoryEigen::SCALAR_TYPE]
-//                               [disMemory(rngs_[TPG_SEED])]];
-//     } while (prog_to_mu->MemGet(memoryEigen::SCALAR_TYPE)->id_ ==
-//     memNew->id_); prog_to_mu->MemGet(memoryEigen::SCALAR_TYPE)->refDec();
-//     prog_to_mu->MemSet(memoryEigen::SCALAR_TYPE, memNew);
-//     prog_to_mu->MemGet(memoryEigen::SCALAR_TYPE)->refInc();
-//   }
-// }
-
 void TPG::ProgramMutator_Instructions(program *prog_to_mu) {
-  prog_to_mu->MuBid(params_, rngs_[TPG_SEED], real_dist_, _ops);
+  prog_to_mu->MuBid(params_, rngs_[TPG_SEED], _ops);
 }
 
 void TPG::ProgramMutator_ActionPointer(program *prog_to_mu, team *new_team,

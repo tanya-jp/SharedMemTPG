@@ -182,14 +182,15 @@ void RegisterMachine::MarkIntrons(
 
 /******************************************************************************/
 void RegisterMachine::MuBid(std::unordered_map<std::string, std::any> &params,
-                            mt19937 &rng, uniform_real_distribution<> &disR,
+                            mt19937& rng,
                             vector<bool> &legalOps) {
+  uniform_real_distribution<> dis_real(0, 1.0);                            
   bool changed = false;
 
   while (!changed) {
     /* Remove random instruction. */
     if (bid_.size() > 1 &&
-        disR(rng) < std::any_cast<double>(params["p_bid_delete"])) {
+        dis_real(rng) < std::any_cast<double>(params["p_bid_delete"])) {
       uniform_int_distribution<int> disBid(0, bid_.size() - 1);
       int i = disBid(rng);
       delete *(bid_.begin() + i);
@@ -199,7 +200,7 @@ void RegisterMachine::MuBid(std::unordered_map<std::string, std::any> &params,
 
     /* Insert random instruction. */
     if ((int)bid_.size() < std::any_cast<int>(params["max_prog_size"]) &&
-        disR(rng) < std::any_cast<double>(params["p_bid_add"])) {
+        dis_real(rng) < std::any_cast<double>(params["p_bid_add"])) {
       instruction *instr = new instruction(params, rng);
       instr->Mutate(true, legalOps, rng);
       uniform_int_distribution<int> disBid(0, bid_.size());
@@ -209,10 +210,9 @@ void RegisterMachine::MuBid(std::unordered_map<std::string, std::any> &params,
     }
 
     /* Mutate a random instruction. */
-    if (disR(rng) < std::any_cast<double>(params["p_bid_mutate"])) {
+    if (dis_real(rng) < std::any_cast<double>(params["p_bid_mutate"])) {
       uniform_int_distribution<int> disBid(0, bid_.size() - 1);
-      int i = disBid(rng);
-      bid_[i]->Mutate(false, legalOps, rng);
+      bid_[disBid(rng)]->Mutate(false, legalOps, rng);
       changed = true;
     }
 
@@ -227,7 +227,7 @@ void RegisterMachine::MuBid(std::unordered_map<std::string, std::any> &params,
 
     /* Swap positions of two instructions. */
     if (bid_.size() > 1 &&
-        disR(rng) < std::any_cast<double>(params["p_bid_swap"])) {
+        dis_real(rng) < std::any_cast<double>(params["p_bid_swap"])) {
       uniform_int_distribution<int> disBid(0, bid_.size() - 1);
       int i = disBid(rng);
       int j;

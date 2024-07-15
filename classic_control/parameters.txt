@@ -101,13 +101,10 @@ pma 0.4
 pmm 1.0
 
 # team mutation: probability of mutating a program's action pointer
-pmn 0.1
-
-# team mutation: probability of mutating a program's memory pointer
-pms 0.1
+pmn 0.2
 
 # team mutation: probability of mutating program execution order
-pmw 0.1
+pmw 0.2
 
 # team variation: probability of team crossover
 pmx 0.5
@@ -139,7 +136,7 @@ max_initial_prog_size 10
 # max program size
 max_prog_size 1000000
 
-# program variation: probability of changing the program
+# program variation: probability of changing a random instruction
 p_bid_mutate 1.0
 
 # program variation: probability of swaping the position of two instructions

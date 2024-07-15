@@ -397,8 +397,8 @@ instruction::instruction(instruction &i) {
   rng_ = i.rng_;
 }
 
-void instruction::Mutate(bool uniform, vector<bool> &legal_ops, mt19937 &rng) {
-  if (uniform) {  // Randomly set each part of this instruction.
+void instruction::Mutate(bool randomize, vector<bool> &legal_ops, mt19937 &rng) {
+  if (randomize) {  // Randomly set each part of this instruction.
     std::uniform_int_distribution<> dis(0, 1);
     in1Src_ = dis(rng);
     in2Src_ = dis(rng);
@@ -422,40 +422,29 @@ void instruction::Mutate(bool uniform, vector<bool> &legal_ops, mt19937 &rng) {
   } else {  // Randomly change one part of this instruction.
     std::uniform_int_distribution<> dis(0, 7);
     int i = dis(rng);
-    switch (i) {
-      case 0:  // Change in1 src to private memory or observation.
+    if (i == 0) {  // Change in1 src to private memory or observation. 
         MutateInt(in1Src_, 0, 1, rng);
-        break;
-      case 1:  // Change in2 src to private memory or observation.
+    } else if (i == 1) {  // Change in2 src to private memory or observation.
         MutateInt(in2Src_, 0, 1, rng);
-        break;
-      case 2:  // Change out index.
+    } else if (i == 2) {  // Change out index.
         MutateInt(outIdx_, 0, memIndices_ - 1, rng);
-        break;
-      case 3:  // Change operation.
+    } else if (i == 3) {  // Change operation.
         do {
           MutateInt(op_, 0, int(legal_ops.size() - 1), rng);
         } while (!legal_ops[op_]);
-        break;
-      case 4:  // Change in1 index.
+    } else if (i == 4) {  // Change in1 index.
         MutateInt(in1Idx_, 0, max(memIndices_, observation_buff_size_) - 1,
                   rng);
-        break;
-      case 5:  // Change in2 index.
+    } else if (i == 5) {  // Change in2 index.
         MutateInt(in2Idx_, 0, max(memIndices_, observation_buff_size_) - 1,
                   rng);
-        break;
-      case 6:  // Change in3 index. Only used as index to vector or matrix
-               // memory.
+    } else if (i == 6) {  // Change in3 index. Used as index to vector or matrix memory.
         MutateInt(in3Idx_, 0, memory_size_ - 1, rng);
-        break;
-      case 7:  // Change in4 index. Only used as index to vector or matrix
-               // memory.
+    } else if (i == 7) {  // Change in4 index. Used as index to vector or matrix memory.
         MutateInt(in4Idx_, 0, memory_size_ - 1, rng);
-        break;
     }
   }
-  
+
   // Protect input indices from ranges larger than memory data structures.
   for (int in = 0; in < 2; in++) {
     if (IsObs(in)) {

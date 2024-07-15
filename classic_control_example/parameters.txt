@@ -37,7 +37,7 @@ write_test_checkpoints 1
 write_phylogeny 0
 
 # how frequently to run test procedure
-test_mod 1000000
+test_mod 100
 
 # Number of tasks used each selection for evaluation. 
 # The rest are estimated with phylogeny.
@@ -62,10 +62,10 @@ n_generations 1000000
 mu_internal 0
 
 # number of elite teams
-n_elite 10
+n_elite 200
 
 # n_elite * n_elite_mul new teams are created each generation
-n_elite_mul 3
+n_elite_mul 5
 
 # fitness proportional selection
 fit_prop_select 0
@@ -101,13 +101,10 @@ pma 0.4
 pmm 1.0
 
 # team mutation: probability of mutating a program's action pointer
-pmn 0.1
-
-# team mutation: probability of mutating a program's memory pointer
-pms 0.1
+pmn 0.2
 
 # team mutation: probability of mutating program execution order
-pmw 0.1
+pmw 0.2
 
 # team variation: probability of team crossover
 pmx 0.5
@@ -131,15 +128,15 @@ skip_introns 0
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 2
+n_input 4
 
 # max initial program size
 max_initial_prog_size 10
 
 # max program size
-max_prog_size 100
+max_prog_size 1000000
 
-# program variation: probability of changing the program
+# program variation: probability of changing a random instruction
 p_bid_mutate 1.0
 
 # program variation: probability of swaping the position of two instructions
@@ -160,12 +157,15 @@ p_bid_xover 0.0
 # program variation: stddev of normal noise added to each const
 bid_mu_const_stddev 0.05
 
-# memory size: number of memory indices
+# number of memory indices
 # each memory index points to a data structure (scalar, vector, or matrix)
 memory_indices 8
 
-# this is the dimensionality for vector & matrix memory
-memory_size 2
+# dimensionality for vector & matrix memory
+memory_size 4
+
+# observations are stored in a buffer with this time window.
+observation_buff_size 1
 
 ################################################################################
 ## General Task Parameters #####################################################
@@ -173,10 +173,10 @@ memory_size 2
 
 # which tasks are active
 # rhs should be a single task name or a comma-separated list
-active_tasks Pendulum
+active_tasks Cartpole
 
 # use the partially-observable version of a task, if available
-partially_observable 1
+partially_observable 0
 
 # number of discrete actions
 n_discrete_action 3
@@ -225,8 +225,7 @@ SCALAR_ARCTAN_OP
 SCALAR_EXP_OP
 SCALAR_LOG_OP
 SCALAR_HEAVYSIDE_OP
-SCALAR_COND_A_OP
-#SCALAR_COND_B_OP
+SCALAR_CONDITIONAL_OP
 SCALAR_POW_OP
 SCALAR_SQR_OP
 SCALAR_CUBE_OP

@@ -92,8 +92,7 @@ class program {
     return a != action;
   }
   // Mutate bid, return true if any changes occured
-  virtual void MuBid(std::unordered_map<std::string, std::any> &, mt19937 &,
-                     uniform_real_distribution<> &, vector<bool> &) = 0;
+  virtual void MuBid(std::unordered_map<std::string, std::any> &, mt19937 &, vector<bool> &) = 0;
   // Not counting introns
   inline long numFeatures() { return features_.size(); }
   inline void op_counts(vector<int> &v) { v = op_counts_; }
