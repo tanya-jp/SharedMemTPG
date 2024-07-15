@@ -128,26 +128,6 @@ class RecursiveForecast : public TaskEnv {
     cout << "time series test slices: " << t_start[2].size() << endl;
   }
 
-  // void Normalize() {
-  //   // normalize data in [0,1]
-  //   double maxFeature = numeric_limits<double>::lowest();
-  //   double minFeature = numeric_limits<double>::max();
-  //   for (size_t sample = 0; sample < data.size(); sample++) {
-  //     maxFeature = max(
-  //         maxFeature, *(max_element(data[sample].begin(),
-  //         data[sample].end())));
-  //     minFeature = min(
-  //         minFeature, *(min_element(data[sample].begin(),
-  //         data[sample].end())));
-  //   }
-  //   for (size_t sample = 0; sample < data.size(); sample++) {
-  //     for (size_t feature = 0; feature < data[sample].size(); feature++) {
-  //       data[sample][feature] =
-  //           (data[sample][feature] - minFeature) / (maxFeature - minFeature);
-  //     }
-  //   }
-  // }
-
   // Normalize data in each column to the range [0,1]
   void Normalize() {
     size_t n_col = data[0].size();
