@@ -109,8 +109,8 @@ RegisterMachine::~RegisterMachine() {
   for (auto memory : privateMemory_) delete memory;
   privateMemory_.clear();
 
-  for (auto memory : input_memory_buff_) delete memory;
-  input_memory_buff_.clear();
+  for (auto memory : observation_memory_buff_) delete memory;
+  observation_memory_buff_.clear();
 }
 
 void RegisterMachine::MarkFeatures(instruction *istr, int in) {
@@ -170,7 +170,7 @@ void RegisterMachine::MarkIntrons(
       // inputs
       for (int in = 0; in < 2; in++) {  // add in arity?
         if (istr->IsObs(in)) {
-          istr->SetInMem(in, input_memory_buff_[istr->GetInType(in)]);
+          istr->SetInMem(in, observation_memory_buff_[istr->GetInType(in)]);
           MarkFeatures(istr, in);
         } else if (istr->IsMemoryRef(in)) {
           istr->SetInMem(in, privateMemory_[istr->GetInType(in)]);
@@ -182,9 +182,8 @@ void RegisterMachine::MarkIntrons(
 
 /******************************************************************************/
 void RegisterMachine::MuBid(std::unordered_map<std::string, std::any> &params,
-                            mt19937& rng,
-                            vector<bool> &legalOps) {
-  uniform_real_distribution<> dis_real(0, 1.0);                            
+                            mt19937 &rng, vector<bool> &legalOps) {
+  uniform_real_distribution<> dis_real(0, 1.0);
   bool changed = false;
 
   while (!changed) {
@@ -268,11 +267,12 @@ void RegisterMachine::MuBid(std::unordered_map<std::string, std::any> &params,
 // }
 
 // TODO(skelly): This functions currently assumes obs is a vector of state vars
-void RegisterMachine::CopyInputToMemoryBuff(state *obs) {
+void RegisterMachine::CopyObservationToMemoryBuff(state *obs) {
   // Memory size is the same for SCALAR, VECTOR, MATRIX
-  auto memory_size = input_memory_buff_[memoryEigen::SCALAR_TYPE]->memory_size_;
+  auto memory_size =
+      observation_memory_buff_[memoryEigen::SCALAR_TYPE]->memory_size_;
 
-  // Copy obs to scalar memory
+  // Copy obs to scalar memory  TODO(skelly): currently unused. remove?
   Matrix<double, Dynamic, Dynamic> scalar_mat(1, 1);
   scalar_mat(0, 0) = obs->stateValueAtIndex(0);
   AddToInputMemoryBuff(scalar_mat, memoryEigen::SCALAR_TYPE);
@@ -280,7 +280,7 @@ void RegisterMachine::CopyInputToMemoryBuff(state *obs) {
   // Copy obs to vector memory
   Matrix<double, Dynamic, Dynamic> vector_mat(memory_size, 1);
   for (size_t row = 0; row < memory_size; row++)
-    vector_mat(row, 0) = obs->stateValueAtIndex(row);
+    vector_mat(row, 0) = obs->stateValueAtIndex(row % obs->dim_);
   AddToInputMemoryBuff(vector_mat, memoryEigen::VECTOR_TYPE);
 
   // Copy obs to matrix memory
@@ -294,7 +294,7 @@ void RegisterMachine::CopyInputToMemoryBuff(state *obs) {
 /******************************************************************************/
 double RegisterMachine::Run(state *obs, int &time_step,
                             const size_t &graph_depth, bool &verbose) {
-  CopyInputToMemoryBuff(obs);
+  CopyObservationToMemoryBuff(obs);
 
   // Clear working memory prior to execution, making this program stateless
   if (!stateful_) ClearWorking();
@@ -305,7 +305,7 @@ double RegisterMachine::Run(state *obs, int &time_step,
     for (size_t in = 0; in < 2; in++) {
       if (istr->GetInType(in) != memoryEigen::NA_TYPE) {  // Input is used.
         if (istr->GetInType(in) == memoryEigen::SCALAR_TYPE) {
-          istr->SetupScalarIn(in, input_memory_buff_);
+          istr->SetupScalarIn(in, observation_memory_buff_);
         }
         if (!(istr->IsObs(in))) {
           // Input is a memory ref. Track read time for temporal memory.
@@ -329,7 +329,7 @@ void RegisterMachine::SetupMemory(size_t memoryIndices,
   for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
     privateMemory_.push_back(
         new memoryEigen(-1, mem_t, memoryIndices, memory_size));
-    input_memory_buff_.push_back(
+    observation_memory_buff_.push_back(
         new memoryEigen(-1, mem_t, observation_buff_size, memory_size));
   }
 }

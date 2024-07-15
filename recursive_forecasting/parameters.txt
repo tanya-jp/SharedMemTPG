@@ -128,7 +128,7 @@ skip_introns 0
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 2
+n_input 1
 
 # max initial program size
 max_initial_prog_size 10

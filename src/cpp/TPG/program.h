@@ -12,7 +12,7 @@ class program {
   int action_;         // Action index
   double bid_val_;     // Most recent bid value
   static long count_;  // Next id to use
- 
+
   // vector<double>* feature;
 
   // Features indexed by non-introns in this program, determined in
@@ -31,7 +31,7 @@ class program {
   vector<memoryEigen *> privateMemory_;
 
   // Vector storing 1 memoryEigen* of each type (SCALAR, VECTOR, MATRIX)
-  vector<memoryEigen *> input_memory_buff_;
+  vector<memoryEigen *> observation_memory_buff_;
 
   // // read inputs into these at runtime TODO(skelly): simplify this
   // vector<vector<memoryEigen *> > inputMemoryPointers_;
@@ -65,7 +65,8 @@ class program {
 
   virtual void MarkIntrons(std::unordered_map<std::string, std::any> &) = 0;
 
-  // inline void MemGet(size_t type, memoryEigen *&m) { m = sharedMemory_[type]; }
+  // inline void MemGet(size_t type, memoryEigen *&m) { m = sharedMemory_[type];
+  // }
 
   // inline void MemSet(uint8_t type, memoryEigen *m) {
   //   sharedMemory_[type] = m;
@@ -82,7 +83,7 @@ class program {
 
   inline void ClearWorking() {
     for (auto memory : privateMemory_) memory->ClearWorking();
-    for (auto memory : input_memory_buff_) memory->ClearWorking();
+    for (auto memory : observation_memory_buff_) memory->ClearWorking();
   }
 
   // Mutate action, return true if the action was actually changed
@@ -92,7 +93,8 @@ class program {
     return a != action;
   }
   // Mutate bid, return true if any changes occured
-  virtual void MuBid(std::unordered_map<std::string, std::any> &, mt19937 &, vector<bool> &) = 0;
+  virtual void MuBid(std::unordered_map<std::string, std::any> &, mt19937 &,
+                     vector<bool> &) = 0;
   // Not counting introns
   inline long numFeatures() { return features_.size(); }
   inline void op_counts(vector<int> &v) { v = op_counts_; }

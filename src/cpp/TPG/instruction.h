@@ -212,7 +212,7 @@ class instruction {
   // For operations in which a scalar refers to an observation ref, we take its
   // value from an index into the vector input buffer.
   // The scalar input buffer is never used.
-  void SetupScalarIn(int in, vector<memoryEigen*>& input_memory_buff) {
+  void SetupScalarIn(int in, vector<memoryEigen*>& observation_memory_buff) {
     int primary_obs_type = memoryEigen::VECTOR_TYPE;  // TODO(skelly): fix
     double* scalar = in == 0 ? &scalar_in1_ : &scalar_in2_;
     int* index = in == 0 ? &in1Idx_ : &in2Idx_;
@@ -220,10 +220,10 @@ class instruction {
 
     if (IsObs(in)) {
       if (primary_obs_type == memoryEigen::VECTOR_TYPE) {
-        *scalar = input_memory_buff[memoryEigen::VECTOR_TYPE]
+        *scalar = observation_memory_buff[memoryEigen::VECTOR_TYPE]
                       ->working_memory_[*index](in3Idx_, 0);
       } else {
-        *scalar = input_memory_buff[memoryEigen::MATRIX_TYPE]
+        *scalar = observation_memory_buff[memoryEigen::MATRIX_TYPE]
                       ->working_memory_[*index](in3Idx_, in4Idx_);
       }
     } else {

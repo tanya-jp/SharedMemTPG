@@ -17,11 +17,11 @@ class RegisterMachine : public program {
   std::vector<instruction *> bidEffective_;
   inline void AddToInputMemoryBuff(Matrix<double, Dynamic, Dynamic> &mat,
                                    int mem_t) {
-    input_memory_buff_[mem_t]->working_memory_.push_front(mat);
-    input_memory_buff_[mem_t]->working_memory_.pop_back();
+    observation_memory_buff_[mem_t]->working_memory_.push_front(mat);
+    observation_memory_buff_[mem_t]->working_memory_.pop_back();
   }
   // void CopyInputToMemory(instruction *istr, state *obs, size_t in);
-  void CopyInputToMemoryBuff(state *obs);
+  void CopyObservationToMemoryBuff(state *obs);
   void MarkFeatures(instruction *istr, int in);
   void MarkIntrons(std::unordered_map<std::string, std::any> &params_);
   double Run(state *, int &time_step, const size_t &graph_depth, bool &verbose);
