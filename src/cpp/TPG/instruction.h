@@ -394,7 +394,7 @@ class instruction {
   }
 
   inline void ExecuteVectorHeavisideOp(bool dbg) {
-    const double* in = out_->working_memory_[in1Idx_].data();
+    const double* in = in1_->working_memory_[in1Idx_].data();
     const double* in_end = in + memory_size_;
     double* out = out_->working_memory_[outIdx_].data();
     while (in != in_end) {
