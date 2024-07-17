@@ -134,12 +134,70 @@ void RegisterMachine::MarkFeatures(instruction *istr, int in) {
   }
 }
 
+// /******************************************************************************/
+// // TODO(skelly): fix this function to walk backwards through program.
+// // Currently doesn't catch all introns.
+// void RegisterMachine::MarkIntrons(
+//     std::unordered_map<std::string, std::any> &params) {
+//   fill(op_counts_.begin(), op_counts_.end(), 0);  // Count occurance of each
+//   op.
+
+//   // Meff keeps track of which memories are effective, i.e. used in the
+//   program.
+//   // Meff maps [memory type][index]->true/false.
+//   map<int, vector<bool> > Meff;
+//   Meff[memoryEigen::SCALAR_TYPE] =
+//       vector<bool>(std::any_cast<int>(params["memory_indices"]), false);
+//   Meff[memoryEigen::VECTOR_TYPE] =
+//       vector<bool>(std::any_cast<int>(params["memory_indices"]), false);
+//   Meff[memoryEigen::MATRIX_TYPE] =
+//       vector<bool>(std::any_cast<int>(params["memory_indices"]), false);
+
+//   Meff[memoryEigen::SCALAR_TYPE][0] = true;  // Mark bid output memory.
+
+//   if (std::any_cast<int>(params["continuous_output"])) {
+//     Meff[memoryEigen::SCALAR_TYPE][1] = true;  // Mark continuous output
+//     memory.
+//   }
+
+//   for (auto istr : bid_) {
+//     for (int in = 0; in < 2; in++) {
+//       if (istr->IsMemoryRef(in))
+//         Meff[istr->GetInType(in)][istr->GetInIdx(in)] = true;
+//     }
+//   }
+
+//   bidEffective_.clear();
+
+//   for (auto istr : bid_) {
+//     if (!skipIntrons_ || Meff[istr->GetOutType()][istr->outIdx_]) {
+//       bidEffective_.push_back(istr);
+//       op_counts_[istr->op_]++;
+//       // Setup output memory
+//       istr->out_ = privateMemory_[istr->GetOutType()];
+//       // Setup input memory
+//       for (int in = 0; in < 2; in++) {  // add in arity?
+//         if (istr->IsObs(in)) {
+//           istr->SetInMem(in, observation_memory_buff_[istr->GetInType(in)]);
+//           MarkFeatures(istr, in);
+//         } else if (istr->IsMemoryRef(in)) {
+//           istr->SetInMem(in, privateMemory_[istr->GetInType(in)]);
+//         }
+//       }
+//     }
+//   }
+// }
+
 /******************************************************************************/
+// TODO(skelly): fix this function to walk backwards through program.
+// Currently doesn't catch all introns.
 void RegisterMachine::MarkIntrons(
     std::unordered_map<std::string, std::any> &params) {
-  fill(op_counts_.begin(), op_counts_.end(), 0);  // count occurance of each op
+  fill(op_counts_.begin(), op_counts_.end(), 0);  // Count occurance of each op.
 
-  map<int, vector<bool> > Meff;  // maps [memory type][index]->true/false
+  // Meff keeps track of which memories are effective, i.e. used in the program.
+  // Meff maps [memory type][index]->true/false.
+  map<int, vector<bool> > Meff;
   Meff[memoryEigen::SCALAR_TYPE] =
       vector<bool>(std::any_cast<int>(params["memory_indices"]), false);
   Meff[memoryEigen::VECTOR_TYPE] =
@@ -147,37 +205,37 @@ void RegisterMachine::MarkIntrons(
   Meff[memoryEigen::MATRIX_TYPE] =
       vector<bool>(std::any_cast<int>(params["memory_indices"]), false);
 
-  Meff[memoryEigen::SCALAR_TYPE][0] = true;  // mark bid output memory
+  Meff[memoryEigen::SCALAR_TYPE][0] = true;  // Mark bid output memory.
 
   if (std::any_cast<int>(params["continuous_output"])) {
-    Meff[memoryEigen::SCALAR_TYPE][1] = true;  // mark continuous output memory
-  }
-  for (auto istr : bid_) {
-    for (int in = 0; in < 2; in++) {
-      if (istr->IsMemoryRef(in))
-        Meff[istr->GetInType(in)][istr->GetInIdx(in)] = true;
-    }
+    Meff[memoryEigen::SCALAR_TYPE][1] = true;  // Mark continuous output memory.
   }
 
   bidEffective_.clear();
-
-  for (auto istr : bid_) {
+  for (vector<instruction *>::reverse_iterator riter = bid_.rbegin();
+       riter != bid_.rend(); riter++) {
+    auto istr = *riter;
     if (!skipIntrons_ || Meff[istr->GetOutType()][istr->outIdx_]) {
       bidEffective_.push_back(istr);
       op_counts_[istr->op_]++;
-      // Setup IO memory
-      istr->out_ = privateMemory_[istr->GetOutType()];
-      // inputs
-      for (int in = 0; in < 2; in++) {  // add in arity?
-        if (istr->IsObs(in)) {
+
+      // Setup output memory.
+      istr->out_ = privateMemory_[istr->GetOutType()];  // TODO(skelly): move?
+
+      for (int in = 0; in < 2; in++) {
+        if (istr->IsMemoryRef(in)) {
+          Meff[istr->GetInType(in)][istr->GetInIdx(in)] = true;
+          // TODO(skelly): move?
+          istr->SetInMem(in, privateMemory_[istr->GetInType(in)]);
+        } else if (istr->IsObs(in)) {
+          // TODO(skelly): move?
           istr->SetInMem(in, observation_memory_buff_[istr->GetInType(in)]);
           MarkFeatures(istr, in);
-        } else if (istr->IsMemoryRef(in)) {
-          istr->SetInMem(in, privateMemory_[istr->GetInType(in)]);
         }
       }
     }
   }
+  std::reverse(bidEffective_.begin(), bidEffective_.end());
 }
 
 /******************************************************************************/
@@ -238,33 +296,6 @@ void RegisterMachine::MuBid(std::unordered_map<std::string, std::any> &params,
     }
   }
 }
-
-// void RegisterMachine::CopyInputToMemory(instruction *istr, state *obs,
-//                                         size_t in) {
-//   // In this case GetInMem(in) will be inputMemory_ and we use index 0
-//   // Indices to input memory are mod by obs->dim_ to support environments
-//   // with different number of scalar observation variables
-//   size_t idx = 0;
-//   if (istr->GetInType(in) == memoryEigen::SCALAR_TYPE) {
-//     istr->GetInMem(in)->working_memory_[idx](0, 0) =
-//         obs->stateValueAtIndex(istr->GetInIdx(in) % obs->dim_);
-//   } else if (istr->GetInType(in) == memoryEigen::VECTOR_TYPE) {
-//     for (size_t f = istr->GetInIdx(in), row = 0;
-//          row < istr->GetInMem(in)->memory_size_; row++) {
-//       istr->GetInMem(in)->working_memory_[idx](row, 0) =
-//           obs->stateValueAtIndex(f++ % obs->dim_);
-//     }
-//   } else if (istr->GetInType(in) == memoryEigen::MATRIX_TYPE) {
-//     for (size_t f = istr->GetInIdx(in), row = 0;
-//          row < istr->GetInMem(in)->memory_size_; row++) {
-//       for (size_t col = 0; col < istr->GetInMem(in)->memory_size_; col++) {
-//         istr->GetInMem(in)->working_memory_[idx](row, col) =
-//             obs->stateValueAtIndex(f++ % obs->dim_);
-//       }
-//     }
-//   }
-//   istr->SetInIdxE(in, idx);  // reset inIdxE to zero for input ref
-// }
 
 // TODO(skelly): This functions currently assumes obs is a vector of state vars
 void RegisterMachine::CopyObservationToMemoryBuff(state *obs) {

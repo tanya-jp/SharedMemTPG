@@ -165,7 +165,7 @@ memory_indices 8
 memory_size 2
 
 # observations are stored in a buffer with this time window.
-observation_buff_size 8
+observation_buff_size 32
 
 ################################################################################
 ## General Task Parameters #####################################################

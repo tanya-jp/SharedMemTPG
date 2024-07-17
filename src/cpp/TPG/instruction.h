@@ -152,7 +152,7 @@ class instruction {
   // Constructor
   instruction(std::unordered_map<string, std::any>&, mt19937&);
 
-  // Copy COnstructor
+  // Copy Constructor
   instruction(instruction&);
 
   // op_list_ maps each operation to a function pointer for its execution

@@ -165,7 +165,7 @@ memory_indices 8
 memory_size 2
 
 # observations are stored in a buffer with this time window.
-observation_buff_size 1
+observation_buff_size 32
 
 ################################################################################
 ## General Task Parameters #####################################################
@@ -185,9 +185,11 @@ n_discrete_action 3
 ## Parameters Specific to Recursive Forecasting ################################
 ################################################################################
 
+forecast_univar 1
+
 # fitness function
 # supported options: "mse", "correlation", "theils", "pearson"
-forecast_fitness theils
+forecast_fitness mse
 
 # whether to use discrete actions for forecasting
 # must also set n_discrete_action
@@ -202,8 +204,8 @@ forecast_horizon_train 50
 forecast_horizon_val 100
 forecast_horizon_test 100
 
-forecast_n_eval_train 100
-forecast_n_eval_val 10
+forecast_n_eval_train 19
+forecast_n_eval_val 9
 
 ################################################################################
 ## Operations, uncomment to activate ###########################################
