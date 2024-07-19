@@ -41,7 +41,7 @@ test_mod 100
 
 # Number of tasks used each selection for evaluation. 
 # The rest are estimated with phylogeny.
-n_sampled_tasks_for_eval 6
+n_sampled_tasks_for_eval 1
 
 # number of fitness functions available
 n_fit_mode 1
