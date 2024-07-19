@@ -5,23 +5,41 @@ mode=0 #Train:0, Replay:1, Debug:2
 numMPIProc=2
 seed=42
 replay_task=0
+experiment_name=""
 
-while getopts m:n:r:s: flag
+while getopts m:n:r:s:e: flag
 do
    case "${flag}" in
       m) mode=${OPTARG};;
       n) numMPIProc=${OPTARG};;
       s) seed=${OPTARG};;
       r) replay_task=${OPTARG};;
+      e) experiment_name=${OPTARG};;
    esac
 done
 
 # Evolve
 if [ $mode -eq 0 ]; then
-   echo "Starting run $seedTPG..."
-   mpirun --oversubscribe -np $numMPIProc \
-     $TPG_PATH/build/release/cpp/experiments/TPGExperimentMPI -s $seed \
-     1> tpg.$seed.$$.std 2> tpg.$seed.$$.err &
+  echo "Starting run $seedTPG..."
+
+  if [ -n "$experiment_name" ]; then
+    # Create experiment
+    experiment_key=$($TPG_PATH/scripts/run/create-experiment.sh $experiment_name)
+
+    mpirun --oversubscribe -np $numMPIProc \
+      $TPG_PATH/build/release/cpp/experiments/TPGExperimentMPI -s $seed -k $experiment_key \
+      1> tpg.$seed.$$.std 2> tpg.$seed.$$.err &
+
+    wait
+
+    # Upload files
+    $TPG_PATH/scripts/run/upload-asset.sh $experiment_key tpg.$seed.$$.std
+    $TPG_PATH/scripts/run/upload-asset.sh $experiment_key tpg.$seed.$$.err
+  else
+    mpirun --oversubscribe -np $numMPIProc \
+      $TPG_PATH/build/release/cpp/experiments/TPGExperimentMPI -s $seed \
+      1> tpg.$seed.$$.std 2> tpg.$seed.$$.err &
+  fi
 fi
 
 # Replay

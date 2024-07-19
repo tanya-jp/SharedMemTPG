@@ -15,3 +15,4 @@ git
 vim
 htop
 libcurlpp-dev
+jq
