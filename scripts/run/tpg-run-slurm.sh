@@ -8,17 +8,14 @@
 # #SBATCH --time=0-0:30  # time (DD-HH:MM)
 
 # cpus anywhere
-#SBATCH --ntasks=21               
+#SBATCH --ntasks=4              
 #SBATCH --mem-per-cpu=4G      
-#SBATCH --time=0-12:00  # time (DD-HH:MM)
+#SBATCH --time=0-00:10  # time (DD-HH:MM)
 
 #defaults
 mode=0 #Train:0, Replay:1, Debug:2
 seed=1
 experiment_name=""
-
-# Access internet for experiment tracking
-module load httpproxy
 
 while getopts m:s:e: flag
 do
@@ -31,6 +28,9 @@ done
 
 if [ $mode -eq 0 ]; then
    if [ -n "$experiment_name" ]; then
+      # Access internet for experiment tracking
+      module load httpproxy
+
       # Create experiment
       experiment_key=$($TPG_PATH/scripts/run/create-experiment.sh $experiment_name)
 
@@ -42,13 +42,13 @@ if [ $mode -eq 0 ]; then
       # Upload files
       $TPG_PATH/scripts/run/upload-asset.sh $experiment_key tpg.$seed.$$.std
       $TPG_PATH/scripts/run/upload-asset.sh $experiment_key tpg.$seed.$$.err
+
+      module unload httpproxy
    else
       srun ../build/release/cpp/experiments/TPGExperimentMPI -s $seed \
       1> tpg.$seed.$$.std 2> tpg.$seed.$$.err
    fi
 fi
-
-module unload httpproxy
 
 ##pickup from checkpoint file
 #t=$(grep -iRl end checkpoints/cp.*.-1.$seed.0.rslt | cut -d '.' -f 2 | sort -n | tail -n 2 | head -n 1)

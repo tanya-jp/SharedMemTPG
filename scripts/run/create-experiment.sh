@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Edit the following variables to match your Comet workspace and project
+workspaceName="genetic-programming"
+projectName="tpg"
+
 # Check if the correct number of arguments is provided
 if [ "$#" -ne 1 ]; then
     echo "Usage: $0 <experimentName>"
@@ -13,8 +17,8 @@ response=$(curl -s -X POST https://www.comet.com/api/rest/v2/write/experiment/cr
      -H "Content-Type: application/json" \
      -H "Authorization: $COMET_API_KEY" \
      -d "{
-            \"workspaceName\": \"genetic-programming\",
-            \"projectName\": \"tpg\",
+            \"workspaceName\": \"${workspaceName}\",
+            \"projectName\": \"${projectName}\",
             \"experimentName\": \"${experimentName}\"
         }")
 
