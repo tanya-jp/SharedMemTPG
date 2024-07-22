@@ -187,7 +187,8 @@ class TPG {
   set<long> elite_team_id_history_;
   vector<mt19937> rngs_;
   vector<uint_fast32_t> seeds_;
-  vector<int> n_input_;  // number of inputs per task
+  vector<int> n_input_;  // Number of inputs per task.
+  vector<int> observation_buff_size_; // Observaiton buff size per task.
   ostringstream oss;     // logging, reporting
   vector<size_t> _numEliteTeamsCurrent;
 

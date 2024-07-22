@@ -32,6 +32,7 @@ class program {
 
   // Vector storing 1 memoryEigen* of each type (SCALAR, VECTOR, MATRIX)
   vector<memoryEigen *> observation_memory_buff_;
+  int observation_buff_size_;
 
   // // read inputs into these at runtime TODO(skelly): simplify this
   // vector<vector<memoryEigen *> > inputMemoryPointers_;

@@ -5,11 +5,10 @@ string RegisterMachine::checkpoint(bool all) {
   ostringstream oss;
 
   oss << "RegisterMachine:" << id_ << ":" << gtime_ << ":" << action_ << ":"
-      << stateful_ << ":" << nrefs_;
+      << stateful_ << ":" << nrefs_ << ":" << observation_buff_size_;
   // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
   //   oss << ":" << sharedMemory_[mem_t]->id();
   // }
-
   if (all)
     for (size_t i = 0; i < bid_.size(); i++)
       oss << ":" << bid_[i]->checkpoint();
@@ -35,6 +34,7 @@ RegisterMachine::RegisterMachine(
   nrefs_ = 0;
 
   skipIntrons_ = false;
+  observation_buff_size_ = std::any_cast<int>(params["memory_indices"]);
 
   instruction *in;
 
@@ -45,12 +45,13 @@ RegisterMachine::RegisterMachine(
 
   for (int i = 0; i < progSize; i++) {
     in = new instruction(params, rng);
-    in->Mutate(true, legalOps, rng);
+    in->Mutate(true, legalOps, std::any_cast<int>(params["memory_indices"]),
+               rng);
     bid_.push_back(in);
   }
   op_counts_.resize(instruction::NUM_OP);
   SetupMemory(std::any_cast<int>(params["memory_indices"]),
-              std::any_cast<int>(params["observation_buff_size"]),
+              observation_buff_size_,
               std::any_cast<int>(params["memory_size"]));
 }
 
@@ -69,22 +70,25 @@ RegisterMachine::RegisterMachine(
 
   skipIntrons_ = false;
   stateful_ = plr.stateful_;
+  observation_buff_size_ = plr.observation_buff_size_;
 
   for (auto initer = plr.bid_.begin(); initer != plr.bid_.end(); initer++)
     bid_.push_back(new instruction(**initer));
 
   op_counts_.resize(instruction::NUM_OP);
   SetupMemory(std::any_cast<int>(params["memory_indices"]),
-              std::any_cast<int>(params["observation_buff_size"]),
+              observation_buff_size_,
               std::any_cast<int>(params["memory_size"]));
 }
 /******************************************************************************
  * Create RegisterMachine from checkpoint file
  */
+// TODO(skelly): observation_buff_sie set separately, maybe put all args in
+// struct?
 RegisterMachine::RegisterMachine(
     long gtime, long action, int stateful,
     std::unordered_map<std::string, std::any> &params, long id, long nrefs,
-    std::vector<instruction *> bid) {
+    int observation_buff_size, std::vector<instruction *> bid) {
   action_ = action;
   bid_ = bid;
   gtime_ = gtime;
@@ -94,11 +98,12 @@ RegisterMachine::RegisterMachine(
 
   stateful_ = stateful > 0 ? true : false;
   skipIntrons_ = false;
+  observation_buff_size_ = observation_buff_size;
 
   op_counts_.resize(instruction::NUM_OP);
 
   SetupMemory(std::any_cast<int>(params["memory_indices"]),
-              std::any_cast<int>(params["observation_buff_size"]),
+              observation_buff_size_,
               std::any_cast<int>(params["memory_size"]));
 }
 
@@ -259,7 +264,7 @@ void RegisterMachine::MuBid(std::unordered_map<std::string, std::any> &params,
     if ((int)bid_.size() < std::any_cast<int>(params["max_prog_size"]) &&
         dis_real(rng) < std::any_cast<double>(params["p_bid_add"])) {
       instruction *instr = new instruction(params, rng);
-      instr->Mutate(true, legalOps, rng);
+      instr->Mutate(true, legalOps, observation_buff_size_, rng);
       uniform_int_distribution<int> disBid(0, bid_.size());
       int i = disBid(rng);
       bid_.insert(bid_.begin() + i, instr);
@@ -269,7 +274,7 @@ void RegisterMachine::MuBid(std::unordered_map<std::string, std::any> &params,
     /* Mutate a random instruction. */
     if (dis_real(rng) < std::any_cast<double>(params["p_bid_mutate"])) {
       uniform_int_distribution<int> disBid(0, bid_.size() - 1);
-      bid_[disBid(rng)]->Mutate(false, legalOps, rng);
+      bid_[disBid(rng)]->Mutate(false, legalOps, observation_buff_size_, rng);
       changed = true;
     }
 
@@ -292,6 +297,13 @@ void RegisterMachine::MuBid(std::unordered_map<std::string, std::any> &params,
         j = disBid(rng);
       } while (i == j);
       std::swap(bid_[i], bid_[j]);
+      changed = true;
+    }
+
+    if (dis_real(rng) <
+        std::any_cast<double>(params["p_observation_buff_size"])) {
+      MutateObsBuffSize(std::any_cast<int>(params["max_observation_buff_size"]),
+                        rng);
       changed = true;
     }
   }
@@ -331,8 +343,6 @@ double RegisterMachine::Run(state *obs, int &time_step,
   if (!stateful_) ClearWorking();
 
   for (auto istr : bidEffective_) {
-    istr->exec(verbose);  // Execute instruction
-
     for (size_t in = 0; in < 2; in++) {
       if (istr->GetInType(in) != memoryEigen::NA_TYPE) {  // Input is used.
         if (istr->GetInType(in) == memoryEigen::SCALAR_TYPE) {
@@ -348,6 +358,7 @@ double RegisterMachine::Run(state *obs, int &time_step,
     // Track write times for temporal memory.
     istr->out_->getWriteTimeE()(istr->outIdx_, 0) =
         time_step + (graph_depth / MAX_GRAPH_DEPTH);
+    istr->exec(verbose);  // Execute instruction
   }
   // Return bid value
   return privateMemory_[memoryEigen::SCALAR_TYPE]->working_memory_[0](0, 0);
@@ -355,7 +366,7 @@ double RegisterMachine::Run(state *obs, int &time_step,
 
 /******************************************************************************/
 void RegisterMachine::SetupMemory(size_t memoryIndices,
-                                  size_t observation_buff_size,
+                                  int observation_buff_size,
                                   size_t memory_size) {
   for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
     privateMemory_.push_back(
@@ -363,4 +374,20 @@ void RegisterMachine::SetupMemory(size_t memoryIndices,
     observation_memory_buff_.push_back(
         new memoryEigen(-1, mem_t, observation_buff_size, memory_size));
   }
+}
+
+/******************************************************************************/
+void RegisterMachine::MutateObsBuffSize(size_t max_observation_buff_size,
+                                        mt19937 &rng) {
+  std::uniform_int_distribution<> dis(1, max_observation_buff_size - 1);
+  auto prev = observation_buff_size_;
+  do {
+    observation_buff_size_ = dis(rng);
+  } while (observation_buff_size_ == prev);
+
+  for (auto memory : observation_memory_buff_) {
+    memory->memoryIndices_ = observation_buff_size_;
+    memory->resizeMemory();
+  }
+  for (auto istr : bid_) istr->BoundInputIndices(observation_buff_size_ - 1);
 }

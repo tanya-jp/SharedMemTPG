@@ -416,7 +416,8 @@ void TPG::ReadParameters(string file_name,
         outcome_fields[0] == "n_stored_outcomes_TEST" ||
         outcome_fields[0] == "forecast_fitness" ||
         outcome_fields[0] == "action_dim" ||
-        outcome_fields[0] == "experiment_key") {
+        outcome_fields[0] == "experiment_key" ||
+        outcome_fields[0] == "observation_buff_size") {
       params[outcome_fields[0]] = outcome_fields[1];
     }
     // double parameters are identified by a decimal place
@@ -2416,6 +2417,7 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       long action = atoi(outcomeFields[f++].c_str());
       int stateful = atoi(outcomeFields[f++].c_str());
       int nrefs = atoi(outcomeFields[f++].c_str());
+      int observation_buff_size = atoi(outcomeFields[f++].c_str());
       // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
       //   memTypeIds[mem_t] = atoi(outcomeFields[f++].c_str());
       // }
@@ -2435,8 +2437,7 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
         in->in4Idx_ = stringToInt(instructionString[7]);
         bid.push_back(in);
       }
-      l = new RegisterMachine(gtime, action, stateful, params_, id, nrefs, bid);
-
+      l = new RegisterMachine(gtime, action, stateful, params_, id, nrefs, observation_buff_size, bid);
       // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
       //   l->MemSet(mem_t, _Memory[mem_t][memTypeIds[mem_t]]);
       // }

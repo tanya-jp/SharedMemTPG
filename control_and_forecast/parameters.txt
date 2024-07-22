@@ -164,9 +164,6 @@ memory_indices 8
 # dimensionality for vector & matrix memory
 memory_size 2
 
-# observations are stored in a buffer with this time window.
-observation_buff_size 32
-
 ################################################################################
 ## General Task Parameters #####################################################
 ################################################################################

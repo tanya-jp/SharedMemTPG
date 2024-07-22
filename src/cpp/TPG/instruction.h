@@ -123,8 +123,6 @@ class instruction {
   // The number of private memories of each type (scalar, vector, matrix)
   int memIndices_ = 0;
 
-  int observation_buff_size_;
-
   // Scalor operation values are stored in these variables prior to execution.
   double scalar_out_ = 0;
   double scalar_in1_ = 0;
@@ -205,7 +203,8 @@ class instruction {
   inline bool IsMemoryRef(int i) const {
     return !IsObs(i) && GetInType(i) != memoryEigen::NA_TYPE;
   }
-  void Mutate(bool randomize, vector<bool>& legal_ops, mt19937& rng);
+  void Mutate(bool randomize, vector<bool>& legal_ops,
+              int observation_buff_size, mt19937& rng);
   inline size_t GetOutType() const { return op_mem_types_[op_][0]; }
   static void SetupOps();
 
@@ -219,6 +218,9 @@ class instruction {
     memoryEigen* memory = in == 0 ? in1_ : in2_;
 
     if (IsObs(in)) {
+      // cerr << "db sz " << memory->working_memory_.size() << " idx " << *index
+      //      << endl;
+
       if (primary_obs_type == memoryEigen::VECTOR_TYPE) {
         *scalar = observation_memory_buff[memoryEigen::VECTOR_TYPE]
                       ->working_memory_[*index](in3Idx_, 0);
@@ -231,12 +233,14 @@ class instruction {
     }
   }
 
+  void BoundInputIndices(int observation_buff_size);
+
   void MutateInt(int& i, int min, int max, mt19937& rng) {
     auto dis = std::uniform_int_distribution<>(min, max);
-    int prev_i = i;
+    auto prev = i;
     do {
       i = dis(rng);
-    } while (i == prev_i);
+    } while (i == prev);
   }
 
   /* Operation implementations ************************************************/
@@ -247,8 +251,9 @@ class instruction {
     if (dbg) {
       cerr << std::setprecision(std::numeric_limits<double>::digits10 + 1)
            << std::fixed << "s" << outIdx_ << " = s" << in1Idx_ << " + " << "s"
-           << in2Idx_ << " | " << std::fixed << scalar_in1_ << " + " << scalar_in2_ << " = "
-           << out_->working_memory_[outIdx_](0, 0) << endl;
+           << in2Idx_ << " | " << std::fixed << scalar_in1_ << " + "
+           << scalar_in2_ << " = " << out_->working_memory_[outIdx_](0, 0)
+           << endl;
     }
   }
 
@@ -258,8 +263,9 @@ class instruction {
     if (dbg) {
       cerr << std::setprecision(std::numeric_limits<double>::digits10 + 1)
            << std::fixed << "s" << outIdx_ << " = s" << in1Idx_ << " - " << "s"
-           << in2Idx_ << " | " << std::fixed << scalar_in1_ << " - " << scalar_in2_ << " = "
-           << out_->working_memory_[outIdx_](0, 0) << endl;
+           << in2Idx_ << " | " << std::fixed << scalar_in1_ << " - "
+           << scalar_in2_ << " = " << out_->working_memory_[outIdx_](0, 0)
+           << endl;
     }
   }
 
@@ -269,8 +275,9 @@ class instruction {
     if (dbg) {
       cerr << std::setprecision(std::numeric_limits<double>::digits10 + 1)
            << std::fixed << "s" << outIdx_ << " = s" << in1Idx_ << " * " << "s"
-           << in2Idx_ << " | " << std::fixed << scalar_in1_ << " * " << scalar_in2_ << " = "
-           << out_->working_memory_[outIdx_](0, 0) << endl;
+           << in2Idx_ << " | " << std::fixed << scalar_in1_ << " * "
+           << scalar_in2_ << " = " << out_->working_memory_[outIdx_](0, 0)
+           << endl;
     }
   }
 
@@ -285,8 +292,9 @@ class instruction {
     if (dbg) {
       cerr << std::setprecision(std::numeric_limits<double>::digits10 + 1)
            << std::fixed << "s" << outIdx_ << " = s" << in1Idx_ << " / " << "s"
-           << in2Idx_ << " | " << std::fixed << scalar_in1_ << " / " << scalar_in2_ << " = "
-           << out_->working_memory_[outIdx_](0, 0) << endl;
+           << in2Idx_ << " | " << std::fixed << scalar_in1_ << " / "
+           << scalar_in2_ << " = " << out_->working_memory_[outIdx_](0, 0)
+           << endl;
     }
   }
 

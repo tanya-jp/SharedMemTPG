@@ -368,7 +368,6 @@ instruction::instruction(std::unordered_map<string, std::any> &params,
                          mt19937 &rng) {
   memory_size_ = std::any_cast<int>(params["memory_size"]);
   memIndices_ = std::any_cast<int>(params["memory_indices"]);
-  observation_buff_size_ = std::any_cast<int>(params["observation_buff_size"]);
   rng_ = rng;
 }
 
@@ -378,7 +377,6 @@ instruction::instruction(instruction &i) {
   memory_size_ = i.memory_size_;
   memory_size_ = i.memory_size_;
   memIndices_ = i.memIndices_;
-  observation_buff_size_ = i.observation_buff_size_;
   out_ = i.out_;
   in1_ = i.in1_;
   in2_ = i.in2_;
@@ -397,7 +395,19 @@ instruction::instruction(instruction &i) {
   rng_ = i.rng_;
 }
 
-void instruction::Mutate(bool randomize, vector<bool> &legal_ops, mt19937 &rng) {
+// Protect input indices from ranges larger than memory data structures.
+void instruction::BoundInputIndices(int observation_buff_size) {
+  for (int in = 0; in < 2; in++) {
+    if (IsObs(in)) {
+      SetInIdx(in, GetInIdx(in) % max(1, observation_buff_size));
+    } else {
+      SetInIdx(in, GetInIdx(in) % memIndices_);
+    }
+  }
+}
+
+void instruction::Mutate(bool randomize, vector<bool> &legal_ops,
+                         int observation_buff_size, mt19937 &rng) {
   if (randomize) {  // Randomly set each part of this instruction.
     std::uniform_int_distribution<> dis(0, 1);
     in1Src_ = dis(rng);
@@ -412,7 +422,7 @@ void instruction::Mutate(bool randomize, vector<bool> &legal_ops, mt19937 &rng) 
     outIdx_ = dis(rng);
 
     dis = std::uniform_int_distribution<>(
-        0, max(memIndices_, observation_buff_size_) - 1);
+        0, max(memIndices_, observation_buff_size - 1));
     in1Idx_ = dis(rng);
     in2Idx_ = dis(rng);
 
@@ -422,35 +432,27 @@ void instruction::Mutate(bool randomize, vector<bool> &legal_ops, mt19937 &rng) 
   } else {  // Randomly change one part of this instruction.
     std::uniform_int_distribution<> dis(0, 7);
     int i = dis(rng);
-    if (i == 0) {  // Change in1 src to private memory or observation. 
-        MutateInt(in1Src_, 0, 1, rng);
+    if (i == 0) {  // Change in1 src to private memory or observation.
+      MutateInt(in1Src_, 0, 1, rng);
     } else if (i == 1) {  // Change in2 src to private memory or observation.
-        MutateInt(in2Src_, 0, 1, rng);
+      MutateInt(in2Src_, 0, 1, rng);
     } else if (i == 2) {  // Change out index.
-        MutateInt(outIdx_, 0, memIndices_ - 1, rng);
+      MutateInt(outIdx_, 0, memIndices_ - 1, rng);
     } else if (i == 3) {  // Change operation.
-        do {
-          MutateInt(op_, 0, int(legal_ops.size() - 1), rng);
-        } while (!legal_ops[op_]);
+      do {
+        MutateInt(op_, 0, int(legal_ops.size() - 1), rng);
+      } while (!legal_ops[op_]);
     } else if (i == 4) {  // Change in1 index.
-        MutateInt(in1Idx_, 0, max(memIndices_, observation_buff_size_) - 1,
-                  rng);
+      MutateInt(in1Idx_, 0, max(memIndices_ - 1, observation_buff_size - 1), rng);
     } else if (i == 5) {  // Change in2 index.
-        MutateInt(in2Idx_, 0, max(memIndices_, observation_buff_size_) - 1,
-                  rng);
-    } else if (i == 6) {  // Change in3 index. Used as index to vector or matrix memory.
-        MutateInt(in3Idx_, 0, memory_size_ - 1, rng);
-    } else if (i == 7) {  // Change in4 index. Used as index to vector or matrix memory.
-        MutateInt(in4Idx_, 0, memory_size_ - 1, rng);
+      MutateInt(in2Idx_, 0, max(memIndices_ - 1, observation_buff_size - 1), rng);
+    } else if (i == 6) {  // Change in3 index. Used as index to vector or matrix
+                          // memory.
+      MutateInt(in3Idx_, 0, memory_size_ - 1, rng);
+    } else if (i == 7) {  // Change in4 index. Used as index to vector or matrix
+                          // memory.
+      MutateInt(in4Idx_, 0, memory_size_ - 1, rng);
     }
   }
-
-  // Protect input indices from ranges larger than memory data structures.
-  for (int in = 0; in < 2; in++) {
-    if (IsObs(in)) {
-      SetInIdx(in, GetInIdx(in) % observation_buff_size_);
-    } else {
-      SetInIdx(in, GetInIdx(in) % memIndices_);
-    }
-  }
+  BoundInputIndices(observation_buff_size - 1);
 }

@@ -136,6 +136,17 @@ max_initial_prog_size 10
 # max program size
 max_prog_size 1000000
 
+# number of memory indices
+# each memory index points to a data structure (scalar, vector, or matrix)
+memory_indices 8
+
+# dimensionality for vector & matrix memory
+memory_size 2
+
+# Observations are stored in a buffer with this time window.
+# This is initially set to the same size as memory_indices.
+max_observation_buff_size 50
+
 # program variation: probability of changing a random instruction
 p_bid_mutate 1.0
 
@@ -157,15 +168,8 @@ p_bid_xover 0.0
 # program variation: stddev of normal noise added to each const
 bid_mu_const_stddev 0.05
 
-# number of memory indices
-# each memory index points to a data structure (scalar, vector, or matrix)
-memory_indices 8
-
-# dimensionality for vector & matrix memory
-memory_size 2
-
-# observations are stored in a buffer with this time window.
-observation_buff_size 32
+# program variation: probability of changing observation_buff_size
+p_observation_buff_size 0.25
 
 ################################################################################
 ## General Task Parameters #####################################################
@@ -173,9 +177,10 @@ observation_buff_size 32
 
 # which tasks are active
 # rhs should be a single task name or a comma-separated list
-active_tasks Cartpole
+active_tasks Pendulum
 
 # use the partially-observable version of a task, if available
+# currently only available for calssic control tasks
 partially_observable 1
 
 # number of discrete actions
@@ -233,7 +238,7 @@ SCALAR_SQR_OP
 SCALAR_CUBE_OP
 SCALAR_TANH_OP
 SCALAR_SQRT_OP
-SCALAR_CONST_SET_OP
+#SCALAR_CONST_SET_OP
 SCALAR_MIN_OP
 SCALAR_MAX_OP
 
@@ -254,7 +259,7 @@ VECTOR_MIN_OP
 VECTOR_MAX_OP
 VECTOR_MEAN_OP
 VECTOR_ST_DEV_OP
-VECTOR_CONST_SET_OP
+#VECTOR_CONST_SET_OP
 SCALAR_VECTOR_ASSIGN_OP
  
 # matrix #########################
@@ -280,7 +285,7 @@ MATRIX_MEAN_OP
 MATRIX_ROW_MEAN_OP
 MATRIX_ROW_ST_DEV_OP
 MATRIX_ST_DEV_OP
-MATRIX_CONST_SET_OP
+#MATRIX_CONST_SET_OP
 SCALAR_MATRIX_ASSIGN_OP
 
 ## noise ##########################
