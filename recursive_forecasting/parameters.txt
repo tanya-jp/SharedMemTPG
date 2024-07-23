@@ -209,8 +209,11 @@ forecast_horizon_train 50
 forecast_horizon_val 100
 forecast_horizon_test 100
 
-forecast_n_eval_train 19
-forecast_n_eval_val 9
+#forecast_n_eval_train 19
+#forecast_n_eval_val 9
+
+forecast_n_eval_train 60
+forecast_n_eval_val 30
 
 ################################################################################
 ## Operations, uncomment to activate ###########################################
