@@ -89,7 +89,7 @@ max_team_size 1000000
 max_teams_per_graph 1000000
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 1.0
+p_atomic 0.99
 
 # team mutation: probability of deleting program from team
 pmd 0.5
@@ -136,6 +136,17 @@ max_initial_prog_size 10
 # max program size
 max_prog_size 1000000
 
+# number of memory indices
+# each memory index points to a data structure (scalar, vector, or matrix)
+memory_indices 8
+
+# dimensionality for vector & matrix memory
+memory_size 2
+
+# Observations are stored in a buffer with this time window.
+# observation_buff_size is initially set to the same size as memory_indices.
+max_observation_buff_size 50
+
 # program variation: probability of changing a random instruction
 p_bid_mutate 1.0
 
@@ -157,12 +168,8 @@ p_bid_xover 0.0
 # program variation: stddev of normal noise added to each const
 bid_mu_const_stddev 0.05
 
-# number of memory indices
-# each memory index points to a data structure (scalar, vector, or matrix)
-memory_indices 8
-
-# dimensionality for vector & matrix memory
-memory_size 2
+# program variation: probability of changing observation_buff_size
+p_observation_buff_size 0.25
 
 ################################################################################
 ## General Task Parameters #####################################################
@@ -202,8 +209,11 @@ forecast_horizon_train 50
 forecast_horizon_val 100
 forecast_horizon_test 100
 
-forecast_n_eval_train 19
-forecast_n_eval_val 9
+#forecast_n_eval_train 19
+#forecast_n_eval_val 9
+
+forecast_n_eval_train 40
+forecast_n_eval_val 20
 
 ################################################################################
 ## Operations, uncomment to activate ###########################################
@@ -231,7 +241,7 @@ SCALAR_SQR_OP
 SCALAR_CUBE_OP
 SCALAR_TANH_OP
 SCALAR_SQRT_OP
-SCALAR_CONST_SET_OP
+#SCALAR_CONST_SET_OP
 SCALAR_MIN_OP
 SCALAR_MAX_OP
 
@@ -252,7 +262,7 @@ VECTOR_MIN_OP
 VECTOR_MAX_OP
 VECTOR_MEAN_OP
 VECTOR_ST_DEV_OP
-VECTOR_CONST_SET_OP
+#VECTOR_CONST_SET_OP
 SCALAR_VECTOR_ASSIGN_OP
  
 # matrix #########################
@@ -278,7 +288,7 @@ MATRIX_MEAN_OP
 MATRIX_ROW_MEAN_OP
 MATRIX_ROW_ST_DEV_OP
 MATRIX_ST_DEV_OP
-MATRIX_CONST_SET_OP
+#MATRIX_CONST_SET_OP
 SCALAR_MATRIX_ASSIGN_OP
 
 ## noise ##########################
