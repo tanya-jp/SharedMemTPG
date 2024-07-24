@@ -37,7 +37,7 @@ write_test_checkpoints 1
 write_phylogeny 0
 
 # how frequently to run test procedure
-test_mod 1
+test_mod 100
 
 # Number of tasks used each selection for evaluation. 
 # The rest are estimated with phylogeny.
