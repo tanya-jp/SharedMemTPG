@@ -122,7 +122,7 @@ pmx_p 0.5
 stateful 1
 
 # skip introns during evaluation
-skip_introns 1
+skip_introns 0
 
 # enable continuous outputs
 continuous_output 1
@@ -169,7 +169,7 @@ p_bid_xover 0.0
 bid_mu_const_stddev 0.05
 
 # program variation: probability of changing observation_buff_size
-p_observation_buff_size 0.25
+p_observation_buff_size 0.0
 
 ################################################################################
 ## General Task Parameters #####################################################

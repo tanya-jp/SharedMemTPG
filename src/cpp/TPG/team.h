@@ -62,9 +62,9 @@ class team {
                    bool) const;
   void GetAllNodes(map<long, team *> &teamMap, set<team *, teamIdComp> &,
                    set<program *, programIdComp> &) const;
-  void GetAllNodes(map<long, team *> &teamMap, set<team *, teamIdComp> &,
-                   set<program *, programIdComp> &,
-                   set<memoryEigen *, memoryEigenIdComp> &) const;
+  // void GetAllNodes(map<long, team *> &teamMap, set<team *, teamIdComp> &,
+  //                  set<program *, programIdComp> &,
+  //                  set<memoryEigen *, memoryEigenIdComp> &) const;
   void getBehaviourSequence(vector<int> &, int);
   double getMeanOutcome(int, int, int, bool, bool);
   double getMeanOutcome(int, int, int, int, long, bool, bool);
@@ -233,7 +233,7 @@ class team {
                      set<team *, teamIdComp> &, long &, int,
                      vector<program *> &, vector<program *> &,
                      vector<set<long>> &,
-                     vector<set<memoryEigen *, memoryEigenIdComp>> &,
+                    //  vector<set<memoryEigen *, memoryEigenIdComp>> &,
                      vector<team *> &, mt19937 &, bool &);
   // double ncdBehaviouralDistance(team*, int);
   void Shuffle(mt19937 &rng) {

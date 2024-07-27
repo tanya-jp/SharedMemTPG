@@ -128,18 +128,18 @@ program *TPG::getAction(
     set<team *, teamIdComp> &visitedTeams, long &decisionInstructions,
     int timeStep, vector<program *> &allPrograms,
     vector<program *> &winningPrograms, vector<set<long>> &decisionFeatures,
-    vector<set<memoryEigen *, memoryEigenIdComp>> &decisionMemories,
+    // vector<set<memoryEigen *, memoryEigenIdComp>> &decisionMemories,
     vector<team *> &teamPath, mt19937 &rng, bool verbose) {
   allPrograms.clear();
   winningPrograms.clear();
   decisionInstructions = 0;
   decisionFeatures.clear();
-  decisionMemories.clear();
+  // decisionMemories.clear();
   // visitedTeams.clear();
   teamPath.clear();
   return tm->getAction(s, _teamMap, updateActive, visitedTeams,
                        decisionInstructions, timeStep, allPrograms,
-                       winningPrograms, decisionFeatures, decisionMemories,
+                       winningPrograms, decisionFeatures,
                        teamPath, rng, verbose);
 }
 
@@ -151,15 +151,15 @@ void TPG::GetAllNodes(team *tm, set<team *, teamIdComp> &teams,
   tm->GetAllNodes(_teamMap, teams, programs);
 }
 
-/******************************************************************************/
-void TPG::GetAllNodes(team *tm, set<team *, teamIdComp> &teams,
-                      set<program *, programIdComp> &programs,
-                      set<memoryEigen *, memoryEigenIdComp> &memories) {
-  teams.clear();
-  programs.clear();
-  memories.clear();
-  tm->GetAllNodes(_teamMap, teams, programs, memories);
-}
+// /******************************************************************************/
+// void TPG::GetAllNodes(team *tm, set<team *, teamIdComp> &teams,
+//                       set<program *, programIdComp> &programs,
+//                       set<memoryEigen *, memoryEigenIdComp> &memories) {
+//   teams.clear();
+//   programs.clear();
+//   memories.clear();
+//   tm->GetAllNodes(_teamMap, teams, programs, memories);
+// }
 
 /******************************************************************************/
 void TPG::getTeams(vector<team *> &t, bool roots) const {
@@ -221,24 +221,10 @@ bool TPG::isElitePS(team *tm, int phase) {
 }
 
 /******************************************************************************/
-void TPG::MarkEffectiveCode(team *tm) {
-  set<team *, teamIdComp> teams;
-  set<program *, programIdComp> programs;
-  set<memoryEigen *, memoryEigenIdComp> memories;
-  tm->GetAllNodes(_teamMap, teams, programs, memories);
-
-  for (auto mem : memories) {
-    mem->ClearActive();
-    mem->RefsPolicy(0);
-  }
-  for (auto prog : programs) {
-    prog->skipIntrons_ = GetParam<int>("skip_introns");
-    prog->stateful_ = GetParam<int>("stateful");
-    prog->MarkIntrons(params_);
-    // TODO(spkelly): remove shared memory code
-    // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-    //   (prog->MemGet(mem_t))->RefsPolicyInc();
-    // }
+void TPG::MarkEffectiveCode() {
+  for (auto prog : _L) {
+    prog.second->stateful_ = GetParam<int>("stateful");
+    prog.second->MarkIntrons(params_);
   }
 }
 
@@ -811,7 +797,7 @@ team *TPG::getBestTeam() {
 }
 
 void TPG::UpdateTeamPhyloData(team *tm) {
-  MarkEffectiveCode(tm);
+  // MarkEffectiveCode(tm);
   if (tm->runTimeComplexityIns() == 0) {
     // TODO(skelly): clean out magic number - 2
     tm->updateComplexityRecord(_teamMap,
@@ -2070,12 +2056,12 @@ void TPG::printTeamInfo(long t, int phase, bool singleBest, long teamId) {
                         effectiveProgramInstructionCounts.end(), 0);
       oss << " mnEProgIns " << vecMean(effectiveProgramInstructionCounts);
       set<program *, programIdComp> programs;
-      set<memoryEigen *, memoryEigenIdComp> memories;
+      // set<memoryEigen *, memoryEigenIdComp> memories;
       set<team *, teamIdComp> visitedTeams2;
-      (*teiter)->GetAllNodes(_teamMap, visitedTeams2, programs, memories);
+      (*teiter)->GetAllNodes(_teamMap, visitedTeams2, programs);
       oss << " nP " << programs.size();
       oss << " nT " << visitedTeams2.size();
-      oss << " nM " << memories.size();
+      // oss << " nM " << memories.size();
 
       // visitedTeams.clear();
       // set<long> pF;
@@ -2198,15 +2184,15 @@ void TPG::trackTeamInfo(long t, int phase, bool singleBest, long teamId) {
                              "", gen);
 
       set<program *, programIdComp> programs;
-      set<memoryEigen *, memoryEigenIdComp> memories;
+      // set<memoryEigen *, memoryEigenIdComp> memories;
       set<team *, teamIdComp> visitedTeams2;
-      (*teiter)->GetAllNodes(_teamMap, visitedTeams2, programs, memories);
+      (*teiter)->GetAllNodes(_teamMap, visitedTeams2, programs);
       api_client_->LogMetric("teamInfo/nP", std::to_string(programs.size()), "",
                              gen);
       api_client_->LogMetric("teamInfo/nT",
                              std::to_string(visitedTeams2.size()), "", gen);
-      api_client_->LogMetric("teamInfo/nM", std::to_string(memories.size()), "",
-                             gen);
+      // api_client_->LogMetric("teamInfo/nM", std::to_string(memories.size()), "",
+      //                        gen);
 
       vector<int> op_countsSingle;
       vector<int> op_countsTally;
@@ -2374,8 +2360,8 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       state_["t_current"] = atoi(outcomeFields[1].c_str());
     else if (outcomeFields[0].compare("active_task") == 0)
       state_["active_task"] = atoi(outcomeFields[1].c_str());
-    else if (outcomeFields[0].compare("internalTestNodeId") == 0)
-      state_["internal_test_node_id"] = atoi(outcomeFields[1].c_str());
+    // else if (outcomeFields[0].compare("internalTestNodeId") == 0)
+    //   state_["internal_test_node_id"] = atoi(outcomeFields[1].c_str());
     else if (outcomeFields[0].compare("fitMode") == 0)
       params_["fit_mode"] = atoi(outcomeFields[1].c_str());
     else if (outcomeFields[0].compare("phase") == 0)
@@ -2687,8 +2673,8 @@ void TPG::updateMODESFilters(bool roots) {
           // store active programs for novelty metric
           set<team *, teamIdComp> teams;
           set<program *, programIdComp> programs;
-          set<memoryEigen *, memoryEigenIdComp> memories;
-          (*teiter)->GetAllNodes(_teamMap, teams, programs, memories);
+          // set<memoryEigen *, memoryEigenIdComp> memories;
+          (*teiter)->GetAllNodes(_teamMap, teams, programs);
           for (auto leiter = programs.begin(); leiter != programs.end();
                leiter++) {
             _persistenceFilterA[(*teiter)->id_].activeProgramIds.insert(
@@ -2815,7 +2801,7 @@ void TPG::writeCheckpoint(long t, bool elite) {
   if (elite) {
     set<program *, programIdComp> programs;
     set<team *, teamIdComp> teams, teamsAll;
-    set<memoryEigen *, memoryEigenIdComp> memories;
+    // set<memoryEigen *, memoryEigenIdComp> memories;
 
     for (auto itr1 = _eliteTeamPS.begin(); itr1 != _eliteTeamPS.end();
          itr1++)  // taskset
@@ -2826,12 +2812,12 @@ void TPG::writeCheckpoint(long t, bool elite) {
       {
         auto tm = itr2->second[2];
         teams.clear();
-        tm->GetAllNodes(_teamMap, teams, programs, memories);
+        tm->GetAllNodes(_teamMap, teams, programs);
         teamsAll.insert(teams.begin(), teams.end());
       }
 
-    for (auto meiter = memories.begin(); meiter != memories.end(); meiter++)
-      ofs << (*meiter)->checkpoint();
+    // for (auto meiter = memories.begin(); meiter != memories.end(); meiter++)
+    //   ofs << (*meiter)->checkpoint();
     for (auto leiter = programs.begin(); leiter != programs.end(); leiter++)
       ofs << (*leiter)->checkpoint(true);  // all instructions
     for (auto teiter = teamsAll.begin(); teiter != teamsAll.end(); teiter++)
@@ -2839,10 +2825,10 @@ void TPG::writeCheckpoint(long t, bool elite) {
     for (auto teiter = teamsAll.begin(); teiter != teamsAll.end(); teiter++)
       ofs << (*teiter)->checkpoint(true);
   } else {
-    for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++)
-      for (auto meiter = _Memory[mem_t].begin(); meiter != _Memory[mem_t].end();
-           meiter++)
-        ofs << meiter->second->checkpoint();
+    // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++)
+    //   for (auto meiter = _Memory[mem_t].begin(); meiter != _Memory[mem_t].end();
+    //        meiter++)
+    //     ofs << meiter->second->checkpoint();
     for (auto leiter = _L.begin(); leiter != _L.end(); leiter++)
       ofs << leiter->second->checkpoint(true);  // all instructions
     for (auto teiter = _M.begin(); teiter != _M.end(); teiter++)
@@ -2898,107 +2884,23 @@ void TPG::writeCheckpoint(long t, bool elite) {
 }
 
 /******************************************************************************/
-void TPG::writeCheckpoint(string &s, vector<team *> &rootTeams) {
+void TPG::WriteMPICheckpoint(string &s, vector<team *> &rootTeams) {
   set<program *, programIdComp> programs;
   set<team *, teamIdComp> teams;
-  set<memoryEigen *, memoryEigenIdComp> memories;
-
-  for (auto teiter = rootTeams.begin(); teiter != rootTeams.end(); teiter++)
-    (*teiter)->GetAllNodes(_teamMap, teams, programs, memories);
-
+  for (auto tm : rootTeams) tm->GetAllNodes(_teamMap, teams, programs);
   stringstream ss;
-
   ss << "seed_tpg:" << seeds_[TPG_SEED] << endl;
   ss << "seed_aux:" << seeds_[AUX_SEED] << endl;
   ss << "t:" << GetState("t_current") << endl;
   ss << "active_task:" << GetState("active_task") << endl;
-  ss << "internalTestNodeId:-1" << endl;
+  // ss << "internalTestNodeId:-1" << endl;
   ss << "fitMode:" << GetParam<int>("fit_mode") << endl;
   ss << "phase:" << GetState("phase") << endl;
-  for (auto meiter = memories.begin(); meiter != memories.end(); meiter++)
-    ss << (*meiter)->checkpoint();
-  for (auto leiter = programs.begin(); leiter != programs.end(); leiter++)
-    ss << (*leiter)->checkpoint(true);  // all instructions
-  for (auto teiter = teams.begin(); teiter != teams.end(); teiter++)
-    ss << (*teiter)->checkpoint(false);
-  // ss << "miniBatchIndexes";
-  // for (size_t i = 0; i < _miniBatchIndexes.size(); i++)
-  //    ss << ":" << _miniBatchIndexes[i];
-  ss << endl;
-
-  s = ss.str();
-}
-
-/******************************************************************************/
-void TPG::writeCheckpoint(string &s, vector<team *> &rootTeams,
-                          vector<teamPair> &teamPairs) {
-  set<program *, programIdComp> programs;
-  set<team *, teamIdComp> teams;
-  set<memoryEigen *, memoryEigenIdComp> memories;
-
-  for (auto teiter = rootTeams.begin(); teiter != rootTeams.end(); teiter++)
-    (*teiter)->GetAllNodes(_teamMap, teams, programs, memories);
-
-  stringstream ss;
-
-  ss << "seed_tpg:" << seeds_[TPG_SEED] << endl;
-  ss << "seed_aux:" << seeds_[AUX_SEED] << endl;
-  ss << "t:" << GetState("t_current") << endl;
-  ss << "active_task:" << GetState("active_task") << endl;
-  ss << "internalTestNodeId:-1" << endl;
-  ss << "fitMode:" << GetParam<int>("fit_mode") << endl;
-  ss << "phase:" << GetState("phase") << endl;
-  for (auto meiter = memories.begin(); meiter != memories.end(); meiter++)
-    ss << (*meiter)->checkpoint();
-  for (auto leiter = programs.begin(); leiter != programs.end(); leiter++)
-    ss << (*leiter)->checkpoint(true);  // all instructions
-  for (auto teiter = teams.begin(); teiter != teams.end(); teiter++)
-    ss << (*teiter)->checkpoint(false);
-  // this has to come after all teams
-  for (auto it1 = teamPairs.begin(); it1 != teamPairs.end(); it1++) {
-    ss << "teamPair";
-    for (auto it2 = (*it1).teams.begin(); it2 != (*it1).teams.end(); it2++)
-      ss << ":" << (*it2)->id_;
-    ss << endl;
+  for (auto prog : programs) {
+    // ss << prog->checkpoint(false);
+    ss << prog->checkpoint(GetParam<int>("skip_introns")); 
   }
+  for (auto tm : teams) ss << tm->checkpoint(false);
   ss << endl;
-
-  s = ss.str();
-}
-
-/******************************************************************************/
-void TPG::writeCheckpoint(string &s, vector<team *> &rootTeams,
-                          team *originalTeam, team *replacementTeam) {
-  set<program *, programIdComp> programs;
-  set<team *, teamIdComp> teams;
-  set<memoryEigen *, memoryEigenIdComp> memories;
-
-  for (auto teiter = rootTeams.begin(); teiter != rootTeams.end(); teiter++)
-    (*teiter)->GetAllNodes(_teamMap, teams, programs, memories);
-  originalTeam->GetAllNodes(_teamMap, teams, programs, memories);
-  replacementTeam->GetAllNodes(_teamMap, teams, programs, memories);
-
-  stringstream ss;
-
-  ss << "seed_tpg:" << seeds_[TPG_SEED] << endl;
-  ss << "seed_aux:" << seeds_[AUX_SEED] << endl;
-  ss << "t:" << GetState("t_current") << endl;
-  ss << "active_task:" << GetState("active_task") << endl;
-  ss << "internalTestNodeId:" << state_["internal_test_node_id"] << endl;
-  ss << "fitMode:" << GetParam<int>("fit_mode") << endl;
-  ss << "phase:" << GetState("phase") << endl;
-  for (auto meiter = memories.begin(); meiter != memories.end(); meiter++)
-    ss << (*meiter)->checkpoint();
-  for (auto leiter = programs.begin(); leiter != programs.end(); leiter++)
-    ss << (*leiter)->checkpoint(true);  // all instructions
-  for (auto teiter = teams.begin(); teiter != teams.end(); teiter++) {
-    if ((*teiter)->id_ == originalTeam->id_ &&
-        originalTeam->id_ != replacementTeam->id_)
-      ss << replacementTeam->checkpoint(false, originalTeam->id_);
-    else
-      ss << (*teiter)->checkpoint(false);
-  }
-  ss << endl;
-
   s = ss.str();
 }

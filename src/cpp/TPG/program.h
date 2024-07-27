@@ -40,7 +40,6 @@ class program {
   int nrefs_;               //  Number of references by teams
   vector<int> op_counts_;   // count for each operator over _bidEffective
   vector<double> profile_;  // Bid profile
-  bool skipIntrons_;
   bool stateful_;
   // Set to true in MarkIntrons if this program writes to stateful memoryEigen.
   bool targetMem_;
@@ -51,7 +50,7 @@ class program {
                      bool &verbose) = 0;
   inline double bidVal() { return bid_val_; }
   inline void bidVal(double b) { bid_val_ = b; }
-  virtual string checkpoint(bool) = 0;
+  virtual string checkpoint(bool effective_only) = 0;
   inline void features(set<long> &f) { f = features_; }
   inline void featuresMem(set<long> &f) { f = featuresMem_; }
   inline void getProfile(vector<double> &p) { p = profile_; }

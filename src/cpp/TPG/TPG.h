@@ -70,13 +70,13 @@ class TPG {
       set<team *, teamIdComp> &visitedTeams, long &decisionInstructions,
       int timeStep, vector<program *> &allPrograms,
       vector<program *> &winningPrograms, vector<set<long>> &decisionFeatures,
-      vector<set<memoryEigen *, memoryEigenIdComp>> &decisionMemories,
+      // vector<set<memoryEigen *, memoryEigenIdComp>> &decisionMemories,
       vector<team *> &teamPath, mt19937 &rng, bool verbose);
   void GetAllNodes(team *tm, set<team *, teamIdComp> &teams,
                    set<program *, programIdComp> &programs);
-  void GetAllNodes(team *tm, set<team *, teamIdComp> &teams,
-                   set<program *, programIdComp> &programs,
-                   set<memoryEigen *, memoryEigenIdComp> &memories);
+  // void GetAllNodes(team *tm, set<team *, teamIdComp> &teams,
+  //                  set<program *, programIdComp> &programs,
+  //                  set<memoryEigen *, memoryEigenIdComp> &memories);
   team *getBestTeam();
   // map<long, team *> GetTeams(bool) const;
   vector<team *> GetTeamsInVec(bool) const;
@@ -87,7 +87,7 @@ class TPG {
   void internalReplacementPareto(int, int, int, team *, map<long, team *> &,
                                  set<team *, teamIdComp> &, mt19937 &);
   bool isElitePS(team *tm, int phase);
-  void MarkEffectiveCode(team *tm);
+  void MarkEffectiveCode();
   void policyFeatures(int, set<long> &, bool);
   // void printGraphDot(
   //     team *, size_t frame, int episode, int step, size_t depth,
@@ -151,9 +151,7 @@ class TPG {
   void teamTaskRank(int, const vector<int> &);
   void updateMODESFilters(bool);
   void writeCheckpoint(long, bool);
-  void writeCheckpoint(string &, vector<team *> &);
-  void writeCheckpoint(string &, vector<team *> &, vector<teamPair> &);
-  void writeCheckpoint(string &, vector<team *> &, team *, team *);
+  void WriteMPICheckpoint(string &, vector<team *> &);
 
   /*****************************************************************************
    *  TPG member variables and data structures.

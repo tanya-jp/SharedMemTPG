@@ -1,22 +1,13 @@
 #include "RegisterMachine.h"
 
 /******************************************************************************/
-string RegisterMachine::checkpoint(bool all) {
+string RegisterMachine::checkpoint(bool effective_only) {
   ostringstream oss;
-
   oss << "RegisterMachine:" << id_ << ":" << gtime_ << ":" << action_ << ":"
       << stateful_ << ":" << nrefs_ << ":" << observation_buff_size_;
-  // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-  //   oss << ":" << sharedMemory_[mem_t]->id();
-  // }
-  if (all)
-    for (size_t i = 0; i < bid_.size(); i++)
-      oss << ":" << bid_[i]->checkpoint();
-  else
-    for (size_t i = 0; i < bidEffective_.size(); i++)
-      oss << ":" << bidEffective_[i]->checkpoint();
+  auto prog = effective_only ? bidEffective_ : bid_;
+  for (auto istr : prog) oss << ":" << istr->checkpoint();
   oss << endl;
-
   return oss.str();
 }
 
@@ -33,7 +24,6 @@ RegisterMachine::RegisterMachine(
   key_ = 0;
   nrefs_ = 0;
 
-  skipIntrons_ = false;
   observation_buff_size_ = std::any_cast<int>(params["memory_indices"]);
 
   instruction *in;
@@ -68,7 +58,6 @@ RegisterMachine::RegisterMachine(
   bid_val_ = -(numeric_limits<double>::max());
   nrefs_ = 0;
 
-  skipIntrons_ = false;
   stateful_ = plr.stateful_;
   observation_buff_size_ = plr.observation_buff_size_;
 
@@ -90,14 +79,13 @@ RegisterMachine::RegisterMachine(
     std::unordered_map<std::string, std::any> &params, long id, long nrefs,
     int observation_buff_size, std::vector<instruction *> bid) {
   action_ = action;
-  bid_ = bid;
+  bid_ = bidEffective_ = bid;
   gtime_ = gtime;
   id_ = id;
   key_ = 0;
   nrefs_ = nrefs;
 
   stateful_ = stateful > 0 ? true : false;
-  skipIntrons_ = false;
   observation_buff_size_ = observation_buff_size;
 
   op_counts_.resize(instruction::NUM_OP);
@@ -146,7 +134,7 @@ void RegisterMachine::MarkFeatures(instruction *istr, int in) {
 /******************************************************************************/
 void RegisterMachine::MarkIntrons(
     std::unordered_map<std::string, std::any> &params) {
-  fill(op_counts_.begin(), op_counts_.end(), 0);  // Count occurance of each op.
+  // fill(op_counts_.begin(), op_counts_.end(), 0);  // Count occurance of each op.
 
   // Meff keeps track of which memories are effective, i.e. used in the program.
   // Meff maps [memory type][index]->true/false.
@@ -182,8 +170,9 @@ void RegisterMachine::MarkIntrons(
   // TODO(skelly): Is this the most efficient method? Currently O(n^2)
   for (size_t t = 0; t < bid_.size(); t++) {
     bidEffective_.clear();
+    std::fill(op_counts_.begin(), op_counts_.end(), 0);  // Count occurance of each op.
     for (auto istr : bid_) {
-      if (!skipIntrons_ || Meff[istr->GetOutType()][istr->outIdx_] ||
+      if (Meff[istr->GetOutType()][istr->outIdx_] ||
           std::find(bid_effective_stateless.begin(),
                     bid_effective_stateless.end(),
                     istr) != bid_effective_stateless.end()) {

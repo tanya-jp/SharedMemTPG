@@ -208,7 +208,7 @@ int main(int argc, char **argv) {
 
         /* evaluation ********************************************************/
         startEval = chrono::system_clock::now();
-
+        tpg.MarkEffectiveCode();
         if (tpg.GetState("t_current") > tpg.GetParam<int>("t_start") &&
             tpg.HaveParam("n_sampled_tasks_for_eval")) {
           // Split tasks into evaluated and estimated
@@ -265,8 +265,9 @@ int main(int argc, char **argv) {
         startChkp = chrono::system_clock::now();
         if (tpg.GetParam<int>("write_train_checkpoints") &&
             tpg.GetState("t_current") % CHECKPOINT_MOD == 0) {
+          // Checkpoint the entire population.    
           tpg.writeCheckpoint(tpg.GetState("t_current"),
-                              false);  // checkpoint entire pop
+                              false);  
         }
         if (tpg.GetParam<int>("write_phylogeny")) {
           tpg.printPhyloGraphDot(tpg.getBestTeam());
