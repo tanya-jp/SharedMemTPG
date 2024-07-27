@@ -569,7 +569,6 @@ void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
       for (auto tm : eval.teams) {
         eval.tm = tm;
         tpg.MarkEffectiveCode(eval.tm);
-
         for (eval.episode = 0; eval.episode < eval.tm->_n_eval;
              eval.episode++) {
           tpg.rngs_[AUX_SEED].seed(eval.episode);
@@ -789,15 +788,18 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
   for (auto tm : eval.teams) {
     if (tm->id_ != tpg.GetParam<int>("host_to_replay")) continue;
     eval.tm = tm;
-    if (eval.animate) eval.tm->_n_eval = 1;
+    
     tpg.MarkEffectiveCode(eval.tm);
     vector<int> steps_per_task(tpg.GetState("n_task"), 0);
     // TODO(skelly): clean up
     // for (int task = 0; task < tpg.GetState("n_task"); task++) {
     // tpg.state_["active_task"] = task;
     eval.task = tasks[tpg.GetState("active_task")];
+    if (eval.animate) eval.tm->_n_eval = 1;
+    else {
     eval.tm->_n_eval =
         eval.task->GetNumEval(tpg.GetParam<int>("checkpoint_in_phase"));
+    }
     for (eval.episode = 0; eval.episode < eval.tm->_n_eval; eval.episode++) {
       tpg.rngs_[AUX_SEED].seed(eval.episode);
       eval.tm->InitMemory(tpg._teamMap, tpg.HaveParam("p_bid_mu_const"));

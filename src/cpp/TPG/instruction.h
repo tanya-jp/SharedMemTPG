@@ -197,8 +197,8 @@ class instruction {
   inline void SetInMem(int i, memoryEigen* m) { (i == 0 ? in1_ : in2_) = m; }
   inline size_t GetInType(int i) const { return op_mem_types_[op_][i + 1]; }
   inline bool IsObs(int i) const {
-    return (i == 0 ? in1Src_ == 1 : in2Src_ == 1) &&
-           GetInType(i) != memoryEigen::NA_TYPE;
+    return (GetInType(i) != memoryEigen::NA_TYPE) &&
+    (i == 0 ? in1Src_ == 1 : in2Src_ == 1);
   }
   inline bool IsMemoryRef(int i) const {
     return !IsObs(i) && GetInType(i) != memoryEigen::NA_TYPE;
@@ -250,8 +250,8 @@ class instruction {
 
     if (dbg) {
       cerr << std::setprecision(std::numeric_limits<double>::digits10 + 1)
-           << std::fixed << "s" << outIdx_ << " = s" << in1Idx_ << " + " << "s"
-           << in2Idx_ << " | " << std::fixed << scalar_in1_ << " + "
+           << std::fixed << "s" << outIdx_ << " = s" << in1Idx_ << (IsObs(0) ? "i" : "") << " + " << "s"
+           << in2Idx_ << (IsObs(1) ? "i" : "") << " | " << std::fixed << scalar_in1_ << " + "
            << scalar_in2_ << " = " << out_->working_memory_[outIdx_](0, 0)
            << endl;
     }
@@ -262,8 +262,8 @@ class instruction {
 
     if (dbg) {
       cerr << std::setprecision(std::numeric_limits<double>::digits10 + 1)
-           << std::fixed << "s" << outIdx_ << " = s" << in1Idx_ << " - " << "s"
-           << in2Idx_ << " | " << std::fixed << scalar_in1_ << " - "
+           << std::fixed << "s" << outIdx_ << " = s" << in1Idx_ << (IsObs(0) ? "i" : "") << " - " << "s"
+           << in2Idx_ << (IsObs(1) ? "i" : "") << " | " << std::fixed << scalar_in1_ << " - "
            << scalar_in2_ << " = " << out_->working_memory_[outIdx_](0, 0)
            << endl;
     }
@@ -274,8 +274,8 @@ class instruction {
 
     if (dbg) {
       cerr << std::setprecision(std::numeric_limits<double>::digits10 + 1)
-           << std::fixed << "s" << outIdx_ << " = s" << in1Idx_ << " * " << "s"
-           << in2Idx_ << " | " << std::fixed << scalar_in1_ << " * "
+           << std::fixed << "s" << outIdx_ << " = s" << in1Idx_ << (IsObs(0) ? "i" : "") << " * " << "s"
+           << in2Idx_ << (IsObs(1) ? "i" : "") << " | " << std::fixed << scalar_in1_ << " * "
            << scalar_in2_ << " = " << out_->working_memory_[outIdx_](0, 0)
            << endl;
     }
@@ -329,7 +329,7 @@ class instruction {
     out_->working_memory_[outIdx_](0, 0) = std::cos(scalar_in1_);
 
     if (dbg) {
-      cerr << "s" << outIdx_ << " = cos(s" << in1Idx_ << ") | " << "cos("
+      cerr << "s" << outIdx_ << " = cos(s" << in1Idx_ << (IsObs(0) ? "i" : "") << ") | " << "cos("
            << scalar_in1_ << ") = " << out_->working_memory_[outIdx_](0, 0)
            << endl;
     }

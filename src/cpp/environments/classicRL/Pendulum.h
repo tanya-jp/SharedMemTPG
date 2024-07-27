@@ -12,7 +12,7 @@
 #include <GL/glut.h>
 #endif
 
-#define STATE_SIZE 4
+#define PENDULUM_STATE_SIZE 3
 #define PENDULUM_DIM 2
 
 using namespace std;
@@ -71,10 +71,10 @@ class Pendulum : public TaskEnv {
     max_costs =
         pow(M_PI, 2) + 0.1 * pow(maxSpeed, 2) + 0.001 * pow(maxTorque, 2);
     // max_costs_all = -(max_costs * max_step);
-    state.reserve(STATE_SIZE);
-    state.resize(STATE_SIZE);
-    state_po.reserve(STATE_SIZE - 2);
-    state_po.resize(STATE_SIZE - 2);
+    state.reserve(PENDULUM_STATE_SIZE);
+    state.resize(PENDULUM_STATE_SIZE);
+    state_po.reserve(PENDULUM_STATE_SIZE - 1);
+    state_po.resize(PENDULUM_STATE_SIZE - 1);
   }
 
   ~Pendulum() {}
@@ -97,7 +97,7 @@ class Pendulum : public TaskEnv {
 
     state[2] = _state[_thetaDot];
 
-    state[3] = disNoise(rng);
+    // state[3] = disNoise(rng);
 
     reward = 0;
 
@@ -129,7 +129,7 @@ class Pendulum : public TaskEnv {
 
     state[2] = _state[_thetaDot];
 
-    state[3] = disNoise(rng);
+    // state[3] = disNoise(rng);
 
     step++;
 

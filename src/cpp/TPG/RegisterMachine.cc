@@ -210,37 +210,55 @@ void RegisterMachine::MarkIntrons(
   Meff[memoryEigen::MATRIX_TYPE] =
       vector<bool>(std::any_cast<int>(params["memory_indices"]), false);
 
-  Meff[memoryEigen::SCALAR_TYPE][0] = true;  // Mark bid output memory.
+  // Mark bid output memory.
+  Meff[memoryEigen::SCALAR_TYPE][0] = true;
 
+  // Mark continuous output memory.
   if (std::any_cast<int>(params["continuous_output"])) {
-    Meff[memoryEigen::SCALAR_TYPE][1] = true;  // Mark continuous output memory.
+    Meff[memoryEigen::SCALAR_TYPE][1] = true;
   }
 
-  bidEffective_.clear();
-  for (vector<instruction *>::reverse_iterator riter = bid_.rbegin();
-       riter != bid_.rend(); riter++) {
+  // backward pass to find effective instructions when stateless
+  std::vector<instruction *> bid_effective_stateless;
+  for (auto riter = bid_.rbegin(); riter != bid_.rend(); riter++) {
     auto istr = *riter;
-    if (!skipIntrons_ || Meff[istr->GetOutType()][istr->outIdx_]) {
-      bidEffective_.push_back(istr);
-      op_counts_[istr->op_]++;
-
-      // Setup output memory.
-      istr->out_ = privateMemory_[istr->GetOutType()];  // TODO(skelly): move?
-
+    if (Meff[istr->GetOutType()][istr->outIdx_]) {
+      bid_effective_stateless.push_back(istr);
       for (int in = 0; in < 2; in++) {
         if (istr->IsMemoryRef(in)) {
           Meff[istr->GetInType(in)][istr->GetInIdx(in)] = true;
-          // TODO(skelly): move?
-          istr->SetInMem(in, privateMemory_[istr->GetInType(in)]);
-        } else if (istr->IsObs(in)) {
-          // TODO(skelly): move?
-          istr->SetInMem(in, observation_memory_buff_[istr->GetInType(in)]);
-          MarkFeatures(istr, in);
         }
       }
     }
   }
-  std::reverse(bidEffective_.begin(), bidEffective_.end());
+  // now any instruction that write to any input
+  // of the effective instructions is also effective forward pass to find
+  // effective instructions when stateful
+  for (size_t t = 0; t < bid_.size(); t++) {
+    bidEffective_.clear();
+    for (auto istr : bid_) {
+      if (!skipIntrons_ || Meff[istr->GetOutType()][istr->outIdx_] ||
+          std::find(bid_effective_stateless.begin(),
+                    bid_effective_stateless.end(),
+                    istr) != bid_effective_stateless.end()) {
+        bidEffective_.push_back(istr);
+        op_counts_[istr->op_]++;
+        // Setup output memory.
+        istr->out_ = privateMemory_[istr->GetOutType()];  // TODO(skelly): move?
+        for (int in = 0; in < 2; in++) {
+          if (istr->IsMemoryRef(in)) {
+            Meff[istr->GetInType(in)][istr->GetInIdx(in)] = true;
+            // TODO(skelly): move?
+            istr->SetInMem(in, privateMemory_[istr->GetInType(in)]);
+          } else if (istr->IsObs(in)) {
+            // TODO(skelly): move?
+            istr->SetInMem(in, observation_memory_buff_[istr->GetInType(in)]);
+            MarkFeatures(istr, in);
+          }
+        }
+      }
+    }
+  }
 }
 
 /******************************************************************************/
@@ -337,10 +355,14 @@ void RegisterMachine::CopyObservationToMemoryBuff(state *obs) {
 /******************************************************************************/
 double RegisterMachine::Run(state *obs, int &time_step,
                             const size_t &graph_depth, bool &verbose) {
-  CopyObservationToMemoryBuff(obs);
+
+  // verbose = true;
+  // cerr << "RUN id " << id_ << " #########################################################################" << endl;       
 
   // Clear working memory prior to execution, making this program stateless
   if (!stateful_) ClearWorking();
+
+  CopyObservationToMemoryBuff(obs);
 
   for (auto istr : bidEffective_) {
     for (size_t in = 0; in < 2; in++) {
@@ -360,6 +382,9 @@ double RegisterMachine::Run(state *obs, int &time_step,
         time_step + (graph_depth / MAX_GRAPH_DEPTH);
     istr->exec(verbose);  // Execute instruction
   }
+
+  // cerr << "OUT " << privateMemory_[memoryEigen::SCALAR_TYPE]->working_memory_[0](0, 0) << " " << privateMemory_[memoryEigen::SCALAR_TYPE]->working_memory_[1](0, 0) << endl;
+
   // Return bid value
   return privateMemory_[memoryEigen::SCALAR_TYPE]->working_memory_[0](0, 0);
 }
