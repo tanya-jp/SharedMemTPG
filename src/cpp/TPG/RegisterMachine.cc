@@ -118,7 +118,11 @@ RegisterMachine::~RegisterMachine() {
   observation_memory_buff_.clear();
 }
 
+// TODO(skelly): confirm this function works as expecte.
 void RegisterMachine::MarkFeatures(instruction *istr, int in) {
+  // Setting input memory pointer is required for MarkIntrons.
+  istr->SetInMem(in, observation_memory_buff_[istr->GetInType(in)]);
+  
   features_.clear();
   if (istr->GetInType(in) == memoryEigen::SCALAR_TYPE) {
     features_.insert(istr->GetInIdx(in));
@@ -140,8 +144,6 @@ void RegisterMachine::MarkFeatures(instruction *istr, int in) {
 }
 
 /******************************************************************************/
-// TODO(skelly): fix this function to walk backwards through program.
-// Currently doesn't catch all introns.
 void RegisterMachine::MarkIntrons(
     std::unordered_map<std::string, std::any> &params) {
   fill(op_counts_.begin(), op_counts_.end(), 0);  // Count occurance of each op.
@@ -177,6 +179,7 @@ void RegisterMachine::MarkIntrons(
     }
   }
  
+  // TODO(skelly): Is this the most efficient method? Currently O(n^2)
   for (size_t t = 0; t < bid_.size(); t++) {
     bidEffective_.clear();
     for (auto istr : bid_) {
@@ -186,16 +189,10 @@ void RegisterMachine::MarkIntrons(
                     istr) != bid_effective_stateless.end()) {
         bidEffective_.push_back(istr);
         op_counts_[istr->op_]++;
-        // Setup output memory.
-        // istr->out_ = privateMemory_[istr->GetOutType()];  // TODO(skelly): move?
         for (int in = 0; in < 2; in++) {
           if (istr->IsMemoryRef(in)) {
             Meff[istr->GetInType(in)][istr->GetInIdx(in)] = true;
-            // TODO(skelly): move?
-            // istr->SetInMem(in, privateMemory_[istr->GetInType(in)]);
           } else if (istr->IsObs(in)) {
-            // This is required for MarkIntrons
-            istr->SetInMem(in, observation_memory_buff_[istr->GetInType(in)]);
             MarkFeatures(istr, in);
           }
         }
@@ -307,10 +304,8 @@ double RegisterMachine::Run(state *obs, int &time_step,
   for (auto istr : bidEffective_) {
     istr->out_ = privateMemory_[istr->GetOutType()];
     for (size_t in = 0; in < 2; in++) {
-      if (istr->GetInType(in) != memoryEigen::NA_TYPE) {  // Input is used.
-        // if (istr->GetInType(in) == memoryEigen::SCALAR_TYPE) {
-        //   istr->SetupScalarIn(in, observation_memory_buff_);
-        // }
+      // Check is this input is used in the operation.
+      if (istr->GetInType(in) != memoryEigen::NA_TYPE) {  
         if (istr->IsMemoryRef(in)) {
           istr->SetInMem(in, privateMemory_[istr->GetInType(in)]);
           // Input is a memory ref. Track read time for temporal memory.
@@ -319,6 +314,8 @@ double RegisterMachine::Run(state *obs, int &time_step,
         } else {  // Input is an observation reference.
           istr->SetInMem(in, observation_memory_buff_[istr->GetInType(in)]);
         }
+        // Scalar inputs are read from either the vector or matrix obs buff.
+        // This copies data from obs buff to temporary scalar input variables.
         if (istr->GetInType(in) == memoryEigen::SCALAR_TYPE) {
           istr->SetupScalarIn(in, observation_memory_buff_);
         }
@@ -329,7 +326,7 @@ double RegisterMachine::Run(state *obs, int &time_step,
         time_step + (graph_depth / MAX_GRAPH_DEPTH);
     istr->exec(verbose);  // Execute instruction
   }
-  // Return bid value
+  // Return bid value.
   return privateMemory_[memoryEigen::SCALAR_TYPE]->working_memory_[0](0, 0);
 }
 
