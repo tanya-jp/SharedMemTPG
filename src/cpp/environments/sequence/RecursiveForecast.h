@@ -95,9 +95,10 @@ class RecursiveForecast : public TaskEnv {
       // for (int s = 50; s <= 850; s += 100) t_start[1].push_back(s);
 
       // Randomized train and validation slices
-      uniform_int_distribution<int> dis(0, 900);
-      for (int s = 0; s <= n_eval_train_; s ++) t_start[0].push_back(dis(rng));
-      for (int s = 0; s <= n_eval_val_; s ++) t_start[1].push_back(dis(rng));
+      uniform_int_distribution<int> dis_train(0, 900);
+      for (int s = 0; s <= n_eval_train_; s++) t_start[0].push_back(dis_train(rng));
+      uniform_int_distribution<int> dis_val(0, 850);
+      for (int s = 0; s <= n_eval_val_; s++) t_start[1].push_back(dis_val(rng));
 
       // test (original single start point)
       t_start[2].insert(t_start[2].begin(), {950});
