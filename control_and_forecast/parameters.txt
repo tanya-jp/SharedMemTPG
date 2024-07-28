@@ -37,7 +37,8 @@ write_test_checkpoints 1
 write_phylogeny 0
 
 # how frequently to run test procedure
-test_mod 100
+#test_mod 100
+test_mod 1
 
 # Number of tasks used each selection for evaluation. 
 # The rest are estimated with phylogeny.
@@ -128,7 +129,8 @@ skip_introns 1
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 2,2,1,1
+#n_input 2,2,8,8
+n_input 8
 
 # max initial program size
 max_initial_prog_size 10
@@ -141,7 +143,7 @@ max_prog_size 1000000
 memory_indices 8
 
 # dimensionality for vector & matrix memory
-memory_size 2
+memory_size 8
 
 # Observations are stored in a buffer with this time window.
 # observation_buff_size is initially set to the same size as memory_indices.
@@ -177,7 +179,8 @@ p_observation_buff_size 0.25
 
 # which tasks are active
 # rhs should be a single task name or a comma-separated list
-active_tasks Cartpole,Pendulum,Sunspots,Mackey
+#active_tasks Cartpole,Pendulum,Sunspots,Mackey
+active_tasks Mackey
 
 # use the partially-observable version of a task, if available
 # currently only available for calssic control tasks
@@ -209,11 +212,11 @@ forecast_horizon_train 50
 forecast_horizon_val 100
 forecast_horizon_test 100
 
-#forecast_n_eval_train 19
-#forecast_n_eval_val 9
+forecast_n_eval_train 19
+forecast_n_eval_val 9
 
-forecast_n_eval_train 40
-forecast_n_eval_val 20
+#forecast_n_eval_train 40
+#forecast_n_eval_val 20
 
 ################################################################################
 ## Operations, uncomment to activate ###########################################
