@@ -83,13 +83,13 @@ parent_select_roots_only 1
 max_initial_team_size 10
 
 # max team size
-max_team_size 1000000
+max_team_size 100
 
 # max teams per graph
 max_teams_per_graph 1000000
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 0.999
+p_atomic 0.9995
 
 # team mutation: probability of deleting program from team
 pmd 0.5
@@ -134,7 +134,7 @@ n_input 50
 max_initial_prog_size 10
 
 # max program size
-max_prog_size 1000000
+max_prog_size 100
 
 # number of memory indices
 # each memory index points to a data structure (scalar, vector, or matrix)
@@ -209,11 +209,11 @@ forecast_horizon_train 50
 forecast_horizon_val 100
 forecast_horizon_test 100
 
-forecast_n_eval_train 19
-forecast_n_eval_val 9
+#forecast_n_eval_train 19
+#forecast_n_eval_val 9
 
-#forecast_n_eval_train 40
-#forecast_n_eval_val 20
+forecast_n_eval_train 100
+forecast_n_eval_val 20
 
 ################################################################################
 ## Operations, uncomment to activate ###########################################
