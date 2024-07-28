@@ -64,7 +64,6 @@ class Pendulum : public TaskEnv {
     actionsDiscrete.push_back(maxTorque);
     eval_type_ = "Control";
     max_step = 300;
-    // min_eval = 3;
     _state.reserve(PENDULUM_DIM);
     _state.resize(PENDULUM_DIM);
 

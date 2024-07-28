@@ -191,7 +191,7 @@ void RegisterMachine::MarkIntrons(
 }
 
 /******************************************************************************/
-void RegisterMachine::MuBid(std::unordered_map<std::string, std::any> &params,
+void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
                             mt19937 &rng, vector<bool> &legalOps) {
   uniform_real_distribution<> dis_real(0, 1.0);
   bool changed = false;

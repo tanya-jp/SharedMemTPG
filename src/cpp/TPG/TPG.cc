@@ -531,7 +531,7 @@ program *TPG::CloneProgram(program *prog) {
 }
 
 void TPG::ProgramMutator_Instructions(program *prog_to_mu) {
-  prog_to_mu->MuBid(params_, rngs_[TPG_SEED], _ops);
+  prog_to_mu->Mutate(params_, rngs_[TPG_SEED], _ops);
 }
 
 void TPG::ProgramMutator_ActionPointer(program *prog_to_mu, team *new_team,

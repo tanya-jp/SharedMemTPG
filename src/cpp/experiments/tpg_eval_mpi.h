@@ -199,7 +199,7 @@ void MaybeAnimateStep(EvalStruct &eval) {
 
 void AccumulateStepStats(EvalStruct &eval) {
   // TODO(spkelly): re-enable behavSeq with obs outide of EvalStruct
-  if (eval.n_prediction == 1) {
+  if (eval.n_prediction == 0) {
     fill(eval.runTimeStats.begin(), eval.runTimeStats.end(), 0);
     // eval.behavSeq.clear();
   }
@@ -406,13 +406,14 @@ void EvalControl(TPG &tpg, EvalStruct &eval) {
     eval.leafProgram = tpg.getAction(
         eval.tm, obs, true, eval.visitedTeams, eval.decision_instructions,
         eval.task->step, eval.teamPath, tpg.rngs_[AUX_SEED], false);
-    eval.n_prediction++;
+    
     MaybeAnimateStep(eval);
     TaskEnv::Results r =
         eval.task->update(WrapDiscreteAction(eval), WrapContinuousAction(eval),
                           tpg.rngs_[AUX_SEED]);
     eval.runTimeStats[REWARD1_IDX] += r.r1;
     AccumulateStepStats(eval);
+    eval.n_prediction++;
     obs->Set(eval.task->GetObsVec(eval.partially_observable));
   }
   delete obs;
@@ -507,7 +508,6 @@ void PrepareRecusiveForecastObs(TPG &tpg, EvalStruct &eval, bool prime) {
 /******************************************************************************/
 void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
   RecursiveForecast *task = dynamic_cast<RecursiveForecast *>(eval.task);
-  eval.n_prediction = 0;
   InitRecusiveForecastObs(tpg, eval);
 
   // Prime
@@ -529,7 +529,6 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
     eval.leafProgram = tpg.getAction(eval.tm, eval.obs, true, eval.visitedTeams,
                                      eval.decision_instructions, task->step,
                                      eval.teamPath, tpg.rngs_[AUX_SEED], false);
-
     SaveRecursiveForecast(tpg, eval);
     eval.sample++;
     AccumulateStepStats(eval);
@@ -568,8 +567,6 @@ void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
       eval.evalResult = "";
       for (auto tm : eval.teams) {
         eval.tm = tm;
-        // tpg.MarkEffectiveCode(eval.tm);
-        // tpg.MarkEffectiveCode();
         for (eval.episode = 0; eval.episode < eval.tm->_n_eval;
              eval.episode++) {
           tpg.rngs_[AUX_SEED].seed(eval.episode);
@@ -594,7 +591,6 @@ void replayer(TPG &tpg, vector<TaskEnv *> &tasks) {
   for (auto tm : eval.teams) {
     eval.tm = tm;
     if (eval.animate) eval.tm->_n_eval = 1;
-    // tpg.MarkEffectiveCode(eval.tm);
     for (eval.episode = 0; eval.episode < eval.tm->_n_eval; eval.episode++) {
       tpg.rngs_[AUX_SEED].seed(eval.episode);
       eval.tm->InitMemory(tpg._teamMap, tpg.HaveParam("p_bid_mu_const"));
@@ -790,7 +786,6 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
     if (tm->id_ != tpg.GetParam<int>("host_to_replay")) continue;
     eval.tm = tm;
     
-    // tpg.MarkEffectiveCode(eval.tm);
     vector<int> steps_per_task(tpg.GetState("n_task"), 0);
     // TODO(skelly): clean up
     // for (int task = 0; task < tpg.GetState("n_task"); task++) {

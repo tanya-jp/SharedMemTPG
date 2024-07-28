@@ -45,27 +45,7 @@ string team::checkpoint(bool fitnessBins, long id) const {
 void team::InitMemory(map<long, team *> &teamMap, bool use_evolved_const) {
   set<team *, teamIdComp> teams;
   set<program *, programIdComp> programs;
-  // set<memoryEigen *, memoryEigenIdComp> memories;
   GetAllNodes(teamMap, teams, programs);
-  // // if shared memory is read-only, this becomes redundant
-  // for (auto m : memories) {
-  //   m->ClearWorking();
-  //   if (use_evolved_const) {
-  //     m->CopyConstToWorking();
-  //   }
-  //   m->ClearReadTime();   // needed?
-  //   m->ClearWriteTime();  // needed?
-  // }
-  // this resets private memory to evolved constants
-  // if (use_evolved_const) {
-  //   for (auto p : programs) {
-  //     if (use_evolved_const)
-  //       p->CopySharedConstToWorking();
-  //     else
-  //       p->ClearWorking();
-  //   }
-  // // }
-
   for (auto p : programs) {
     p->ClearWorking();
     // if (use_evolved_const)

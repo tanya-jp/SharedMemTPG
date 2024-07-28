@@ -13,8 +13,6 @@ class program {
   double bid_val_;     // Most recent bid value
   static long count_;  // Next id to use
 
-  // vector<double>* feature;
-
   // Features indexed by non-introns in this program, determined in
   // MarkIntrons().
   set<long> features_;
@@ -26,7 +24,6 @@ class program {
   double key_;
   int lastCompareFactor_;
 
-  // vector<memoryEigen *> sharedMemory_;
   // Vector storing 1 memoryEigen* of each type (SCALAR, VECTOR, MATRIX)
   vector<memoryEigen *> privateMemory_;
 
@@ -65,22 +62,6 @@ class program {
 
   virtual void MarkIntrons(std::unordered_map<std::string, std::any> &) = 0;
 
-  // inline void MemGet(size_t type, memoryEigen *&m) { m = sharedMemory_[type];
-  // }
-
-  // inline void MemSet(uint8_t type, memoryEigen *m) {
-  //   sharedMemory_[type] = m;
-  //   m->refInc();
-  // }
-
-  // inline memoryEigen *MemGet(uint8_t type) { return sharedMemory_[type]; }
-
-  // inline void CopySharedConstToWorking() {
-  //   for (size_t i = 0; i < sharedMemory_.size(); i++) {
-  //     privateMemory_[i]->working_memory_ = sharedMemory_[i]->const_memory_;
-  //   }
-  // }
-
   inline void ClearWorking() {
     for (auto memory : privateMemory_) memory->ClearWorking();
     for (auto memory : observation_memory_buff_) memory->ClearWorking();
@@ -93,7 +74,7 @@ class program {
     return a != action;
   }
   // Mutate bid, return true if any changes occured
-  virtual void MuBid(std::unordered_map<std::string, std::any> &, mt19937 &,
+  virtual void Mutate(std::unordered_map<std::string, std::any> &, mt19937 &,
                      vector<bool> &) = 0;
   // Not counting introns
   inline long numFeatures() { return features_.size(); }
