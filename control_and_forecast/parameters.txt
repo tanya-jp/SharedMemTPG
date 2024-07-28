@@ -37,7 +37,6 @@ write_test_checkpoints 1
 write_phylogeny 0
 
 # how frequently to run test procedure
-#test_mod 100
 test_mod 1
 
 # Number of tasks used each selection for evaluation. 
@@ -129,8 +128,7 @@ skip_introns 1
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-#n_input 2,2,8,8
-n_input 8
+n_input 2,2,8,8
 
 # max initial program size
 max_initial_prog_size 10
@@ -146,7 +144,7 @@ memory_indices 8
 memory_size 8
 
 # Observations are stored in a buffer with this time window.
-# observation_buff_size is initially set to the same size as memory_indices.
+# This is initially set to the same size as memory_indices.
 max_observation_buff_size 50
 
 # program variation: probability of changing a random instruction
@@ -179,8 +177,7 @@ p_observation_buff_size 0.25
 
 # which tasks are active
 # rhs should be a single task name or a comma-separated list
-#active_tasks Cartpole,Pendulum,Sunspots,Mackey
-active_tasks Mackey
+active_tasks Cartpole,Pendulum,Sunspots,Mackey
 
 # use the partially-observable version of a task, if available
 # currently only available for calssic control tasks
