@@ -89,7 +89,7 @@ max_team_size 1000000
 max_teams_per_graph 1000000
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 0.999
+p_atomic 0.9999
 
 # team mutation: probability of deleting program from team
 pmd 0.5
@@ -128,7 +128,7 @@ skip_introns 1
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 2,2,8,8
+n_input 2,2,1,1
 
 # max initial program size
 max_initial_prog_size 10
@@ -141,7 +141,7 @@ max_prog_size 1000000
 memory_indices 8
 
 # dimensionality for vector & matrix memory
-memory_size 8
+memory_size 2
 
 # Observations are stored in a buffer with this time window.
 # This is initially set to the same size as memory_indices.
@@ -212,8 +212,8 @@ forecast_horizon_test 100
 #forecast_n_eval_train 19
 #forecast_n_eval_val 9
 
-forecast_n_eval_train 40
-forecast_n_eval_val 20
+forecast_n_eval_train 37
+forecast_n_eval_val 18
 
 ################################################################################
 ## Operations, uncomment to activate ###########################################
