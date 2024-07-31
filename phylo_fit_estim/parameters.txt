@@ -2,12 +2,6 @@
 ## Experiment Tracking Parameters ##############################################
 ################################################################################
 
-# whether to track experiments in comet
-track_experiments 0
-
-# comet experiment key
-experiment_key
-
 # how frequently to track experiment metrics (in generations)
 track_mod 20
 
@@ -89,7 +83,7 @@ max_team_size 128
 max_teams_per_graph 1000000
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 1.0
+p_atomic 0.999
 
 # team mutation: probability of deleting program from team
 pmd 0.5
