@@ -329,8 +329,8 @@ struct teamFitComplexLexCompare {
       // endl;
       return t1->fit_ > t2->fit_;
     } else {
-      auto t1_val = t1->runTimeComplexityIns_ + t1->runTimeComplexityTms_;
-      auto t2_val = t2->runTimeComplexityIns_ + t2->runTimeComplexityTms_;
+      auto t1_val = t1->runTimeComplexityIns_;// + t1->runTimeComplexityTms_;
+      auto t2_val = t2->runTimeComplexityIns_;// + t2->runTimeComplexityTms_;
 
       if (!isnan(t1_val) && !isnan(t2_val) && !isEqual(t1_val, t2_val)) {
         // cerr <<"teamFitComplexLexCompare 0:" << t1->fit_ << " " << t2->fit_
