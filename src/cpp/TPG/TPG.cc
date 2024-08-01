@@ -503,7 +503,6 @@ void TPG::TeamMutator_AddPrograms(team *team_to_mu) {
     int rand_p = dis_programs(rngs_[TPG_SEED]);
     int rand_ts = dis_team_size(rngs_[TPG_SEED]);
     program *p = _L[_Lids[rand_p]];
-    (void)p;
     team_to_mu->AddProgram(p, rand_ts);
   }
 }
@@ -1168,39 +1167,33 @@ bool compareByDistance(const distanceInstance &a, const distanceInstance &b) {
 
 /******************************************************************************/
 void TPG::InitTeams() {
-  uniform_int_distribution<int> disSize(
-      2, GetParam<int>("max_initial_team_size") - 1);
-  uniform_int_distribution<int> disA(0, GetParam<int>("n_discrete_action") - 1);
+  
+  uniform_int_distribution<int> dis_actions(0, GetParam<int>("n_discrete_action") - 1);
+  int initial_team_size = GetParam<int>("n_discrete_action");
   for (int t = 0; t < GetParam<int>("n_elite") * GetParam<int>("n_elite_mul");
        t++) {
     auto new_team = new team(GetState("t_current"), state_["team_count"]++);
-
-    int team_size = disSize(rngs_[TPG_SEED]);
-    for (int p = 0; p < team_size; p++) {
+    for (int p = 0; p < initial_team_size; p++) {
       // discrete atomic actions are negatives -1 to -numAtomicActions()
-      long discrete_action = -1 - disA(rngs_[TPG_SEED]);
+      long discrete_action = -1 - dis_actions(rngs_[TPG_SEED]);
       auto new_prog =
           new RegisterMachine(GetState("t_current"), discrete_action, params_,
                               state_["program_count"]++, rngs_[TPG_SEED], _ops);
-
-      // TODO(spkelly): remove shared memory code
-      // // create one new memory of each type for this team
-      // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-      //   auto *mem = new memoryEigen(state_["memory_count"]++, mem_t,
-      //   params_); if (HaveParam("p_bid_mu_const")) {
-      //     // new_prog->privateMemory_[mem_t]->RandomizeConst();
-      //     mem->RandomizeConst();
-      //   }
-      //   AddMemory(mem);  // add new memory to memory population
-      //   new_prog->MemSet(mem_t, mem);
-      // }
-
       new_team->AddProgram(new_prog);
       AddProgram(new_prog);  // add program to program population
     }
     AddTeam(new_team);  // ad team to team population
     _phyloGraph.insert(pair<long, phyloRecord>(new_team->id_, phyloRecord()));
     _phyloGraph[new_team->id_].gtime = 0;
+  }
+
+  // Fill teams from learner population
+  uniform_int_distribution<int> dis_team_size(
+      2, GetParam<int>("max_initial_team_size") - 1);
+  uniform_int_distribution<int> dis_programs(0, _L.size() - 1);
+  for (auto tm : _M) {
+    int team_size = dis_team_size(rngs_[TPG_SEED]);
+    while (tm->size() < team_size) tm->AddProgram(_L[dis_programs(rngs_[TPG_SEED])]);
   }
 
   oss << "InitTms Msz " << _M.size() << " Lsz " << _L.size() << " rSz "
