@@ -423,6 +423,7 @@ void EvalControl(TPG &tpg, EvalStruct &eval) {
     eval.n_prediction++;
     obs->Set(eval.task->GetObsVec(eval.partially_observable));
   }
+  MaybeAnimateStep(eval);
   delete obs;
 }
 
@@ -642,6 +643,7 @@ void EvalControlViz(TPG &tpg, EvalStruct &eval,
   for (auto p : teamUseMapPerTask[tpg.state_["active_task"]]) {
     p.second = p.second / eval.task->step;
   }
+  MaybeAnimateStep(eval);
   delete obs;
 }
 

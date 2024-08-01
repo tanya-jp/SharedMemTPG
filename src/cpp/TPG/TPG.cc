@@ -880,6 +880,9 @@ vector<team *> TPG::NormalizeScoresAndRankTeams(
           "This team should have a score for all tasks.");
     }
     tm->fit_ = *min_element(normalizedScores.begin(), normalizedScores.end());
+    // TODO(skelly): debug, test, and cleanup complexity record
+    // GetParam<int>("n_point_aux_double") - 2 refers to decision_instructions
+    tm->updateComplexityRecord(_teamMap, GetParam<int>("n_point_aux_double") - 1);
     vec.push_back(tm);
   }
   return vec;
@@ -896,8 +899,10 @@ void TPG::FindMultiTaskElites(vector<TaskEnv *> &tasks,
     auto teams_normed_scores =
         NormalizeScoresAndRankTeams(tasks, set, min_scores, max_scores);
     size_t n_elite_per_task = GetParam<int>("n_elite") / PS.size();
+    // sort(teams_normed_scores.begin(), teams_normed_scores.end(),
+    //      teamFitnessLexicalCompare());
     sort(teams_normed_scores.begin(), teams_normed_scores.end(),
-         teamFitnessLexicalCompare());
+         teamFitComplexLexCompare());
     size_t elite_count = 0;
     for (auto tm : teams_normed_scores) {
       if (!tm->elite(GetState("phase"))) {

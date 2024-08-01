@@ -230,7 +230,7 @@ class team {
                      set<team *, teamIdComp> &, long &, int,
                      vector<program *> &, vector<program *> &,
                      vector<set<long>> &,
-                    //  vector<set<memoryEigen *, memoryEigenIdComp>> &,
+                     //  vector<set<memoryEigen *, memoryEigenIdComp>> &,
                      vector<team *> &, mt19937 &, bool &);
   // double ncdBehaviouralDistance(team*, int);
   void Shuffle(mt19937 &rng) {
@@ -325,20 +325,23 @@ struct teamFitComplexLexCompare {
     if (!isEqual(t1->fit_, t2->fit_)) {
       t1->lastCompareFactor_ = 1;
       t2->lastCompareFactor_ = 1;
-      // cout <<"teamFitComplexLexCompare 0:" << t1->fit_ << " " << t2->fit_ <<
+      // cerr <<"teamFitComplexLexCompare 0:" << t1->fit_ << " " << t2->fit_ <<
       // endl;
       return t1->fit_ > t2->fit_;
-    } else if (!isnan(t1->runTimeComplexityIns()) &&
-               !isnan(t2->runTimeComplexityIns()) &&
-               !isEqual(t1->runTimeComplexityIns(),
-                        t2->runTimeComplexityIns())) {
-      // cout <<"teamFitComplexLexCompare 1:" << t1->runTimeComplexityIns()  <<
-      // " " << t2->runTimeComplexityIns() << endl;
-      return t1->runTimeComplexityIns() < t2->runTimeComplexityIns();
     } else {
-      // cout <<"teamFitComplexLexCompare 2:" << t1->id_ << " " << t2->id_ <<
-      // endl;
-      return t1->id_ > t2->id_;
+      auto t1_val = t1->runTimeComplexityIns_ + t1->runTimeComplexityTms_;
+      auto t2_val = t2->runTimeComplexityIns_ + t2->runTimeComplexityTms_;
+
+      if (!isnan(t1_val) && !isnan(t2_val) && !isEqual(t1_val, t2_val)) {
+        // cerr <<"teamFitComplexLexCompare 0:" << t1->fit_ << " " << t2->fit_
+        // <<
+        // endl;
+        return t1_val < t2_val;
+      } else {
+        // cerr <<"teamFitComplexLexCompare 2:" << t1->id_ << " " << t2->id_ <<
+        // endl;
+        return t1->id_ > t2->id_;
+      }
     }
   }
 };

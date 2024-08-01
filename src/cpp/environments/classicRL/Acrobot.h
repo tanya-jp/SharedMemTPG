@@ -160,11 +160,11 @@ class Acrobot : public TaskEnv {
     reward = -1.0;
 
     normalizeState(true);
-    return {-reward, 0.0};
+    return {reward, 0.0};
   }
 
   bool terminal() {
-    if (step >= max_step || (-cos(state[0]) - cos(state[1] + state[0]) > 1.0))
+    if (step >= max_step || (-cos(state[_theta1]) - cos(state[_theta2] + state[_theta1]) > AcrobotGoalPosition))
       terminalState = true;
     return terminalState;
   }
