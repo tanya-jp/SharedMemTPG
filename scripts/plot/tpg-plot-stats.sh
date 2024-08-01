@@ -85,7 +85,7 @@ do
 
    # echo $(tac $f | sed '/restart/q' | tac | grep "setElTmsMTA fm ${fitMode} " | grep " phs $phs " | head -n $maxT | awk -F " nP " '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-pCount-mt.rslt
    # echo $(tac $f | sed '/restart/q' | tac | grep "setElTmsMTA fm ${fitMode} " | grep " phs $phs " | head -n $maxT | awk -F " nT " '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-tCount-mt.rslt
-   # echo $(tac $f | sed '/restart/q' | tac | grep setElTmsMTA | grep " fm ${fitMode} "  | grep " phs $phs " | head -n $maxT | awk -F "age" '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-age-mt.rslt   
+   echo $(tac $f | sed '/restart/q' | tac | grep setElTmsMTA | grep " fm ${fitMode} "  | grep " phs $phs " | head -n $maxT | awk -F "age" '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-age-mt.rslt   
 
    #echo $(tac $f | sed '/restart/q' | tac | grep "setElTmsMTA fm ${fitMode} " | grep " phs $phs " | head -n $maxT | awk -F " mnProgIns " '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-meanPIns.rslt
    #echo $(tac $f | sed '/restart/q' | tac | grep "setElTmsMTA fm ${fitMode} " | grep " phs $phs " | head -n $maxT | awk -F " mnEProgIns " '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-meanEPIns.rslt
@@ -243,8 +243,8 @@ fi
 # Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-tCount-mt.rslt "Teams per Graph (best multi-task ${task})" "$winSize" "$(printf "%03d" $i)" 0
 # i=$((i+1))
 # Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-pCount-mt.rslt "Programs per Graph (best multi-task ${task})" "$winSize" "$(printf "%03d" $i)" 0
-# i=$((i+1))
-# Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-age-mt.rslt "Age of Graph (best multi-task ${task})" "$winSize" "$(printf "%03d" $i)" 0
+i=$((i+1))
+Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-age-mt.rslt "Age of Graph (best multi-task ${task})" "$winSize" "$(printf "%03d" $i)" 0
 #i=$((i+1))
 #Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-auxDouble_MTA-minThresh.rslt "minThreshold" "$winSize" "$(printf "%03d" $i)" 0
 #i=$((i+1))

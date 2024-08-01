@@ -645,8 +645,10 @@ team *TPG::TeamXover(vector<team *> &parents) {
 
 /******************************************************************************/
 void TPG::GenerateNewTeams() {
+  auto root_size_in = _Mroot.size();
   int new_teams_count = 0;
   auto task_power_set = PowerSet(GetState("n_task"));
+  // cerr << "task_power_set.size() " << task_power_set.size() << endl;
   int n_new_teams_per_set =
       (GetParam<int>("n_elite") * (GetParam<int>("n_elite_mul") - 1)) /
       task_power_set.size();
@@ -678,7 +680,7 @@ void TPG::GenerateNewTeams() {
     }
   }
   oss << "genTms t " << GetState("t_current") << " Msz " << _M.size() << " Lsz "
-      << _L.size() << " rSz " << _Mroot.size() << " mSz";
+      << _L.size() << " rSz " << _Mroot.size() << " rSzIn " << root_size_in << " mSz";
   for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
     oss << " " << _Memory[mem_t].size();
   }
@@ -893,12 +895,13 @@ void TPG::FindMultiTaskElites(vector<TaskEnv *> &tasks,
                               vector<vector<double>> &min_scores,
                               vector<vector<double>> &max_scores) {
   auto PS = PowerSet(GetState("n_task"));
+  size_t n_elite_per_task = GetParam<int>("n_elite") / PS.size();
   for (auto &set : PS) {
     if (GetState("phase") == _TRAIN_PHASE)
       task_set_map_[vecToStrNoSpace(set)].clear();  // TODO(skelly): check this
     auto teams_normed_scores =
         NormalizeScoresAndRankTeams(tasks, set, min_scores, max_scores);
-    size_t n_elite_per_task = GetParam<int>("n_elite") / PS.size();
+    
     // sort(teams_normed_scores.begin(), teams_normed_scores.end(),
     //      teamFitnessLexicalCompare());
     sort(teams_normed_scores.begin(), teams_normed_scores.end(),

@@ -62,9 +62,10 @@ n_generations 1000000
 mu_internal 0
 
 # number of elite teams
-n_elite 100
+# TODO(skelly): for your sanity, make this divisible by the number of tasks + 1
+n_elite 120
 
-# n_elite * n_elite_mul new teams are created each generation
+# n_elite * (n_elite_mul - 1) new teams are created each generation
 n_elite_mul 4
 
 # fitness proportional selection
@@ -73,7 +74,7 @@ fit_prop_select 0
 # which diversity mode to use, if available
 diversity_mode 0
 
-parent_select_roots_only 0
+parent_select_roots_only 1
 
 ################################################################################
 ## Team  parameters ############################################################
@@ -89,7 +90,7 @@ max_team_size 1000000
 max_teams_per_graph 1000000
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 0.999
+p_atomic 0.99
 
 # team mutation: probability of deleting program from team
 pmd 0.5
@@ -177,7 +178,7 @@ p_observation_buff_size 0.25
 
 # which tasks are active
 # rhs should be a single task name or a comma-separated list
-active_tasks Acrobot
+active_tasks Acrobot,CartCentering
 
 # use the partially-observable version of a task, if available
 # currently only available for calssic control tasks

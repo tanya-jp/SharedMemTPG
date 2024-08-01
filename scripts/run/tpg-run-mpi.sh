@@ -31,38 +31,8 @@ if [ $mode -eq 1 ]; then
    if ls replay/frames/* 1> /dev/null 2>&1; then rm replay/frames/*; fi
    if ls rplay/graphs/* 1> /dev/null 2>&1; then rm replay/graphs/*; fi
    
-   # Get fitness of best team
-   bestScore=$(grep setElTmsST  tpg.${seed}.*.std | \
-     grep " fm 0 " | \
-     grep " phs $phase " | \
-     awk -F"mnOut" '{print $2}' | \
-     awk -F "p${phase}t${replay_task}a0 " '{print $2}' | \
-     awk '{print $1}' | \
-     sort -n | \
-     uniq | \
-     tail -n 1)
-
-   # Get generation of best team
-   t_pickup=$(grep setElTmsST tpg.${seed}.*.std | \
-     grep " fm 0 " | \
-     grep "p${phase}t${replay_task}a0 ${bestScore} " | \
-     grep " phs $phase " | \
-     head -n 1 | \
-     awk -F" t " '{print $2}' | \
-     awk '{print $1}')
-   
-   # Get id of best team
-   tm=$(grep "setElTmsST" tpg.${seed}.*.std | \
-     grep " fm 0 " | \
-     grep "p${phase}t${replay_task}a0 ${bestScore} " | \
-     grep " phs $phase " | \
-     grep " t $t_pickup " | \
-     head -n 1 | \
-     awk -F"id" '{print $2}' | \
-     awk '{print $1}')
-
-  #    # Get fitness of best team
-  #  bestScore=$(grep setElTmsMTA  tpg.${seed}.*.std | \
+  #  # Get fitness of best team
+  #  bestScore=$(grep setElTmsST  tpg.${seed}.*.std | \
   #    grep " fm 0 " | \
   #    grep " phs $phase " | \
   #    awk -F"mnOut" '{print $2}' | \
@@ -73,7 +43,7 @@ if [ $mode -eq 1 ]; then
   #    tail -n 1)
 
   #  # Get generation of best team
-  #  t_pickup=$(grep setElTmsMTA tpg.${seed}.*.std | \
+  #  t_pickup=$(grep setElTmsST tpg.${seed}.*.std | \
   #    grep " fm 0 " | \
   #    grep "p${phase}t${replay_task}a0 ${bestScore} " | \
   #    grep " phs $phase " | \
@@ -82,7 +52,7 @@ if [ $mode -eq 1 ]; then
   #    awk '{print $1}')
    
   #  # Get id of best team
-  #  tm=$(grep "setElTmsMTA" tpg.${seed}.*.std | \
+  #  tm=$(grep "setElTmsST" tpg.${seed}.*.std | \
   #    grep " fm 0 " | \
   #    grep "p${phase}t${replay_task}a0 ${bestScore} " | \
   #    grep " phs $phase " | \
@@ -90,6 +60,36 @@ if [ $mode -eq 1 ]; then
   #    head -n 1 | \
   #    awk -F"id" '{print $2}' | \
   #    awk '{print $1}')
+
+   # Get fitness of best team
+   bestScore=$(grep setElTmsMTA  tpg.${seed}.*.std | \
+     grep " fm 0 " | \
+     grep " phs $phase " | \
+     awk -F"mnOut" '{print $2}' | \
+     awk -F "p${phase}t${replay_task}a0 " '{print $2}' | \
+     awk '{print $1}' | \
+     sort -n | \
+     uniq | \
+     tail -n 1)
+
+   # Get generation of best team
+   t_pickup=$(grep setElTmsMTA tpg.${seed}.*.std | \
+     grep " fm 0 " | \
+     grep "p${phase}t${replay_task}a0 ${bestScore} " | \
+     grep " phs $phase " | \
+     head -n 1 | \
+     awk -F" t " '{print $2}' | \
+     awk '{print $1}')
+   
+   # Get id of best team
+   tm=$(grep "setElTmsMTA" tpg.${seed}.*.std | \
+     grep " fm 0 " | \
+     grep "p${phase}t${replay_task}a0 ${bestScore} " | \
+     grep " phs $phase " | \
+     grep " t $t_pickup " | \
+     head -n 1 | \
+     awk -F"id" '{print $2}' | \
+     awk '{print $1}')
    
    echo "Fitness:$bestScore Generation:$t_pickup Team:$tm"
    
