@@ -74,7 +74,7 @@ fit_prop_select 0
 # which diversity mode to use, if available
 diversity_mode 0
 
-parent_select_roots_only 1
+parent_select_roots_only 0
 
 ################################################################################
 ## Team  parameters ############################################################
