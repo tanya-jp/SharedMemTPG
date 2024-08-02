@@ -129,7 +129,7 @@ skip_introns 1
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 2,2
+n_input 2,4
 
 # max initial program size
 max_initial_prog_size 10
@@ -142,7 +142,7 @@ max_prog_size 1000000
 memory_indices 8
 
 # dimensionality for vector & matrix memory
-memory_size 2
+memory_size 4
 
 # Observations are stored in a buffer with this time window.
 # This is initially set to the same size as memory_indices.
