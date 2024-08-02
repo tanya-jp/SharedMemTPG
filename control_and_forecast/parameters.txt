@@ -63,10 +63,10 @@ mu_internal 0
 
 # number of elite teams
 # TODO(skelly): for your sanity, make this divisible by the number of tasks + 1
-n_elite 150
+n_elite 90
 
 # n_elite * (n_elite_mul - 1) new teams are created each generation
-n_elite_mul 5
+n_elite_mul 3
 
 # fitness proportional selection
 fit_prop_select 0
