@@ -393,6 +393,8 @@ void TPG::ReadParameters(string file_name,
       _ops[instruction::SCALAR_VECTOR_ASSIGN_OP_] = true;
     if (outcome_fields[0] == "SCALAR_MATRIX_ASSIGN_OP")
       _ops[instruction::SCALAR_MATRIX_ASSIGN_OP_] = true;
+    if (outcome_fields[0] == "OBS_BUFF_SLICE_OP")
+      _ops[instruction::OBS_BUFF_SLICE_OP_] = true;  
 
     // TODO(skelly): make types part of parameter file
     // string parameters are "hard coded" here

@@ -129,7 +129,7 @@ skip_introns 1
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 2,4
+n_input 2,1
 
 # max initial program size
 max_initial_prog_size 10
@@ -142,7 +142,7 @@ max_prog_size 1000000
 memory_indices 8
 
 # dimensionality for vector & matrix memory
-memory_size 4
+memory_size 8
 
 # Observations are stored in a buffer with this time window.
 # This is initially set to the same size as memory_indices.
@@ -170,7 +170,7 @@ p_bid_xover 0.0
 bid_mu_const_stddev 0.05
 
 # program variation: probability of changing observation_buff_size
-p_observation_buff_size 0.25
+p_observation_buff_size 0.0
 
 ################################################################################
 ## General Task Parameters #####################################################
@@ -237,13 +237,13 @@ SCALAR_EXP_OP
 SCALAR_LOG_OP
 SCALAR_HEAVYSIDE_OP
 SCALAR_CONDITIONAL_OP
-SCALAR_POW_OP
-SCALAR_SQR_OP
-SCALAR_CUBE_OP
+####SCALAR_POW_OP
+####SCALAR_SQR_OP
+####SCALAR_CUBE_OP
 SCALAR_TANH_OP
-SCALAR_SQRT_OP
-#SCALAR_CONST_SET_OP
-SCALAR_MIN_OP
+####SCALAR_SQRT_OP
+####SCALAR_CONST_SET_OP
+####SCALAR_MIN_OP
 SCALAR_MAX_OP
 
 # vector #########################
@@ -259,12 +259,13 @@ VECTOR_DIFF_OP
 VECTOR_PRODUCT_OP
 VECTOR_DIVISION_OP
 VECTOR_INNER_PRODUCT_OP
-VECTOR_MIN_OP
+####VECTOR_MIN_OP
 VECTOR_MAX_OP
 VECTOR_MEAN_OP
 VECTOR_ST_DEV_OP
-#VECTOR_CONST_SET_OP
+####VECTOR_CONST_SET_OP
 SCALAR_VECTOR_ASSIGN_OP
+OBS_BUFF_SLICE_OP
  
 # matrix #########################
 VECTOR_OUTER_PRODUCT_OP
@@ -284,12 +285,12 @@ MATRIX_PRODUCT_OP
 MATRIX_DIVISION_OP
 MATRIX_MATRIX_PRODUCT_OP
 MATRIX_MIN_OP
-MATRIX_MAX_OP
+####MATRIX_MAX_OP
 MATRIX_MEAN_OP
 MATRIX_ROW_MEAN_OP
 MATRIX_ROW_ST_DEV_OP
 MATRIX_ST_DEV_OP
-#MATRIX_CONST_SET_OP
+####MATRIX_CONST_SET_OP
 SCALAR_MATRIX_ASSIGN_OP
 
 ## noise ##########################

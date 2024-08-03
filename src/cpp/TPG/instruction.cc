@@ -361,6 +361,11 @@ void instruction::SetupOps() {
       memoryEigen::SCALAR_TYPE, memoryEigen::MATRIX_TYPE, memoryEigen::NA_TYPE};
   op_list_[SCALAR_MATRIX_ASSIGN_OP_] =
       (&instruction::ExecuteScalarMatrixAssignOp);
+
+  op_mem_types_[OBS_BUFF_SLICE_OP_] =
+      {memoryEigen::VECTOR_TYPE, memoryEigen::VECTOR_TYPE,
+       memoryEigen::NA_TYPE};
+  op_list_[OBS_BUFF_SLICE_OP_] = {&instruction::ExecuteObsBuffSliceOp};
 }
 
 // constructor
@@ -443,9 +448,11 @@ void instruction::Mutate(bool randomize, vector<bool> &legal_ops,
         MutateInt(op_, 0, int(legal_ops.size() - 1), rng);
       } while (!legal_ops[op_]);
     } else if (i == 4) {  // Change in1 index.
-      MutateInt(in1Idx_, 0, max(memIndices_ - 1, observation_buff_size - 1), rng);
+      MutateInt(in1Idx_, 0, max(memIndices_ - 1, observation_buff_size - 1),
+                rng);
     } else if (i == 5) {  // Change in2 index.
-      MutateInt(in2Idx_, 0, max(memIndices_ - 1, observation_buff_size - 1), rng);
+      MutateInt(in2Idx_, 0, max(memIndices_ - 1, observation_buff_size - 1),
+                rng);
     } else if (i == 6) {  // Change in3 index. Used as index to vector or matrix
                           // memory.
       MutateInt(in3Idx_, 0, memory_size_ - 1, rng);
@@ -455,4 +462,5 @@ void instruction::Mutate(bool randomize, vector<bool> &legal_ops,
     }
   }
   BoundInputIndices(observation_buff_size - 1);
+  if (op_ == OBS_BUFF_SLICE_OP_) in1Src_  = 1;
 }

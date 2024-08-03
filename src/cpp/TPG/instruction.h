@@ -83,8 +83,9 @@ class instruction {
   static const int SCALAR_SQRT_OP_ = 69;
   static const int SCALAR_VECTOR_ASSIGN_OP_ = 70;
   static const int SCALAR_MATRIX_ASSIGN_OP_ = 71;
+  static const int OBS_BUFF_SLICE_OP_ = 73;
 
-  static const int NUM_OP = 72;
+  static const int NUM_OP = 74;
 
   static const vector<double> constants_;
   mt19937 rng_;
@@ -198,7 +199,7 @@ class instruction {
   inline size_t GetInType(int i) const { return op_mem_types_[op_][i + 1]; }
   inline bool IsObs(int i) const {
     return (GetInType(i) != memoryEigen::NA_TYPE) &&
-    (i == 0 ? in1Src_ == 1 : in2Src_ == 1);
+           (i == 0 ? in1Src_ == 1 : in2Src_ == 1);
   }
   inline bool IsMemoryRef(int i) const {
     return !IsObs(i) && GetInType(i) != memoryEigen::NA_TYPE;
@@ -250,10 +251,11 @@ class instruction {
 
     if (dbg) {
       cerr << std::setprecision(std::numeric_limits<double>::digits10 + 1)
-           << std::fixed << "s" << outIdx_ << " = s" << in1Idx_ << (IsObs(0) ? "i" : "") << " + " << "s"
-           << in2Idx_ << (IsObs(1) ? "i" : "") << " | " << std::fixed << scalar_in1_ << " + "
-           << scalar_in2_ << " = " << out_->working_memory_[outIdx_](0, 0)
-           << endl;
+           << std::fixed << "s" << outIdx_ << " = s" << in1Idx_
+           << (IsObs(0) ? "i" : "") << " + " << "s" << in2Idx_
+           << (IsObs(1) ? "i" : "") << " | " << std::fixed << scalar_in1_
+           << " + " << scalar_in2_ << " = "
+           << out_->working_memory_[outIdx_](0, 0) << endl;
     }
   }
 
@@ -262,10 +264,11 @@ class instruction {
 
     if (dbg) {
       cerr << std::setprecision(std::numeric_limits<double>::digits10 + 1)
-           << std::fixed << "s" << outIdx_ << " = s" << in1Idx_ << (IsObs(0) ? "i" : "") << " - " << "s"
-           << in2Idx_ << (IsObs(1) ? "i" : "") << " | " << std::fixed << scalar_in1_ << " - "
-           << scalar_in2_ << " = " << out_->working_memory_[outIdx_](0, 0)
-           << endl;
+           << std::fixed << "s" << outIdx_ << " = s" << in1Idx_
+           << (IsObs(0) ? "i" : "") << " - " << "s" << in2Idx_
+           << (IsObs(1) ? "i" : "") << " | " << std::fixed << scalar_in1_
+           << " - " << scalar_in2_ << " = "
+           << out_->working_memory_[outIdx_](0, 0) << endl;
     }
   }
 
@@ -274,10 +277,11 @@ class instruction {
 
     if (dbg) {
       cerr << std::setprecision(std::numeric_limits<double>::digits10 + 1)
-           << std::fixed << "s" << outIdx_ << " = s" << in1Idx_ << (IsObs(0) ? "i" : "") << " * " << "s"
-           << in2Idx_ << (IsObs(1) ? "i" : "") << " | " << std::fixed << scalar_in1_ << " * "
-           << scalar_in2_ << " = " << out_->working_memory_[outIdx_](0, 0)
-           << endl;
+           << std::fixed << "s" << outIdx_ << " = s" << in1Idx_
+           << (IsObs(0) ? "i" : "") << " * " << "s" << in2Idx_
+           << (IsObs(1) ? "i" : "") << " | " << std::fixed << scalar_in1_
+           << " * " << scalar_in2_ << " = "
+           << out_->working_memory_[outIdx_](0, 0) << endl;
     }
   }
 
@@ -329,9 +333,9 @@ class instruction {
     out_->working_memory_[outIdx_](0, 0) = std::cos(scalar_in1_);
 
     if (dbg) {
-      cerr << "s" << outIdx_ << " = cos(s" << in1Idx_ << (IsObs(0) ? "i" : "") << ") | " << "cos("
-           << scalar_in1_ << ") = " << out_->working_memory_[outIdx_](0, 0)
-           << endl;
+      cerr << "s" << outIdx_ << " = cos(s" << in1Idx_ << (IsObs(0) ? "i" : "")
+           << ") | " << "cos(" << scalar_in1_
+           << ") = " << out_->working_memory_[outIdx_](0, 0) << endl;
     }
   }
 
@@ -878,6 +882,27 @@ class instruction {
     out_->working_memory_[outIdx_](0, 0) =
         in1_->working_memory_[in1Idx_](in3Idx_, in4Idx_);
     if (dbg) {
+    }
+  }
+
+  // TODO(skelly): warning: this op assumes memory_indices == memory_size
+  // so, can't evolve obs buff size
+  inline void ExecuteObsBuffSliceOp(bool dbg) {
+    for (size_t i = 0; i < in1_->working_memory_.size(); i++) {
+      out_->working_memory_[outIdx_](i, 0) =
+          in1_->working_memory_[i](in3Idx_, 0);
+    }
+    if (dbg) {
+      // TO(skelly): improve debug format
+      cerr << "from ";
+      for (size_t i = 0; i < in1_->working_memory_.size(); i++) {
+        cerr << " " << in1_->working_memory_[i](in3Idx_, 0);
+      }
+      cerr << " To:";
+      for (size_t i = 0; i < out_->working_memory_.size(); i++) {
+        cerr << " " << out_->working_memory_[outIdx_](i, 0);
+      }
+      cerr << endl;
     }
   }
 };
