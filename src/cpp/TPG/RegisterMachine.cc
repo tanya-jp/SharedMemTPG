@@ -43,6 +43,7 @@ RegisterMachine::RegisterMachine(
   SetupMemory(std::any_cast<int>(params["memory_indices"]),
               observation_buff_size_,
               std::any_cast<int>(params["memory_size"]));
+  ResizeMemory(); // TODO(skelly): clean this           
 }
 
 /******************************************************************************
@@ -68,6 +69,7 @@ RegisterMachine::RegisterMachine(
   SetupMemory(std::any_cast<int>(params["memory_indices"]),
               observation_buff_size_,
               std::any_cast<int>(params["memory_size"]));
+  ResizeMemory(); // TODO(skelly): clean this           
 }
 /******************************************************************************
  * Create RegisterMachine from checkpoint file
@@ -93,6 +95,7 @@ RegisterMachine::RegisterMachine(
   SetupMemory(std::any_cast<int>(params["memory_indices"]),
               observation_buff_size_,
               std::any_cast<int>(params["memory_size"]));
+  ResizeMemory(); // TODO(skelly): clean this            
 }
 
 /******************************************************************************/
@@ -253,6 +256,7 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
                         rng);
       changed = true;
     }
+    for (auto istr : bid_) istr->BoundMemoryIndices(observation_buff_size_);
   }
 }
 
@@ -331,6 +335,20 @@ void RegisterMachine::SetupMemory(size_t memoryIndices,
   }
 }
 
+
+void RegisterMachine::ResizeMemory() {
+  for (auto memory : observation_memory_buff_) {
+    memory->memoryIndices_ = observation_buff_size_;
+    memory->memory_size_ = observation_buff_size_;
+    memory->ResizeMemory();
+  }
+  for (auto memory : privateMemory_) {
+    memory->memory_size_ = observation_buff_size_;
+    memory->ResizeMemory();
+  }
+  for (auto istr : bid_) istr->BoundMemoryIndices(observation_buff_size_);
+}
+
 /******************************************************************************/
 void RegisterMachine::MutateObsBuffSize(size_t max_observation_buff_size,
                                         mt19937 &rng) {
@@ -339,10 +357,5 @@ void RegisterMachine::MutateObsBuffSize(size_t max_observation_buff_size,
   do {
     observation_buff_size_ = dis(rng);
   } while (observation_buff_size_ == prev);
-
-  for (auto memory : observation_memory_buff_) {
-    memory->memoryIndices_ = observation_buff_size_;
-    memory->resizeMemory();
-  }
-  for (auto istr : bid_) istr->BoundInputIndices(observation_buff_size_ - 1);
+  ResizeMemory();
 }

@@ -401,14 +401,17 @@ instruction::instruction(instruction &i) {
 }
 
 // Protect input indices from ranges larger than memory data structures.
-void instruction::BoundInputIndices(int observation_buff_size) {
+void instruction::BoundMemoryIndices(int observation_buff_size) {   
   for (int in = 0; in < 2; in++) {
     if (IsObs(in)) {
-      SetInIdx(in, GetInIdx(in) % max(1, observation_buff_size));
+      SetInIdx(in, GetInIdx(in) % max(1, observation_buff_size - 1));
     } else {
       SetInIdx(in, GetInIdx(in) % memIndices_);
     }
   }
+  memory_size_ = observation_buff_size;
+  in3Idx_ = in3Idx_ % (max(1, memory_size_ - 1));
+  in4Idx_ = in4Idx_ % (max(1, memory_size_ - 1));
 }
 
 void instruction::Mutate(bool randomize, vector<bool> &legal_ops,
@@ -461,6 +464,6 @@ void instruction::Mutate(bool randomize, vector<bool> &legal_ops,
       MutateInt(in4Idx_, 0, memory_size_ - 1, rng);
     }
   }
-  BoundInputIndices(observation_buff_size - 1);
+  BoundMemoryIndices(observation_buff_size);
   if (op_ == OBS_BUFF_SLICE_OP_) in1Src_  = 1;
 }

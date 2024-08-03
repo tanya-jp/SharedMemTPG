@@ -81,7 +81,7 @@ parent_select_roots_only 0
 ################################################################################
 
 # initial team size
-max_initial_team_size 10
+max_initial_team_size 5
 
 # max team size
 max_team_size 1000000
@@ -129,7 +129,7 @@ skip_introns 1
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 2,1
+n_input 1,1
 
 # max initial program size
 max_initial_prog_size 10
@@ -146,7 +146,7 @@ memory_size 8
 
 # Observations are stored in a buffer with this time window.
 # This is initially set to the same size as memory_indices.
-max_observation_buff_size 50
+max_observation_buff_size 32
 
 # program variation: probability of changing a random instruction
 p_bid_mutate 1.0
@@ -170,7 +170,7 @@ p_bid_xover 0.0
 bid_mu_const_stddev 0.05
 
 # program variation: probability of changing observation_buff_size
-p_observation_buff_size 0.0
+p_observation_buff_size 0.5
 
 ################################################################################
 ## General Task Parameters #####################################################
@@ -178,7 +178,7 @@ p_observation_buff_size 0.0
 
 # which tasks are active
 # rhs should be a single task name or a comma-separated list
-active_tasks Acrobot,Mackey
+active_tasks Mackey,Sunspots
 
 # use the partially-observable version of a task, if available
 # currently only available for calssic control tasks

@@ -85,7 +85,7 @@ class memoryEigen {
   inline int RefsPolicy() { return nrefs_policy_; }
   inline void RefsPolicy(int i) { nrefs_policy_ = i; }
   inline int RefsPolicyInc() { return ++nrefs_policy_; }
-  void resizeMemory() {
+  void ResizeMemory() {
     working_memory_.resize(memoryIndices_);
     const_memory_.resize(memoryIndices_);
     for (size_t i = 0; i < memoryIndices_; i++) {
@@ -113,7 +113,7 @@ class memoryEigen {
     type_ = type;
     memoryIndices_ = memoryIndices;
     memory_size_ = memory_size;
-    resizeMemory();
+    ResizeMemory();
     ClearWorking();
     ClearConst();
     ClearActive();
@@ -128,7 +128,7 @@ class memoryEigen {
     type_ = type;
     memoryIndices_ = std::any_cast<int>(params["memory_indices"]);
     memory_size_ = std::any_cast<int>(params["memory_size"]);
-    resizeMemory();
+    ResizeMemory();
     ClearWorking();
     ClearConst();
     ClearActive();
@@ -143,7 +143,7 @@ class memoryEigen {
     type_ = type;
     memoryIndices_ = memoryIndices;
     memory_size_ = memory_size;
-    resizeMemory();
+    ResizeMemory();
     ClearWorking();
     ClearConst();
     ClearActive();
@@ -157,7 +157,7 @@ class memoryEigen {
     type_ = m->type();
     memoryIndices_ = m->indexSize();
     memory_size_ = m->memory_size_;
-    resizeMemory();
+    ResizeMemory();
     ClearWorking();
     ClearConst();
     ClearActive();

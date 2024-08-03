@@ -223,6 +223,9 @@ class instruction {
       //      << endl;
 
       if (primary_obs_type == memoryEigen::VECTOR_TYPE) {
+        // cerr << "check " << *index << " " << in3Idx_ << ":" <<
+        // observation_memory_buff[memoryEigen::VECTOR_TYPE]->working_memory_[*index].rows()
+        // << endl;
         *scalar = observation_memory_buff[memoryEigen::VECTOR_TYPE]
                       ->working_memory_[*index](in3Idx_, 0);
       } else {
@@ -234,14 +237,16 @@ class instruction {
     }
   }
 
-  void BoundInputIndices(int observation_buff_size);
+  void BoundMemoryIndices(int observation_buff_size);
 
   void MutateInt(int& i, int min, int max, mt19937& rng) {
-    auto dis = std::uniform_int_distribution<>(min, max);
-    auto prev = i;
-    do {
-      i = dis(rng);
-    } while (i == prev);
+    if (min != max) {
+      auto dis = std::uniform_int_distribution<>(min, max);
+      auto prev = i;
+      do {
+        i = dis(rng);
+      } while (i == prev);
+    }
   }
 
   /* Operation implementations ************************************************/
@@ -885,13 +890,14 @@ class instruction {
     }
   }
 
-  // TODO(skelly): warning: this op assumes memory_indices == memory_size
+  // TODO(skelly): warning: this op assumes obs_buff == memory_size
   // so, can't evolve obs buff size
   inline void ExecuteObsBuffSliceOp(bool dbg) {
     for (size_t i = 0; i < in1_->working_memory_.size(); i++) {
       out_->working_memory_[outIdx_](i, 0) =
           in1_->working_memory_[i](in3Idx_, 0);
     }
+
     if (dbg) {
       // TO(skelly): improve debug format
       cerr << "from ";
