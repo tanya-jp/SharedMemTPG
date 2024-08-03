@@ -2424,6 +2424,7 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
         in->in2Idx_ = stringToInt(instructionString[5]);
         in->in3Idx_ = stringToInt(instructionString[6]);
         in->in4Idx_ = stringToInt(instructionString[7]);
+        in->memory_size_ = stringToInt(instructionString[8]);
         bid.push_back(in);
       }
       l = new RegisterMachine(gtime, action, stateful, params_, id, nrefs, observation_buff_size, bid);

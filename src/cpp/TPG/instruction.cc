@@ -17,6 +17,7 @@ string instruction::checkpoint() {
   oss << in2Idx_ << "_";
   oss << in3Idx_ << "_";
   oss << in4Idx_ << "_";
+  oss << memory_size_ << "_";
   return oss.str();
 }
 
@@ -379,7 +380,6 @@ instruction::instruction(std::unordered_map<string, std::any> &params,
 // copy construction
 instruction::instruction(instruction &i) {
   // TODO(skelly): check which things actually need to be copied
-  memory_size_ = i.memory_size_;
   memory_size_ = i.memory_size_;
   memIndices_ = i.memIndices_;
   out_ = i.out_;

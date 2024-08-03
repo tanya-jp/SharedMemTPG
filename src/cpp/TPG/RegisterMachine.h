@@ -37,7 +37,7 @@ class RegisterMachine : public program {
   ~RegisterMachine();
   // Mutate bid
   void Mutate(std::unordered_map<std::string, std::any> &, mt19937 &, std::vector<bool> &);
-  void SetupMemory(size_t memoryIndices, int observation_buff_size, size_t memory_size);
+  void SetupMemory(size_t memoryIndices);
   void MutateObsBuffSize(size_t max_observation_buff_size, mt19937& rng);
   void ResizeMemory();
   inline int Size() { return bid_.size(); }

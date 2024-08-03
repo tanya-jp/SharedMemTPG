@@ -66,7 +66,7 @@ mu_internal 0
 n_elite 180
 
 # n_elite * (n_elite_mul - 1) new teams are created each generation
-n_elite_mul 5
+n_elite_mul 3
 
 # fitness proportional selection
 fit_prop_select 0
@@ -90,7 +90,7 @@ max_team_size 1000000
 max_teams_per_graph 1000000
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 0.999
+p_atomic 0.9995
 
 # team mutation: probability of deleting program from team
 pmd 0.5
@@ -170,7 +170,7 @@ p_bid_xover 0.0
 bid_mu_const_stddev 0.05
 
 # program variation: probability of changing observation_buff_size
-p_observation_buff_size 0.5
+p_observation_buff_size 0.25
 
 ################################################################################
 ## General Task Parameters #####################################################
@@ -178,7 +178,7 @@ p_observation_buff_size 0.5
 
 # which tasks are active
 # rhs should be a single task name or a comma-separated list
-active_tasks Mackey,Sunspots
+active_tasks Mackey
 
 # use the partially-observable version of a task, if available
 # currently only available for calssic control tasks

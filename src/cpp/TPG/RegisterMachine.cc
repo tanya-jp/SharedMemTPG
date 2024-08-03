@@ -1,6 +1,5 @@
 #include "RegisterMachine.h"
 
-/******************************************************************************/
 string RegisterMachine::checkpoint(bool effective_only) {
   ostringstream oss;
   oss << "RegisterMachine:" << id_ << ":" << gtime_ << ":" << action_ << ":"
@@ -11,9 +10,7 @@ string RegisterMachine::checkpoint(bool effective_only) {
   return oss.str();
 }
 
-/******************************************************************************
- * Create arbitrary RegisterMachine
- */
+// Create arbitrary RegisterMachine
 RegisterMachine::RegisterMachine(
     long gtime, long action, std::unordered_map<std::string, std::any> &params,
     long id, mt19937 &rng, std::vector<bool> &legalOps) {
@@ -23,32 +20,21 @@ RegisterMachine::RegisterMachine(
   id_ = id;
   key_ = 0;
   nrefs_ = 0;
-
   observation_buff_size_ = std::any_cast<int>(params["memory_indices"]);
-
-  instruction *in;
-
   uniform_real_distribution<double> disR(0.0, 1.0);
   uniform_int_distribution<int> disP(
       1, std::any_cast<int>(params["max_initial_prog_size"]));
-  int progSize = disP(rng);
-
-  for (int i = 0; i < progSize; i++) {
-    in = new instruction(params, rng);
-    in->Mutate(true, legalOps, std::any_cast<int>(params["memory_indices"]),
-               rng);
+  int prog_size = disP(rng);
+  for (int i = 0; i < prog_size; i++) {
+    auto in = new instruction(params, rng);
+    in->Mutate(true, legalOps, observation_buff_size_, rng);
     bid_.push_back(in);
   }
   op_counts_.resize(instruction::NUM_OP);
-  SetupMemory(std::any_cast<int>(params["memory_indices"]),
-              observation_buff_size_,
-              std::any_cast<int>(params["memory_size"]));
-  ResizeMemory(); // TODO(skelly): clean this           
+  SetupMemory(std::any_cast<int>(params["memory_indices"]));
 }
 
-/******************************************************************************
- * Create RegisterMachine from another RegisterMachine
- */
+// Create RegisterMachine from another RegisterMachine
 RegisterMachine::RegisterMachine(
     long gtime, RegisterMachine &plr,
     std::unordered_map<std::string, std::any> &params, long id) {
@@ -58,24 +44,16 @@ RegisterMachine::RegisterMachine(
   key_ = plr.key();
   bid_val_ = -(numeric_limits<double>::max());
   nrefs_ = 0;
-
   stateful_ = plr.stateful_;
   observation_buff_size_ = plr.observation_buff_size_;
 
   for (auto initer = plr.bid_.begin(); initer != plr.bid_.end(); initer++)
     bid_.push_back(new instruction(**initer));
-
   op_counts_.resize(instruction::NUM_OP);
-  SetupMemory(std::any_cast<int>(params["memory_indices"]),
-              observation_buff_size_,
-              std::any_cast<int>(params["memory_size"]));
-  ResizeMemory(); // TODO(skelly): clean this           
+  SetupMemory(std::any_cast<int>(params["memory_indices"]));
 }
-/******************************************************************************
- * Create RegisterMachine from checkpoint file
- */
-// TODO(skelly): observation_buff_sie set separately, maybe put all args in
-// struct?
+
+// Create RegisterMachine from checkpoint file
 RegisterMachine::RegisterMachine(
     long gtime, long action, int stateful,
     std::unordered_map<std::string, std::any> &params, long id, long nrefs,
@@ -86,34 +64,24 @@ RegisterMachine::RegisterMachine(
   id_ = id;
   key_ = 0;
   nrefs_ = nrefs;
-
   stateful_ = stateful > 0 ? true : false;
   observation_buff_size_ = observation_buff_size;
-
   op_counts_.resize(instruction::NUM_OP);
-
-  SetupMemory(std::any_cast<int>(params["memory_indices"]),
-              observation_buff_size_,
-              std::any_cast<int>(params["memory_size"]));
-  ResizeMemory(); // TODO(skelly): clean this            
+  SetupMemory(std::any_cast<int>(params["memory_indices"]));
 }
 
-/******************************************************************************/
+
 RegisterMachine::~RegisterMachine() {
   for (auto instr : bid_) delete instr;
-  bid_.clear();
   for (auto memory : privateMemory_) delete memory;
-  privateMemory_.clear();
-
   for (auto memory : observation_memory_buff_) delete memory;
-  observation_memory_buff_.clear();
 }
 
-// TODO(skelly): confirm this function works as expecte.
+// TODO(skelly): confirm this function works as expected.
 void RegisterMachine::MarkFeatures(instruction *istr, int in) {
   // Setting input memory pointer is required for MarkIntrons.
   istr->SetInMem(in, observation_memory_buff_[istr->GetInType(in)]);
-  
+
   features_.clear();
   if (istr->GetInType(in) == memoryEigen::SCALAR_TYPE) {
     features_.insert(istr->GetInIdx(in));
@@ -134,11 +102,9 @@ void RegisterMachine::MarkFeatures(instruction *istr, int in) {
   }
 }
 
-/******************************************************************************/
+
 void RegisterMachine::MarkIntrons(
     std::unordered_map<std::string, std::any> &params) {
-  // fill(op_counts_.begin(), op_counts_.end(), 0);  // Count occurance of each op.
-
   // Meff keeps track of which memories are effective, i.e. used in the program.
   // Meff maps [memory type][index]->true/false.
   map<int, vector<bool> > Meff;
@@ -155,7 +121,6 @@ void RegisterMachine::MarkIntrons(
   // Mark continuous output memory.
   if (std::any_cast<int>(params["continuous_output"]))
     Meff[memoryEigen::SCALAR_TYPE][1] = true;
-  
 
   // backward pass to find effective instructions when stateless
   std::vector<instruction *> bid_effective_stateless;
@@ -164,16 +129,18 @@ void RegisterMachine::MarkIntrons(
     if (Meff[istr->GetOutType()][istr->outIdx_]) {
       bid_effective_stateless.push_back(istr);
       for (int in = 0; in < 2; in++) {
-        if (istr->IsMemoryRef(in)) 
+        if (istr->IsMemoryRef(in))
           Meff[istr->GetInType(in)][istr->GetInIdx(in)] = true;
       }
     }
   }
- 
+
+
   // TODO(skelly): Is this the most efficient method? Currently O(n^2)
   for (size_t t = 0; t < bid_.size(); t++) {
     bidEffective_.clear();
-    std::fill(op_counts_.begin(), op_counts_.end(), 0);  // Count occurance of each op.
+    std::fill(op_counts_.begin(), op_counts_.end(),
+              0);  // Count occurance of each op.
     for (auto istr : bid_) {
       if (Meff[istr->GetOutType()][istr->outIdx_] ||
           std::find(bid_effective_stateless.begin(),
@@ -193,9 +160,9 @@ void RegisterMachine::MarkIntrons(
   }
 }
 
-/******************************************************************************/
+
 void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
-                            mt19937 &rng, vector<bool> &legalOps) {
+                             mt19937 &rng, vector<bool> &legalOps) {
   uniform_real_distribution<> dis_real(0, 1.0);
   bool changed = false;
 
@@ -260,6 +227,7 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
   }
 }
 
+
 // TODO(skelly): This functions currently assumes obs is a vector of state vars
 void RegisterMachine::CopyObservationToMemoryBuff(state *obs) {
   // Memory size is the same for SCALAR, VECTOR, MATRIX
@@ -285,10 +253,9 @@ void RegisterMachine::CopyObservationToMemoryBuff(state *obs) {
   AddToInputMemoryBuff(matrix_mat, memoryEigen::MATRIX_TYPE);
 }
 
-/******************************************************************************/
-double RegisterMachine::Run(state *obs, int &time_step,
-                            const size_t &graph_depth, bool &verbose) {      
 
+double RegisterMachine::Run(state *obs, int &time_step,
+                            const size_t &graph_depth, bool &verbose) {
   // Clear working memory prior to execution, making this program stateless
   if (!stateful_) ClearWorking();
 
@@ -298,7 +265,7 @@ double RegisterMachine::Run(state *obs, int &time_step,
     istr->out_ = privateMemory_[istr->GetOutType()];
     for (size_t in = 0; in < 2; in++) {
       // Check is this input is used in the operation.
-      if (istr->GetInType(in) != memoryEigen::NA_TYPE) {  
+      if (istr->GetInType(in) != memoryEigen::NA_TYPE) {
         if (istr->IsMemoryRef(in)) {
           istr->SetInMem(in, privateMemory_[istr->GetInType(in)]);
           // Input is a memory ref. Track read time for temporal memory.
@@ -323,18 +290,15 @@ double RegisterMachine::Run(state *obs, int &time_step,
   return privateMemory_[memoryEigen::SCALAR_TYPE]->working_memory_[0](0, 0);
 }
 
-/******************************************************************************/
-void RegisterMachine::SetupMemory(size_t memoryIndices,
-                                  int observation_buff_size,
-                                  size_t memory_size) {
+
+void RegisterMachine::SetupMemory(size_t memoryIndices) {
   for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
     privateMemory_.push_back(
-        new memoryEigen(-1, mem_t, memoryIndices, memory_size));
-    observation_memory_buff_.push_back(
-        new memoryEigen(-1, mem_t, observation_buff_size, memory_size));
+        new memoryEigen(-1, mem_t, memoryIndices, observation_buff_size_));
+    observation_memory_buff_.push_back(new memoryEigen(
+        -1, mem_t, observation_buff_size_, observation_buff_size_));
   }
 }
-
 
 void RegisterMachine::ResizeMemory() {
   for (auto memory : observation_memory_buff_) {
@@ -349,7 +313,7 @@ void RegisterMachine::ResizeMemory() {
   for (auto istr : bid_) istr->BoundMemoryIndices(observation_buff_size_);
 }
 
-/******************************************************************************/
+
 void RegisterMachine::MutateObsBuffSize(size_t max_observation_buff_size,
                                         mt19937 &rng) {
   std::uniform_int_distribution<> dis(1, max_observation_buff_size - 1);
