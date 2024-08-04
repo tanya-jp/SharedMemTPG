@@ -328,5 +328,5 @@ Rscript  $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-gt-Rsize.rslt "Roo
 
 pdfunite 0*.pdf ${wd}_p${phs}.pdf
 rm 0*.pdf
-rm *rslt
+# rm *rslt
 
