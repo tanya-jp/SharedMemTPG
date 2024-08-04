@@ -63,7 +63,7 @@ mu_internal 0
 
 # number of elite teams
 # TODO(skelly): for your sanity, make this divisible by the number of tasks + 1
-n_elite 20
+n_elite 200
 
 # n_elite * (n_elite_mul - 1) new teams are created each generation
 n_elite_mul 5
@@ -74,19 +74,19 @@ fit_prop_select 0
 # which diversity mode to use, if available
 diversity_mode 0
 
-parent_select_roots_only 0
+parent_select_roots_only 1
 
 ################################################################################
 ## Team  parameters ############################################################
 ################################################################################
 
 # initial team size
-max_initial_team_size 5
+max_initial_team_size 10
 
 # max team size
 max_team_size 1000000
 
-# max teams per graph
+# max teams per graph00
 max_teams_per_graph 1000000
 
 # when changing action pointer, probability of selecting atomic action
@@ -96,22 +96,22 @@ p_atomic 1.0
 pmd 0.5
 
 # team mtation: probability of adding program to team
-pma 0.3
+pma 0.4
 
 # team mutation: probability of mutating a program
 pmm 1.0
 
 # team mutation: probability of mutating a program's action pointer
-pmn 0.2
+pmn 0.1
 
 # team mutation: probability of mutating program execution order
-pmw 0.2
+pmw 0.1
 
 # team variation: probability of team crossover
-pmx 0.5
+pmx 0.0
 
 # team variation: probability of team crossover adding each parent prog to child
-pmx_p 0.5
+pmx_p 0.3
 
 ################################################################################
 ## Program  parameters #########################################################
@@ -142,11 +142,13 @@ max_prog_size 1000000
 memory_indices 8
 
 # dimensionality for vector & matrix memory
-# This is initially set to the same size as memory_indices.
-memory_size 8
+# This is initially set to the same size as observation_buff_size.
+memory_size 32
 
 # Observations are stored in a buffer with this time window.
 # This is initially set to the same size as memory_indices.
+observation_buff_size 32
+
 max_observation_buff_size 32
 
 # program variation: probability of changing a random instruction
@@ -159,7 +161,7 @@ p_bid_swap 0.5
 p_bid_delete 0.5
 
 # program variation: probability of adding an instruction
-p_bid_add 0.3
+p_bid_add 0.4
 
 # program variation: probability of linear crossover with another team
 p_bid_xover 0.0
@@ -211,11 +213,11 @@ forecast_horizon_train 50
 forecast_horizon_val 100
 forecast_horizon_test 100
 
-#forecast_n_eval_train 19
-#forecast_n_eval_val 9
+forecast_n_eval_train 19
+forecast_n_eval_val 9
 
-forecast_n_eval_train 37
-forecast_n_eval_val 18
+#forecast_n_eval_train 37
+#forecast_n_eval_val 18
 
 ################################################################################
 ## Operations, uncomment to activate ###########################################

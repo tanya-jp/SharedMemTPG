@@ -20,7 +20,7 @@ RegisterMachine::RegisterMachine(
   id_ = id;
   key_ = 0;
   nrefs_ = 0;
-  observation_buff_size_ = std::any_cast<int>(params["memory_indices"]);
+  observation_buff_size_ = std::any_cast<int>(params["observation_buff_size"]);
   uniform_real_distribution<double> disR(0.0, 1.0);
   uniform_int_distribution<int> disP(
       1, std::any_cast<int>(params["max_initial_prog_size"]));
@@ -273,6 +273,7 @@ double RegisterMachine::Run(state *obs, int &time_step,
               time_step + (graph_depth / MAX_GRAPH_DEPTH);
         } else {  // Input is an observation reference.
           istr->SetInMem(in, observation_memory_buff_[istr->GetInType(in)]);
+          istr->SetInIdx(in,0); // TODO(skelly): WARNING! QUICK HACK 
         }
         // Scalar inputs are read from either the vector or matrix obs buff.
         // This copies data from obs buff to temporary scalar input variables.
