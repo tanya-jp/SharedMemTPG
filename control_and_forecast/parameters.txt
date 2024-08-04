@@ -66,7 +66,7 @@ mu_internal 0
 n_elite 200
 
 # n_elite * (n_elite_mul - 1) new teams are created each generation
-n_elite_mul 3
+n_elite_mul 5
 
 # fitness proportional selection
 fit_prop_select 0
@@ -90,7 +90,7 @@ max_team_size 1000000
 max_teams_per_graph 1000000
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 0.9995
+p_atomic 1.0
 
 # team mutation: probability of deleting program from team
 pmd 0.5
@@ -129,7 +129,7 @@ skip_introns 1
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 2,2,1
+n_input 32
 
 # max initial program size
 max_initial_prog_size 10
@@ -142,6 +142,7 @@ max_prog_size 1000000
 memory_indices 8
 
 # dimensionality for vector & matrix memory
+# This is initially set to the same size as memory_indices.
 memory_size 8
 
 # Observations are stored in a buffer with this time window.
@@ -170,7 +171,7 @@ p_bid_xover 0.0
 bid_mu_const_stddev 0.05
 
 # program variation: probability of changing observation_buff_size
-p_observation_buff_size 0.25
+p_observation_buff_size 0.0
 
 ################################################################################
 ## General Task Parameters #####################################################
@@ -178,7 +179,7 @@ p_observation_buff_size 0.25
 
 # which tasks are active
 # rhs should be a single task name or a comma-separated list
-active_tasks Cartpole,Pendulum,Mackey
+active_tasks Mackey
 
 # use the partially-observable version of a task, if available
 # currently only available for calssic control tasks
