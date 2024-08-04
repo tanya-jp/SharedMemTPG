@@ -25,7 +25,7 @@ numTask=$(grep "n_task" tpg.*.std | cut -d ' ' -f 2 | head -n 1)
 
 c=1
 #if ls *p${phs}*rslt 1> /dev/null 2>&1; then rm *p${phs}.rslt; fi
-if ls *.rslt 1> /dev/null 2>&1; then rm *.rslt; fi
+# if ls *.rslt 1> /dev/null 2>&1; then rm *.rslt; fi
 maxT=$maxt
 if [ $maxt -eq 0 ] 
 then
