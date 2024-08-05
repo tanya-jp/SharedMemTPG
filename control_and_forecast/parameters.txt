@@ -74,19 +74,19 @@ fit_prop_select 0
 # which diversity mode to use, if available
 diversity_mode 0
 
-parent_select_roots_only 1
+parent_select_roots_only 0
 
 ################################################################################
 ## Team  parameters ############################################################
 ################################################################################
 
 # initial team size
-max_initial_team_size 10
+max_initial_team_size 5
 
 # max team size
 max_team_size 1000000
 
-# max teams per graph00
+# max teams per graph
 max_teams_per_graph 1000000
 
 # when changing action pointer, probability of selecting atomic action
@@ -96,22 +96,22 @@ p_atomic 1.0
 pmd 0.5
 
 # team mtation: probability of adding program to team
-pma 0.4
+pma 0.3
 
 # team mutation: probability of mutating a program
 pmm 1.0
 
 # team mutation: probability of mutating a program's action pointer
-pmn 0.1
+pmn 0.2
 
 # team mutation: probability of mutating program execution order
-pmw 0.1
+pmw 0.2
 
 # team variation: probability of team crossover
-pmx 0.0
+pmx 0.5
 
 # team variation: probability of team crossover adding each parent prog to child
-pmx_p 0.3
+pmx_p 0.5
 
 ################################################################################
 ## Program  parameters #########################################################
@@ -129,7 +129,7 @@ skip_introns 1
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 32
+n_input 1
 
 # max initial program size
 max_initial_prog_size 10
@@ -142,7 +142,6 @@ max_prog_size 1000000
 memory_indices 8
 
 # dimensionality for vector & matrix memory
-# This is initially set to the same size as observation_buff_size.
 memory_size 8
 
 # Observations are stored in a buffer with this time window.
@@ -160,7 +159,7 @@ p_bid_swap 0.5
 p_bid_delete 0.5
 
 # program variation: probability of adding an instruction
-p_bid_add 0.4
+p_bid_add 0.3
 
 # program variation: probability of linear crossover with another team
 p_bid_xover 0.0
@@ -172,7 +171,7 @@ p_bid_xover 0.0
 bid_mu_const_stddev 0.05
 
 # program variation: probability of changing observation_buff_size
-p_observation_buff_size 0.0
+p_observation_buff_size 0.2
 
 ################################################################################
 ## General Task Parameters #####################################################
@@ -212,11 +211,11 @@ forecast_horizon_train 50
 forecast_horizon_val 100
 forecast_horizon_test 100
 
-forecast_n_eval_train 19
-forecast_n_eval_val 9
+#forecast_n_eval_train 19
+#forecast_n_eval_val 9
 
-#forecast_n_eval_train 37
-#forecast_n_eval_val 18
+forecast_n_eval_train 37
+forecast_n_eval_val 18
 
 ################################################################################
 ## Operations, uncomment to activate ###########################################
@@ -266,8 +265,8 @@ VECTOR_MAX_OP
 VECTOR_MEAN_OP
 VECTOR_ST_DEV_OP
 ####VECTOR_CONST_SET_OP
-#SCALAR_VECTOR_ASSIGN_OP
-#OBS_BUFF_SLICE_OP
+SCALAR_VECTOR_ASSIGN_OP
+OBS_BUFF_SLICE_OP
  
 # matrix #########################
 VECTOR_OUTER_PRODUCT_OP
@@ -293,7 +292,7 @@ MATRIX_ROW_MEAN_OP
 MATRIX_ROW_ST_DEV_OP
 MATRIX_ST_DEV_OP
 ####MATRIX_CONST_SET_OP
-#SCALAR_MATRIX_ASSIGN_OP
+SCALAR_MATRIX_ASSIGN_OP
 
 ## noise ##########################
 ##SCALAR_UNIFORM_SET_OP

@@ -273,7 +273,6 @@ double RegisterMachine::Run(state *obs, int &time_step,
               time_step + (graph_depth / MAX_GRAPH_DEPTH);
         } else {  // Input is an observation reference.
           istr->SetInMem(in, observation_memory_buff_[istr->GetInType(in)]);
-          istr->SetInIdx(in,0); // TODO(skelly): WARNING! QUICK HACK 
         }
         // Scalar inputs are read from either the vector or matrix obs buff.
         // This copies data from obs buff to temporary scalar input variables.

@@ -21,7 +21,7 @@ def plot_experiment(arg, col, alph):
   p = pathlib.Path(file)
   df = pd.read_csv(p, header=None, sep="\s+",names=range(max_gen))
   df = df.T
-  df = clip_generations(df)
+  # df = clip_generations(df)
   medians = df.median(axis='columns')
   plt.plot(df, color=col, alpha=alph)
 #   plt.plot(medians.index, medians.values, linestyle='-', color=col)
