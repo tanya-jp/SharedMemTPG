@@ -2406,6 +2406,8 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       int stateful = atoi(outcomeFields[f++].c_str());
       int nrefs = atoi(outcomeFields[f++].c_str());
       int observation_buff_size = atoi(outcomeFields[f++].c_str());
+      int obs_indsx = atoi(outcomeFields[f++].c_str());
+      int memory_size = atoi(outcomeFields[f++].c_str());
       // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
       //   memTypeIds[mem_t] = atoi(outcomeFields[f++].c_str());
       // }
@@ -2419,14 +2421,15 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
         in->in2Src_ = stringToInt(instructionString[1]);
         in->outIdx_ = stringToInt(instructionString[2]);
         in->op_ = stringToInt(instructionString[3]);
-        in->in1Idx_ = stringToInt(instructionString[4]);
-        in->in2Idx_ = stringToInt(instructionString[5]);
-        in->in3Idx_ = stringToInt(instructionString[6]);
-        in->in4Idx_ = stringToInt(instructionString[7]);
+        in->in0Idx_ = stringToInt(instructionString[4]);
+        in->in1Idx_ = stringToInt(instructionString[5]);
+        in->in2Idx_ = stringToInt(instructionString[6]);
+        in->in3Idx_ = stringToInt(instructionString[7]);
         in->memory_size_ = stringToInt(instructionString[8]);
         bid.push_back(in);
       }
-      l = new RegisterMachine(gtime, action, stateful, params_, id, nrefs, observation_buff_size, bid);
+      l = new RegisterMachine(gtime, action, stateful, params_, id, nrefs, observation_buff_size, memory_size, bid);
+      l->obs_index_ = obs_indsx;
       // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
       //   l->MemSet(mem_t, _Memory[mem_t][memTypeIds[mem_t]]);
       // }

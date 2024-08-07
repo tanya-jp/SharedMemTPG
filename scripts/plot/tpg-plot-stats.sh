@@ -135,14 +135,14 @@ if ls *p${phs}.pdf 1> /dev/null 2>&1; then rm *p${phs}.pdf; fi
 
 ##combined train+test
 #if [ $phs -eq 2 ]; then
-#Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves-paired.R ${wd}_aux_0_ST_0_p0.rslt ${wd}_aux_0_ST_0_p2.rslt "Mean Fitness" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
+#Rscript $TPG/scripts/plot/plot-tpg-trainingCurves-paired.R ${wd}_aux_0_ST_0_p0.rslt ${wd}_aux_0_ST_0_p2.rslt "Mean Fitness" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
 #i=$((i+1))
 #fi
 
 # for aux in `seq 0 $(echo "$numAux-1" | bc)`; do
 #    for task in `seq 0 $(echo "$numTask-1" | bc)`; do
 #       i=$((i+1))
-#       Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R ${wd}_aux_${aux}_ST_${task}_p${phs}.rslt "Aux ${aux} (single-task $task)" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
+#       Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R ${wd}_aux_${aux}_ST_${task}_p${phs}.rslt "Aux ${aux} (single-task $task)" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
 #    done
 # done
 
@@ -150,7 +150,7 @@ if ls *p${phs}.pdf 1> /dev/null 2>&1; then rm *p${phs}.pdf; fi
 aux=0
 for task in `seq 0 $(echo "$numTask-1" | bc)`; do
    i=$((i+1))
-   Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R ${wd}_aux_${aux}_ST_${task}_p${phs}.rslt "Fitness (single-task $task)" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
+   Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R ${wd}_aux_${aux}_ST_${task}_p${phs}.rslt "Fitness (single-task $task)" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
 
 done
 
@@ -158,7 +158,7 @@ done
 aux=1
 for task in `seq 0 $(echo "$numTask-1" | bc)`; do
    i=$((i+1))
-   Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R ${wd}_aux_${aux}_ST_${task}_p${phs}.rslt "Teams/Prediction (single-task $task)" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
+   Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R ${wd}_aux_${aux}_ST_${task}_p${phs}.rslt "Teams/Prediction (single-task $task)" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
 
 done
 
@@ -166,7 +166,7 @@ done
 aux=2
 for task in `seq 0 $(echo "$numTask-1" | bc)`; do
    i=$((i+1))
-   Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R ${wd}_aux_${aux}_ST_${task}_p${phs}.rslt "Instructions/Prediction (single-task $task)" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
+   Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R ${wd}_aux_${aux}_ST_${task}_p${phs}.rslt "Instructions/Prediction (single-task $task)" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
 
 done
 
@@ -174,7 +174,7 @@ done
 # aux=3
 # for task in `seq 0 $(echo "$numTask-1" | bc)`; do
 #    i=$((i+1))
-#    Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R ${wd}_aux_${aux}_ST_${task}_p${phs}.rslt "MSE (single-task $task)" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
+#    Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R ${wd}_aux_${aux}_ST_${task}_p${phs}.rslt "MSE (single-task $task)" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
 
 # done
 
@@ -185,28 +185,28 @@ if [ $fitMode -eq 0 ] && [ $numTask -gt 1 ]; then
    aux=0
    for task in `seq 0 $(echo "$numTask-1" | bc)`; do
       i=$((i+1))
-      Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R ${wd}_aux_${aux}_MTA_${task}_p${phs}.rslt "Fitness (multi-task $task)" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
+      Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R ${wd}_aux_${aux}_MTA_${task}_p${phs}.rslt "Fitness (multi-task $task)" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
    done
    
    # teams per prediction of best individual for each task
    aux=1
    for task in `seq 0 $(echo "$numTask-1" | bc)`; do
       i=$((i+1))
-      Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R ${wd}_aux_${aux}_MTA_${task}_p${phs}.rslt "Teams/Prediction (multi-task $task)" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
+      Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R ${wd}_aux_${aux}_MTA_${task}_p${phs}.rslt "Teams/Prediction (multi-task $task)" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
    done
 
    # instructions per prediction of best individual for each task
    aux=2
    for task in `seq 0 $(echo "$numTask-1" | bc)`; do
       i=$((i+1))
-      Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R ${wd}_aux_${aux}_MTA_${task}_p${phs}.rslt "Instructions/Prediction (multi-task $task)" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
+      Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R ${wd}_aux_${aux}_MTA_${task}_p${phs}.rslt "Instructions/Prediction (multi-task $task)" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
    done
 
    # # ? per prediction of best individual for each task
    # aux=3
    # for task in `seq 0 $(echo "$numTask-1" | bc)`; do
    #    i=$((i+1))
-   #    Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R ${wd}_aux_${aux}_MTA_${task}_p${phs}.rslt "MSE (multi-task $task)" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
+   #    Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R ${wd}_aux_${aux}_MTA_${task}_p${phs}.rslt "MSE (multi-task $task)" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
    # done
 fi
 
@@ -214,115 +214,115 @@ fi
 #    for aux in `seq 0 $(echo "$numAux-1" | bc)`; do
 #       for task in `seq 0 $(echo "$numTask-1" | bc)`; do
 #          i=$((i+1))
-#          Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R ${wd}_aux_${aux}_MTA_${task}_p${phs}.rslt "Aux ${aux} (multi-task $task)" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
+#          Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R ${wd}_aux_${aux}_MTA_${task}_p${phs}.rslt "Aux ${aux} (multi-task $task)" "$winSize" "$(printf "%03d" $i)_${task}-${aux}" 0
 #       done
 #    done
 # fi
 
  for task in `seq 0 $(echo "$numTask-1" | bc)`; do
     i=$((i+1))
-    Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-tCount-st-${task}.rslt "Teams per Graph (best single-task ${task})" "$winSize" "$(printf "%03d" $i)-st-${task}" 0
+    Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-tCount-st-${task}.rslt "Teams per Graph (best single-task ${task})" "$winSize" "$(printf "%03d" $i)-st-${task}" 0
  done
 #  
  for task in `seq 0 $(echo "$numTask-1" | bc)`; do
     i=$((i+1))
-    Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-pCount-st-${task}.rslt "Programs per Graph (best single-task ${task})" "$winSize" "$(printf "%03d" $i)-st-${task}" 0
+    Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-pCount-st-${task}.rslt "Programs per Graph (best single-task ${task})" "$winSize" "$(printf "%03d" $i)-st-${task}" 0
  done
  
  for task in `seq 0 $(echo "$numTask-1" | bc)`; do
     i=$((i+1))
-    Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-age-st-${task}.rslt "Age of Graph (best single-task ${task})" "$winSize" "$(printf "%03d" $i)-st-${task}" 0
+    Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-age-st-${task}.rslt "Age of Graph (best single-task ${task})" "$winSize" "$(printf "%03d" $i)-st-${task}" 0
  done
 
 # for task in `seq 0 $(echo "$numTask-1" | bc)`; do
 #     i=$((i+1))
-#     Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-fit-st-${task}.rslt "Fitness of Graph (best single-task ${task})" "$winSize" "$(printf "%03d" $i)-st-${task}" 0
+#     Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-fit-st-${task}.rslt "Fitness of Graph (best single-task ${task})" "$winSize" "$(printf "%03d" $i)-st-${task}" 0
 # done
 
 # i=$((i+1))
-# Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-tCount-mt.rslt "Teams per Graph (best multi-task ${task})" "$winSize" "$(printf "%03d" $i)" 0
+# Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-tCount-mt.rslt "Teams per Graph (best multi-task ${task})" "$winSize" "$(printf "%03d" $i)" 0
 # i=$((i+1))
-# Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-pCount-mt.rslt "Programs per Graph (best multi-task ${task})" "$winSize" "$(printf "%03d" $i)" 0
+# Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-pCount-mt.rslt "Programs per Graph (best multi-task ${task})" "$winSize" "$(printf "%03d" $i)" 0
 i=$((i+1))
-Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-age-mt.rslt "Age of Graph (best multi-task ${task})" "$winSize" "$(printf "%03d" $i)" 0
+Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-age-mt.rslt "Age of Graph (best multi-task ${task})" "$winSize" "$(printf "%03d" $i)" 0
 #i=$((i+1))
-#Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-auxDouble_MTA-minThresh.rslt "minThreshold" "$winSize" "$(printf "%03d" $i)" 0
+#Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-auxDouble_MTA-minThresh.rslt "minThreshold" "$winSize" "$(printf "%03d" $i)" 0
 #i=$((i+1))
-#Rscript  $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-sRTC.rslt "Population-wide Instructions Executed" "$winSize" "$(printf "%03d" $i)" 0
+#Rscript  $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-sRTC.rslt "Population-wide Instructions Executed" "$winSize" "$(printf "%03d" $i)" 0
 #i=$((i+1))
-#Rscript  $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-sGsz.rslt "Population-wide Teams Executed" "$winSize" "$(printf "%03d" $i)" 0
+#Rscript  $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-sGsz.rslt "Population-wide Teams Executed" "$winSize" "$(printf "%03d" $i)" 0
 #i=$((i+1))
-#Rscript  $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-nDel.rslt "# teams deleted" "$winSize" "$(printf "%03d" $i)" 0
+#Rscript  $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-nDel.rslt "# teams deleted" "$winSize" "$(printf "%03d" $i)" 0
 i=$((i+1))
-Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-genTimeCurve-sec.rslt "Seconds Total" "$winSize" "$(printf "%03d" $i)" 0 
+Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-genTimeCurve-sec.rslt "Seconds Total" "$winSize" "$(printf "%03d" $i)" 0 
 i=$((i+1))
-Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-genTimeCurve-eval.rslt "Seconds Evaluation " "$winSize" "$(printf "%03d" $i)" 0 
+Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-genTimeCurve-eval.rslt "Seconds Evaluation " "$winSize" "$(printf "%03d" $i)" 0 
 #i=$((i+1))
-#Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-genTimeCurve-genTeams.rslt "Seconds Replacement" "$winSize" "$(printf "%03d" $i)" 0 
+#Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-genTimeCurve-genTeams.rslt "Seconds Replacement" "$winSize" "$(printf "%03d" $i)" 0 
 #i=$((i+1))
-#Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-genTimeCurve-setEliteTeams.rslt "Seconds Set Elite Teams" "$winSize" "$(printf "%03d" $i)" 0
+#Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-genTimeCurve-setEliteTeams.rslt "Seconds Set Elite Teams" "$winSize" "$(printf "%03d" $i)" 0
 #i=$((i+1))
-#Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-genTimeCurve-selTeams.rslt "Seconds Selection" "$winSize" "$(printf "%03d" $i)" 0 
+#Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-genTimeCurve-selTeams.rslt "Seconds Selection" "$winSize" "$(printf "%03d" $i)" 0 
 #i=$((i+1))
-#Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-genTimeCurve-rprt.rslt "Seconds Accounting & Reporting" "$winSize" "$(printf "%03d" $i)" 0
+#Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-genTimeCurve-rprt.rslt "Seconds Accounting & Reporting" "$winSize" "$(printf "%03d" $i)" 0
 #i=$((i+1))
-#Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-genTimeCurve-tToEvl.rslt "Teams to Evaluate" "$winSize" "$(printf "%03d" $i)" 0
+#Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-genTimeCurve-tToEvl.rslt "Teams to Evaluate" "$winSize" "$(printf "%03d" $i)" 0
 #  #i=$((i+1))
-#  #Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-propType0.rslt "Proportion of Action-Value Programs (best graph)" "$winSize" "$(printf "%03d" $i)" 1 
+#  #Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-propType0.rslt "Proportion of Action-Value Programs (best graph)" "$winSize" "$(printf "%03d" $i)" 1 
 #i=$((i+1))
-#Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-osr.rslt "Offspring Survival Rate (numOldDeleted/numDeleted)" "$winSize" "$(printf "%03d" $i)" 0 
+#Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-osr.rslt "Offspring Survival Rate (numOldDeleted/numDeleted)" "$winSize" "$(printf "%03d" $i)" 0 
 #  #i=$((i+1))
-#  #Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-avp.rslt "Proportion Action-Value Programs in Population" "$winSize" "$(printf "%03d" $i)" 0
+#  #Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-avp.rslt "Proportion Action-Value Programs in Population" "$winSize" "$(printf "%03d" $i)" 0
 
 if [ $modes -gt 0 ]; then
    i=$((i+1))
-   Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R ${wd}-MODES-change.rslt "MODES - Change" 5 "$(printf "%03d" $i)" 0 
+   Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R ${wd}-MODES-change.rslt "MODES - Change" 5 "$(printf "%03d" $i)" 0 
    i=$((i+1))
-   Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R ${wd}-MODES-novelty.rslt "MODES - Novelty" 5 "$(printf "%03d" $i)" 0 
+   Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R ${wd}-MODES-novelty.rslt "MODES - Novelty" 5 "$(printf "%03d" $i)" 0 
    i=$((i+1))
-   Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R ${wd}-MODES-complexityRTC.rslt "MODES - Complexity RTC" 5 "$(printf "%03d" $i)" 0 
+   Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R ${wd}-MODES-complexityRTC.rslt "MODES - Complexity RTC" 5 "$(printf "%03d" $i)" 0 
    i=$((i+1))
-   Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R ${wd}-MODES-complexityTeams.rslt "MODES - Complexity Teams" 5 "$(printf "%03d" $i)" 0 
+   Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R ${wd}-MODES-complexityTeams.rslt "MODES - Complexity Teams" 5 "$(printf "%03d" $i)" 0 
    i=$((i+1))
-   Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R ${wd}-MODES-complexityPrograms.rslt "MODES - Complexity Programs" 5 "$(printf "%03d" $i)" 0
+   Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R ${wd}-MODES-complexityPrograms.rslt "MODES - Complexity Programs" 5 "$(printf "%03d" $i)" 0
    i=$((i+1))
-   Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R ${wd}-MODES-complexityInstructions.rslt "MODES - Complexity Instruction" 5 "$(printf "%03d" $i)" 0
+   Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R ${wd}-MODES-complexityInstructions.rslt "MODES - Complexity Instruction" 5 "$(printf "%03d" $i)" 0
    i=$((i+1))
-   Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R ${wd}-MODES-ecology.rslt "MODES - Ecology" 5 "$(printf "%03d" $i)" 0 
+   Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R ${wd}-MODES-ecology.rslt "MODES - Ecology" 5 "$(printf "%03d" $i)" 0 
 fi
 
 #i=$((i+1))
-#Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-meanPIns.rslt "Mean Instructions per Program (best graph)" "$winSize" "$(printf "%03d" $i)" 0 
+#Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-meanPIns.rslt "Mean Instructions per Program (best graph)" "$winSize" "$(printf "%03d" $i)" 0 
 #i=$((i+1))
-#Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-meanEPIns.rslt "Mean Effective Instructions per Program (best graph)" "$winSize" "$(printf "%03d" $i)" 0 
+#Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-meanEPIns.rslt "Mean Effective Instructions per Program (best graph)" "$winSize" "$(printf "%03d" $i)" 0 
 #i=$((i+1))
-#Rscript $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-policyFeatures.rslt "Features (best graph)" "$winSize" "$(printf "%03d" $i)" 0
+#Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-policyFeatures.rslt "Features (best graph)" "$winSize" "$(printf "%03d" $i)" 0
 i=$((i+1))
-Rscript  $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-gt-Msize.rslt "Team Population Size" "$winSize" "$(printf "%03d" $i)" 0 
+Rscript  $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-gt-Msize.rslt "Team Population Size" "$winSize" "$(printf "%03d" $i)" 0 
 i=$((i+1))
-Rscript  $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-gt-Lsize.rslt "Program Population Size" "$winSize" "$(printf "%03d" $i)" 0
+Rscript  $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-gt-Lsize.rslt "Program Population Size" "$winSize" "$(printf "%03d" $i)" 0
 #i=$((i+1))
-#Rscript  $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-gt-MemSize.rslt "Memory Population Size" "$winSize" "$(printf "%03d" $i)" 0
+#Rscript  $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-gt-MemSize.rslt "Memory Population Size" "$winSize" "$(printf "%03d" $i)" 0
 i=$((i+1))
-Rscript  $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-gt-Rsize.rslt "Root Population Size" "$winSize" "$(printf "%03d" $i)" 0
+Rscript  $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-gt-Rsize.rslt "Root Population Size" "$winSize" "$(printf "%03d" $i)" 0
 #i=$((i+1))
-#Rscript  $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-gt-eLSz.rslt "Elite Teams " "$winSize" "$(printf "%03d" $i)" 0
+#Rscript  $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-gt-eLSz.rslt "Elite Teams " "$winSize" "$(printf "%03d" $i)" 0
 #i=$((i+1))
-#Rscript  $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-st-Msize.rslt "st Team population size" "$winSize" "$(printf "%03d" $i)" 0
+#Rscript  $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-st-Msize.rslt "st Team population size" "$winSize" "$(printf "%03d" $i)" 0
 #i=$((i+1))
-#Rscript  $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-st-Lsize.rslt "st Program population size" "$winSize" "$(printf "%03d" $i)" 0
+#Rscript  $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-st-Lsize.rslt "st Program population size" "$winSize" "$(printf "%03d" $i)" 0
 #i=$((i+1))
-#Rscript  $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-st-Rsize.rslt "st Rsize" "$winSize" "$(printf "%03d" $i)" 0
+#Rscript  $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-st-Rsize.rslt "st Rsize" "$winSize" "$(printf "%03d" $i)" 0
 #i=$((i+1))
-#Rscript  $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-st-mRsize.rslt "st mRoot population size" "$winSize" "$(printf "%03d" $i)" 0
+#Rscript  $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-st-mRsize.rslt "st mRoot population size" "$winSize" "$(printf "%03d" $i)" 0
 #i=$((i+1))
-#Rscript  $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-st-MemSize.rslt "st Memory population size" "$winSize" "$(printf "%03d" $i)" 0
+#Rscript  $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-st-MemSize.rslt "st Memory population size" "$winSize" "$(printf "%03d" $i)" 0
 #i=$((i+1))
-#Rscript  $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-tmSizeRoot.rslt "Mean Root Team Size" "$winSize" "$(printf "%03d" $i)" 0 
+#Rscript  $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-tmSizeRoot.rslt "Mean Root Team Size" "$winSize" "$(printf "%03d" $i)" 0 
 #i=$((i+1))
-#Rscript  $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-tmSizeSub.rslt "Mean Sub Team Size" "$winSize" "$(printf "%03d" $i)" 0 
+#Rscript  $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-tmSizeSub.rslt "Mean Sub Team Size" "$winSize" "$(printf "%03d" $i)" 0 
 #i=$((i+1))
-#Rscript  $TPG_PATH/scripts/plot/plot-tpg-trainingCurves.R tpg-archive-size.rslt "Archive Size " "$winSize" "$(printf "%03d" $i)" 0
+#Rscript  $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-archive-size.rslt "Archive Size " "$winSize" "$(printf "%03d" $i)" 0
 
 
 

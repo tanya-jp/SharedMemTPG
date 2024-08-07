@@ -13,10 +13,10 @@ string instruction::checkpoint() {
   oss << in2Src_ << "_";
   oss << outIdx_ << "_";
   oss << op_ << "_";
+  oss << in0Idx_ << "_";
   oss << in1Idx_ << "_";
   oss << in2Idx_ << "_";
   oss << in3Idx_ << "_";
-  oss << in4Idx_ << "_";
   oss << memory_size_ << "_";
   return oss.str();
 }
@@ -392,30 +392,32 @@ instruction::instruction(instruction &i) {
   in2Src_ = i.in2Src_;
   outIdx_ = i.outIdx_;
   op_ = i.op_;
+  in0Idx_ = i.in0Idx_;
   in1Idx_ = i.in1Idx_;
   in2Idx_ = i.in2Idx_;
   in3Idx_ = i.in3Idx_;
-  in4Idx_ = i.in4Idx_;
 
   rng_ = i.rng_;
 }
 
-// Protect input indices from ranges larger than memory data structures.
-void instruction::BoundMemoryIndices(int observation_buff_size) {   
-  for (int in = 0; in < 2; in++) {
-    if (IsObs(in)) {
-      SetInIdx(in, GetInIdx(in) % max(1, observation_buff_size - 1));
-    } else {
-      SetInIdx(in, GetInIdx(in) % memIndices_);
-    }
-  }
-  memory_size_ = observation_buff_size;
-  in3Idx_ = in3Idx_ % (max(1, memory_size_ - 1));
-  in4Idx_ = in4Idx_ % (max(1, memory_size_ - 1));
-}
+// // Protect input indices from ranges larger than memory data structures.
+// void instruction::BoundMemoryIndices(int observation_buff_size) {   
+//   for (int in = 0; in < 2; in++) {
+//     if (IsObs(in)) {
+//       SetInIdx(in, GetInIdx(in) % max(1, observation_buff_size - 1));
+//     } else {
+//       SetInIdx(in, GetInIdx(in) % memIndices_);
+//     }
+//   }
+//   memory_size_ = observation_buff_size;
+//   in2Idx_ = in2Idx_ % (max(1, memory_size_ - 1));
+//   in3Idx_ = in3Idx_ % (max(1, memory_size_ - 1));
+// }
 
 void instruction::Mutate(bool randomize, vector<bool> &legal_ops,
                          int observation_buff_size, mt19937 &rng) {
+  const int max_index = 100; 
+  auto dis_index = std::uniform_int_distribution<>(0, max_index);                         
   if (randomize) {  // Randomly set each part of this instruction.
     std::uniform_int_distribution<> dis(0, 1);
     in1Src_ = dis(rng);
@@ -426,17 +428,13 @@ void instruction::Mutate(bool randomize, vector<bool> &legal_ops,
       op_ = dis(rng);
     } while (!legal_ops[op_]);
 
-    dis = std::uniform_int_distribution<>(0, memIndices_ - 1);
-    outIdx_ = dis(rng);
+    //TODO(skelly): use MutateInt()
+    outIdx_ = dis_index(rng);
+    in0Idx_ = dis_index(rng);
+    in1Idx_ = dis_index(rng);
+    in2Idx_ = dis_index(rng);
+    in3Idx_ = dis_index(rng);
 
-    dis = std::uniform_int_distribution<>(
-        0, max(memIndices_, observation_buff_size - 1));
-    in1Idx_ = dis(rng);
-    in2Idx_ = dis(rng);
-
-    dis = std::uniform_int_distribution<>(0, memory_size_ - 1);
-    in3Idx_ = dis(rng);
-    in4Idx_ = dis(rng);
   } else {  // Randomly change one part of this instruction.
     std::uniform_int_distribution<> dis(0, 7);
     int i = dis(rng);
@@ -445,25 +443,23 @@ void instruction::Mutate(bool randomize, vector<bool> &legal_ops,
     } else if (i == 1) {  // Change in2 src to private memory or observation.
       MutateInt(in2Src_, 0, 1, rng);
     } else if (i == 2) {  // Change out index.
-      MutateInt(outIdx_, 0, memIndices_ - 1, rng);
+      MutateInt(outIdx_, 0, max_index, rng);
     } else if (i == 3) {  // Change operation.
       do {
         MutateInt(op_, 0, int(legal_ops.size() - 1), rng);
       } while (!legal_ops[op_]);
     } else if (i == 4) {  // Change in1 index.
-      MutateInt(in1Idx_, 0, max(memIndices_ - 1, observation_buff_size - 1),
-                rng);
+      MutateInt(in0Idx_, 0, max_index, rng);
     } else if (i == 5) {  // Change in2 index.
-      MutateInt(in2Idx_, 0, max(memIndices_ - 1, observation_buff_size - 1),
-                rng);
+      MutateInt(in1Idx_, 0, max_index, rng);
     } else if (i == 6) {  // Change in3 index. Used as index to vector or matrix
                           // memory.
-      MutateInt(in3Idx_, 0, memory_size_ - 1, rng);
+      MutateInt(in2Idx_, 0, max_index, rng);
     } else if (i == 7) {  // Change in4 index. Used as index to vector or matrix
                           // memory.
-      MutateInt(in4Idx_, 0, memory_size_ - 1, rng);
+      MutateInt(in3Idx_, 0, max_index, rng);
     }
   }
-  BoundMemoryIndices(observation_buff_size);
+//   BoundMemoryIndices(observation_buff_size);
   if (op_ == OBS_BUFF_SLICE_OP_) in1Src_  = 1;
 }

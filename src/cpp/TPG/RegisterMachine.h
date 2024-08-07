@@ -33,13 +33,14 @@ class RegisterMachine : public program {
                   std::unordered_map<std::string, std::any> &, long);
   // Create RegisterMachine from checkpoint file
   RegisterMachine(long, long, int, std::unordered_map<std::string, std::any> &,
-                  long, long, int, std::vector<instruction *>);
+                  long, long, int, int, std::vector<instruction *>);
   ~RegisterMachine();
   // Mutate bid
   void Mutate(std::unordered_map<std::string, std::any> &, mt19937 &, std::vector<bool> &);
-  void SetupMemory(size_t memoryIndices);
-  void MutateObsBuffSize(size_t max_observation_buff_size, mt19937& rng);
-  void ResizeMemory();
+  void SetupMemory(int memory_indices, int observation_buff_size, int memory_size);
+  // void MutateObsBuffSize(size_t max_observation_buff_size, mt19937& rng);
+  void MutateMemorySize(std::unordered_map<std::string, std::any> &, mt19937 &);
+  void ResizeMemory(int new_size);
   inline int Size() { return bid_.size(); }
   inline int SizeEffective() { return bidEffective_.size(); }
 };

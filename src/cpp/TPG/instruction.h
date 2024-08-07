@@ -104,6 +104,7 @@ class instruction {
 
   // Which memory index does this instruction write to
   int outIdx_ = 0;
+  int outIdxE_ = 0;
 
   // Which operation does this instrcution execute
   int op_ = 0;
@@ -112,13 +113,17 @@ class instruction {
   // For observations, they specify which timestep in the buffer to use,
   // where 0 is the current observation, 1 is the previous observation, etc.
   // Their range is [0, memIndices_ - 1]
+  int in0Idx_ = 0;
   int in1Idx_ = 0;
-  int in2Idx_ = 0;
+  int in0IdxE_ = 0;
+  int in1IdxE_ = 0;
 
   // These parameters are used as indices to vector or matrix memory.
   // Their range is [0, memory_size_ - 1]
+  int in2Idx_ = 0;
   int in3Idx_ = 0;
-  int in4Idx_ = 0;
+  int in2IdxE_ = 0;
+  int in3IdxE_ = 0;
 
   /****************************************************************************/
   // The number of private memories of each type (scalar, vector, matrix)
@@ -160,13 +165,14 @@ class instruction {
 
   // Execute this instruction
   inline void exec(bool dbg) {
+    // dbg = true;
     (this->*op_list_[op_])(dbg);
 
     // TODO(skelly): set to 1.0 instead of 0.0?
     // Change infinite values to 0.0 in output memory
     // This "protects" output memory by filtering nan value.
-    out_->working_memory_[outIdx_].array() =
-        out_->working_memory_[outIdx_].array().unaryExpr(
+    out_->working_memory_[outIdxE_].array() =
+        out_->working_memory_[outIdxE_].array().unaryExpr(
             [](double v) { return std::isfinite(v) ? v : 0.0; });
 
     // TODO(skelly): tmp debugging output
@@ -175,25 +181,48 @@ class instruction {
 
   inline int GetInIdx(int i) const {
     if (i == 0)
-      return in1Idx_;
+      return in0Idx_;
     else if (i == 1)
-      return in2Idx_;
+      return in1Idx_;
     else if (i == 2)
-      return in3Idx_;
+      return in2Idx_;
     else
-      return in4Idx_;
+      return in3Idx_;
+  }
+
+  inline int GetInIdxE(int i) const {
+    if (i == 0)
+      return in0IdxE_;
+    else if (i == 1)
+      return in1IdxE_;
+    else if (i == 2)
+      return in2IdxE_;
+    else
+      return in3IdxE_;
   }
 
   inline void SetInIdx(int i, int idx) {
     if (i == 0)
-      in1Idx_ = idx;
+      in0Idx_ = idx;
     else if (i == 1)
-      in2Idx_ = idx;
+      in1Idx_ = idx;
     else if (i == 2)
-      in3Idx_ = idx;
+      in2Idx_ = idx;
     else
-      in4Idx_ = idx;
+      in3Idx_ = idx;
   }
+
+  inline void SetInIdxE(int i, int idx) {
+    if (i == 0)
+      in0IdxE_ = idx;
+    else if (i == 1)
+      in1IdxE_ = idx;
+    else if (i == 2)
+      in2IdxE_ = idx;
+    else
+      in3IdxE_ = idx;
+  }
+
   inline memoryEigen* GetInMem(int i) const { return i == 0 ? in1_ : in2_; }
   inline void SetInMem(int i, memoryEigen* m) { (i == 0 ? in1_ : in2_) = m; }
   inline size_t GetInType(int i) const { return op_mem_types_[op_][i + 1]; }
@@ -215,26 +244,20 @@ class instruction {
   void SetupScalarIn(int in, vector<memoryEigen*>& observation_memory_buff) {
     int primary_obs_type = memoryEigen::VECTOR_TYPE;  // TODO(skelly): fix
     double* scalar = in == 0 ? &scalar_in1_ : &scalar_in2_;
-    int* index = in == 0 ? &in1Idx_ : &in2Idx_;
-    memoryEigen* memory = in == 0 ? in1_ : in2_;
+    // int* index = in == 0 ? &in0IdxE_ : &in1IdxE_;
+    int index_1 = 0;  //TODO(skelly): assume index 0 (buff is always size 1)
 
     if (IsObs(in)) {
-      // cerr << "db sz " << memory->working_memory_.size() << " idx " << *index
-      //      << endl;
-
       if (primary_obs_type == memoryEigen::VECTOR_TYPE) {
-        // cerr << "check " << *index << " " << in3Idx_ << ":" <<
-        // observation_memory_buff[memoryEigen::VECTOR_TYPE]->working_memory_[*index].rows()
-        // << endl;
         *scalar = observation_memory_buff[memoryEigen::VECTOR_TYPE]
-                      ->working_memory_[*index](in3Idx_, 0);
+                      ->working_memory_[index_1](in2IdxE_, 0);
       } else {
         *scalar = observation_memory_buff[memoryEigen::MATRIX_TYPE]
-                      ->working_memory_[*index](in3Idx_, in4Idx_);
+                      ->working_memory_[index_1](in2IdxE_, in3IdxE_);
       }
-    } else {
-      *scalar = memory->working_memory_[*index](0, 0);
     }
+    // // TODO(skelly): debugging output
+    // cerr << "scalar_in " << *scalar << endl; 
   }
 
   void BoundMemoryIndices(int observation_buff_size);
@@ -252,168 +275,168 @@ class instruction {
   /* Operation implementations ************************************************/
 
   inline void ExecuteScalarSumOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) = scalar_in1_ + scalar_in2_;
+    out_->working_memory_[outIdxE_](0, 0) = scalar_in1_ + scalar_in2_;
 
     if (dbg) {
       cerr << std::setprecision(std::numeric_limits<double>::digits10 + 1)
-           << std::fixed << "s" << outIdx_ << " = s" << in1Idx_
-           << (IsObs(0) ? "i" : "") << " + " << "s" << in2Idx_
+           << std::fixed << "s" << outIdxE_ << " = s" << in0IdxE_
+           << (IsObs(0) ? "i" : "") << " + " << "s" << in1IdxE_
            << (IsObs(1) ? "i" : "") << " | " << std::fixed << scalar_in1_
            << " + " << scalar_in2_ << " = "
-           << out_->working_memory_[outIdx_](0, 0) << endl;
+           << out_->working_memory_[outIdxE_](0, 0) << endl;
     }
   }
 
   inline void ExecuteScalarDiffOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) = scalar_in1_ - scalar_in2_;
+    out_->working_memory_[outIdxE_](0, 0) = scalar_in1_ - scalar_in2_;
 
     if (dbg) {
       cerr << std::setprecision(std::numeric_limits<double>::digits10 + 1)
-           << std::fixed << "s" << outIdx_ << " = s" << in1Idx_
-           << (IsObs(0) ? "i" : "") << " - " << "s" << in2Idx_
+           << std::fixed << "s" << outIdxE_ << " = s" << in0IdxE_
+           << (IsObs(0) ? "i" : "") << " - " << "s" << in1IdxE_
            << (IsObs(1) ? "i" : "") << " | " << std::fixed << scalar_in1_
            << " - " << scalar_in2_ << " = "
-           << out_->working_memory_[outIdx_](0, 0) << endl;
+           << out_->working_memory_[outIdxE_](0, 0) << endl;
     }
   }
 
   inline void ExecuteScalarProductOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) = scalar_in1_ * scalar_in2_;
+    out_->working_memory_[outIdxE_](0, 0) = scalar_in1_ * scalar_in2_;
 
     if (dbg) {
       cerr << std::setprecision(std::numeric_limits<double>::digits10 + 1)
-           << std::fixed << "s" << outIdx_ << " = s" << in1Idx_
-           << (IsObs(0) ? "i" : "") << " * " << "s" << in2Idx_
+           << std::fixed << "s" << outIdxE_ << " = s" << in0IdxE_
+           << (IsObs(0) ? "i" : "") << " * " << "s" << in1IdxE_
            << (IsObs(1) ? "i" : "") << " | " << std::fixed << scalar_in1_
            << " * " << scalar_in2_ << " = "
-           << out_->working_memory_[outIdx_](0, 0) << endl;
+           << out_->working_memory_[outIdxE_](0, 0) << endl;
     }
   }
 
   inline void ExecuteScalarDivisionOp(bool dbg) {
     // Protected division
     if (isEqual(scalar_in2_, 0.0)) {
-      out_->working_memory_[outIdx_](0, 0) = 0;  // TODO(skelly): 1.0 instead?
+      out_->working_memory_[outIdxE_](0, 0) = 0;  // TODO(skelly): 1.0 instead?
     } else {
-      out_->working_memory_[outIdx_](0, 0) = scalar_in1_ / scalar_in2_;
+      out_->working_memory_[outIdxE_](0, 0) = scalar_in1_ / scalar_in2_;
     }
 
     if (dbg) {
       cerr << std::setprecision(std::numeric_limits<double>::digits10 + 1)
-           << std::fixed << "s" << outIdx_ << " = s" << in1Idx_ << " / " << "s"
-           << in2Idx_ << " | " << std::fixed << scalar_in1_ << " / "
-           << scalar_in2_ << " = " << out_->working_memory_[outIdx_](0, 0)
+           << std::fixed << "s" << outIdxE_ << " = s" << in0IdxE_ << " / " << "s"
+           << in1IdxE_ << " | " << std::fixed << scalar_in1_ << " / "
+           << scalar_in2_ << " = " << out_->working_memory_[outIdxE_](0, 0)
            << endl;
     }
   }
 
   inline void ExecuteScalarReciprocalOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) = 1.0 / scalar_in1_;
+    out_->working_memory_[outIdxE_](0, 0) = 1.0 / scalar_in1_;
 
     if (dbg) {
     }
   }
 
   inline void ExecuteScalarAbsOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) = std::abs(scalar_in1_);
+    out_->working_memory_[outIdxE_](0, 0) = std::abs(scalar_in1_);
 
     if (dbg) {
-      cerr << "s" << outIdx_ << " = abs(s" << in1Idx_ << ") | " << "abs("
-           << scalar_in1_ << ") = " << out_->working_memory_[outIdx_](0, 0)
+      cerr << "s" << outIdxE_ << " = abs(s" << in0IdxE_ << ") | " << "abs("
+           << scalar_in1_ << ") = " << out_->working_memory_[outIdxE_](0, 0)
            << endl;
     }
   }
 
   inline void ExecuteScalarSinOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) = std::sin(scalar_in1_);
+    out_->working_memory_[outIdxE_](0, 0) = std::sin(scalar_in1_);
 
     if (dbg) {
-      cerr << "s" << outIdx_ << " = sin(s" << in1Idx_ << ") | " << "sin("
-           << scalar_in1_ << ") = " << out_->working_memory_[outIdx_](0, 0)
+      cerr << "s" << outIdxE_ << " = sin(s" << in0IdxE_ << ") | " << "sin("
+           << scalar_in1_ << ") = " << out_->working_memory_[outIdxE_](0, 0)
            << endl;
     }
   }
 
   inline void ExecuteScalarCosOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) = std::cos(scalar_in1_);
+    out_->working_memory_[outIdxE_](0, 0) = std::cos(scalar_in1_);
 
     if (dbg) {
-      cerr << "s" << outIdx_ << " = cos(s" << in1Idx_ << (IsObs(0) ? "i" : "")
+      cerr << "s" << outIdxE_ << " = cos(s" << in0IdxE_ << (IsObs(0) ? "i" : "")
            << ") | " << "cos(" << scalar_in1_
-           << ") = " << out_->working_memory_[outIdx_](0, 0) << endl;
+           << ") = " << out_->working_memory_[outIdxE_](0, 0) << endl;
     }
   }
 
   inline void ExecuteScalarTanOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) = std::tan(scalar_in1_);
+    out_->working_memory_[outIdxE_](0, 0) = std::tan(scalar_in1_);
 
     if (dbg) {
-      cerr << "s" << outIdx_ << " = tan(s" << in1Idx_ << ") | " << "tan("
-           << scalar_in1_ << ") = " << out_->working_memory_[outIdx_](0, 0)
+      cerr << "s" << outIdxE_ << " = tan(s" << in0IdxE_ << ") | " << "tan("
+           << scalar_in1_ << ") = " << out_->working_memory_[outIdxE_](0, 0)
            << endl;
     }
   }
 
   inline void ExecuteScalarExpOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) = std::exp(scalar_in1_);
+    out_->working_memory_[outIdxE_](0, 0) = std::exp(scalar_in1_);
 
     if (dbg) {
-      cerr << "s" << outIdx_ << " = exp(s" << in1Idx_ << ") | " << "exp("
-           << scalar_in1_ << ") = " << out_->working_memory_[outIdx_](0, 0)
+      cerr << "s" << outIdxE_ << " = exp(s" << in0IdxE_ << ") | " << "exp("
+           << scalar_in1_ << ") = " << out_->working_memory_[outIdxE_](0, 0)
            << endl;
     }
   }
 
   inline void ExecuteScalarLogOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) = std::log(scalar_in1_);
+    out_->working_memory_[outIdxE_](0, 0) = std::log(scalar_in1_);
 
     if (dbg) {
-      cerr << "s" << outIdx_ << " = log(s" << in1Idx_ << ") | " << "log("
-           << scalar_in1_ << ") = " << out_->working_memory_[outIdx_](0, 0)
+      cerr << "s" << outIdxE_ << " = log(s" << in0IdxE_ << ") | " << "log("
+           << scalar_in1_ << ") = " << out_->working_memory_[outIdxE_](0, 0)
            << endl;
     }
   }
 
   inline void ExecuteScalarArcSinOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) = std::asin(scalar_in1_);
+    out_->working_memory_[outIdxE_](0, 0) = std::asin(scalar_in1_);
 
     if (dbg) {
-      cerr << "s" << outIdx_ << " = asin(s" << in1Idx_ << ") | " << "asin("
-           << scalar_in1_ << ") = " << out_->working_memory_[outIdx_](0, 0)
+      cerr << "s" << outIdxE_ << " = asin(s" << in0IdxE_ << ") | " << "asin("
+           << scalar_in1_ << ") = " << out_->working_memory_[outIdxE_](0, 0)
            << endl;
     }
   }
 
   inline void ExecuteScalarArcCosOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) = std::acos(scalar_in1_);
+    out_->working_memory_[outIdxE_](0, 0) = std::acos(scalar_in1_);
 
     if (dbg) {
-      cerr << "s" << outIdx_ << " = acos(s" << in1Idx_ << ") | " << "acos("
-           << scalar_in1_ << ") = " << out_->working_memory_[outIdx_](0, 0)
+      cerr << "s" << outIdxE_ << " = acos(s" << in0IdxE_ << ") | " << "acos("
+           << scalar_in1_ << ") = " << out_->working_memory_[outIdxE_](0, 0)
            << endl;
     }
   }
 
   inline void ExecuteScalarArcTanOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) = std::atan(scalar_in1_);
+    out_->working_memory_[outIdxE_](0, 0) = std::atan(scalar_in1_);
     if (dbg) {
-      cerr << "s" << outIdx_ << " = atan(s" << in1Idx_ << ") | " << "atan("
-           << scalar_in1_ << ") = " << out_->working_memory_[outIdx_](0, 0)
+      cerr << "s" << outIdxE_ << " = atan(s" << in0IdxE_ << ") | " << "atan("
+           << scalar_in1_ << ") = " << out_->working_memory_[outIdxE_](0, 0)
            << endl;
     }
   }
 
   inline void ExecuteScalarHeavisideOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) = scalar_in1_ >= 0.0 ? 1.0 : 0.0;
+    out_->working_memory_[outIdxE_](0, 0) = scalar_in1_ >= 0.0 ? 1.0 : 0.0;
 
     if (dbg) {
     }
   }
 
   inline void ExecuteVectorHeavisideOp(bool dbg) {
-    const double* in = in1_->working_memory_[in1Idx_].data();
+    const double* in = in1_->working_memory_[in0IdxE_].data();
     const double* in_end = in + memory_size_;
-    double* out = out_->working_memory_[outIdx_].data();
+    double* out = out_->working_memory_[outIdxE_].data();
     while (in != in_end) {
       *out = *in > 0.0 ? 1.0 : 0.0;
       ++out;
@@ -424,10 +447,10 @@ class instruction {
   }
 
   inline void ExecuteMatrixHeavisideOp(bool dbg) {
-    const double* ind = in1_->working_memory_[in1Idx_].data();
+    const double* ind = in1_->working_memory_[in0IdxE_].data();
     const double* ind_end =
         ind + memory_size_ * memory_size_;  // all matices will be same size
-    double* outd = out_->working_memory_[outIdx_].data();
+    double* outd = out_->working_memory_[outIdxE_].data();
     while (ind != ind_end) {
       *outd = *ind > 0.0 ? 1.0 : 0.0;
       ++outd;
@@ -438,130 +461,130 @@ class instruction {
   }
 
   inline void ExecuteScalarVectorProductOp(bool dbg) {
-    out_->working_memory_[outIdx_] =
-        in1_->working_memory_[in1Idx_](0, 0) * in2_->working_memory_[in2Idx_];
+    out_->working_memory_[outIdxE_] =
+        in1_->working_memory_[in0IdxE_](0, 0) * in2_->working_memory_[in1IdxE_];
     if (dbg) {
     }
   }
 
   inline void ExecuteScalarBroadcastOp(bool dbg) {
-    out_->working_memory_[outIdx_] =
-        in1_->working_memory_[in1Idx_](0, 0) * MatrixXd::Ones(memory_size_, 1);
+    out_->working_memory_[outIdxE_] =
+        in1_->working_memory_[in0IdxE_](0, 0) * MatrixXd::Ones(memory_size_, 1);
     if (dbg) {
     }
   }
 
   inline void ExecuteVectorReciprocalOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) =
-        1.0 / in1_->working_memory_[in1Idx_](0, 0);
+    out_->working_memory_[outIdxE_](0, 0) =
+        1.0 / in1_->working_memory_[in0IdxE_](0, 0);
     if (dbg) {
     }
   }
 
   inline void ExecuteVectorNormOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) =
-        in1_->working_memory_[in1Idx_].norm();
+    out_->working_memory_[outIdxE_](0, 0) =
+        in1_->working_memory_[in0IdxE_].norm();
     if (dbg) {
     }
   }
 
   inline void ExecuteVectorAbsOp(bool dbg) {
-    out_->working_memory_[outIdx_] =
-        (in1_->working_memory_[in1Idx_].array().abs()).matrix();
+    out_->working_memory_[outIdxE_] =
+        (in1_->working_memory_[in0IdxE_].array().abs()).matrix();
     if (dbg) {
     }
   }
 
   inline void ExecuteVectorSumOp(bool dbg) {
-    out_->working_memory_[outIdx_] =
-        in1_->working_memory_[in1Idx_] + in2_->working_memory_[in2Idx_];
+    out_->working_memory_[outIdxE_] =
+        in1_->working_memory_[in0IdxE_] + in2_->working_memory_[in1IdxE_];
     if (dbg) {
     }
   }
 
   inline void ExecuteVectorDiffOp(bool dbg) {
-    out_->working_memory_[outIdx_] =
-        in1_->working_memory_[in1Idx_] - in2_->working_memory_[in2Idx_];
+    out_->working_memory_[outIdxE_] =
+        in1_->working_memory_[in0IdxE_] - in2_->working_memory_[in1IdxE_];
     if (dbg) {
     }
   }
 
   inline void ExecuteVectorProductOp(bool dbg) {
-    out_->working_memory_[outIdx_] = in1_->working_memory_[in1Idx_].array() *
-                                     in2_->working_memory_[in2Idx_].array();
+    out_->working_memory_[outIdxE_] = in1_->working_memory_[in0IdxE_].array() *
+                                     in2_->working_memory_[in1IdxE_].array();
     if (dbg) {
     }
   }
 
   inline void ExecuteVectorDivisionOp(bool dbg) {
-    out_->working_memory_[outIdx_] = in1_->working_memory_[in1Idx_].array() /
-                                     in2_->working_memory_[in2Idx_].array();
+    out_->working_memory_[outIdxE_] = in1_->working_memory_[in0IdxE_].array() /
+                                     in2_->working_memory_[in1IdxE_].array();
     if (dbg) {
     }
   }
 
   inline void ExecuteVectorInnerProductOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) =
-        in1_->working_memory_[in1Idx_].col(0).dot(
-            in2_->working_memory_[in2Idx_].col(0));
+    out_->working_memory_[outIdxE_](0, 0) =
+        in1_->working_memory_[in0IdxE_].col(0).dot(
+            in2_->working_memory_[in1IdxE_].col(0));
     if (dbg) {
     }
   }
 
   inline void ExecuteVectorOuterProductOp(bool dbg) {
-    out_->working_memory_[outIdx_] = in1_->working_memory_[in1Idx_] *
-                                     in2_->working_memory_[in2Idx_].transpose();
+    out_->working_memory_[outIdxE_] = in1_->working_memory_[in0IdxE_] *
+                                     in2_->working_memory_[in1IdxE_].transpose();
     if (dbg) {
     }
   }
 
   inline void ExecuteScalarMatrixProductOp(bool dbg) {
-    out_->working_memory_[outIdx_] =
-        in1_->working_memory_[in1Idx_](0, 0) * in2_->working_memory_[in2Idx_];
+    out_->working_memory_[outIdxE_] =
+        in1_->working_memory_[in0IdxE_](0, 0) * in2_->working_memory_[in1IdxE_];
     if (dbg) {
     }
   }
 
   inline void ExecuteMatrixReciprocalOp(bool dbg) {
-    out_->working_memory_[outIdx_] =
-        (1.0 / in1_->working_memory_[in1Idx_].array()).matrix();
+    out_->working_memory_[outIdxE_] =
+        (1.0 / in1_->working_memory_[in0IdxE_].array()).matrix();
     if (dbg) {
     }
   }
 
   inline void ExecuteMatrixVectorProductOp(bool dbg) {
-    out_->working_memory_[outIdx_] =
-        in1_->working_memory_[in1Idx_] * in2_->working_memory_[in2Idx_];
+    out_->working_memory_[outIdxE_] =
+        in1_->working_memory_[in0IdxE_] * in2_->working_memory_[in1IdxE_];
     if (dbg) {
     }
   }
 
   inline void ExecuteVectorColumnBroadcastOp(bool dbg) {
-    out_->working_memory_[outIdx_] = in1_->working_memory_[in1Idx_].replicate(
-        1, in1_->working_memory_[in1Idx_].rows());
+    out_->working_memory_[outIdxE_] = in1_->working_memory_[in0IdxE_].replicate(
+        1, in1_->working_memory_[in0IdxE_].rows());
     if (dbg) {
     }
   }
 
   inline void ExecuteVectorRowBroadcastOp(bool dbg) {
-    out_->working_memory_[outIdx_] =
-        in1_->working_memory_[in1Idx_]
-            .replicate(1, in1_->working_memory_[in1Idx_].rows())
+    out_->working_memory_[outIdxE_] =
+        in1_->working_memory_[in0IdxE_]
+            .replicate(1, in1_->working_memory_[in0IdxE_].rows())
             .transpose();
     if (dbg) {
     }
   }
 
   inline void ExecuteMatrixNormOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) =
-        in1_->working_memory_[in1Idx_].norm();
+    out_->working_memory_[outIdxE_](0, 0) =
+        in1_->working_memory_[in0IdxE_].norm();
     if (dbg) {
     }
   }
 
   inline void ExecuteMatrixColumnNormOp(bool dbg) {
-    out_->working_memory_[outIdx_] =
-        in1_->working_memory_[in1Idx_]
+    out_->working_memory_[outIdxE_] =
+        in1_->working_memory_[in0IdxE_]
             .colwise()
             .norm()
             .transpose();  // automl-zero doesn't transpose?
@@ -570,86 +593,86 @@ class instruction {
   }
 
   inline void ExecuteMatrixRowNormOp(bool dbg) {
-    out_->working_memory_[outIdx_] =
-        in1_->working_memory_[in1Idx_].rowwise().norm();
+    out_->working_memory_[outIdxE_] =
+        in1_->working_memory_[in0IdxE_].rowwise().norm();
     if (dbg) {
     }
   }
 
   inline void ExecuteMatrixTransposeOp(bool dbg) {
-    if (outIdx_ == in1Idx_)
-      out_->working_memory_[outIdx_].transposeInPlace();
+    if (outIdxE_ == in0IdxE_)
+      out_->working_memory_[outIdxE_].transposeInPlace();
     else
-      out_->working_memory_[outIdx_] =
-          in1_->working_memory_[in1Idx_].transpose();
+      out_->working_memory_[outIdxE_] =
+          in1_->working_memory_[in0IdxE_].transpose();
     if (dbg) {
     }
   }
 
   inline void ExecuteMatrixAbsOp(bool dbg) {
-    out_->working_memory_[outIdx_] =
-        in1_->working_memory_[in1Idx_].array().abs().matrix();
+    out_->working_memory_[outIdxE_] =
+        in1_->working_memory_[in0IdxE_].array().abs().matrix();
     if (dbg) {
     }
   }
 
   inline void ExecuteMatrixSumOp(bool dbg) {
-    out_->working_memory_[outIdx_] =
-        in1_->working_memory_[in1Idx_] + in2_->working_memory_[in2Idx_];
+    out_->working_memory_[outIdxE_] =
+        in1_->working_memory_[in0IdxE_] + in2_->working_memory_[in1IdxE_];
     if (dbg) {
     }
   }
 
   inline void ExecuteMatrixDiffOp(bool dbg) {
-    out_->working_memory_[outIdx_] =
-        in1_->working_memory_[in1Idx_] - in2_->working_memory_[in2Idx_];
+    out_->working_memory_[outIdxE_] =
+        in1_->working_memory_[in0IdxE_] - in2_->working_memory_[in1IdxE_];
     if (dbg) {
     }
   }
 
   inline void ExecuteMatrixProductOp(bool dbg) {
-    out_->working_memory_[outIdx_] = (in1_->working_memory_[in1Idx_].array() *
-                                      in2_->working_memory_[in2Idx_].array())
+    out_->working_memory_[outIdxE_] = (in1_->working_memory_[in0IdxE_].array() *
+                                      in2_->working_memory_[in1IdxE_].array())
                                          .matrix();
     if (dbg) {
     }
   }
 
   inline void ExecuteMatrixDivisionOp(bool dbg) {
-    out_->working_memory_[outIdx_] = (in1_->working_memory_[in1Idx_].array() /
-                                      in2_->working_memory_[in2Idx_].array())
+    out_->working_memory_[outIdxE_] = (in1_->working_memory_[in0IdxE_].array() /
+                                      in2_->working_memory_[in1IdxE_].array())
                                          .matrix();
     if (dbg) {
     }
   }
 
   inline void ExecuteMatrixMatrixProductOp(bool dbg) {
-    out_->working_memory_[outIdx_] =
-        in1_->working_memory_[in1Idx_] * in2_->working_memory_[in2Idx_];
+    out_->working_memory_[outIdxE_] =
+        in1_->working_memory_[in0IdxE_] * in2_->working_memory_[in1IdxE_];
     if (dbg) {
     }
   }
 
   inline void ExecuteScalarMinOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) = min(scalar_in1_, scalar_in2_);
+    out_->working_memory_[outIdxE_](0, 0) = min(scalar_in1_, scalar_in2_);
 
     if (dbg) {
     }
   }
 
   inline void ExecuteVectorMinOp(bool dbg) {
-    out_->working_memory_[outIdx_] = in1_->working_memory_[in1Idx_].array().min(
-        in2_->working_memory_[in2Idx_].array());
+    out_->working_memory_[outIdxE_] = in1_->working_memory_[in0IdxE_].array().min(
+        in2_->working_memory_[in1IdxE_].array());
     if (dbg) {
     }
   }
 
   inline void ExecuteMatrixMinOp(bool dbg) {
-    const double* in1d = in1_->working_memory_[in1Idx_].data();
-    const double* in2d = in2_->working_memory_[in2Idx_].data();
-    const double* in1_end = in1d + in2_->working_memory_[in2Idx_].rows() *
-                                       in2_->working_memory_[in2Idx_].cols();
-    double* outd = out_->working_memory_[outIdx_].data();
+    const double* in1d = in1_->working_memory_[in0IdxE_].data();
+    const double* in2d = in2_->working_memory_[in1IdxE_].data();
+    const double* in1_end = in1d + in2_->working_memory_[in1IdxE_].rows() *
+                                       in2_->working_memory_[in1IdxE_].cols();
+    double* outd = out_->working_memory_[outIdxE_].data();
     while (in1d != in1_end) {
       const double in1v = *in1d;
       const double in2v = *in2d;
@@ -663,25 +686,25 @@ class instruction {
   }
 
   inline void ExecuteScalarMaxOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) = max(scalar_in1_, scalar_in2_);
+    out_->working_memory_[outIdxE_](0, 0) = max(scalar_in1_, scalar_in2_);
 
     if (dbg) {
     }
   }
 
   inline void ExecuteVectorMaxOp(bool dbg) {
-    out_->working_memory_[outIdx_] = in1_->working_memory_[in1Idx_].array().max(
-        in2_->working_memory_[in2Idx_].array());
+    out_->working_memory_[outIdxE_] = in1_->working_memory_[in0IdxE_].array().max(
+        in2_->working_memory_[in1IdxE_].array());
     if (dbg) {
     }
   }
 
   inline void ExecuteMatrixMaxOp(bool dbg) {
-    const double* in1d = in1_->working_memory_[in1Idx_].data();
-    const double* in2d = in2_->working_memory_[in2Idx_].data();
-    const double* in1_end = in1d + in2_->working_memory_[in2Idx_].rows() *
-                                       in2_->working_memory_[in2Idx_].cols();
-    double* outd = out_->working_memory_[outIdx_].data();
+    const double* in1d = in1_->working_memory_[in0IdxE_].data();
+    const double* in2d = in2_->working_memory_[in1IdxE_].data();
+    const double* in1_end = in1d + in2_->working_memory_[in1IdxE_].rows() *
+                                       in2_->working_memory_[in1IdxE_].cols();
+    double* outd = out_->working_memory_[outIdxE_].data();
     while (in1d != in1_end) {
       const double in1v = *in1d;
       const double in2v = *in2d;
@@ -695,197 +718,197 @@ class instruction {
   }
 
   inline void ExecuteVectorMeanOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) =
-        in1_->working_memory_[in1Idx_].mean();
+    out_->working_memory_[outIdxE_](0, 0) =
+        in1_->working_memory_[in0IdxE_].mean();
     if (dbg) {
     }
   }
 
   inline void ExecuteMatrixMeanOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) =
-        in1_->working_memory_[in1Idx_].mean();
+    out_->working_memory_[outIdxE_](0, 0) =
+        in1_->working_memory_[in0IdxE_].mean();
     if (dbg) {
     }
   }
 
   inline void ExecuteMatrixRowMeanOp(bool dbg) {
-    out_->working_memory_[outIdx_] =
-        in1_->working_memory_[in1Idx_].rowwise().mean();
+    out_->working_memory_[outIdxE_] =
+        in1_->working_memory_[in0IdxE_].rowwise().mean();
     if (dbg) {
     }
   }
 
   inline void ExecuteMatrixRowStDevOp(bool dbg) {
-    for (int row = 0; row < out_->working_memory_[outIdx_].rows(); ++row) {
-      const MatrixXd values = in1_->working_memory_[in1Idx_].row(row);
+    for (int row = 0; row < out_->working_memory_[outIdxE_].rows(); ++row) {
+      const MatrixXd values = in1_->working_memory_[in0IdxE_].row(row);
       const double mean = values.mean();
       const double stdev =
           sqrt((values.array() * values.array()).sum() /
-                   static_cast<double>(in1_->working_memory_[in1Idx_].rows()) -
+                   static_cast<double>(in1_->working_memory_[in0IdxE_].rows()) -
                mean * mean);
-      out_->working_memory_[outIdx_](row, 0) = stdev;
+      out_->working_memory_[outIdxE_](row, 0) = stdev;
     }
     if (dbg) {
     }
   }
 
   inline void ExecuteVectorStDevOp(bool dbg) {
-    const double mean = in1_->working_memory_[in1Idx_].mean();
-    out_->working_memory_[outIdx_](0, 0) =
-        sqrt(in1_->working_memory_[in1Idx_].col(0).dot(
-                 in1_->working_memory_[in1Idx_].col(0)) /
-                 in1_->working_memory_[in1Idx_].rows() -
+    const double mean = in1_->working_memory_[in0IdxE_].mean();
+    out_->working_memory_[outIdxE_](0, 0) =
+        sqrt(in1_->working_memory_[in0IdxE_].col(0).dot(
+                 in1_->working_memory_[in0IdxE_].col(0)) /
+                 in1_->working_memory_[in0IdxE_].rows() -
              mean * mean);
     if (dbg) {
     }
   }
 
   inline void ExecuteMatrixStDevOp(bool dbg) {
-    const MatrixXd values = in1_->working_memory_[in1Idx_];
+    const MatrixXd values = in1_->working_memory_[in0IdxE_];
     const double mean = values.mean();
-    out_->working_memory_[outIdx_](0, 0) =
+    out_->working_memory_[outIdxE_](0, 0) =
         sqrt((values.array() * values.array()).sum() /
-                 static_cast<double>(out_->working_memory_[outIdx_].rows() *
-                                     out_->working_memory_[outIdx_].cols()) -
+                 static_cast<double>(out_->working_memory_[outIdxE_].rows() *
+                                     out_->working_memory_[outIdxE_].cols()) -
              mean * mean);
     if (dbg) {
     }
   }
 
   inline void ExecuteScalarConstSetOp(bool dbg) {
-    out_->working_memory_[outIdx_] = in1_->const_memory_[in1Idx_];
+    out_->working_memory_[outIdxE_] = in1_->const_memory_[in0IdxE_];
     if (dbg) {
     }
   }
 
   inline void ExecuteVectorConstSetOp(bool dbg) {
-    out_->working_memory_[outIdx_] = in1_->const_memory_[in1Idx_];
+    out_->working_memory_[outIdxE_] = in1_->const_memory_[in0IdxE_];
 
     if (dbg) {
     }
   }
 
   inline void ExecuteMatrixConstSetOp(bool dbg) {
-    out_->working_memory_[outIdx_] = in1_->const_memory_[in1Idx_];
+    out_->working_memory_[outIdxE_] = in1_->const_memory_[in0IdxE_];
 
     if (dbg) {
     }
   }
 
   inline void ExecuteScalarUniformSetOp(bool dbg) {
-    uniform_real_distribution<double> dis(in1_->working_memory_[in1Idx_](0, 0),
-                                          in2_->working_memory_[in2Idx_](0, 0));
-    out_->working_memory_[outIdx_](0, 0) = dis(rng_);
+    uniform_real_distribution<double> dis(in1_->working_memory_[in0IdxE_](0, 0),
+                                          in2_->working_memory_[in1IdxE_](0, 0));
+    out_->working_memory_[outIdxE_](0, 0) = dis(rng_);
     if (dbg) {
     }
   }
 
   inline void ExecuteVectorUniformSetOp(bool dbg) {
-    uniform_real_distribution<double> dis(in1_->working_memory_[in1Idx_](0, 0),
-                                          in2_->working_memory_[in2Idx_](0, 0));
-    for (int i = 0; i < out_->working_memory_[outIdx_].rows(); i++)
-      out_->working_memory_[outIdx_](i, 0) = dis(rng_);
+    uniform_real_distribution<double> dis(in1_->working_memory_[in0IdxE_](0, 0),
+                                          in2_->working_memory_[in1IdxE_](0, 0));
+    for (int i = 0; i < out_->working_memory_[outIdxE_].rows(); i++)
+      out_->working_memory_[outIdxE_](i, 0) = dis(rng_);
     if (dbg) {
     }
   }
 
   inline void ExecuteMatrixUniformSetOp(bool dbg) {
-    uniform_real_distribution<double> dis(in1_->working_memory_[in1Idx_](0, 0),
-                                          in2_->working_memory_[in2Idx_](0, 0));
-    for (int row = 0; row < out_->working_memory_[outIdx_].rows(); row++)
-      for (int col = 0; col < out_->working_memory_[outIdx_].cols(); col++)
-        out_->working_memory_[outIdx_](row, col) = dis(rng_);
+    uniform_real_distribution<double> dis(in1_->working_memory_[in0IdxE_](0, 0),
+                                          in2_->working_memory_[in1IdxE_](0, 0));
+    for (int row = 0; row < out_->working_memory_[outIdxE_].rows(); row++)
+      for (int col = 0; col < out_->working_memory_[outIdxE_].cols(); col++)
+        out_->working_memory_[outIdxE_](row, col) = dis(rng_);
     if (dbg) {
     }
   }
 
   inline void ExecuteScalarGaussianSetOp(bool dbg) {
-    normal_distribution<double> dis(in1_->working_memory_[in1Idx_](0, 0),
-                                    in2_->working_memory_[in2Idx_](0, 0));
-    out_->working_memory_[outIdx_](0, 0) = dis(rng_);
+    normal_distribution<double> dis(in1_->working_memory_[in0IdxE_](0, 0),
+                                    in2_->working_memory_[in1IdxE_](0, 0));
+    out_->working_memory_[outIdxE_](0, 0) = dis(rng_);
     if (dbg) {
     }
   }
 
   inline void ExecuteVectorGaussianSetOp(bool dbg) {
-    normal_distribution<double> dis(in1_->working_memory_[in1Idx_](0, 0),
-                                    in2_->working_memory_[in2Idx_](0, 0));
-    for (int i = 0; i < out_->working_memory_[outIdx_].rows(); i++)
-      out_->working_memory_[outIdx_](i, 0) = dis(rng_);
+    normal_distribution<double> dis(in1_->working_memory_[in0IdxE_](0, 0),
+                                    in2_->working_memory_[in1IdxE_](0, 0));
+    for (int i = 0; i < out_->working_memory_[outIdxE_].rows(); i++)
+      out_->working_memory_[outIdxE_](i, 0) = dis(rng_);
     if (dbg) {
     }
   }
 
   inline void ExecuteMatrixGaussianSetOp(bool dbg) {
-    normal_distribution<double> dis(in1_->working_memory_[in1Idx_](0, 0),
-                                    in2_->working_memory_[in2Idx_](0, 0));
-    for (int row = 0; row < out_->working_memory_[outIdx_].rows(); row++)
-      for (int col = 0; col < out_->working_memory_[outIdx_].cols(); col++)
-        out_->working_memory_[outIdx_](row, col) = dis(rng_);
+    normal_distribution<double> dis(in1_->working_memory_[in0IdxE_](0, 0),
+                                    in2_->working_memory_[in1IdxE_](0, 0));
+    for (int row = 0; row < out_->working_memory_[outIdxE_].rows(); row++)
+      for (int col = 0; col < out_->working_memory_[outIdxE_].cols(); col++)
+        out_->working_memory_[outIdxE_](row, col) = dis(rng_);
     if (dbg) {
     }
   }
 
   inline void ExecuteScalarConditionalOp(bool dbg) {
     if (scalar_in1_ < scalar_in2_)
-      out_->working_memory_[outIdx_](0, 0) =
-          -(out_->working_memory_[outIdx_](0, 0));
+      out_->working_memory_[outIdxE_](0, 0) =
+          -(out_->working_memory_[outIdxE_](0, 0));
 
     if (dbg) {
-      cerr << " IF s" << in1Idx_ << " < s" << in2Idx_ << " THEN s" << outIdx_
-           << " = -s" << outIdx_ << " | " << " in1 " << scalar_in1_ << " in2 "
-           << scalar_in2_ << " : " << out_->working_memory_[outIdx_](0, 0)
+      cerr << " IF s" << in0IdxE_ << " < s" << in1IdxE_ << " THEN s" << outIdxE_
+           << " = -s" << outIdxE_ << " | " << " in1 " << scalar_in1_ << " in2 "
+           << scalar_in2_ << " : " << out_->working_memory_[outIdxE_](0, 0)
            << endl;
     }
   }
 
   inline void ExecuteScalarPowOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) = std::pow(scalar_in1_, scalar_in2_);
+    out_->working_memory_[outIdxE_](0, 0) = std::pow(scalar_in1_, scalar_in2_);
     if (dbg) {
-      cerr << "s" << outIdx_ << " = pow(s" << in1Idx_ << ", s" << in2Idx_
+      cerr << "s" << outIdxE_ << " = pow(s" << in0IdxE_ << ", s" << in1IdxE_
            << ") | " << "pow(" << scalar_in1_ << ", " << scalar_in2_ << " = "
-           << out_->working_memory_[outIdx_](0, 0) << endl;
+           << out_->working_memory_[outIdxE_](0, 0) << endl;
     }
   }
 
   inline void ExecuteScalarSqrOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) = std::pow(scalar_in1_, 2);
+    out_->working_memory_[outIdxE_](0, 0) = std::pow(scalar_in1_, 2);
 
     if (dbg) {
     }
   }
 
   inline void ExecuteScalarCubeOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) = std::pow(scalar_in1_, 2);
+    out_->working_memory_[outIdxE_](0, 0) = std::pow(scalar_in1_, 2);
 
     if (dbg) {
     }
   }
 
   inline void ExecuteScalarTanhOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) = std::tanh(scalar_in1_);
+    out_->working_memory_[outIdxE_](0, 0) = std::tanh(scalar_in1_);
 
     if (dbg) {
     }
   }
 
   inline void ExecuteScalarSqrtOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) = std::sqrt(scalar_in1_);
+    out_->working_memory_[outIdxE_](0, 0) = std::sqrt(scalar_in1_);
 
     if (dbg) {
     }
   }
 
   inline void ExecuteScalarVectorAssignOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) =
-        in1_->working_memory_[in1Idx_](in3Idx_, 0);
+    out_->working_memory_[outIdxE_](0, 0) =
+        in1_->working_memory_[in0IdxE_](in2IdxE_, 0);
     if (dbg) {
     }
   }
 
   inline void ExecuteScalarMatrixAssignOp(bool dbg) {
-    out_->working_memory_[outIdx_](0, 0) =
-        in1_->working_memory_[in1Idx_](in3Idx_, in4Idx_);
+    out_->working_memory_[outIdxE_](0, 0) =
+        in1_->working_memory_[in0IdxE_](in2IdxE_, in3IdxE_);
     if (dbg) {
     }
   }
@@ -894,19 +917,19 @@ class instruction {
   // so, can't evolve obs buff size
   inline void ExecuteObsBuffSliceOp(bool dbg) {
     for (size_t i = 0; i < in1_->working_memory_.size(); i++) {
-      out_->working_memory_[outIdx_](i, 0) =
-          in1_->working_memory_[i](in3Idx_, 0);
+      out_->working_memory_[outIdxE_](i, 0) =
+          in1_->working_memory_[i](in2IdxE_, 0);
     }
 
     if (dbg) {
       // TO(skelly): improve debug format
       cerr << "from ";
       for (size_t i = 0; i < in1_->working_memory_.size(); i++) {
-        cerr << " " << in1_->working_memory_[i](in3Idx_, 0);
+        cerr << " " << in1_->working_memory_[i](in2IdxE_, 0);
       }
       cerr << " To:";
       for (size_t i = 0; i < out_->working_memory_.size(); i++) {
-        cerr << " " << out_->working_memory_[outIdx_](i, 0);
+        cerr << " " << out_->working_memory_[outIdxE_](i, 0);
       }
       cerr << endl;
     }

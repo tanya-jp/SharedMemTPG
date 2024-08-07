@@ -472,7 +472,7 @@ void InitRecusiveForecastObs(TPG &tpg, EvalStruct &eval) {
   eval.obs_vec.assign(tpg.n_input_[tpg.GetState("active_task")], 1.0);
 }
 
-void PrepareRecusiveForecastObs(TPG &tpg, EvalStruct &eval, bool prime) {
+void PrepareRecursiveForecastObs(TPG &tpg, EvalStruct &eval, bool prime) {
   RecursiveForecast *task = dynamic_cast<RecursiveForecast *>(eval.task);
   bool discrete_actions = tpg.GetParam<int>("forecast_discrete");
   if (prime) {  // prime
@@ -481,6 +481,16 @@ void PrepareRecusiveForecastObs(TPG &tpg, EvalStruct &eval, bool prime) {
       eval.obs_list.pop_front();
       std::copy(eval.obs_list.begin(), eval.obs_list.end(),
                 eval.obs_vec.begin());
+ 
+      // // TODO(skelly): debugging obs
+      // double c = 1;
+      // for (size_t ov = 0; ov < eval.obs_vec.size(); ov++) {
+      //   eval.obs_vec[ov] = c;
+      //   c += 1.0;
+      // }
+      // cerr << "obs " << vecToStr(eval.obs_vec) << endl;
+
+
       eval.obs->Set(eval.obs_vec);
     } else {
       eval.obs->Set(task->data[eval.sample]);
@@ -497,6 +507,15 @@ void PrepareRecusiveForecastObs(TPG &tpg, EvalStruct &eval, bool prime) {
       eval.obs_list.pop_front();
       std::copy(eval.obs_list.begin(), eval.obs_list.end(),
                 eval.obs_vec.begin());
+
+      // // TODO(skelly): debugging obs
+      // double c = 1;
+      // for (size_t ov = 0; ov < eval.obs_vec.size(); ov++) {
+      //   eval.obs_vec[ov] = c;
+      //   c += 1.0;
+      // }
+      // cerr << "obs " << vecToStr(eval.obs_vec) << endl;
+
       eval.obs->Set(eval.obs_vec);
     } else {
       std::vector<double> v;
@@ -521,7 +540,7 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
   // Prime
   eval.sample = task->t_start[tpg.GetState("phase")][eval.episode];
   for (int i = 0; i < task->n_prime_ - 1; i++) {
-    PrepareRecusiveForecastObs(tpg, eval, true);
+    PrepareRecursiveForecastObs(tpg, eval, true);
     // Execute graph
     eval.leafProgram = tpg.getAction(
         eval.tm, eval.obs, true, eval.visitedTeams, eval.decision_instructions,
@@ -532,7 +551,7 @@ void EvalRecursiveForecast(TPG &tpg, EvalStruct &eval) {
   for (eval.n_prediction = 0;
        eval.n_prediction < task->n_predict_[tpg.GetState("phase")];
        eval.n_prediction++) {
-    PrepareRecusiveForecastObs(tpg, eval, false);
+    PrepareRecursiveForecastObs(tpg, eval, false);
     // Execute graph
     eval.leafProgram = tpg.getAction(eval.tm, eval.obs, true, eval.visitedTeams,
                                      eval.decision_instructions, task->step,
@@ -704,7 +723,7 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
   eval.sample =
       task->t_start[tpg.GetParam<int>("checkpoint_in_phase")][eval.episode];
   for (int i = 0; i < task->n_prime_ - 1; i++) {
-    PrepareRecusiveForecastObs(tpg, eval, true);
+    PrepareRecursiveForecastObs(tpg, eval, true);
 
     if (tpg.GetParam<int>("forecast_univar")) {
       prime_samples_plot.push_back(task->data[eval.sample][0]);
@@ -739,7 +758,7 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
        eval.n_prediction <
        task->n_predict_[tpg.GetParam<int>("checkpoint_in_phase")];
        eval.n_prediction++) {
-    PrepareRecusiveForecastObs(tpg, eval, false);
+    PrepareRecursiveForecastObs(tpg, eval, false);
 
     // Execute graph
     eval.leafProgram = tpg.getAction(eval.tm, eval.obs, true, eval.visitedTeams,

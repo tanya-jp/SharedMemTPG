@@ -9,6 +9,7 @@
 
 class program {
  public:
+  int obs_index_;
   int action_;         // Action index
   double bid_val_;     // Most recent bid value
   static long count_;  // Next id to use
@@ -30,6 +31,7 @@ class program {
   // Vector storing 1 memoryEigen* of each type (SCALAR, VECTOR, MATRIX)
   vector<memoryEigen *> observation_memory_buff_;
   int observation_buff_size_;
+  int memory_size_;
 
   // // read inputs into these at runtime TODO(skelly): simplify this
   // vector<vector<memoryEigen *> > inputMemoryPointers_;

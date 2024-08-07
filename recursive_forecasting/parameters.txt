@@ -62,10 +62,10 @@ n_generations 1000000
 mu_internal 0
 
 # number of elite teams
-n_elite 200
+n_elite 180
 
 # n_elite * n_elite_mul new teams are created each generation
-n_elite_mul 5
+n_elite_mul 2
 
 # fitness proportional selection
 fit_prop_select 0
@@ -128,7 +128,7 @@ skip_introns 1
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 1
+n_input 32
 
 # max initial program size
 max_initial_prog_size 10
@@ -140,12 +140,15 @@ max_prog_size 1000000
 # each memory index points to a data structure (scalar, vector, or matrix)
 memory_indices 8
 
-# dimensionality for vector & matrix memory
-memory_size 2
+# Dimensionality for vector & matrix memory
+memory_size 8
+min_memory_size 2
+max_memory_size 32 
 
 # Observations are stored in a buffer with this time window.
-# This is initially set to the same size as memory_indices.
-max_observation_buff_size 50
+observation_buff_size 1
+min_observation_buff_size 1
+max_observation_buff_size 32
 
 # program variation: probability of changing a random instruction
 p_bid_mutate 1.0
@@ -169,7 +172,15 @@ p_bid_xover 0.0
 bid_mu_const_stddev 0.05
 
 # program variation: probability of changing observation_buff_size
-p_observation_buff_size 0.25
+p_observation_buff_size 0.0
+
+# program variation: probability of changing observation_index
+p_observation_index 0.2
+
+# program variation: probability of changing memory_size
+p_memory_size 0.2
+
+
 
 ################################################################################
 ## General Task Parameters #####################################################
@@ -209,11 +220,11 @@ forecast_horizon_train 50
 forecast_horizon_val 100
 forecast_horizon_test 100
 
-#forecast_n_eval_train 19
-#forecast_n_eval_val 9
+forecast_n_eval_train 19
+forecast_n_eval_val 9
 
-forecast_n_eval_train 37
-forecast_n_eval_val 18
+#forecast_n_eval_train 37
+#forecast_n_eval_val 18
 
 ################################################################################
 ## Operations, uncomment to activate ###########################################
@@ -245,51 +256,51 @@ SCALAR_SQRT_OP
 SCALAR_MIN_OP
 SCALAR_MAX_OP
 
-# vector #########################
-VECTOR_HEAVYSIDE_OP
-MATRIX_HEAVYSIDE_OP
-SCALAR_VECTOR_PRODUCT_OP
-SCALAR_BROADCAST_OP
-VECTOR_RECIPROCAL_OP
-VECTOR_NORM_OP
-VECTOR_ABS_OP
-VECTOR_SUM_OP
-VECTOR_DIFF_OP
-VECTOR_PRODUCT_OP
-VECTOR_DIVISION_OP
-VECTOR_INNER_PRODUCT_OP
-VECTOR_MIN_OP
-VECTOR_MAX_OP
-VECTOR_MEAN_OP
-VECTOR_ST_DEV_OP
-#VECTOR_CONST_SET_OP
-SCALAR_VECTOR_ASSIGN_OP
- 
-# matrix #########################
-VECTOR_OUTER_PRODUCT_OP
-SCALAR_MATRIX_PRODUCT_OP
-MATRIX_RECIPROCAL_OP
-MATRIX_VECTOR_PRODUCT_OP
-VECTOR_COLUMN_BROADCAST_OP
-VECTOR_ROW_BROADCAST_OP
-MATRIX_NORM_OP
-MATRIX_COLUMN_NORM_OP
-MATRIX_ROW_NORM_OP
-MATRIX_TRANSPOSE_OP
-MATRIX_ABS_OP
-MATRIX_SUM_OP
-MATRIX_DIFF_OP
-MATRIX_PRODUCT_OP
-MATRIX_DIVISION_OP
-MATRIX_MATRIX_PRODUCT_OP
-MATRIX_MIN_OP
-MATRIX_MAX_OP
-MATRIX_MEAN_OP
-MATRIX_ROW_MEAN_OP
-MATRIX_ROW_ST_DEV_OP
-MATRIX_ST_DEV_OP
-#MATRIX_CONST_SET_OP
-SCALAR_MATRIX_ASSIGN_OP
+## vector #########################
+#VECTOR_HEAVYSIDE_OP
+#MATRIX_HEAVYSIDE_OP
+#SCALAR_VECTOR_PRODUCT_OP
+#SCALAR_BROADCAST_OP
+#VECTOR_RECIPROCAL_OP
+#VECTOR_NORM_OP
+#VECTOR_ABS_OP
+#VECTOR_SUM_OP
+#VECTOR_DIFF_OP
+#VECTOR_PRODUCT_OP
+#VECTOR_DIVISION_OP
+#VECTOR_INNER_PRODUCT_OP
+#VECTOR_MIN_OP
+#VECTOR_MAX_OP
+#VECTOR_MEAN_OP
+#VECTOR_ST_DEV_OP
+##VECTOR_CONST_SET_OP
+#SCALAR_VECTOR_ASSIGN_OP
+# 
+## matrix #########################
+#VECTOR_OUTER_PRODUCT_OP
+#SCALAR_MATRIX_PRODUCT_OP
+#MATRIX_RECIPROCAL_OP
+#MATRIX_VECTOR_PRODUCT_OP
+#VECTOR_COLUMN_BROADCAST_OP
+#VECTOR_ROW_BROADCAST_OP
+#MATRIX_NORM_OP
+#MATRIX_COLUMN_NORM_OP
+#MATRIX_ROW_NORM_OP
+#MATRIX_TRANSPOSE_OP
+#MATRIX_ABS_OP
+#MATRIX_SUM_OP
+#MATRIX_DIFF_OP
+#MATRIX_PRODUCT_OP
+#MATRIX_DIVISION_OP
+#MATRIX_MATRIX_PRODUCT_OP
+#MATRIX_MIN_OP
+#MATRIX_MAX_OP
+#MATRIX_MEAN_OP
+#MATRIX_ROW_MEAN_OP
+#MATRIX_ROW_ST_DEV_OP
+#MATRIX_ST_DEV_OP
+##MATRIX_CONST_SET_OP
+#SCALAR_MATRIX_ASSIGN_OP
 
 ## noise ##########################
 ##SCALAR_UNIFORM_SET_OP
