@@ -40,7 +40,8 @@ class RegisterMachine : public program {
   void SetupMemory(int memory_indices, int observation_buff_size, int memory_size);
   // void MutateObsBuffSize(size_t max_observation_buff_size, mt19937& rng);
   void MutateMemorySize(std::unordered_map<std::string, std::any> &, mt19937 &);
-  void ResizeMemory(int new_size);
+  // void ResizeMemory(int new_size);
+  void ResizeMemory(int memory_indices, int memory_size);
   inline int Size() { return bid_.size(); }
   inline int SizeEffective() { return bidEffective_.size(); }
 };

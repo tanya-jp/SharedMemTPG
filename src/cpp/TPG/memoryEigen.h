@@ -111,6 +111,11 @@ class memoryEigen {
     id_ = i;
     nrefs_ = 0;
     type_ = type;
+    
+    // memoryIndices_ = 64;
+    // memory_size_ = 64;
+    // ResizeMemory();
+    
     memoryIndices_ = memoryIndices;
     memory_size_ = memory_size;
     ResizeMemory();
@@ -126,6 +131,11 @@ class memoryEigen {
     id_ = i;
     nrefs_ = 0;
     type_ = type;
+    
+    // memoryIndices_ = 64;
+    // memory_size_ = 64;
+    // ResizeMemory();
+    
     memoryIndices_ = std::any_cast<int>(params["memory_indices"]);
     memory_size_ = std::any_cast<int>(params["memory_size"]);
     ResizeMemory();
@@ -141,6 +151,11 @@ class memoryEigen {
     id_ = i;
     nrefs_ = nr;
     type_ = type;
+
+    // memoryIndices_ = 64;
+    // memory_size_ = 64;
+    // ResizeMemory();
+    
     memoryIndices_ = memoryIndices;
     memory_size_ = memory_size;
     ResizeMemory();
@@ -155,6 +170,11 @@ class memoryEigen {
     id_ = m->id();
     nrefs_ = m->refs();
     type_ = m->type();
+    
+    memoryIndices_ = 64;
+    memory_size_ = 64;
+    ResizeMemory();
+    
     memoryIndices_ = m->indexSize();
     memory_size_ = m->memory_size_;
     ResizeMemory();

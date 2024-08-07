@@ -510,6 +510,11 @@ class instruction {
   }
 
   inline void ExecuteVectorProductOp(bool dbg) {
+    // cerr << "outIdxE_ " << outIdxE_ << " in0IdxE_ " << in0IdxE_ << " in1IdxE_ " << in1IdxE_;
+    // cerr << " " <<  out_->working_memory_[outIdxE_].rows() << "," << out_->working_memory_[outIdxE_].cols();
+    // cerr << " " <<  in1_->working_memory_[in0IdxE_].rows() << "," << in1_->working_memory_[in0IdxE_].cols();
+    // cerr << " " <<  in2_->working_memory_[in1IdxE_].rows() << "," << in2_->working_memory_[in1IdxE_].cols() << endl;
+
     out_->working_memory_[outIdxE_] = in1_->working_memory_[in0IdxE_].array() *
                                      in2_->working_memory_[in1IdxE_].array();
     if (dbg) {

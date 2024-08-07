@@ -84,8 +84,11 @@ RegisterMachine::RegisterMachine(
 
 RegisterMachine::~RegisterMachine() {
   for (auto instr : bid_) delete instr;
-  for (auto memory : privateMemory_) delete memory;
+  bid_.clear();
+  for (size_t m = 0; m < privateMemory_.size(); m++) delete privateMemory_[m];
+  privateMemory_.clear();
   for (auto memory : observation_memory_buff_) delete memory;
+  observation_memory_buff_.clear();
 }
 
 // TODO(skelly): WARNING: confirm this function works as expected.
@@ -373,17 +376,45 @@ void RegisterMachine::SetupMemory(int memory_indices, int observation_buff_size,
   }
 }
 
-void RegisterMachine::ResizeMemory(int new_size) {
-  for (auto memory : observation_memory_buff_) {
-    // memory->memoryIndices_ = observation_buff_size_;
-    memory->memory_size_ = new_size;
-    memory->ResizeMemory();
-  }
-  for (auto memory : privateMemory_) {
-    memory->memory_size_ = new_size;
-    memory->ResizeMemory();
-  }
-  // for (auto istr : bid_) istr->BoundMemoryIndices(observation_buff_size_);
+// void RegisterMachine::ResizeMemory(int new_size) {
+//   // for (auto memory : observation_memory_buff_) {
+//   //   // memory->memoryIndices_ = observation_buff_size_;
+//   //   memory->memory_size_ = new_size;
+//   //   memory->ResizeMemory();
+//   // }
+//   for (size_t i = 0; i < observation_memory_buff_.size(); i++) {
+//     observation_memory_buff_[i]->memory_size_ = new_size;
+//     observation_memory_buff_[i]->ResizeMemory();
+//   }
+//   // for (auto memory : privateMemory_) {
+//   //   memory->memory_size_ = new_size;
+//   //   memory->ResizeMemory();
+//   // }
+//   for (size_t i = 0; i < privateMemory_.size(); i++) {
+//     privateMemory_[i]->memory_size_ = new_size;
+//     privateMemory_[i]->ResizeMemory();
+//   }
+//   for (auto istr : bid_) istr->memory_size_ = memory_size_;
+// }
+
+void RegisterMachine::ResizeMemory(int memory_indices, int memory_size) {
+  for (auto memory : privateMemory_) delete memory;
+  privateMemory_.clear();
+  for (auto memory : observation_memory_buff_) delete memory;
+  observation_memory_buff_.clear();
+
+  SetupMemory(memory_indices, observation_buff_size_, memory_size);
+
+  // for (size_t i = 0; i < observation_memory_buff_.size(); i++) {
+  //   delete observation_memory_buff_[i];
+  //   observation_memory_buff_[i] = new memoryEigen(-1, i, memory_indices,
+  //   memory_size);
+  // }
+  // for (size_t i = 0; i < privateMemory_.size(); i++) {
+  //  delete privateMemory_[i];
+  //  privateMemory_[i] = new memoryEigen(-1, i, memory_indices, memory_size);
+  // }
+  // for (auto istr : bid_) istr->memory_size_ = memory_size;
 }
 
 // void RegisterMachine::MutateObsBuffSize(size_t max_observation_buff_size,
@@ -398,12 +429,15 @@ void RegisterMachine::ResizeMemory(int new_size) {
 
 void RegisterMachine::MutateMemorySize(
     std::unordered_map<std::string, std::any> &params, mt19937 &rng) {
-  std::uniform_int_distribution<> dis(
-      std::any_cast<int>(params["min_memory_size"]),
-      std::any_cast<int>(params["max_memory_size"]));
-  auto prev = memory_size_;
-  do {
-    memory_size_ = dis(rng);
-  } while (memory_size_ == prev);
-  ResizeMemory(memory_size_);
+      (void)params;
+      (void)rng;
+  // std::uniform_int_distribution<> dis(
+  //     std::any_cast<int>(params["min_memory_size"]),
+  //     std::any_cast<int>(params["max_memory_size"]));
+  // auto prev = memory_size_;
+  // do {
+  //   memory_size_ = dis(rng);
+  // } while (memory_size_ == prev);
+  // ResizeMemory(std::any_cast<int>(params["memory_indices"]), memory_size_);
+  // for (auto istr : bid_) istr->memory_size_ = memory_size_;
 }
