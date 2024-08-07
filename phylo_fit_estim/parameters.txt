@@ -35,7 +35,7 @@ test_mod 100
 
 # Number of tasks used each selection for evaluation. 
 # The rest are estimated with phylogeny.
-n_sampled_tasks_for_eval 6
+n_sampled_tasks_for_eval 3
 
 # number of fitness functions available
 n_fit_mode 1
@@ -83,7 +83,7 @@ max_team_size 128
 max_teams_per_graph 1000000
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 0.999
+p_atomic 0.99
 
 # team mutation: probability of deleting program from team
 pmd 0.5
@@ -125,7 +125,7 @@ skip_introns 1
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 50,50,50,50,50,50
+n_input 50,50,50
 
 # max initial program size
 max_initial_prog_size 10
@@ -167,7 +167,7 @@ memory_size 8
 
 # which tasks are active
 # rhs should be a single task name or a comma-separated list
-active_tasks Cartpole,Acrobot,CartCentering,Pendulum,Mountaincar,MountainCarContinuous
+active_tasks Cartpole,Acrobot,Pendulum
 
 # use the partially-observable version of a task, if available
 partially_observable 0
