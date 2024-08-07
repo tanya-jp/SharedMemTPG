@@ -62,10 +62,10 @@ n_generations 1000000
 mu_internal 0
 
 # number of elite teams
-n_elite 180
+n_elite 200
 
 # n_elite * n_elite_mul new teams are created each generation
-n_elite_mul 2
+n_elite_mul 5
 
 # fitness proportional selection
 fit_prop_select 0
@@ -178,7 +178,7 @@ p_observation_buff_size 0.0
 p_observation_index 0.2
 
 # program variation: probability of changing memory_size
-p_memory_size 0.5
+p_memory_size 0.2
 
 
 

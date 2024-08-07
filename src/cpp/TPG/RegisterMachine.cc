@@ -429,15 +429,15 @@ void RegisterMachine::ResizeMemory(int memory_indices, int memory_size) {
 
 void RegisterMachine::MutateMemorySize(
     std::unordered_map<std::string, std::any> &params, mt19937 &rng) {
-      (void)params;
-      (void)rng;
-  // std::uniform_int_distribution<> dis(
-  //     std::any_cast<int>(params["min_memory_size"]),
-  //     std::any_cast<int>(params["max_memory_size"]));
-  // auto prev = memory_size_;
-  // do {
-  //   memory_size_ = dis(rng);
-  // } while (memory_size_ == prev);
-  // ResizeMemory(std::any_cast<int>(params["memory_indices"]), memory_size_);
-  // for (auto istr : bid_) istr->memory_size_ = memory_size_;
+      // (void)params;
+      // (void)rng;
+  std::uniform_int_distribution<> dis(
+      std::any_cast<int>(params["min_memory_size"]),
+      std::any_cast<int>(params["max_memory_size"]));
+  auto prev = memory_size_;
+  do {
+    memory_size_ = dis(rng);
+  } while (memory_size_ == prev);
+  ResizeMemory(std::any_cast<int>(params["memory_indices"]), memory_size_);
+  for (auto istr : bid_) istr->memory_size_ = memory_size_;
 }
