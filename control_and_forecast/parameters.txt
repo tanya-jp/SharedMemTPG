@@ -62,11 +62,10 @@ n_generations 1000000
 mu_internal 0
 
 # number of elite teams
-# TODO(skelly): for your sanity, make this divisible by the number of tasks + 1
-n_elite 200
+n_elite 360
 
-# n_elite * (n_elite_mul - 1) new teams are created each generation
-n_elite_mul 5
+# n_elite * n_elite_mul new teams are created each generation
+n_elite_mul 2
 
 # fitness proportional selection
 fit_prop_select 0
@@ -74,14 +73,14 @@ fit_prop_select 0
 # which diversity mode to use, if available
 diversity_mode 0
 
-parent_select_roots_only 0
+parent_select_roots_only 1
 
 ################################################################################
 ## Team  parameters ############################################################
 ################################################################################
 
 # initial team size
-max_initial_team_size 5
+max_initial_team_size 10
 
 # max team size
 max_team_size 1000000
@@ -90,13 +89,13 @@ max_team_size 1000000
 max_teams_per_graph 1000000
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 1.0
+p_atomic 0.999
 
 # team mutation: probability of deleting program from team
 pmd 0.5
 
 # team mtation: probability of adding program to team
-pma 0.3
+pma 0.4
 
 # team mutation: probability of mutating a program
 pmm 1.0
@@ -123,13 +122,13 @@ pmx_p 0.5
 stateful 1
 
 # skip introns during evaluation
-skip_introns 1
+skip_introns 0
 
 # enable continuous outputs
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 32
+n_input 2
 
 # max initial program size
 max_initial_prog_size 10
@@ -141,12 +140,14 @@ max_prog_size 1000000
 # each memory index points to a data structure (scalar, vector, or matrix)
 memory_indices 8
 
-# dimensionality for vector & matrix memory
+# Dimensionality for vector & matrix memory
 memory_size 8
+min_memory_size 2
+max_memory_size 32 
 
 # Observations are stored in a buffer with this time window.
-# This is initially set to the same size as memory_indices.
-observation_buff_size 8
+observation_buff_size 1
+min_observation_buff_size 1
 max_observation_buff_size 32
 
 # program variation: probability of changing a random instruction
@@ -159,7 +160,7 @@ p_bid_swap 0.5
 p_bid_delete 0.5
 
 # program variation: probability of adding an instruction
-p_bid_add 0.3
+p_bid_add 0.4
 
 # program variation: probability of linear crossover with another team
 p_bid_xover 0.0
@@ -171,7 +172,15 @@ p_bid_xover 0.0
 bid_mu_const_stddev 0.05
 
 # program variation: probability of changing observation_buff_size
-p_observation_buff_size 0.2
+p_observation_buff_size 0.0
+
+# program variation: probability of changing observation_index
+p_observation_index 0.2
+
+# program variation: probability of changing memory_size
+p_memory_size 0.0
+
+
 
 ################################################################################
 ## General Task Parameters #####################################################
@@ -179,7 +188,7 @@ p_observation_buff_size 0.2
 
 # which tasks are active
 # rhs should be a single task name or a comma-separated list
-active_tasks Mackey
+active_tasks Cartpole
 
 # use the partially-observable version of a task, if available
 # currently only available for calssic control tasks
@@ -211,11 +220,11 @@ forecast_horizon_train 50
 forecast_horizon_val 100
 forecast_horizon_test 100
 
-#forecast_n_eval_train 19
-#forecast_n_eval_val 9
+forecast_n_eval_train 19
+forecast_n_eval_val 9
 
-forecast_n_eval_train 37
-forecast_n_eval_val 18
+#forecast_n_eval_train 37
+#forecast_n_eval_val 18
 
 ################################################################################
 ## Operations, uncomment to activate ###########################################
@@ -239,11 +248,11 @@ SCALAR_LOG_OP
 SCALAR_HEAVYSIDE_OP
 SCALAR_CONDITIONAL_OP
 SCALAR_POW_OP
-#####SCALAR_SQR_OP
-####SCALAR_CUBE_OP
+SCALAR_SQR_OP
+SCALAR_CUBE_OP
 SCALAR_TANH_OP
 SCALAR_SQRT_OP
-####SCALAR_CONST_SET_OP
+#SCALAR_CONST_SET_OP
 SCALAR_MIN_OP
 SCALAR_MAX_OP
 
@@ -264,9 +273,8 @@ VECTOR_MIN_OP
 VECTOR_MAX_OP
 VECTOR_MEAN_OP
 VECTOR_ST_DEV_OP
-####VECTOR_CONST_SET_OP
-SCALAR_VECTOR_ASSIGN_OP
-OBS_BUFF_SLICE_OP
+#VECTOR_CONST_SET_OP
+#SCALAR_VECTOR_ASSIGN_OP
  
 # matrix #########################
 VECTOR_OUTER_PRODUCT_OP
@@ -291,8 +299,8 @@ MATRIX_MEAN_OP
 MATRIX_ROW_MEAN_OP
 MATRIX_ROW_ST_DEV_OP
 MATRIX_ST_DEV_OP
-####MATRIX_CONST_SET_OP
-SCALAR_MATRIX_ASSIGN_OP
+#MATRIX_CONST_SET_OP
+#SCALAR_MATRIX_ASSIGN_OP
 
 ## noise ##########################
 ##SCALAR_UNIFORM_SET_OP

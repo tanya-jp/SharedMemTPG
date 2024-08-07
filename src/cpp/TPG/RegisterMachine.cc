@@ -373,13 +373,14 @@ double RegisterMachine::Run(state *obs, int &time_step,
           // memoryIndices_ and memory_size_ can be dynamic, so do mods here.
           istr->SetInIdxE(
               in, istr->GetInIdx(in) % istr->GetInMem(in)->memoryIndices_);
-          // CheckMemorySizes(8);    
+          // tail -f tpg. rySizes(8);    
         }
         
         // Scalar inputs are read from either the vector or matrix obs buff.
         // This copies data from obs buff to temporary scalar input variables.
         if (istr->GetInType(in) == memoryEigen::SCALAR_TYPE) {
           // cerr << "dbg memory_size_ " << memory_size_ << " in2Idx_ " <<  istr->in3Idx_ << " in2IdxE_ " << istr->in2IdxE_ << endl; 
+          // istr->in2IdxE_ = istr->in2Idx_ % obs->dim_;
           istr->SetupScalarIn(in, observation_memory_buff_);
         }
         // CheckMemorySizes(8);

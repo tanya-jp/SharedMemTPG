@@ -242,22 +242,17 @@ class instruction {
   // value from an index into the vector input buffer.
   // The scalar input buffer is never used.
   void SetupScalarIn(int in, vector<memoryEigen*>& observation_memory_buff) {
-    int primary_obs_type = memoryEigen::VECTOR_TYPE;  // TODO(skelly): fix
     double* scalar = in == 0 ? &scalar_in1_ : &scalar_in2_;
-    // int* index = in == 0 ? &in0IdxE_ : &in1IdxE_;
-    int index_1 = 0;  //TODO(skelly): assume index 0 (buff is always size 1)
+    int* index = in == 0 ? &in0IdxE_ : &in1IdxE_;
+    int obs_buff_index_index = 0;  //TODO(skelly): assume index 0 (buff is always size 1)
 
     if (IsObs(in)) {
-      if (primary_obs_type == memoryEigen::VECTOR_TYPE) {
         *scalar = observation_memory_buff[memoryEigen::VECTOR_TYPE]
-                      ->working_memory_[index_1](in2IdxE_, 0);
-      } else {
-        *scalar = observation_memory_buff[memoryEigen::MATRIX_TYPE]
-                      ->working_memory_[index_1](in2IdxE_, in3IdxE_);
-      }
+                      ->working_memory_[obs_buff_index_index](*index % memory_size_, 0);
+    
     }
     // // TODO(skelly): debugging output
-    // cerr << "scalar_in " << *scalar << endl; 
+    // cerr << "scalar_in idx " <<  in2IdxE_ << " val " << *scalar << endl; 
   }
 
   void BoundMemoryIndices(int observation_buff_size);
