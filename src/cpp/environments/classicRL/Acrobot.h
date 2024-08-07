@@ -160,7 +160,7 @@ class Acrobot : public TaskEnv {
     reward = -1.0;
 
     normalizeState(true);
-    return {-reward, 0.0};
+    return {reward, 0.0};
   }
 
   bool terminal() {
