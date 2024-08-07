@@ -8,6 +8,7 @@ string RegisterMachine::checkpoint(bool effective_only) {
   auto prog = effective_only ? bidEffective_ : bid_;
   for (auto istr : prog) oss << ":" << istr->checkpoint();
   oss << endl;
+  // CheckMemorySizes(8);
   return oss.str();
 }
 
@@ -36,8 +37,8 @@ RegisterMachine::RegisterMachine(
     bid_.push_back(in);
   }
   op_counts_.resize(instruction::NUM_OP);
-  SetupMemory(std::any_cast<int>(params["memory_indices"]),
-              observation_buff_size_, memory_size_);
+  SetupMemory(std::any_cast<int>(params["memory_indices"]));
+  // CheckMemorySizes(std::any_cast<int>(params["memory_indices"]));
 }
 
 // Create RegisterMachine from another RegisterMachine
@@ -58,8 +59,8 @@ RegisterMachine::RegisterMachine(
   for (auto initer = plr.bid_.begin(); initer != plr.bid_.end(); initer++)
     bid_.push_back(new instruction(**initer));
   op_counts_.resize(instruction::NUM_OP);
-  SetupMemory(std::any_cast<int>(params["memory_indices"]),
-              observation_buff_size_, memory_size_);
+  SetupMemory(std::any_cast<int>(params["memory_indices"]));
+  // CheckMemorySizes(std::any_cast<int>(params["memory_indices"]));
 }
 
 // Create RegisterMachine from checkpoint file
@@ -78,8 +79,8 @@ RegisterMachine::RegisterMachine(
   observation_buff_size_ = observation_buff_size;
   memory_size_ = memory_size;
   op_counts_.resize(instruction::NUM_OP);
-  SetupMemory(std::any_cast<int>(params["memory_indices"]),
-              observation_buff_size_, memory_size_);
+  SetupMemory(std::any_cast<int>(params["memory_indices"]));
+  // CheckMemorySizes(std::any_cast<int>(params["memory_indices"]));
 }
 
 RegisterMachine::~RegisterMachine() {
@@ -114,6 +115,7 @@ void RegisterMachine::MarkFeatures(instruction *istr, int in) {
       }
     }
   }
+  // CheckMemorySizes(8);
 }
 
 void RegisterMachine::MarkIntrons(
@@ -171,6 +173,7 @@ void RegisterMachine::MarkIntrons(
       }
     }
   }
+  // CheckMemorySizes(8);
 }
 
 void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
@@ -193,6 +196,7 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
     if ((int)bid_.size() < std::any_cast<int>(params["max_prog_size"]) &&
         dis_real(rng) < std::any_cast<double>(params["p_bid_add"])) {
       instruction *instr = new instruction(params, rng);
+      instr->memory_size_ = memory_size_;
       instr->Mutate(true, legalOps, observation_buff_size_, rng);
       uniform_int_distribution<int> disBid(0, bid_.size());
       int i = disBid(rng);
@@ -252,6 +256,8 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
 
     // for (auto istr : bid_) istr->BoundMemoryIndices(observation_buff_size_);
   }
+
+  // CheckMemorySizes(std::any_cast<int>(params["memory_indices"]));
 }
 
 // TODO(skelly): This functions currently assumes obs is a vector of state vars
@@ -313,16 +319,23 @@ void RegisterMachine::CopyObservationToMemoryBuff(state *obs) {
   //   }
   // }
   // cerr << endl;
+  // CheckMemorySizes(8);
 }
 
 double RegisterMachine::Run(state *obs, int &time_step,
                             const size_t &graph_depth, bool &verbose) {
+
+  // CheckMemorySizes(8);
+
   // Clear working memory prior to execution, making this program stateless
   if (!stateful_) ClearWorking();
+
+  // CheckMemorySizes(8);
 
   CopyObservationToMemoryBuff(obs);
 
   for (auto istr : bidEffective_) {
+    // CheckMemorySizes(8);
     istr->out_ = privateMemory_[istr->GetOutType()];
 
     // memoryIndices_ and memory_size_ can be dynamic
@@ -336,44 +349,65 @@ double RegisterMachine::Run(state *obs, int &time_step,
       if (istr->GetInType(in) != memoryEigen::NA_TYPE) {
         if (istr->IsMemoryRef(in)) {
           istr->SetInMem(in, privateMemory_[istr->GetInType(in)]);
+
+          
+
           // memoryIndices_ and memory_size_ can be dynamic, so do mods here.
           istr->SetInIdxE(
               in, istr->GetInIdx(in) % istr->GetInMem(in)->memoryIndices_);
+
+          // if (istr->GetInType(in) != memoryEigen::SCALAR_TYPE) {
+          //   if (istr->GetInMem(in)
+          //           ->working_memory_[istr->GetInIdxE(in)]
+          //           .rows() != memory_size_) {
+          //     die(__FILE__, __FUNCTION__, __LINE__, "run_caught");
+          //   }
+          // }
+
           // Input is a memory ref. Track read time for temporal memory.
           istr->GetInMem(in)->getReadTimeE()(istr->GetInIdxE(in), 0) =
               time_step + (graph_depth / MAX_GRAPH_DEPTH);
+          // CheckMemorySizes(8);
         } else {  // Input is an observation reference.
           istr->SetInMem(in, observation_memory_buff_[istr->GetInType(in)]);
           // memoryIndices_ and memory_size_ can be dynamic, so do mods here.
           istr->SetInIdxE(
               in, istr->GetInIdx(in) % istr->GetInMem(in)->memoryIndices_);
+          // CheckMemorySizes(8);    
         }
-
+        
         // Scalar inputs are read from either the vector or matrix obs buff.
         // This copies data from obs buff to temporary scalar input variables.
         if (istr->GetInType(in) == memoryEigen::SCALAR_TYPE) {
           // cerr << "dbg memory_size_ " << memory_size_ << " in2Idx_ " <<  istr->in3Idx_ << " in2IdxE_ " << istr->in2IdxE_ << endl; 
           istr->SetupScalarIn(in, observation_memory_buff_);
         }
+        // CheckMemorySizes(8);
       }
     }
-    // Track write times for temporal memory.
-    istr->out_->getWriteTimeE()(istr->outIdxE_, 0) =
-        time_step + (graph_depth / MAX_GRAPH_DEPTH);
+    // // Track write times for temporal memory.
+    // istr->out_->getWriteTimeE()(istr->outIdxE_, 0) =
+    //     time_step + (graph_depth / MAX_GRAPH_DEPTH);
+    // CheckMemorySizes(8);
+    // cerr << "op_ " << istr->op_ << " memory_size_ " << memory_size_ << " " << istr->memory_size_ << endl;
     istr->exec(verbose);  // Execute instruction
+    // CheckMemorySizes(8);
   }
+  // CheckMemorySizes(8);
   // Return bid value.
   return privateMemory_[memoryEigen::SCALAR_TYPE]->working_memory_[0](0, 0);
 }
 
-void RegisterMachine::SetupMemory(int memory_indices, int observation_buff_size,
-                                  int memory_size) {
+void RegisterMachine::SetupMemory(int memory_indices) {
   for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
     privateMemory_.push_back(
-        new memoryEigen(-1, mem_t, memory_indices, memory_size));
+        new memoryEigen(-1, mem_t, memory_indices, memory_size_));
     observation_memory_buff_.push_back(
-        new memoryEigen(-1, mem_t, observation_buff_size, memory_size));
+        new memoryEigen(-1, mem_t, observation_buff_size_, memory_size_));
   }
+  for (auto istr : bid_) istr->memory_size_ = memory_size_;
+  for (auto istr : bidEffective_) istr->memory_size_ = memory_size_;
+  // CheckMemorySizes(8);
 }
 
 // void RegisterMachine::ResizeMemory(int new_size) {
@@ -397,24 +431,20 @@ void RegisterMachine::SetupMemory(int memory_indices, int observation_buff_size,
 //   for (auto istr : bid_) istr->memory_size_ = memory_size_;
 // }
 
-void RegisterMachine::ResizeMemory(int memory_indices, int memory_size) {
-  for (auto memory : privateMemory_) delete memory;
-  privateMemory_.clear();
-  for (auto memory : observation_memory_buff_) delete memory;
+void RegisterMachine::ResizeMemory(int memory_indices) {
+
+  for (size_t i = 0; i < observation_memory_buff_.size(); i++) {
+    delete observation_memory_buff_[i];
+  }
   observation_memory_buff_.clear();
 
-  SetupMemory(memory_indices, observation_buff_size_, memory_size);
+  for (size_t i = 0; i < privateMemory_.size(); i++) {
+   delete privateMemory_[i];
+  }
+  privateMemory_.clear();
 
-  // for (size_t i = 0; i < observation_memory_buff_.size(); i++) {
-  //   delete observation_memory_buff_[i];
-  //   observation_memory_buff_[i] = new memoryEigen(-1, i, memory_indices,
-  //   memory_size);
-  // }
-  // for (size_t i = 0; i < privateMemory_.size(); i++) {
-  //  delete privateMemory_[i];
-  //  privateMemory_[i] = new memoryEigen(-1, i, memory_indices, memory_size);
-  // }
-  // for (auto istr : bid_) istr->memory_size_ = memory_size;
+  SetupMemory(memory_indices);
+  // CheckMemorySizes(8);
 }
 
 // void RegisterMachine::MutateObsBuffSize(size_t max_observation_buff_size,
@@ -438,6 +468,8 @@ void RegisterMachine::MutateMemorySize(
   do {
     memory_size_ = dis(rng);
   } while (memory_size_ == prev);
-  ResizeMemory(std::any_cast<int>(params["memory_indices"]), memory_size_);
+  ResizeMemory(std::any_cast<int>(params["memory_indices"]));
   for (auto istr : bid_) istr->memory_size_ = memory_size_;
+  for (auto istr : bidEffective_) istr->memory_size_ = memory_size_;
+  // CheckMemorySizes(std::any_cast<int>(params["memory_indices"]));
 }

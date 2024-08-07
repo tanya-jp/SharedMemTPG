@@ -2406,7 +2406,7 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       int stateful = atoi(outcomeFields[f++].c_str());
       int nrefs = atoi(outcomeFields[f++].c_str());
       int observation_buff_size = atoi(outcomeFields[f++].c_str());
-      int obs_indsx = atoi(outcomeFields[f++].c_str());
+      int obs_index = atoi(outcomeFields[f++].c_str());
       int memory_size = atoi(outcomeFields[f++].c_str());
       // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
       //   memTypeIds[mem_t] = atoi(outcomeFields[f++].c_str());
@@ -2429,7 +2429,7 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
         bid.push_back(in);
       }
       l = new RegisterMachine(gtime, action, stateful, params_, id, nrefs, observation_buff_size, memory_size, bid);
-      l->obs_index_ = obs_indsx;
+      l->obs_index_ = obs_index;
       // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
       //   l->MemSet(mem_t, _Memory[mem_t][memTypeIds[mem_t]]);
       // }

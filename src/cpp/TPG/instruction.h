@@ -558,6 +558,10 @@ class instruction {
   }
 
   inline void ExecuteMatrixVectorProductOp(bool dbg) {
+    // cerr <<"dbg " << out_->working_memory_[outIdxE_].rows() << " " << in1_->working_memory_[in0IdxE_].rows() << " " << in2_->working_memory_[in1IdxE_].rows();
+    // cerr << " types " << GetInType(0) << " " << GetInType(1);
+    // cerr << " src " << in1Src_ << " " << in2Src_;
+    // cerr << " memory_size " << memory_size_ << endl;
     out_->working_memory_[outIdxE_] =
         in1_->working_memory_[in0IdxE_] * in2_->working_memory_[in1IdxE_];
     if (dbg) {
