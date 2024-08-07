@@ -62,7 +62,7 @@ n_generations 1000000
 mu_internal 0
 
 # number of elite teams
-n_elite 360
+n_elite 250
 
 # n_elite * n_elite_mul new teams are created each generation
 n_elite_mul 2
@@ -89,7 +89,7 @@ max_team_size 1000000
 max_teams_per_graph 1000000
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 0.999
+p_atomic 0.99
 
 # team mutation: probability of deleting program from team
 pmd 0.5
@@ -128,7 +128,7 @@ skip_introns 0
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 2
+n_input 2,2,32,32
 
 # max initial program size
 max_initial_prog_size 10
@@ -178,7 +178,7 @@ p_observation_buff_size 0.0
 p_observation_index 0.2
 
 # program variation: probability of changing memory_size
-p_memory_size 0.0
+p_memory_size 0.2
 
 
 
@@ -188,7 +188,7 @@ p_memory_size 0.0
 
 # which tasks are active
 # rhs should be a single task name or a comma-separated list
-active_tasks Cartpole
+active_tasks Cartpole,Pendulum,Mackey,Laser
 
 # use the partially-observable version of a task, if available
 # currently only available for calssic control tasks

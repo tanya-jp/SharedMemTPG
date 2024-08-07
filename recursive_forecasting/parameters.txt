@@ -62,7 +62,7 @@ n_generations 1000000
 mu_internal 0
 
 # number of elite teams
-n_elite 180
+n_elite 250
 
 # n_elite * n_elite_mul new teams are created each generation
 n_elite_mul 2
@@ -89,7 +89,7 @@ max_team_size 1000000
 max_teams_per_graph 1000000
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 0.999
+p_atomic 0.99
 
 # team mutation: probability of deleting program from team
 pmd 0.5
@@ -274,7 +274,7 @@ VECTOR_MAX_OP
 VECTOR_MEAN_OP
 VECTOR_ST_DEV_OP
 #VECTOR_CONST_SET_OP
-SCALAR_VECTOR_ASSIGN_OP
+#SCALAR_VECTOR_ASSIGN_OP
  
 # matrix #########################
 VECTOR_OUTER_PRODUCT_OP
@@ -300,7 +300,7 @@ MATRIX_ROW_MEAN_OP
 MATRIX_ROW_ST_DEV_OP
 MATRIX_ST_DEV_OP
 #MATRIX_CONST_SET_OP
-SCALAR_MATRIX_ASSIGN_OP
+#SCALAR_MATRIX_ASSIGN_OP
 
 ## noise ##########################
 ##SCALAR_UNIFORM_SET_OP
