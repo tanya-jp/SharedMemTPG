@@ -27,7 +27,7 @@ def plot_experiment(arg, col, alph):
 #   plt.plot(medians.index, medians.values, linestyle='-', color=col)
   
 
-max_gen = 10000
+max_gen = 100000
 plot_name = sys.argv[1]
 plt.rcParams["figure.figsize"] = [7.50, 3.50]
 plt.rcParams["figure.autolayout"] = True

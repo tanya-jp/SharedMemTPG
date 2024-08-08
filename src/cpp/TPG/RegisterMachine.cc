@@ -350,8 +350,6 @@ double RegisterMachine::Run(state *obs, int &time_step,
         if (istr->IsMemoryRef(in)) {
           istr->SetInMem(in, privateMemory_[istr->GetInType(in)]);
 
-          
-
           // memoryIndices_ and memory_size_ can be dynamic, so do mods here.
           istr->SetInIdxE(
               in, istr->GetInIdx(in) % istr->GetInMem(in)->memoryIndices_);

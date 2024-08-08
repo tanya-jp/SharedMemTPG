@@ -37,7 +37,7 @@ write_test_checkpoints 1
 write_phylogeny 0
 
 # how frequently to run test procedure
-test_mod 100
+test_mod 1
 
 # Number of tasks used each selection for evaluation. 
 # The rest are estimated with phylogeny.
@@ -62,10 +62,10 @@ n_generations 1000000
 mu_internal 0
 
 # number of elite teams
-n_elite 200
+n_elite 150
 
 # n_elite * n_elite_mul new teams are created each generation
-n_elite_mul 5
+n_elite_mul 2
 
 # fitness proportional selection
 fit_prop_select 0
@@ -73,23 +73,23 @@ fit_prop_select 0
 # which diversity mode to use, if available
 diversity_mode 0
 
-parent_select_roots_only 1
+parent_select_roots_only 0
 
 ################################################################################
 ## Team  parameters ############################################################
 ################################################################################
 
 # initial team size
-max_initial_team_size 5
+max_initial_team_size 10
 
 # max team size
-max_team_size 5
+max_team_size 1000000
 
 # max teams per graph
 max_teams_per_graph 1000000
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 0.999
+p_atomic 0.99
 
 # team mutation: probability of deleting program from team
 pmd 0.5
@@ -128,24 +128,27 @@ skip_introns 0
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 3
+n_input 2
 
 # max initial program size
 max_initial_prog_size 10
 
 # max program size
-max_prog_size 10
+max_prog_size 1000000
 
 # number of memory indices
 # each memory index points to a data structure (scalar, vector, or matrix)
 memory_indices 8
 
-# dimensionality for vector & matrix memory
-memory_size 3
+# Dimensionality for vector & matrix memory
+memory_size 8
+min_memory_size 2
+max_memory_size 32 
 
 # Observations are stored in a buffer with this time window.
-# This is initially set to the same size as memory_indices.
-max_observation_buff_size 50
+observation_buff_size 1
+min_observation_buff_size 1
+max_observation_buff_size 32
 
 # program variation: probability of changing a random instruction
 p_bid_mutate 1.0
@@ -171,17 +174,25 @@ bid_mu_const_stddev 0.05
 # program variation: probability of changing observation_buff_size
 p_observation_buff_size 0.0
 
+# program variation: probability of changing observation_index
+p_observation_index 0.2
+
+# program variation: probability of changing memory_size
+p_memory_size 0.2
+
+
+
 ################################################################################
 ## General Task Parameters #####################################################
 ################################################################################
 
 # which tasks are active
 # rhs should be a single task name or a comma-separated list
-active_tasks Pendulum
+active_tasks Cartpole
 
 # use the partially-observable version of a task, if available
 # currently only available for calssic control tasks
-partially_observable 0
+partially_observable 1
 
 # number of discrete actions
 n_discrete_action 3
@@ -211,6 +222,9 @@ forecast_horizon_test 100
 
 forecast_n_eval_train 19
 forecast_n_eval_val 9
+
+#forecast_n_eval_train 37
+#forecast_n_eval_val 18
 
 ################################################################################
 ## Operations, uncomment to activate ###########################################
@@ -260,7 +274,7 @@ VECTOR_MAX_OP
 VECTOR_MEAN_OP
 VECTOR_ST_DEV_OP
 #VECTOR_CONST_SET_OP
-SCALAR_VECTOR_ASSIGN_OP
+#SCALAR_VECTOR_ASSIGN_OP
  
 # matrix #########################
 VECTOR_OUTER_PRODUCT_OP
@@ -286,7 +300,7 @@ MATRIX_ROW_MEAN_OP
 MATRIX_ROW_ST_DEV_OP
 MATRIX_ST_DEV_OP
 #MATRIX_CONST_SET_OP
-SCALAR_MATRIX_ASSIGN_OP
+#SCALAR_MATRIX_ASSIGN_OP
 
 ## noise ##########################
 ##SCALAR_UNIFORM_SET_OP
@@ -295,4 +309,3 @@ SCALAR_MATRIX_ASSIGN_OP
 #VECTOR_GAUSSIAN_SET_OP
 ##MATRIX_UNIFORM_SET_OP
 #MATRIX_GAUSSIAN_SET_OP
-
