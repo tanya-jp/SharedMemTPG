@@ -62,7 +62,7 @@ n_generations 1000000
 mu_internal 0
 
 # number of elite teams
-n_elite 150
+n_elite 500
 
 # n_elite * n_elite_mul new teams are created each generation
 n_elite_mul 2
@@ -141,9 +141,9 @@ max_prog_size 1000000
 memory_indices 8
 
 # Dimensionality for vector & matrix memory
-memory_size 8
+memory_size 2
 min_memory_size 2
-max_memory_size 32 
+max_memory_size 8 
 
 # Observations are stored in a buffer with this time window.
 observation_buff_size 1
@@ -180,15 +180,13 @@ p_observation_index 0.2
 # program variation: probability of changing memory_size
 p_memory_size 0.2
 
-
-
 ################################################################################
 ## General Task Parameters #####################################################
 ################################################################################
 
 # which tasks are active
 # rhs should be a single task name or a comma-separated list
-active_tasks Cartpole,Mackey
+active_tasks Pendulum,Mackey
 
 # use the partially-observable version of a task, if available
 # currently only available for calssic control tasks

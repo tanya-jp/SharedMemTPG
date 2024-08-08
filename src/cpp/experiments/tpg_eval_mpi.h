@@ -298,6 +298,7 @@ void evaluate_main(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks,
   for (int task : evalTasks) {
     tpg.state_["active_task"] = task;
     auto teams_to_eval = GetTeamsToEval(tpg, tasks[task]);
+    // cerr << "Number of teams to eval: " << teams_to_eval.size() << endl;
 
     AssignTeamsToEvaluators(tpg, world, teams_to_eval, world_size_per_task,
                             evaluator);

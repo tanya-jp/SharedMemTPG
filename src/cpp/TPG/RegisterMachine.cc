@@ -124,12 +124,9 @@ void RegisterMachine::MarkIntrons(
   // Meff maps [memory type][index]->true/false.
   auto memory_indices = std::any_cast<int>(params["memory_indices"]);
   map<int, vector<bool> > Meff;
-  Meff[memoryEigen::SCALAR_TYPE] =
-      vector<bool>(memory_indices, false);
-  Meff[memoryEigen::VECTOR_TYPE] =
-      vector<bool>(memory_indices, false);
-  Meff[memoryEigen::MATRIX_TYPE] =
-      vector<bool>(memory_indices, false);
+  Meff[memoryEigen::SCALAR_TYPE] = vector<bool>(memory_indices, false);
+  Meff[memoryEigen::VECTOR_TYPE] = vector<bool>(memory_indices, false);
+  Meff[memoryEigen::MATRIX_TYPE] = vector<bool>(memory_indices, false);
 
   // Mark bid output memory.
   Meff[memoryEigen::SCALAR_TYPE][0] = true;
@@ -165,7 +162,8 @@ void RegisterMachine::MarkIntrons(
         op_counts_[istr->op_]++;
         for (int in = 0; in < 2; in++) {
           if (istr->IsMemoryRef(in)) {
-            Meff[istr->GetInType(in)][istr->GetInIdx(in) % memory_indices] = true;
+            Meff[istr->GetInType(in)][istr->GetInIdx(in) % memory_indices] =
+                true;
           } else if (istr->IsObs(in)) {
             MarkFeatures(istr, in);
           }
@@ -260,92 +258,117 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
   // CheckMemorySizes(std::any_cast<int>(params["memory_indices"]));
 }
 
+// // TODO(skelly): This functions currently assumes obs is a vector of state
+// vars void RegisterMachine::CopyObservationToMemoryBuff(state *obs) {
+//   // // Copy obs to scalar memory  TODO(skelly): currently unused. remove?
+//   // Matrix<double, Dynamic, Dynamic> scalar_mat(1, 1);
+//   // scalar_mat(0, 0) = obs->stateValueAtIndex(0);
+//   // AddToInputMemoryBuff(scalar_mat, memoryEigen::SCALAR_TYPE);
+
+//   // Copy obs to vector memory
+//   // Matrix<double, Dynamic, Dynamic> vector_mat(memory_size, 1);
+//   int f = obs_index_ % obs->dim_;
+//   for (int row = 0; row < memory_size_; row++) {
+//     // vector_mat(row, 0) = obs->stateValueAtIndex(f % obs->dim_);
+//     observation_memory_buff_[memoryEigen::VECTOR_TYPE]->working_memory_[0](
+//         row, 0) = obs->stateValueAtIndex(f % obs->dim_);
+//     f++;
+//   }
+//   // AddToInputMemoryBuff(vector_mat, memoryEigen::VECTOR_TYPE);
+
+//   // // TODO(skelly): debugging output
+//   // cerr << "vector_in " << memory_size_ << ",1";
+//   // for (int r = 0; r < observation_memory_buff_[memoryEigen::VECTOR_TYPE]
+//   //                         ->working_memory_[0]
+//   //                         .rows();
+//   //      r++) {
+//   //   cerr << " "
+//   //        << observation_memory_buff_[memoryEigen::VECTOR_TYPE]
+//   //               ->working_memory_[0](r, 0);
+//   // }
+//   // cerr << endl;
+
+//   // Copy obs to matrix memory
+//   // Matrix<double, Dynamic, Dynamic> matrix_mat(memory_size, memory_size);
+//   f = obs_index_ % obs->dim_;
+//   for (int row = 0; row < memory_size_; row++) {
+//     for (int col = 0; col < memory_size_; col++) {
+//       // matrix_mat(row, col) = obs->stateValueAtIndex(f % obs->dim_);
+//       observation_memory_buff_[memoryEigen::MATRIX_TYPE]->working_memory_[0](
+//           row, col) = obs->stateValueAtIndex(f % obs->dim_);
+//       f++;
+//     }
+//   }
+//   // AddToInputMemoryBuff(matrix_mat, memoryEigen::MATRIX_TYPE);
+
+//   // // TODO(skelly): debugging output
+//   // cerr << "matrix_in " << memory_size_ << "," << memory_size_;
+//   // for (int r = 0; r < observation_memory_buff_[memoryEigen::MATRIX_TYPE]
+//   //                         ->working_memory_[0]
+//   //                         .rows();
+//   //      r++) {
+//   //   for (int c = 0; c < observation_memory_buff_[memoryEigen::MATRIX_TYPE]
+//   //                           ->working_memory_[0]
+//   //                           .cols();
+//   //        c++) {
+//   //     cerr << " "
+//   //          << observation_memory_buff_[memoryEigen::MATRIX_TYPE]
+//   //                 ->working_memory_[0](r, c);
+//   //   }
+//   // }
+//   // cerr << endl;
+//   // CheckMemorySizes(8);
+// }
+
 // TODO(skelly): This functions currently assumes obs is a vector of state vars
-void RegisterMachine::CopyObservationToMemoryBuff(state *obs) {
-  // // Copy obs to scalar memory  TODO(skelly): currently unused. remove?
-  // Matrix<double, Dynamic, Dynamic> scalar_mat(1, 1);
-  // scalar_mat(0, 0) = obs->stateValueAtIndex(0);
-  // AddToInputMemoryBuff(scalar_mat, memoryEigen::SCALAR_TYPE);
-
-  // Copy obs to vector memory
-  // Matrix<double, Dynamic, Dynamic> vector_mat(memory_size, 1);
-  int f = obs_index_ % obs->dim_;
-  for (int row = 0; row < memory_size_; row++) {
-    // vector_mat(row, 0) = obs->stateValueAtIndex(f % obs->dim_);
-    observation_memory_buff_[memoryEigen::VECTOR_TYPE]->working_memory_[0](
-        row, 0) = obs->stateValueAtIndex(f % obs->dim_);
-    f++;
-  }
-  // AddToInputMemoryBuff(vector_mat, memoryEigen::VECTOR_TYPE);
-
-  // // TODO(skelly): debugging output
-  // cerr << "vector_in " << memory_size_ << ",1";
-  // for (int r = 0; r < observation_memory_buff_[memoryEigen::VECTOR_TYPE]
-  //                         ->working_memory_[0]
-  //                         .rows();
-  //      r++) {
-  //   cerr << " "
-  //        << observation_memory_buff_[memoryEigen::VECTOR_TYPE]
-  //               ->working_memory_[0](r, 0);
-  // }
-  // cerr << endl;
-
-  // Copy obs to matrix memory
-  // Matrix<double, Dynamic, Dynamic> matrix_mat(memory_size, memory_size);
-  f = obs_index_ % obs->dim_;
-  for (int row = 0; row < memory_size_; row++) {
-    for (int col = 0; col < memory_size_; col++) {
-      // matrix_mat(row, col) = obs->stateValueAtIndex(f % obs->dim_);
-      observation_memory_buff_[memoryEigen::MATRIX_TYPE]->working_memory_[0](
-          row, col) = obs->stateValueAtIndex(f % obs->dim_);
+void RegisterMachine::CopyObservationToMemoryBuff(state *obs,
+                                                  size_t memory_type) {
+  if (memory_type == memoryEigen::VECTOR_TYPE) {
+    // Copy obs to vector memory
+    int f = obs_index_ % obs->dim_;
+    for (int row = 0; row < memory_size_; row++) {
+      observation_memory_buff_[memoryEigen::VECTOR_TYPE]->working_memory_[0](
+          row, 0) = obs->stateValueAtIndex(f % obs->dim_);
       f++;
     }
-  }
-  // AddToInputMemoryBuff(matrix_mat, memoryEigen::MATRIX_TYPE);
+  } else if (memory_type == memoryEigen::MATRIX_TYPE) {
+    // int fv = obs_index_ % obs->dim_;
+    int fm = obs_index_ % obs->dim_;
+    for (int row = 0; row < memory_size_; row++) {
+      // observation_memory_buff_[memoryEigen::VECTOR_TYPE]->working_memory_[0](
+      //     row, 0) = obs->stateValueAtIndex(fv % obs->dim_);
+      // fv++;
 
-  // // TODO(skelly): debugging output
-  // cerr << "matrix_in " << memory_size_ << "," << memory_size_;
-  // for (int r = 0; r < observation_memory_buff_[memoryEigen::MATRIX_TYPE]
-  //                         ->working_memory_[0]
-  //                         .rows();
-  //      r++) {
-  //   for (int c = 0; c < observation_memory_buff_[memoryEigen::MATRIX_TYPE]
-  //                           ->working_memory_[0]
-  //                           .cols();
-  //        c++) {
-  //     cerr << " "
-  //          << observation_memory_buff_[memoryEigen::MATRIX_TYPE]
-  //                 ->working_memory_[0](r, c);
-  //   }
-  // }
-  // cerr << endl;
-  // CheckMemorySizes(8);
+      for (int col = 0; col < memory_size_; col++) {
+        observation_memory_buff_[memoryEigen::MATRIX_TYPE]->working_memory_[0](
+            row, col) = obs->stateValueAtIndex(fm % obs->dim_);
+        fm++;
+      }
+    }
+  }
 }
 
 double RegisterMachine::Run(state *obs, int &time_step,
                             const size_t &graph_depth, bool &verbose) {
-
-  // CheckMemorySizes(8);
-
   // Clear working memory prior to execution, making this program stateless
   if (!stateful_) ClearWorking();
 
-  // CheckMemorySizes(8);
-
-  CopyObservationToMemoryBuff(obs);
+  // CopyObservationToMemoryBuff(obs);
+  bool copied_obs_vec = false;
+  bool copied_obs_mat = false;
 
   for (auto istr : bidEffective_) {
-    // CheckMemorySizes(8);
     istr->out_ = privateMemory_[istr->GetOutType()];
 
     // memoryIndices_ and memory_size_ can be dynamic
     // Must do mods here at runtime.
     istr->outIdxE_ = istr->outIdx_ % istr->out_->memoryIndices_;
-    istr->SetInIdxE(2, istr->in2Idx_ % memory_size_);
-    istr->SetInIdxE(3, istr->in3Idx_ % memory_size_);
+    // TODO(skelly): these are unused
+    // istr->SetInIdxE(2, istr->in2Idx_ % memory_size_);
+    // istr->SetInIdxE(3, istr->in3Idx_ % memory_size_);
 
     for (size_t in = 0; in < 2; in++) {
-      // Check is this input is used in the operation.
+      // Check if this input is used in the operation.
       if (istr->GetInType(in) != memoryEigen::NA_TYPE) {
         if (istr->IsMemoryRef(in)) {
           istr->SetInMem(in, privateMemory_[istr->GetInType(in)]);
@@ -354,45 +377,39 @@ double RegisterMachine::Run(state *obs, int &time_step,
           istr->SetInIdxE(
               in, istr->GetInIdx(in) % istr->GetInMem(in)->memoryIndices_);
 
-          // if (istr->GetInType(in) != memoryEigen::SCALAR_TYPE) {
-          //   if (istr->GetInMem(in)
-          //           ->working_memory_[istr->GetInIdxE(in)]
-          //           .rows() != memory_size_) {
-          //     die(__FILE__, __FUNCTION__, __LINE__, "run_caught");
-          //   }
-          // }
-
           // Input is a memory ref. Track read time for temporal memory.
           istr->GetInMem(in)->getReadTimeE()(istr->GetInIdxE(in), 0) =
               time_step + (graph_depth / MAX_GRAPH_DEPTH);
-          // CheckMemorySizes(8);
         } else {  // Input is an observation reference.
           istr->SetInMem(in, observation_memory_buff_[istr->GetInType(in)]);
           // memoryIndices_ and memory_size_ can be dynamic, so do mods here.
           istr->SetInIdxE(
               in, istr->GetInIdx(in) % istr->GetInMem(in)->memoryIndices_);
-          // tail -f tpg. rySizes(8);    
+
+          // Copy to obs buff only once.
+          if (istr->GetInType(in) == memoryEigen::VECTOR_TYPE &&
+              !copied_obs_vec) {
+            CopyObservationToMemoryBuff(obs, memoryEigen::VECTOR_TYPE);
+            copied_obs_vec = true;
+          } else if (istr->GetInType(in) == memoryEigen::MATRIX_TYPE &&
+                     !copied_obs_mat) {
+            CopyObservationToMemoryBuff(obs, memoryEigen::MATRIX_TYPE);
+            copied_obs_mat = true;
+          }
         }
-        
+
         // Scalar inputs are read from either the vector or matrix obs buff.
         // This copies data from obs buff to temporary scalar input variables.
         if (istr->GetInType(in) == memoryEigen::SCALAR_TYPE) {
-          // cerr << "dbg memory_size_ " << memory_size_ << " in2Idx_ " <<  istr->in3Idx_ << " in2IdxE_ " << istr->in2IdxE_ << endl; 
-          // istr->in2IdxE_ = istr->in2Idx_ % obs->dim_;
-          istr->SetupScalarIn(in, observation_memory_buff_);
+          istr->SetupScalarIn(in, observation_memory_buff_, obs);
         }
-        // CheckMemorySizes(8);
       }
     }
-    // // Track write times for temporal memory.
-    // istr->out_->getWriteTimeE()(istr->outIdxE_, 0) =
-    //     time_step + (graph_depth / MAX_GRAPH_DEPTH);
-    // CheckMemorySizes(8);
-    // cerr << "op_ " << istr->op_ << " memory_size_ " << memory_size_ << " " << istr->memory_size_ << endl;
+    // Track write times for temporal memory.
+    istr->out_->getWriteTimeE()(istr->outIdxE_, 0) =
+        time_step + (graph_depth / MAX_GRAPH_DEPTH);
     istr->exec(verbose);  // Execute instruction
-    // CheckMemorySizes(8);
   }
-  // CheckMemorySizes(8);
   // Return bid value.
   return privateMemory_[memoryEigen::SCALAR_TYPE]->working_memory_[0](0, 0);
 }
@@ -431,14 +448,13 @@ void RegisterMachine::SetupMemory(int memory_indices) {
 // }
 
 void RegisterMachine::ResizeMemory(int memory_indices) {
-
   for (size_t i = 0; i < observation_memory_buff_.size(); i++) {
     delete observation_memory_buff_[i];
   }
   observation_memory_buff_.clear();
 
   for (size_t i = 0; i < privateMemory_.size(); i++) {
-   delete privateMemory_[i];
+    delete privateMemory_[i];
   }
   privateMemory_.clear();
 
@@ -458,8 +474,8 @@ void RegisterMachine::ResizeMemory(int memory_indices) {
 
 void RegisterMachine::MutateMemorySize(
     std::unordered_map<std::string, std::any> &params, mt19937 &rng) {
-      // (void)params;
-      // (void)rng;
+  // (void)params;
+  // (void)rng;
   std::uniform_int_distribution<> dis(
       std::any_cast<int>(params["min_memory_size"]),
       std::any_cast<int>(params["max_memory_size"]));

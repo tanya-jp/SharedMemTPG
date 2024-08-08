@@ -1,6 +1,7 @@
 #ifndef instruction_h
 #define instruction_h
 
+#include <state.h>
 #include <bitset>
 #include <iomanip>
 #include <random>
@@ -241,15 +242,17 @@ class instruction {
   // For operations in which a scalar refers to an observation ref, we take its
   // value from an index into the vector input buffer.
   // The scalar input buffer is never used.
-  void SetupScalarIn(int in, vector<memoryEigen*>& observation_memory_buff) {
+  void SetupScalarIn(int in, vector<memoryEigen*>& observation_memory_buff, state* obs) {
     double* scalar = in == 0 ? &scalar_in1_ : &scalar_in2_;
     int* index = in == 0 ? &in0IdxE_ : &in1IdxE_;
     memoryEigen* input_memory = in == 0 ? in1_ : in2_;
-    int obs_buff_index_index = 0;  //TODO(skelly): assume index 0 (buff is always size 1)
+    // int obs_buff_index_index = 0;  //TODO(skelly): assume index 0 (buff is always size 1)
 
     if (IsObs(in)) {
-        *scalar = observation_memory_buff[memoryEigen::VECTOR_TYPE]
-                      ->working_memory_[obs_buff_index_index](*index % memory_size_, 0);
+        // *scalar = observation_memory_buff[memoryEigen::VECTOR_TYPE]
+        //               ->working_memory_[obs_buff_index_index](*index % memory_size_, 0);
+        // TODO (skelly): should this also be range limited to memory_size?
+         *scalar = obs->stateValueAtIndex(*index  % obs->dim_);       
     
     } else {
        *scalar = input_memory->working_memory_[*index](0, 0);

@@ -106,8 +106,8 @@ class Acrobot : public TaskEnv {
     (void)actionD;
     (void)rng;
 
-    double torque = actionsDiscrete[actionD];
-    // double torque = bound(actionC, -1.0, 1.0);
+    // double torque = actionsDiscrete[actionD];
+    double torque = bound(actionC, -1.0, 1.0);
     double d1;
     double d2;
     double phi_2;

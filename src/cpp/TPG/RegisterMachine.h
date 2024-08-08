@@ -20,7 +20,7 @@ class RegisterMachine : public program {
   //   observation_memory_buff_[mem_t]->working_memory_.push_front(mat);
   //   observation_memory_buff_[mem_t]->working_memory_.pop_back();
   // }
-  void CopyObservationToMemoryBuff(state *obs);
+  void CopyObservationToMemoryBuff(state *obs, size_t memory_type);
   void MarkFeatures(instruction *istr, int in);
   void MarkIntrons(std::unordered_map<std::string, std::any> &params_);
   double Run(state *, int &time_step, const size_t &graph_depth, bool &verbose);
