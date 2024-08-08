@@ -242,23 +242,20 @@ class instruction {
   // For operations in which a scalar refers to an observation ref, we take its
   // value from an index into the vector input buffer.
   // The scalar input buffer is never used.
-  void SetupScalarIn(int in, vector<memoryEigen*>& observation_memory_buff, state* obs) {
+  void SetupScalarIn(int in, state* obs) {
     double* scalar = in == 0 ? &scalar_in1_ : &scalar_in2_;
-    int* index = in == 0 ? &in0IdxE_ : &in1IdxE_;
-    memoryEigen* input_memory = in == 0 ? in1_ : in2_;
-    // int obs_buff_index_index = 0;  //TODO(skelly): assume index 0 (buff is always size 1)
-
+    int* index = in == 0 ? &in0Idx_ : &in1Idx_;
     if (IsObs(in)) {
-        // *scalar = observation_memory_buff[memoryEigen::VECTOR_TYPE]
-        //               ->working_memory_[obs_buff_index_index](*index % memory_size_, 0);
-        // TODO (skelly): should this also be range limited to memory_size?
-         *scalar = obs->stateValueAtIndex(*index  % obs->dim_);       
-    
+      // TODO (skelly): should this also be range limited to memory_size?
+      *scalar = obs->stateValueAtIndex(*index % obs->dim_);
+      // TODO(skelly): debugging output
+      // cerr << "scalar_in idx "  << " val " << *scalar << endl;
     } else {
-       *scalar = input_memory->working_memory_[*index](0, 0);
+      memoryEigen* input_memory = in == 0 ? in1_ : in2_;
+      *scalar =
+          input_memory->working_memory_[*index % GetInMem(in)->memoryIndices_](
+              0, 0);
     }
-    // // TODO(skelly): debugging output
-    // cerr << "scalar_in idx " <<  in2IdxE_ << " val " << *scalar << endl; 
   }
 
   void BoundMemoryIndices(int observation_buff_size);

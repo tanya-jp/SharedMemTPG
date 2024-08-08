@@ -398,10 +398,9 @@ double RegisterMachine::Run(state *obs, int &time_step,
           }
         }
 
-        // Scalar inputs are read from either the vector or matrix obs buff.
-        // This copies data from obs buff to temporary scalar input variables.
+        // This copies input data to temporary scalar input variables.
         if (istr->GetInType(in) == memoryEigen::SCALAR_TYPE) {
-          istr->SetupScalarIn(in, observation_memory_buff_, obs);
+          istr->SetupScalarIn(in, obs);
         }
       }
     }

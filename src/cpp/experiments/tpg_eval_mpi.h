@@ -491,7 +491,6 @@ void PrepareRecursiveForecastObs(TPG &tpg, EvalStruct &eval, bool prime) {
       // }
       // cerr << "obs " << vecToStr(eval.obs_vec) << endl;
 
-
       eval.obs->Set(eval.obs_vec);
     } else {
       eval.obs->Set(task->data[eval.sample]);
