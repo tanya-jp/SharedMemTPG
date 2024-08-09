@@ -128,7 +128,7 @@ skip_introns 0
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 2,32
+n_input 2,2,32,32
 
 # max initial program size
 max_initial_prog_size 10
@@ -186,7 +186,7 @@ p_memory_size 0.2
 
 # which tasks are active
 # rhs should be a single task name or a comma-separated list
-active_tasks Pendulum,Mackey
+active_tasks Acrobot,Pendulum,Mackey,Laser
 
 # use the partially-observable version of a task, if available
 # currently only available for calssic control tasks
@@ -235,21 +235,21 @@ SCALAR_PRODUCT_OP
 SCALAR_DIVISION_OP
 SCALAR_ABS_OP
 SCALAR_RECIPROCAL_OP
-SCALAR_SIN_OP
+#SCALAR_SIN_OP
 SCALAR_COS_OP
-SCALAR_TAN_OP
-SCALAR_ARCSIN_OP
-SCALAR_ARCCOS_OP
-SCALAR_ARCTAN_OP
+#SCALAR_TAN_OP
+#SCALAR_ARCSIN_OP
+#SCALAR_ARCCOS_OP
+#SCALAR_ARCTAN_OP
 SCALAR_EXP_OP
 SCALAR_LOG_OP
 SCALAR_HEAVYSIDE_OP
 SCALAR_CONDITIONAL_OP
-SCALAR_POW_OP
-SCALAR_SQR_OP
-SCALAR_CUBE_OP
-SCALAR_TANH_OP
-SCALAR_SQRT_OP
+#SCALAR_POW_OP
+#SCALAR_SQR_OP
+#SCALAR_CUBE_OP
+#SCALAR_TANH_OP
+#SCALAR_SQRT_OP
 #SCALAR_CONST_SET_OP
 SCALAR_MIN_OP
 SCALAR_MAX_OP
