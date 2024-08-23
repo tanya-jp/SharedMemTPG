@@ -159,6 +159,7 @@ class RecursiveForecast : public TaskEnv {
       for (size_t row = 0; row < data.size(); row++) {
         data[row][col] =
             (data[row][col] - min_feature) / (max_feature - min_feature);
+        cerr <<  data[row][col] << endl;   
       }
     }
   }

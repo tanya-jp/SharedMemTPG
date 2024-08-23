@@ -102,6 +102,7 @@ int main(int argc, char **argv) {
       cerr << "Unrecognised task:" << substr << endl;
       exit(1);
     }
+    
     if (tasks[tasks.size() - 1]->eval_type_ == "RecursiveForecast") {
       RecursiveForecast *task =
           dynamic_cast<RecursiveForecast *>(tasks[tasks.size() - 1]);
@@ -121,7 +122,7 @@ int main(int argc, char **argv) {
       }
     }
   }
-
+  
   // Create task indices vector
   vector<int> taskIndices;
   for (int i = 0; i < (int)tasks.size(); i++) taskIndices.push_back(i);

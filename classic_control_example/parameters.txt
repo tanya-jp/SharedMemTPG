@@ -37,7 +37,7 @@ write_test_checkpoints 1
 write_phylogeny 0
 
 # how frequently to run test procedure
-test_mod 100
+test_mod 1
 
 # Number of tasks used each selection for evaluation. 
 # The rest are estimated with phylogeny.
@@ -62,10 +62,10 @@ n_generations 1000000
 mu_internal 0
 
 # number of elite teams
-n_elite 200
+n_elite 400
 
 # n_elite * n_elite_mul new teams are created each generation
-n_elite_mul 5
+n_elite_mul 2
 
 # fitness proportional selection
 fit_prop_select 0
@@ -73,7 +73,7 @@ fit_prop_select 0
 # which diversity mode to use, if available
 diversity_mode 0
 
-parent_select_roots_only 1
+parent_select_roots_only 0
 
 ################################################################################
 ## Team  parameters ############################################################
@@ -89,7 +89,7 @@ max_team_size 1000000
 max_teams_per_graph 1000000
 
 # when changing action pointer, probability of selecting atomic action
-p_atomic 1.0
+p_atomic 0.99
 
 # team mutation: probability of deleting program from team
 pmd 0.5
@@ -128,13 +128,27 @@ skip_introns 0
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 4
+n_input 2
 
 # max initial program size
 max_initial_prog_size 10
 
 # max program size
 max_prog_size 1000000
+
+# number of memory indices
+# each memory index points to a data structure (scalar, vector, or matrix)
+memory_indices 8
+
+# Dimensionality for vector & matrix memory
+memory_size 2
+min_memory_size 2
+max_memory_size 32 
+
+# Observations are stored in a buffer with this time window.
+observation_buff_size 1
+min_observation_buff_size 1
+max_observation_buff_size 1
 
 # program variation: probability of changing a random instruction
 p_bid_mutate 1.0
@@ -157,15 +171,14 @@ p_bid_xover 0.0
 # program variation: stddev of normal noise added to each const
 bid_mu_const_stddev 0.05
 
-# number of memory indices
-# each memory index points to a data structure (scalar, vector, or matrix)
-memory_indices 8
+# program variation: probability of changing observation_buff_size
+p_observation_buff_size 0.0
 
-# dimensionality for vector & matrix memory
-memory_size 4
+# program variation: probability of changing observation_index
+p_observation_index 0.2
 
-# observations are stored in a buffer with this time window.
-observation_buff_size 1
+# program variation: probability of changing memory_size
+p_memory_size 0.0
 
 ################################################################################
 ## General Task Parameters #####################################################
@@ -176,7 +189,8 @@ observation_buff_size 1
 active_tasks Cartpole
 
 # use the partially-observable version of a task, if available
-partially_observable 0
+# currently only available for calssic control tasks
+partially_observable 1
 
 # number of discrete actions
 n_discrete_action 3
@@ -185,9 +199,11 @@ n_discrete_action 3
 ## Parameters Specific to Recursive Forecasting ################################
 ################################################################################
 
+forecast_univar 1
+
 # fitness function
 # supported options: "mse", "correlation", "theils", "pearson"
-forecast_fitness theils
+forecast_fitness mse
 
 # whether to use discrete actions for forecasting
 # must also set n_discrete_action
@@ -202,8 +218,11 @@ forecast_horizon_train 50
 forecast_horizon_val 100
 forecast_horizon_test 100
 
-forecast_n_eval_train 100
-forecast_n_eval_val 10
+forecast_n_eval_train 19
+forecast_n_eval_val 9
+
+#forecast_n_eval_train 37
+#forecast_n_eval_val 18
 
 ################################################################################
 ## Operations, uncomment to activate ###########################################
@@ -216,22 +235,22 @@ SCALAR_PRODUCT_OP
 SCALAR_DIVISION_OP
 SCALAR_ABS_OP
 SCALAR_RECIPROCAL_OP
-SCALAR_SIN_OP
+#SCALAR_SIN_OP
 SCALAR_COS_OP
-SCALAR_TAN_OP
-SCALAR_ARCSIN_OP
-SCALAR_ARCCOS_OP
-SCALAR_ARCTAN_OP
+#SCALAR_TAN_OP
+#SCALAR_ARCSIN_OP
+#SCALAR_ARCCOS_OP
+#SCALAR_ARCTAN_OP
 SCALAR_EXP_OP
 SCALAR_LOG_OP
 SCALAR_HEAVYSIDE_OP
 SCALAR_CONDITIONAL_OP
-SCALAR_POW_OP
-SCALAR_SQR_OP
-SCALAR_CUBE_OP
-SCALAR_TANH_OP
-SCALAR_SQRT_OP
-SCALAR_CONST_SET_OP
+#SCALAR_POW_OP
+#SCALAR_SQR_OP
+#SCALAR_CUBE_OP
+#SCALAR_TANH_OP
+#SCALAR_SQRT_OP
+#SCALAR_CONST_SET_OP
 SCALAR_MIN_OP
 SCALAR_MAX_OP
 
@@ -252,8 +271,8 @@ VECTOR_MIN_OP
 VECTOR_MAX_OP
 VECTOR_MEAN_OP
 VECTOR_ST_DEV_OP
-VECTOR_CONST_SET_OP
-SCALAR_VECTOR_ASSIGN_OP
+#VECTOR_CONST_SET_OP
+#SCALAR_VECTOR_ASSIGN_OP
  
 # matrix #########################
 VECTOR_OUTER_PRODUCT_OP
@@ -278,8 +297,8 @@ MATRIX_MEAN_OP
 MATRIX_ROW_MEAN_OP
 MATRIX_ROW_ST_DEV_OP
 MATRIX_ST_DEV_OP
-MATRIX_CONST_SET_OP
-SCALAR_MATRIX_ASSIGN_OP
+#MATRIX_CONST_SET_OP
+#SCALAR_MATRIX_ASSIGN_OP
 
 ## noise ##########################
 ##SCALAR_UNIFORM_SET_OP

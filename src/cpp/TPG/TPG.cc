@@ -1646,7 +1646,7 @@ void TPG::printGraphDotGPTPXXI(long rootTeamId,
   char outputFilename[80];
   ofstream ofs;
 
-  sprintf(outputFilename, "replay/gv_taskDecomposition_%d%s",
+  sprintf(outputFilename, "replay/graphs/gv_taskDecomposition_%d%s",
           (int)rootTeam->id_, ".dot");
   ofs.open(outputFilename, ios::out);
   if (!ofs) die(__FILE__, __FUNCTION__, __LINE__, "Can't open file.");

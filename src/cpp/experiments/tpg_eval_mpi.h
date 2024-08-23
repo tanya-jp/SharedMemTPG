@@ -787,7 +787,7 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalStruct &eval,
   // TODO(spkelly): fix hard coding
   int n_var = tpg.GetParam<int>("forecast_univar") ? 1 : 3;
   PrintRecursizeForecast(
-      "tpg_" + to_string(tpg.seeds_[TPG_SEED]) + "_test_t" +
+      "tpg_seed_" + to_string(tpg.seeds_[TPG_SEED]) + "_task_" + to_string(tpg.state_["active_task"]) + "_test_t" +
           to_string(task->t_start[tpg.GetParam<int>("checkpoint_in_phase")]
                                  [eval.episode]) +
           ".csv",
@@ -815,8 +815,8 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
 
     vector<int> steps_per_task(tpg.GetState("n_task"), 0);
     // TODO(skelly): clean up
-    // for (int task = 0; task < tpg.GetState("n_task"); task++) {
-    // tpg.state_["active_task"] = task;
+    for (int task = 0; task < tpg.GetState("n_task"); task++) {
+    tpg.state_["active_task"] = task;
     eval.task = tasks[tpg.GetState("active_task")];
     if (eval.animate)
       eval.tm->_n_eval = 1;
@@ -838,7 +838,7 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
       }
       FinalizeStepStats(tpg, eval);
     }
-    // }
+    }
     tpg.printGraphDotGPTPXXI(eval.tm->id_, visitedTeamsAllTasks,
                              teamUseMapPerTask, steps_per_task);
   }
