@@ -16,9 +16,9 @@ sudo xargs --arg-file requirements.txt apt install
 In order to easily access tpg scripts, we must add appropriate folders to the $PATH environment variable.
 To do so, add the following to *~/.profile*
 ```
-export TPG=<YOUR_PATH_HERE>/tpg
-export PATH=$PATH:$TPG/scripts/plot
-export PATH=$PATH:$TPG/scripts/run
+export TPG_PATH=<YOUR_PATH_HERE>/tpg
+export PATH=$PATH:$TPG_PATH/scripts/plot
+export PATH=$PATH:$TPG_PATH/scripts/run
 ```
 Then run:
 ```
@@ -46,7 +46,7 @@ Generate classic_control_example_p0.pdf with various statistics:
 ```
 tpg-plot-stats.sh
 ```
-The first page will be a training curve looking something like the plot below. A fitness of 500 indicates the agent balances the pole for 500 timesteps, thus solving the task.
+The first page will be a training curve looking something like the plot below. A fitness of 300 indicates the agent balances the pole for 300 timesteps, thus solving the task.
 
 <img src="./classic_control_example/images/cartpole-example.png" height="300" />
 

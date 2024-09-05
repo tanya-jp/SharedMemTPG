@@ -19,7 +19,6 @@
 #include "tpg_eval_mpi.h"
 
 #define CHECKPOINT_MOD 1000000
-#define PHYLO_MOD 1000
 #define PRINT_MOD 1
 // rawfitness,  mean visitedTeams, decisionInstructions
 #define NUM_POINT_AUX_DOUBLE 3
@@ -36,10 +35,9 @@ int main(int argc, char **argv) {
   tpg_arg_parse(tpg, argc, argv);
 
   APIClient *apiClient = nullptr;
-  bool trackExperiments = tpg.HaveParam("experiment_key");
 
-  if (trackExperiments) {
-    // Instantiate API client
+  if (tpg.GetParam<int>("track_experiments")) {
+    // Only instantiate APIClient if trackExperiment is true
     apiClient = new APIClient(getenv("COMET_API_KEY"),
                               tpg.GetParam<std::string>("experiment_key"));
 
@@ -272,8 +270,7 @@ int main(int argc, char **argv) {
           tpg.writeCheckpoint(tpg.GetState("t_current"),
                               false);  
         }
-        if (tpg.GetParam<int>("write_phylogeny") &&
-            tpg.GetState("t_current") % PHYLO_MOD == 0) {
+        if (tpg.GetParam<int>("write_phylogeny")) {
           tpg.printPhyloGraphDot(tpg.getBestTeam());
         }
         endChkp = chrono::system_clock::now() - startChkp;
@@ -285,7 +282,7 @@ int main(int argc, char **argv) {
             (endEval.count() + endGenTeams.count() + endSetEliteTeams.count() +
              endSelTeams.count() + endChkp.count() + endReport.count());
 
-        if (trackExperiments &&
+        if (tpg.GetParam<int>("track_experiments") &&
             tpg.GetState("t_current") % tpg.GetParam<int>("track_mod") == 0) {
           std::string gen = to_string(tpg.GetState("t_current"));
           apiClient->LogMetric("sec", std::to_string(endGen.count()), "", gen);

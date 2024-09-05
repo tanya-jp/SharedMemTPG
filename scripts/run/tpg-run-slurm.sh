@@ -15,39 +15,18 @@
 #defaults
 mode=0 #Train:0, Replay:1, Debug:2
 seed=1
-experiment_name=""
 
-while getopts m:s:e: flag
+while getopts m:s: flag
 do
    case "${flag}" in
       m) mode=${OPTARG};;
       s) seed=${OPTARG};;
-      e) experiment_name=${OPTARG};;
    esac
 done
 
 if [ $mode -eq 0 ]; then
-   if [ -n "$experiment_name" ]; then
-      # Access internet for experiment tracking
-      module load httpproxy
-
-      # Create experiment
-      experiment_key=$($TPG_PATH/scripts/run/create-experiment.sh $experiment_name)
-
-      srun ../build/release/cpp/experiments/TPGExperimentMPI -s $seed -k $experiment_key \
-      1> tpg.$seed.$$.std 2> tpg.$seed.$$.err
-
-      wait
-
-      # Upload files
-      $TPG_PATH/scripts/run/upload-asset.sh $experiment_key tpg.$seed.$$.std
-      $TPG_PATH/scripts/run/upload-asset.sh $experiment_key tpg.$seed.$$.err
-
-      module unload httpproxy
-   else
-      srun ../build/release/cpp/experiments/TPGExperimentMPI -s $seed \
-      1> tpg.$seed.$$.std 2> tpg.$seed.$$.err
-   fi
+  srun ../build/release/cpp/experiments/TPGExperimentMPI -s $seed \
+  1> tpg.$seed.$$.std 2> tpg.$seed.$$.err
 fi
 
 ##pickup from checkpoint file

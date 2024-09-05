@@ -5,7 +5,7 @@
 
 void tpg_arg_parse(TPG& tpg, int argc, char** argv) {
   int option_char;
-  while ((option_char = getopt(argc, argv, "aC:g:R:r:s:t:p:k:")) != -1) {
+  while ((option_char = getopt(argc, argv, "aC:g:R:r:s:t:p:")) != -1) {
     switch (option_char) {
       case 'C': {
         tpg.params_["checkpoint"] = 1;
@@ -43,11 +43,6 @@ void tpg_arg_parse(TPG& tpg, int argc, char** argv) {
       }
       case 'a': {
         tpg.params_["animate"] = 1;
-        break;
-      }
-      case 'k': {
-        std::string experiment_key(optarg);
-        tpg.params_["experiment_key"] = experiment_key;
         break;
       }
       case '?': {
