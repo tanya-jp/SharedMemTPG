@@ -9,11 +9,10 @@
 
 class program {
  public:
+  int obs_index_;
   int action_;         // Action index
   double bid_val_;     // Most recent bid value
   static long count_;  // Next id to use
-  size_t memory_size_;
-  // vector<double>* feature;
 
   // Features indexed by non-introns in this program, determined in
   // MarkIntrons().
@@ -26,16 +25,20 @@ class program {
   double key_;
   int lastCompareFactor_;
 
-  vector<memoryEigen *> sharedMemory_;
+  // Vector storing 1 memoryEigen* of each type (SCALAR, VECTOR, MATRIX)
   vector<memoryEigen *> privateMemory_;
 
-  // read inputs into these at runtime
-  vector<vector<memoryEigen *> > inputMemoryPointers_;
+  // Vector storing 1 memoryEigen* of each type (SCALAR, VECTOR, MATRIX)
+  vector<memoryEigen *> observation_memory_buff_;
+  int observation_buff_size_;
+  int memory_size_;
+
+  // // read inputs into these at runtime TODO(skelly): simplify this
+  // vector<vector<memoryEigen *> > inputMemoryPointers_;
 
   int nrefs_;               //  Number of references by teams
   vector<int> op_counts_;   // count for each operator over _bidEffective
   vector<double> profile_;  // Bid profile
-  bool skipIntrons_;
   bool stateful_;
   // Set to true in MarkIntrons if this program writes to stateful memoryEigen.
   bool targetMem_;
@@ -46,7 +49,7 @@ class program {
                      bool &verbose) = 0;
   inline double bidVal() { return bid_val_; }
   inline void bidVal(double b) { bid_val_ = b; }
-  virtual string checkpoint(bool) = 0;
+  virtual string checkpoint(bool effective_only) = 0;
   inline void features(set<long> &f) { f = features_; }
   inline void featuresMem(set<long> &f) { f = featuresMem_; }
   inline void getProfile(vector<double> &p) { p = profile_; }
@@ -61,25 +64,9 @@ class program {
 
   virtual void MarkIntrons(std::unordered_map<std::string, std::any> &) = 0;
 
-  inline void MemGet(size_t type, memoryEigen *&m) { m = sharedMemory_[type]; }
-
-  inline void MemSet(uint8_t type, memoryEigen *m) {
-    sharedMemory_[type] = m;
-    m->refInc();
-  }
-
-  inline memoryEigen *MemGet(uint8_t type) { return sharedMemory_[type]; }
-
-  inline void CopySharedConstToWorking() {
-    for (size_t i = 0; i < sharedMemory_.size(); i++) {
-      privateMemory_[i]->working_memory_ = sharedMemory_[i]->const_memory_;
-    }
-  }
-
   inline void ClearWorking() {
-    for (size_t i = 0; i < privateMemory_.size(); i++) {
-      privateMemory_[i]->ClearWorking();
-    }
+    for (auto memory : privateMemory_) memory->ClearWorking();
+    for (auto memory : observation_memory_buff_) memory->ClearWorking();
   }
 
   // Mutate action, return true if the action was actually changed
@@ -89,8 +76,8 @@ class program {
     return a != action;
   }
   // Mutate bid, return true if any changes occured
-  virtual void MuBid(std::unordered_map<std::string, std::any> &, mt19937 &,
-                     uniform_real_distribution<> &, vector<bool> &) = 0;
+  virtual void Mutate(std::unordered_map<std::string, std::any> &, mt19937 &,
+                     vector<bool> &) = 0;
   // Not counting introns
   inline long numFeatures() { return features_.size(); }
   inline void op_counts(vector<int> &v) { v = op_counts_; }

@@ -85,7 +85,7 @@ class memoryEigen {
   inline int RefsPolicy() { return nrefs_policy_; }
   inline void RefsPolicy(int i) { nrefs_policy_ = i; }
   inline int RefsPolicyInc() { return ++nrefs_policy_; }
-  void resizeMemory() {
+  void ResizeMemory() {
     working_memory_.resize(memoryIndices_);
     const_memory_.resize(memoryIndices_);
     for (size_t i = 0; i < memoryIndices_; i++) {
@@ -111,9 +111,14 @@ class memoryEigen {
     id_ = i;
     nrefs_ = 0;
     type_ = type;
+    
+    // memoryIndices_ = 64;
+    // memory_size_ = 64;
+    // ResizeMemory();
+    
     memoryIndices_ = memoryIndices;
     memory_size_ = memory_size;
-    resizeMemory();
+    ResizeMemory();
     ClearWorking();
     ClearConst();
     ClearActive();
@@ -126,9 +131,14 @@ class memoryEigen {
     id_ = i;
     nrefs_ = 0;
     type_ = type;
+    
+    // memoryIndices_ = 64;
+    // memory_size_ = 64;
+    // ResizeMemory();
+    
     memoryIndices_ = std::any_cast<int>(params["memory_indices"]);
     memory_size_ = std::any_cast<int>(params["memory_size"]);
-    resizeMemory();
+    ResizeMemory();
     ClearWorking();
     ClearConst();
     ClearActive();
@@ -141,9 +151,14 @@ class memoryEigen {
     id_ = i;
     nrefs_ = nr;
     type_ = type;
+
+    // memoryIndices_ = 64;
+    // memory_size_ = 64;
+    // ResizeMemory();
+    
     memoryIndices_ = memoryIndices;
     memory_size_ = memory_size;
-    resizeMemory();
+    ResizeMemory();
     ClearWorking();
     ClearConst();
     ClearActive();
@@ -155,9 +170,14 @@ class memoryEigen {
     id_ = m->id();
     nrefs_ = m->refs();
     type_ = m->type();
+    
+    memoryIndices_ = 64;
+    memory_size_ = 64;
+    ResizeMemory();
+    
     memoryIndices_ = m->indexSize();
     memory_size_ = m->memory_size_;
-    resizeMemory();
+    ResizeMemory();
     ClearWorking();
     ClearConst();
     ClearActive();
@@ -173,7 +193,7 @@ class memoryEigen {
   int type_;
   size_t memoryIndices_;
   size_t memory_size_;
-  std::vector<Matrix<double, Dynamic, Dynamic> > working_memory_;
+  std::deque<Matrix<double, Dynamic, Dynamic> > working_memory_;
   std::vector<Matrix<double, Dynamic, Dynamic> > const_memory_;
   Matrix<bool, Dynamic, 1> active_;
   Matrix<double, Dynamic, 1> read_time_;

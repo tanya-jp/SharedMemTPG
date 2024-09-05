@@ -31,7 +31,7 @@ class MountainCar : public TaskEnv {
   const int _velocity = 1;
 
   const int n_eval_train_ = 20;
-  const int n_eval_validation_ = 50;
+  const int n_eval_validation_ = 0;
   const int n_eval_test_ = 100;
 
  public:

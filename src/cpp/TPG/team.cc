@@ -45,32 +45,13 @@ string team::checkpoint(bool fitnessBins, long id) const {
 void team::InitMemory(map<long, team *> &teamMap, bool use_evolved_const) {
   set<team *, teamIdComp> teams;
   set<program *, programIdComp> programs;
-  set<memoryEigen *, memoryEigenIdComp> memories;
-  GetAllNodes(teamMap, teams, programs, memories);
-  // // if shared memory is read-only, this becomes redundant
-  // for (auto m : memories) {
-  //   m->ClearWorking();
-  //   if (use_evolved_const) {
-  //     m->CopyConstToWorking();
-  //   }
-  //   m->ClearReadTime();   // needed?
-  //   m->ClearWriteTime();  // needed?
-  // }
-  // this resets private memory to evolved constants
-  // if (use_evolved_const) {
-  //   for (auto p : programs) {
-  //     if (use_evolved_const)
-  //       p->CopySharedConstToWorking();
-  //     else
-  //       p->ClearWorking();
-  //   }
-  // // }
-
+  GetAllNodes(teamMap, teams, programs);
   for (auto p : programs) {
-    if (use_evolved_const)
-      p->CopySharedConstToWorking();
-    else
-      p->ClearWorking();
+    p->ClearWorking();
+    // if (use_evolved_const)
+    //   p->CopySharedConstToWorking();
+    // else
+    //   p->ClearWorking();
   }
 }
 
@@ -156,22 +137,23 @@ void team::updateComplexityRecord(map<long, team *> &teamMap, int rtcIndex,
       getMeanOutcome(phase, 0, rtcIndex - 1, auxInt, auxIntMatch, false, true);
 }
 
+//TODO(skelly): remove shared memory code
 /******************************************************************************/
-void team::GetAllMemories(
-    map<long, team *> &teamMap, set<team *, teamIdComp> &visitedTeams,
-    set<memoryEigen *, memoryEigenIdComp> &memories) const {
-  visitedTeams.insert(teamMap[id_]);
+// void team::GetAllMemories(
+//     map<long, team *> &teamMap, set<team *, teamIdComp> &visitedTeams,
+//     set<memoryEigen *, memoryEigenIdComp> &memories) const {
+//   visitedTeams.insert(teamMap[id_]);
 
-  for (auto prog : members_) {
-    for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-      memories.insert(prog->MemGet(mem_t));
-    }
-    if (prog->action() >= 0 &&
-        find(visitedTeams.begin(), visitedTeams.end(),
-             teamMap[prog->action()]) == visitedTeams.end())
-      teamMap[prog->action()]->GetAllMemories(teamMap, visitedTeams, memories);
-  }
-}
+//   for (auto prog : members_) {
+//     for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+//       memories.insert(prog->MemGet(mem_t));
+//     }
+//     if (prog->action() >= 0 &&
+//         find(visitedTeams.begin(), visitedTeams.end(),
+//              teamMap[prog->action()]) == visitedTeams.end())
+//       teamMap[prog->action()]->GetAllMemories(teamMap, visitedTeams, memories);
+//   }
+// }
 
 /******************************************************************************/
 // this version returns partial graph up to team tm
@@ -204,24 +186,24 @@ void team::GetAllNodes(map<long, team *> &teamMap,
   }
 }
 
-/******************************************************************************/
-void team::GetAllNodes(map<long, team *> &teamMap,
-                       set<team *, teamIdComp> &visitedTeams,
-                       set<program *, programIdComp> &programs,
-                       set<memoryEigen *, memoryEigenIdComp> &memories) const {
-  visitedTeams.insert(teamMap[id_]);
-  for (auto prog : members_) {
-    programs.insert(prog);
-    for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-      memories.insert(prog->MemGet(mem_t));
-    }
-    if (prog->action() >= 0 &&
-        find(visitedTeams.begin(), visitedTeams.end(),
-             teamMap[prog->action()]) == visitedTeams.end())
-      teamMap[prog->action()]->GetAllNodes(teamMap, visitedTeams, programs,
-                                           memories);
-  }
-}
+// /******************************************************************************/
+// void team::GetAllNodes(map<long, team *> &teamMap,
+//                        set<team *, teamIdComp> &visitedTeams,
+//                        set<program *, programIdComp> &programs,
+//                        set<memoryEigen *, memoryEigenIdComp> &memories) const {
+//   visitedTeams.insert(teamMap[id_]);
+//   for (auto prog : members_) {
+//     programs.insert(prog);
+//     // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+//     //   memories.insert(prog->MemGet(mem_t));
+//     // }
+//     if (prog->action() >= 0 &&
+//         find(visitedTeams.begin(), visitedTeams.end(),
+//              teamMap[prog->action()]) == visitedTeams.end())
+//       teamMap[prog->action()]->GetAllNodes(teamMap, visitedTeams, programs,
+//                                            memories);
+//   }
+// }
 
 /******************************************************************************/
 void team::updatePolicyRoot(map<long, team *> &teamMap,
@@ -609,7 +591,7 @@ program *team::getAction(
     set<team *, teamIdComp> &visitedTeams, long &decisionInstructions,
     int timeStep, vector<program *> &allPrograms,
     vector<program *> &winningPrograms, vector<set<long> > &decisionFeatures,
-    vector<set<memoryEigen *, memoryEigenIdComp> > &decisionMemories,
+    // vector<set<memoryEigen *, memoryEigenIdComp> > &decisionMemories,
     vector<team *> &teamPath, mt19937 &rng, bool &verbose) {
   //_depthSum += visitedTeams.size(); _visitedCount++;
   visitedTeams.insert(teamMap[id_]);
@@ -617,7 +599,7 @@ program *team::getAction(
 
   set<long> features;
   set<long> featuresSingle;
-  set<memoryEigen *, memoryEigenIdComp> memories;
+  // set<memoryEigen *, memoryEigenIdComp> memories;
   set<memoryEigen *, memoryEigenIdComp> memoriesSingle;
 
   int l = 0;
@@ -629,12 +611,13 @@ program *team::getAction(
 
     prog->features(featuresSingle);
     features.insert(featuresSingle.begin(), featuresSingle.end());
-    for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-      memories.insert(prog->MemGet(mem_t));
-    }
+    //TODO(skelly): remove shared memory code
+    // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+    //   memories.insert(prog->MemGet(mem_t));
+    // }
   }
   decisionFeatures.push_back(features);
-  decisionMemories.push_back(memories);
+  // decisionMemories.push_back(memories);
 
   sort(members_run_.begin(), members_run_.end(), ProgramBidLexicalCompare());
   long teamIdToFollow = 0;
@@ -656,6 +639,6 @@ program *team::getAction(
   }
   return teamMap[teamIdToFollow]->getAction(
       s, teamMap, updateActive, visitedTeams, decisionInstructions, timeStep,
-      allPrograms, winningPrograms, decisionFeatures, decisionMemories,
+      allPrograms, winningPrograms, decisionFeatures,
       teamPath, rng, verbose);
 }

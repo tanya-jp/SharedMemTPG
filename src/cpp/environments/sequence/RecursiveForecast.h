@@ -87,11 +87,27 @@ class RecursiveForecast : public TaskEnv {
     t_start.resize(3);
 
     if (task_ == "Sunspots" || task_ == "Mackey" || task_ == "Laser") {
+
       // train (original, 19 start points)
       for (int s = 0; s <= 900; s += 50) t_start[0].push_back(s);
 
       // validation (original, 9 start points)
       for (int s = 50; s <= 850; s += 100) t_start[1].push_back(s);
+
+      // // train (original*2, 37 start points)
+      // for (int s = 0; s <= 900; s += 25) t_start[0].push_back(s);
+
+      // // validation (original*2, 18 start points)
+      // for (int s = 50; s <= 850; s += 50) t_start[1].push_back(s);
+
+      // // Randomized train and validation slices
+      // mt19937 rng_data(42);
+      // uniform_int_distribution<int> dis_train(0, 900);
+      // for (int s = 0; s <= n_eval_train_; s++) 
+      //   t_start[0].push_back(dis_train(rng_data));
+      // uniform_int_distribution<int> dis_val(0, 850);
+      // for (int s = 0; s <= n_eval_val_; s++) 
+      //   t_start[1].push_back(dis_val(rng_data));
 
       // test (original single start point)
       t_start[2].insert(t_start[2].begin(), {950});
@@ -128,26 +144,6 @@ class RecursiveForecast : public TaskEnv {
     cout << "time series test slices: " << t_start[2].size() << endl;
   }
 
-  // void Normalize() {
-  //   // normalize data in [0,1]
-  //   double maxFeature = numeric_limits<double>::lowest();
-  //   double minFeature = numeric_limits<double>::max();
-  //   for (size_t sample = 0; sample < data.size(); sample++) {
-  //     maxFeature = max(
-  //         maxFeature, *(max_element(data[sample].begin(),
-  //         data[sample].end())));
-  //     minFeature = min(
-  //         minFeature, *(min_element(data[sample].begin(),
-  //         data[sample].end())));
-  //   }
-  //   for (size_t sample = 0; sample < data.size(); sample++) {
-  //     for (size_t feature = 0; feature < data[sample].size(); feature++) {
-  //       data[sample][feature] =
-  //           (data[sample][feature] - minFeature) / (maxFeature - minFeature);
-  //     }
-  //   }
-  // }
-
   // Normalize data in each column to the range [0,1]
   void Normalize() {
     size_t n_col = data[0].size();
@@ -163,6 +159,7 @@ class RecursiveForecast : public TaskEnv {
       for (size_t row = 0; row < data.size(); row++) {
         data[row][col] =
             (data[row][col] - min_feature) / (max_feature - min_feature);
+        cerr <<  data[row][col] << endl;   
       }
     }
   }

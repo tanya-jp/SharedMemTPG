@@ -44,7 +44,7 @@ class Acrobot : public TaskEnv {
   const int _theta2_po = 1;
 
   const int n_eval_train_ = 20;
-  const int n_eval_validation_ = 50;
+  const int n_eval_validation_ = 0;
   const int n_eval_test_ = 100;
 
  public:
@@ -164,7 +164,7 @@ class Acrobot : public TaskEnv {
   }
 
   bool terminal() {
-    if (step >= max_step || (-cos(state[0]) - cos(state[1] + state[0]) > 1.0))
+    if (step >= max_step || (-cos(state[_theta1]) - cos(state[_theta2] + state[_theta1]) > AcrobotGoalPosition))
       terminalState = true;
     return terminalState;
   }

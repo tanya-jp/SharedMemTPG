@@ -11,13 +11,13 @@ string instruction::checkpoint() {
   ostringstream oss;
   oss << in1Src_ << "_";
   oss << in2Src_ << "_";
-  oss << outSrc_ << "_";
   oss << outIdx_ << "_";
   oss << op_ << "_";
+  oss << in0Idx_ << "_";
   oss << in1Idx_ << "_";
-  oss << in1IdxE_ << "_";
   oss << in2Idx_ << "_";
-  oss << in2IdxE_;
+  oss << in3Idx_ << "_";
+  oss << memory_size_ << "_";
   return oss.str();
 }
 
@@ -327,15 +327,10 @@ void instruction::SetupOps() {
   op_list_[MATRIX_GAUSSIAN_SET_OP_] =
       (&instruction::ExecuteMatrixGaussianSetOp);
 
-  op_mem_types_[SCALAR_COND_A_OP_] = {memoryEigen::SCALAR_TYPE,
-                                      memoryEigen::SCALAR_TYPE,
-                                      memoryEigen::SCALAR_TYPE};
-  op_list_[SCALAR_COND_A_OP_] = (&instruction::ExecuteScalarCondAOp);
-
-  op_mem_types_[SCALAR_COND_B_OP_] = {memoryEigen::SCALAR_TYPE,
-                                      memoryEigen::SCALAR_TYPE,
-                                      memoryEigen::SCALAR_TYPE};
-  op_list_[SCALAR_COND_B_OP_] = (&instruction::ExecuteScalarCondBOp);
+  op_mem_types_[SCALAR_CONDITIONAL_OP_] = {memoryEigen::SCALAR_TYPE,
+                                           memoryEigen::SCALAR_TYPE,
+                                           memoryEigen::SCALAR_TYPE};
+  op_list_[SCALAR_CONDITIONAL_OP_] = (&instruction::ExecuteScalarConditionalOp);
 
   op_mem_types_[SCALAR_POW_OP_] = {memoryEigen::SCALAR_TYPE,
                                    memoryEigen::SCALAR_TYPE,
@@ -357,6 +352,21 @@ void instruction::SetupOps() {
   op_mem_types_[SCALAR_SQRT_OP_] = {
       memoryEigen::SCALAR_TYPE, memoryEigen::SCALAR_TYPE, memoryEigen::NA_TYPE};
   op_list_[SCALAR_SQRT_OP_] = (&instruction::ExecuteScalarSqrtOp);
+
+  op_mem_types_[SCALAR_VECTOR_ASSIGN_OP_] = {
+      memoryEigen::SCALAR_TYPE, memoryEigen::VECTOR_TYPE, memoryEigen::NA_TYPE};
+  op_list_[SCALAR_VECTOR_ASSIGN_OP_] =
+      (&instruction::ExecuteScalarVectorAssignOp);
+
+  op_mem_types_[SCALAR_MATRIX_ASSIGN_OP_] = {
+      memoryEigen::SCALAR_TYPE, memoryEigen::MATRIX_TYPE, memoryEigen::NA_TYPE};
+  op_list_[SCALAR_MATRIX_ASSIGN_OP_] =
+      (&instruction::ExecuteScalarMatrixAssignOp);
+
+  op_mem_types_[OBS_BUFF_SLICE_OP_] =
+      {memoryEigen::VECTOR_TYPE, memoryEigen::VECTOR_TYPE,
+       memoryEigen::NA_TYPE};
+  op_list_[OBS_BUFF_SLICE_OP_] = {&instruction::ExecuteObsBuffSliceOp};
 }
 
 // constructor
@@ -369,7 +379,7 @@ instruction::instruction(std::unordered_map<string, std::any> &params,
 
 // copy construction
 instruction::instruction(instruction &i) {
-  memory_size_ = i.memory_size_;
+  // TODO(skelly): check which things actually need to be copied
   memory_size_ = i.memory_size_;
   memIndices_ = i.memIndices_;
   out_ = i.out_;
@@ -380,93 +390,77 @@ instruction::instruction(instruction &i) {
 
   in1Src_ = i.in1Src_;
   in2Src_ = i.in2Src_;
-  outSrc_ = i.outSrc_;
   outIdx_ = i.outIdx_;
   op_ = i.op_;
+  in0Idx_ = i.in0Idx_;
   in1Idx_ = i.in1Idx_;
-  in1IdxE_ = i.in1IdxE_;
   in2Idx_ = i.in2Idx_;
-  in2IdxE_ = i.in2IdxE_;
+  in3Idx_ = i.in3Idx_;
 
   rng_ = i.rng_;
 }
 
-void instruction::mutate(bool uniform, vector<bool> &legal_ops, mt19937 &rng) {
-  auto nOp = std::count(legal_ops.begin(), legal_ops.end(), true);
+// // Protect input indices from ranges larger than memory data structures.
+// void instruction::BoundMemoryIndices(int observation_buff_size) {   
+//   for (int in = 0; in < 2; in++) {
+//     if (IsObs(in)) {
+//       SetInIdx(in, GetInIdx(in) % max(1, observation_buff_size - 1));
+//     } else {
+//       SetInIdx(in, GetInIdx(in) % memIndices_);
+//     }
+//   }
+//   memory_size_ = observation_buff_size;
+//   in2Idx_ = in2Idx_ % (max(1, memory_size_ - 1));
+//   in3Idx_ = in3Idx_ % (max(1, memory_size_ - 1));
+// }
 
-  if (uniform) {  // randomly set each part of this instruction
-    // std::uniform_int_distribution<> dis(0, 2);
+void instruction::Mutate(bool randomize, vector<bool> &legal_ops,
+                         int observation_buff_size, mt19937 &rng) {
+  const int max_index = 100; 
+  auto dis_index = std::uniform_int_distribution<>(0, max_index);                         
+  if (randomize) {  // Randomly set each part of this instruction.
     std::uniform_int_distribution<> dis(0, 1);
-    in1Src_ = dis(rng) == 0 ? 0 : 2;  // private memory or input
-    in2Src_ = dis(rng) == 0 ? 0 : 2;  // private memory or input
-    // dis = std::uniform_int_distribution<>(0, 1);
-    outSrc_ = 0;  // dis(rng);  // only write to private
-    dis = std::uniform_int_distribution<>(0, memIndices_ - 1);
-    outIdx_ = dis(rng);
+    in1Src_ = dis(rng);
+    in2Src_ = dis(rng);
+
     dis = std::uniform_int_distribution<>(0, legal_ops.size() - 1);
     do {
       op_ = dis(rng);
     } while (!legal_ops[op_]);
-    dis = std::uniform_int_distribution<>(0, memIndices_ - 1);
-    in1Idx_ = in1IdxE_ = dis(rng);
-    in2Idx_ = in2IdxE_ = dis(rng);
-  } else {  // randomly change one part of this instruction
-    int prev;
-    // select which part to change
-    // std::uniform_int_distribution<> dis(0, 6);
+
+    //TODO(skelly): use MutateInt()
+    outIdx_ = dis_index(rng);
+    in0Idx_ = dis_index(rng);
+    in1Idx_ = dis_index(rng);
+    in2Idx_ = dis_index(rng);
+    in3Idx_ = dis_index(rng);
+
+  } else {  // Randomly change one part of this instruction.
     std::uniform_int_distribution<> dis(0, 5);
     int i = dis(rng);
-    switch (i) {
-      case 0:  // change in1 src to one of: private memory, shared memory, input
-        prev = in1Src_;
-        // dis = std::uniform_int_distribution<>(0, 2);
-        dis = std::uniform_int_distribution<>(0, 1);
-        do {
-          in1Src_ = dis(rng) == 0 ? 0 : 2;  // private memory or input
-        } while (in1Src_ == prev);
-        // switching from input to memory ref
-        if (prev == 2) in1Idx_ = in1IdxE_ = in1Idx_ % memIndices_;
-        break;
-      case 1:  // change in2 src to one of: private memory, shared memory, input
-        prev = in2Src_;
-        // dis = std::uniform_int_distribution<>(0, 2);
-        dis = std::uniform_int_distribution<>(0, 1);
-        do {
-          in2Src_ = dis(rng) == 0 ? 0 : 2;  // private memory or input
-        } while (in2Src_ == prev);
-        // switching from input to memory ref
-        if (prev == 2) in2Idx_ = in2IdxE_ = in2Idx_ % memIndices_;
-        break;
-      case 2:  // change out index
-        prev = outIdx_;
-        dis = std::uniform_int_distribution<>(0, memIndices_ - 1);
-        do {
-          outIdx_ = dis(rng);
-        } while (outIdx_ == prev);
-        break;
-      case 3:  // change op
-        prev = op_;
-        dis = std::uniform_int_distribution<>(0, legal_ops.size() - 1);
-        do {
-          op_ = dis(rng);
-        } while ((nOp > 1 && op_ == prev) || !legal_ops[op_]);
-        break;
-      case 4:  // change in1 index
-        // if (num_input_ < 2) break;
-        prev = in1Idx_;
-        dis = std::uniform_int_distribution<>(0, memIndices_ - 1);
-        do {
-          in1Idx_ = in1IdxE_ = dis(rng);
-        } while (in1Idx_ == prev);
-        break;
-      case 5:  // change in2 index
-        // if (num_input_ < 2) break;
-        prev = in2Idx_;
-        dis = std::uniform_int_distribution<>(0, memIndices_ - 1);
-        do {
-          in2Idx_ = in2IdxE_ = dis(rng);
-        } while (in2Idx_ == prev);
-        break;
+    if (i == 0) {  // Change in1 src to private memory or observation.
+      MutateInt(in1Src_, 0, 1, rng);
+    } else if (i == 1) {  // Change in2 src to private memory or observation.
+      MutateInt(in2Src_, 0, 1, rng);
+    } else if (i == 2) {  // Change out index.
+      MutateInt(outIdx_, 0, max_index, rng);
+    } else if (i == 3) {  // Change operation.
+      do {
+        MutateInt(op_, 0, int(legal_ops.size() - 1), rng);
+      } while (!legal_ops[op_]);
+    } else if (i == 4) {  // Change in1 index.
+      MutateInt(in0Idx_, 0, max_index, rng);
+    } else if (i == 5) {  // Change in2 index.
+      MutateInt(in1Idx_, 0, max_index, rng);
     }
+    // else if (i == 6) {  // Change in3 index. Used as index to vector or matrix
+    //                       // memory.
+    //   MutateInt(in2Idx_, 0, max_index, rng);
+    // } else if (i == 7) {  // Change in4 index. Used as index to vector or matrix
+    //                       // memory.
+    //   MutateInt(in3Idx_, 0, max_index, rng);
+    // }
   }
+//   BoundMemoryIndices(observation_buff_size);
+//   if (op_ == OBS_BUFF_SLICE_OP_) in1Src_  = 1;
 }
