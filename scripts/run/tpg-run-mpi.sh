@@ -17,6 +17,7 @@ do
       T) tm_id=${OPTARG};;
       t) replay_gen=${OPTARG};;
       r) replay_task=${OPTARG};;
+      e) experiment_name=${OPTARG};;
    esac
 done
 

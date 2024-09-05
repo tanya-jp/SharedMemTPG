@@ -9,7 +9,7 @@ track_experiments 0
 experiment_key 7ac170bcf3e64f6fb3a29646c316ba7e
 
 # how frequently to track experiment metrics (in generations)
-track_mod 20
+track_mod 5
 
 ################################################################################
 ## Experiment Type Parameters ##################################################

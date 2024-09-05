@@ -403,8 +403,7 @@ void TPG::ReadParameters(string file_name,
         outcome_fields[0] == "n_stored_outcomes_VALIDATION" ||
         outcome_fields[0] == "n_stored_outcomes_TEST" ||
         outcome_fields[0] == "forecast_fitness" ||
-        outcome_fields[0] == "action_dim" ||
-        outcome_fields[0] == "experiment_key") {
+        outcome_fields[0] == "action_dim") {
       params[outcome_fields[0]] = outcome_fields[1];
     }
     // double parameters are identified by a decimal place
@@ -965,7 +964,7 @@ void TPG::SetEliteTeams(vector<TaskEnv *> &tasks) {
           << " ";
       printTeamInfo(GetState("t_current"), GetState("phase"), false, elite_id);
 
-      if (GetParam<int>("track_experiments") &&
+      if (HaveParam("experiment_key") &&
           GetState("t_current") % GetParam<int>("track_mod") == 0) {
         trackTeamInfo(GetState("t_current"), GetState("phase"), false,
                       elite_id);
@@ -983,7 +982,7 @@ void TPG::SetEliteTeams(vector<TaskEnv *> &tasks) {
           << " ";
       printTeamInfo(GetState("t_current"), GetState("phase"), false, elite_id);
 
-      if (GetParam<int>("track_experiments") &&
+      if (HaveParam("experiment_key") &&
           GetState("t_current") % GetParam<int>("track_mod") == 0) {
         trackTeamInfo(GetState("t_current"), GetState("phase"), false,
                       elite_id);
