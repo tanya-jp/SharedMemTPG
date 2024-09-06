@@ -41,6 +41,3 @@ build/
 # Log files
 *.err
 *.std
-
-# Experiment files
-experiments/
