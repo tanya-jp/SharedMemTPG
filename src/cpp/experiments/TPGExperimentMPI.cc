@@ -14,10 +14,10 @@
 #include <chrono>
 #include <cstdlib>
 
-#include "api_client.h"
-#include "tpg_arg_parse.h"
-#include "tpg_eval_mpi.h"
-#include "phylogenetic_fitness.h"
+#include <api_client.h>
+#include <tpg_arg_parse.h>
+#include <tpg_eval_mpi.h>
+#include <phylogenetic_fitness.h>
 
 #define CHECKPOINT_MOD 1000000
 #define PRINT_MOD 1
