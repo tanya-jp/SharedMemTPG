@@ -134,9 +134,9 @@ inline double sas(double s1, double s2, double a) {
   return sqrt(pow(s1, 2) + pow(s2, 2) -
               (2 * s1 * s2 * cos(a * (3.14159265 / 180.0))));
 }
-std::vector<string> &splitString(const string &s, char delim,
+std::vector<string> &SplitString(const string &s, char delim,
                                  std::vector<string> &elems);
-std::vector<string> splitString(const string &s, char delim);
+std::vector<string> SplitString(const string &s, char delim);
 
 template <class vtype>
 string vecToStr(std::vector<vtype> &v, string delim = " ") {

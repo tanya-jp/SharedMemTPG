@@ -126,7 +126,7 @@ double stdDev(vector<double> vec) {
 }
 
 /******************************************************************************/
-vector<string> &splitString(const string &s, char delim,
+vector<string> &SplitString(const string &s, char delim,
                             vector<string> &elems) {
   elems.clear();
   stringstream ss(s);
@@ -138,9 +138,9 @@ vector<string> &splitString(const string &s, char delim,
 }
 
 /******************************************************************************/
-vector<string> splitString(const string &s, char delim) {
+vector<string> SplitString(const string &s, char delim) {
   vector<string> elems;
-  splitString(s, delim, elems);
+  SplitString(s, delim, elems);
   return elems;
 }
 

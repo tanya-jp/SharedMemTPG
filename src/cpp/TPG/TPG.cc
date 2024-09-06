@@ -249,7 +249,7 @@ void TPG::ReadParameters(string file_name,
   while (std::getline(infile, oneline)) {
     if (oneline.find('#') != std::string::npos || oneline.size() == 0)
       continue;  // skip comments and empty lines
-    splitString(oneline, ' ', outcome_fields);
+    SplitString(oneline, ' ', outcome_fields);
 
     if (outcome_fields[0] == "SCALAR_SUM_OP")
       _ops[instruction::SCALAR_SUM_OP_] = true;
@@ -2345,7 +2345,7 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
     if (oneline.size() == 0) continue;
     outcomeFields.clear();
 
-    splitString(oneline, delim, outcomeFields);
+    SplitString(oneline, delim, outcomeFields);
 
     if (outcomeFields[0].compare("teamPair") == 0) {
       long id1 = atoi(outcomeFields[1].c_str());
@@ -2415,7 +2415,7 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       vector<instruction *> bid;
       for (size_t ii = f; ii < outcomeFields.size(); ii++) {
         vector<string> instructionString;
-        splitString(outcomeFields[ii], '_', instructionString);
+        SplitString(outcomeFields[ii], '_', instructionString);
         instruction *in = new instruction(params_, rngs_[TPG_SEED]);
         in->in1Src_ = stringToInt(instructionString[0]);
         in->in2Src_ = stringToInt(instructionString[1]);
@@ -2469,7 +2469,7 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       team *tm = _teamMap[id];
       for (size_t ii = 2; ii < outcomeFields.size(); ii++) {
         vector<string> fb;
-        splitString(outcomeFields[ii].c_str(), '-', fb);
+        SplitString(outcomeFields[ii].c_str(), '-', fb);
         tm->fitnessBin(atoi(fb[0].c_str()), fb[1]);
       }
     } else if (!fromString && outcomeFields[0].compare("phyloNode") == 0 &&
