@@ -114,23 +114,22 @@ class RecursiveForecast : public TaskEnv {
 
     } else if (task_ == "Offset" || task_ == "Duration" || task_ == "Pitch" ||
                task_ == "PitchBach" || task_ == "Bach") {
-      if (task_.find("Pitch") != std::string::npos)
-        for (auto& s : data) {
-          if (std::find(uniq_discrete_univars_.begin(),
-                        uniq_discrete_univars_.end(),
-                        s[0]) == uniq_discrete_univars_.end())
-            uniq_discrete_univars_.push_back(s[0]);
-        }
-      std::sort(uniq_discrete_univars_.begin(), uniq_discrete_univars_.end());
+      // if (task_.find("Pitch") != std::string::npos)
+      //   for (auto& s : data) {
+      //     if (std::find(uniq_discrete_univars_.begin(),
+      //                   uniq_discrete_univars_.end(),
+      //                   s[0]) == uniq_discrete_univars_.end())
+      //       uniq_discrete_univars_.push_back(s[0]);
+      //   }
+      // std::sort(uniq_discrete_univars_.begin(), uniq_discrete_univars_.end());
 
-      uniform_int_distribution<int> DisTrain(
-          0, data.size() - (n_prime_ + n_predict_[0]));
-      uniform_int_distribution<int> DisVal(
-          0, data.size() - (n_prime_ + n_predict_[1]));
+      // uniform_int_distribution<int> DisTrain(
+      //     0, data.size() - (n_prime_ + n_predict_[0]));
+      // uniform_int_distribution<int> DisVal(
+      //     0, data.size() - (n_prime_ + n_predict_[1]));
 
       // Train
-      for (int i = 0; i < n_eval_train_; i++)
-        t_start[0].push_back(DisTrain(rng));
+      for (int i = 0; i < n_eval_train_; i+=10) t_start[0].push_back(i);
 
       // Validation
       int s = 0;
