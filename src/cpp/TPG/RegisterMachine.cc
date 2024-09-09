@@ -132,8 +132,13 @@ void RegisterMachine::MarkIntrons(
   Meff[memoryEigen::SCALAR_TYPE][0] = true;
 
   // Mark continuous output memory.
-  if (std::any_cast<int>(params["continuous_output"]))
+  if (std::any_cast<int>(params["continuous_output"]) == 1)
     Meff[memoryEigen::SCALAR_TYPE][1] = true;
+  else if (std::any_cast<int>(params["continuous_output"]) == 2)
+    Meff[memoryEigen::VECTOR_TYPE][1] = true;
+  else if (std::any_cast<int>(params["continuous_output"]) == 3)
+    Meff[memoryEigen::MATRIX_TYPE][1] = true;  
+    
 
   // backward pass to find effective instructions when stateless
   std::vector<instruction *> bid_effective_stateless;
@@ -258,68 +263,6 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
   // CheckMemorySizes(std::any_cast<int>(params["memory_indices"]));
 }
 
-// // TODO(skelly): This functions currently assumes obs is a vector of state
-// vars void RegisterMachine::CopyObservationToMemoryBuff(state *obs) {
-//   // // Copy obs to scalar memory  TODO(skelly): currently unused. remove?
-//   // Matrix<double, Dynamic, Dynamic> scalar_mat(1, 1);
-//   // scalar_mat(0, 0) = obs->stateValueAtIndex(0);
-//   // AddToInputMemoryBuff(scalar_mat, memoryEigen::SCALAR_TYPE);
-
-//   // Copy obs to vector memory
-//   // Matrix<double, Dynamic, Dynamic> vector_mat(memory_size, 1);
-//   int f = obs_index_ % obs->dim_;
-//   for (int row = 0; row < memory_size_; row++) {
-//     // vector_mat(row, 0) = obs->stateValueAtIndex(f % obs->dim_);
-//     observation_memory_buff_[memoryEigen::VECTOR_TYPE]->working_memory_[0](
-//         row, 0) = obs->stateValueAtIndex(f % obs->dim_);
-//     f++;
-//   }
-//   // AddToInputMemoryBuff(vector_mat, memoryEigen::VECTOR_TYPE);
-
-//   // // TODO(skelly): debugging output
-//   // cerr << "vector_in " << memory_size_ << ",1";
-//   // for (int r = 0; r < observation_memory_buff_[memoryEigen::VECTOR_TYPE]
-//   //                         ->working_memory_[0]
-//   //                         .rows();
-//   //      r++) {
-//   //   cerr << " "
-//   //        << observation_memory_buff_[memoryEigen::VECTOR_TYPE]
-//   //               ->working_memory_[0](r, 0);
-//   // }
-//   // cerr << endl;
-
-//   // Copy obs to matrix memory
-//   // Matrix<double, Dynamic, Dynamic> matrix_mat(memory_size, memory_size);
-//   f = obs_index_ % obs->dim_;
-//   for (int row = 0; row < memory_size_; row++) {
-//     for (int col = 0; col < memory_size_; col++) {
-//       // matrix_mat(row, col) = obs->stateValueAtIndex(f % obs->dim_);
-//       observation_memory_buff_[memoryEigen::MATRIX_TYPE]->working_memory_[0](
-//           row, col) = obs->stateValueAtIndex(f % obs->dim_);
-//       f++;
-//     }
-//   }
-//   // AddToInputMemoryBuff(matrix_mat, memoryEigen::MATRIX_TYPE);
-
-//   // // TODO(skelly): debugging output
-//   // cerr << "matrix_in " << memory_size_ << "," << memory_size_;
-//   // for (int r = 0; r < observation_memory_buff_[memoryEigen::MATRIX_TYPE]
-//   //                         ->working_memory_[0]
-//   //                         .rows();
-//   //      r++) {
-//   //   for (int c = 0; c < observation_memory_buff_[memoryEigen::MATRIX_TYPE]
-//   //                           ->working_memory_[0]
-//   //                           .cols();
-//   //        c++) {
-//   //     cerr << " "
-//   //          << observation_memory_buff_[memoryEigen::MATRIX_TYPE]
-//   //                 ->working_memory_[0](r, c);
-//   //   }
-//   // }
-//   // cerr << endl;
-//   // CheckMemorySizes(8);
-// }
-
 // TODO(skelly): This functions currently assumes obs is a vector of state vars
 void RegisterMachine::CopyObservationToMemoryBuff(state *obs,
                                                   size_t memory_type) {
@@ -332,13 +275,8 @@ void RegisterMachine::CopyObservationToMemoryBuff(state *obs,
       f++;
     }
   } else if (memory_type == memoryEigen::MATRIX_TYPE) {
-    // int fv = obs_index_ % obs->dim_;
     int fm = obs_index_ % obs->dim_;
     for (int row = 0; row < memory_size_; row++) {
-      // observation_memory_buff_[memoryEigen::VECTOR_TYPE]->working_memory_[0](
-      //     row, 0) = obs->stateValueAtIndex(fv % obs->dim_);
-      // fv++;
-
       for (int col = 0; col < memory_size_; col++) {
         observation_memory_buff_[memoryEigen::MATRIX_TYPE]->working_memory_[0](
             row, col) = obs->stateValueAtIndex(fm % obs->dim_);

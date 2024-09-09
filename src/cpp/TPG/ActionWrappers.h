@@ -22,7 +22,7 @@ double WrapContinuousActionSigmoid(EvalData &eval) {
 
 vector<double> WrapVectorActionSigmoid(EvalData &eval) {
     auto mat = eval.program_out->privateMemory_[memoryEigen::VECTOR_TYPE]
-                   ->working_memory_[0];
+                   ->working_memory_[1];
     vector<double> vec(mat.data(), mat.data() + mat.rows() * mat.cols());
     for (auto &v : vec) v = sigmoid(v);  // TODO(skelly): better/faster way?
     return vec;

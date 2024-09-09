@@ -82,6 +82,10 @@ struct EvalData {
             if (tpg.GetParam<string>("forecast_fitness") == "mse") {
                 auto err = MeanSquaredError(sequence_targ, sequence_pred);
                 stats_double[REWARD1_IDX] = -err;
+                // TODO(skelly): remove debug out
+                // cerr << "targ " << vecToStr(sequence_targ) << endl;
+                // cerr << " pred " << vecToStr(sequence_pred) << endl;
+                // cerr << "err " << err << endl;
             } else if (tpg.GetParam<string>("forecast_fitness") ==
                        "correlation") {
                 auto corr = Correlation(sequence_targ, sequence_pred);

@@ -165,19 +165,6 @@ void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
       tpg.readCheckpoint(-1, _TRAIN_PHASE, -1, true, eval.checkpointString);
       tpg.getTeams(eval.teams, true);
       eval.task = tasks[tpg.GetState("active_task")];
-      // TODO(skely): remove any task-specific code from this file
-      if (eval.task->eval_type_ == "RecursiveForecast") {
-        RecursiveForecast *task = dynamic_cast<RecursiveForecast *>(eval.task);
-        if (tpg.GetParam<int>("forecast_univar")) {
-          eval.sequence_targ.resize(task->n_predict_[tpg.GetState("phase")]);
-          eval.sequence_pred.resize(task->n_predict_[tpg.GetState("phase")]);
-        } else {
-          eval.sequence_targ.resize(task->n_predict_[tpg.GetState("phase")] *
-                                    tpg.n_input_[tpg.GetState("active_task")]);
-          eval.sequence_pred.resize(task->n_predict_[tpg.GetState("phase")] *
-                                    tpg.n_input_[tpg.GetState("active_task")]);
-        }
-      }
       eval.eval_result = "";
       for (auto tm : eval.teams) {
         eval.tm = tm;

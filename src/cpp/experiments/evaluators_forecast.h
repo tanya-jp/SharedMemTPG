@@ -6,30 +6,21 @@
 #include "EvalData.h"
 
 void SaveRecursiveForecast(TPG &tpg, EvalData &eval) {
-    RecursiveForecast *task = dynamic_cast<RecursiveForecast *>(eval.task);
-    bool discrete_actions = tpg.GetParam<int>("forecast_discrete");
-    if (tpg.GetParam<int>("forecast_univar")) {
-        eval.sequence_targ[eval.n_prediction] = task->data[eval.sample + 1][0];
-        if (discrete_actions) {
-            int action = WrapDiscreteAction(eval);
-            eval.sequence_pred[eval.n_prediction] =
-                task->uniq_discrete_univars_[action];
-        } else
-            eval.sequence_pred[eval.n_prediction] =
-                WrapContinuousActionSigmoid(eval);
-    } else {
+    RecursiveForecast *task = dynamic_cast<RecursiveForecast *>(eval.task);  
             auto targ = task->data[eval.sample + 1];
-            auto act = WrapVectorActionSigmoid(eval);
-            for (size_t var = 0; var < act.size(); var++) {
-                eval.sequence_targ[eval.n_prediction * act.size() + var] =
-                    targ[var];
-                eval.sequence_pred[eval.n_prediction * act.size() + var] =
-                    targ[var];
+            auto pred = WrapVectorActionSigmoid(eval);
+            for (size_t var = 0; var < targ.size(); var++) {
+                eval.sequence_targ.push_back(targ[var]);    
+                eval.sequence_pred.push_back(pred[var]);    
             }
-    }
+            // // TODO(skelly):remove debugging output
+            // cerr << "targ " << vecToStr(targ) << endl;
+            // cerr << "pred " << vecToStr(pred) << endl;
 }
 
 void InitRecusiveForecastObs(TPG &tpg, EvalData &eval) {
+    eval.sequence_targ.clear();
+    eval.sequence_pred.clear();
     eval.obs = new state(tpg.n_input_[tpg.GetState("active_task")]);
     eval.obs_list.assign(tpg.n_input_[tpg.GetState("active_task")], 1.0);
     eval.obs_vec.assign(tpg.n_input_[tpg.GetState("active_task")], 1.0);
@@ -37,53 +28,12 @@ void InitRecusiveForecastObs(TPG &tpg, EvalData &eval) {
 
 void PrepareRecursiveForecastObs(TPG &tpg, EvalData &eval, bool prime) {
     RecursiveForecast *task = dynamic_cast<RecursiveForecast *>(eval.task);
-    bool discrete_actions = tpg.GetParam<int>("forecast_discrete");
     if (prime) {  // prime
-        if (tpg.GetParam<int>("forecast_univar")) {
-            eval.obs_list.push_back(task->data[eval.sample][0]);
-            eval.obs_list.pop_front();
-            std::copy(eval.obs_list.begin(), eval.obs_list.end(),
-                      eval.obs_vec.begin());
-
-            // TODO(skelly): debugging obs
-            double c = 1;
-            for (size_t ov = 0; ov < eval.obs_vec.size(); ov++) {
-              eval.obs_vec[ov] = c;
-              c += 1.0;
-            }
-            cerr << "obs " << vecToStr(eval.obs_vec) << endl;
-
-            eval.obs->Set(eval.obs_vec);
-        } else {
             eval.obs->Set(task->data[eval.sample]);
-        }
     } else {  // predict
-        if (tpg.GetParam<int>("forecast_univar")) {
-            if (discrete_actions) {
-                int action = WrapDiscreteAction(eval);
-                eval.obs_list.push_back(
-                    task->uniq_discrete_univars_[action]);  // Prev action
-            } else
-                eval.obs_list.push_back(
-                    WrapContinuousActionSigmoid(eval));  // Prev action
-            eval.obs_list.pop_front();
-            std::copy(eval.obs_list.begin(), eval.obs_list.end(),
-                      eval.obs_vec.begin());
-
-            // TODO(skelly): debugging obs
-            double c = 1;
-            for (size_t ov = 0; ov < eval.obs_vec.size(); ov++) {
-              eval.obs_vec[ov] = c;
-              c += 1.0;
-            }
-            cerr << "obs " << vecToStr(eval.obs_vec) << endl;
-
-            eval.obs->Set(eval.obs_vec);
-        } else {
             std::vector<double> v;
             v = WrapVectorActionSigmoid(eval);  // Previous action
             eval.obs->Set(v);
-        }
     }
 }
 
@@ -158,16 +108,7 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalData &eval,
                               int &steps) {
     RecursiveForecast *task = dynamic_cast<RecursiveForecast *>(eval.task);
     eval.n_prediction = 0;
-    if (tpg.GetParam<int>("forecast_univar")) {
-        eval.sequence_targ.resize(task->n_predict_[tpg.GetState("phase")]);
-        eval.sequence_pred.resize(task->n_predict_[tpg.GetState("phase")]);
-    } else {
-        eval.sequence_targ.resize(task->n_predict_[tpg.GetState("phase")] *
-                                  tpg.n_input_[tpg.GetState("active_task")]);
-        eval.sequence_pred.resize(task->n_predict_[tpg.GetState("phase")] *
-                                  tpg.n_input_[tpg.GetState("active_task")]);
-    }
-
+    
     InitRecusiveForecastObs(tpg, eval);
 
     // Prime
@@ -176,15 +117,9 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalData &eval,
         task->t_start[tpg.GetParam<int>("checkpoint_in_phase")][eval.episode];
     for (int i = 0; i < task->n_prime_ - 1; i++) {
         PrepareRecursiveForecastObs(tpg, eval, true);
-
-        if (tpg.GetParam<int>("forecast_univar")) {
-            prime_samples_plot.push_back(task->data[eval.sample][0]);
-        } else {
             prime_samples_plot.insert(prime_samples_plot.end(),
                                       task->data[eval.sample].begin(),
                                       task->data[eval.sample].end());
-        }
-
         // Execute graph
         eval.program_out = tpg.getAction(
             eval.tm, eval.obs, true, eval.teams_visited, eval.instruction_count,
@@ -235,17 +170,6 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalData &eval,
         eval.AccumulateStepData();
     }
     delete eval.obs;
-
-    // TODO(spkelly): fix hard coding
-    int n_var = tpg.GetParam<int>("forecast_univar") ? 1 : 3;
-    PrintRecursizeForecast(
-        "tpg_seed_" + to_string(tpg.seeds_[TPG_SEED]) + "_task_" +
-            to_string(tpg.state_["active_task"]) + "_test_t" +
-            to_string(task->t_start[tpg.GetParam<int>("checkpoint_in_phase")]
-                                   [eval.episode]) +
-            ".csv",
-        task->t_start[tpg.GetParam<int>("checkpoint_in_phase")][eval.episode],
-        n_var, prime_samples_plot, eval.sequence_targ, eval.sequence_pred);
 }
 
 #endif
