@@ -62,7 +62,7 @@ n_generations 1000000
 mu_internal 0
 
 # number of elite teams
-n_elite 100
+n_elite 500
 
 # n_elite * n_elite_mul new teams are created each generation
 n_elite_mul 2
@@ -73,7 +73,7 @@ fit_prop_select 0
 # which diversity mode to use, if available
 diversity_mode 0
 
-parent_select_roots_only 1
+parent_select_roots_only 0
 
 ################################################################################
 ## Team  parameters ############################################################
@@ -125,10 +125,14 @@ stateful 1
 skip_introns 0
 
 # enable continuous outputs
-continuous_output 1
+# 0: disabled
+# 1: output is scalar s1
+# 2: output is vector v1
+# 3: output is matrix m1
+continuous_output 2
 
 # number of inputs (aka "features" or "state variables")
-n_input 32
+n_input 2,32,32
 
 # max initial program size
 max_initial_prog_size 10
@@ -141,9 +145,9 @@ max_prog_size 1000000
 memory_indices 8
 
 # Dimensionality for vector & matrix memory
-memory_size 8
+memory_size 2
 min_memory_size 2
-max_memory_size 32 
+max_memory_size 8 
 
 # Observations are stored in a buffer with this time window.
 observation_buff_size 1
@@ -180,15 +184,13 @@ p_observation_index 0.2
 # program variation: probability of changing memory_size
 p_memory_size 0.2
 
-
-
 ################################################################################
 ## General Task Parameters #####################################################
 ################################################################################
 
 # which tasks are active
 # rhs should be a single task name or a comma-separated list
-active_tasks Laser
+active_tasks Bach
 
 # use the partially-observable version of a task, if available
 # currently only available for calssic control tasks
@@ -201,7 +203,7 @@ n_discrete_action 3
 ## Parameters Specific to Recursive Forecasting ################################
 ################################################################################
 
-forecast_univar 1
+forecast_univar 0
 
 # fitness function
 # supported options: "mse", "correlation", "theils", "pearson"
@@ -237,21 +239,21 @@ SCALAR_PRODUCT_OP
 SCALAR_DIVISION_OP
 SCALAR_ABS_OP
 SCALAR_RECIPROCAL_OP
-SCALAR_SIN_OP
+#SCALAR_SIN_OP
 SCALAR_COS_OP
-SCALAR_TAN_OP
-SCALAR_ARCSIN_OP
-SCALAR_ARCCOS_OP
-SCALAR_ARCTAN_OP
+#SCALAR_TAN_OP
+#SCALAR_ARCSIN_OP
+#SCALAR_ARCCOS_OP
+#SCALAR_ARCTAN_OP
 SCALAR_EXP_OP
 SCALAR_LOG_OP
 SCALAR_HEAVYSIDE_OP
 SCALAR_CONDITIONAL_OP
-SCALAR_POW_OP
-SCALAR_SQR_OP
-SCALAR_CUBE_OP
-SCALAR_TANH_OP
-SCALAR_SQRT_OP
+#SCALAR_POW_OP
+#SCALAR_SQR_OP
+#SCALAR_CUBE_OP
+#SCALAR_TANH_OP
+#SCALAR_SQRT_OP
 #SCALAR_CONST_SET_OP
 SCALAR_MIN_OP
 SCALAR_MAX_OP

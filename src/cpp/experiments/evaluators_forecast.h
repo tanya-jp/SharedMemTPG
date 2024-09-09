@@ -18,7 +18,6 @@ void SaveRecursiveForecast(TPG &tpg, EvalData &eval) {
             eval.sequence_pred[eval.n_prediction] =
                 WrapContinuousActionSigmoid(eval);
     } else {
-        if (tpg.GetParam<string>("action_dim") == "1x3") {
             auto targ = task->data[eval.sample + 1];
             auto act = WrapVectorActionSigmoid(eval);
             for (size_t var = 0; var < act.size(); var++) {
@@ -27,25 +26,6 @@ void SaveRecursiveForecast(TPG &tpg, EvalData &eval) {
                 eval.sequence_pred[eval.n_prediction * act.size() + var] =
                     targ[var];
             }
-        } else {  // if (tpg.GetParam<string>("action_dim") == "1x1"){
-            auto targ = task->data[eval.sample + 1];
-            vector<double> pred;
-            size_t y = size_t(tpg.GetParam<int>("predict_var"));
-            for (size_t var = 0; var < targ.size(); var++) {
-                eval.sequence_targ[eval.n_prediction * targ.size() + var] =
-                    targ[var];
-                if (var == y) {
-                    eval.sequence_pred[eval.n_prediction * targ.size() + var] =
-                        WrapContinuousActionSigmoid(eval);
-                    pred.push_back(WrapContinuousActionSigmoid(eval));
-                } else {
-                    eval.sequence_pred[eval.n_prediction * targ.size() + var] =
-                        targ[var];
-                    pred.push_back(targ[var]);
-                }
-            }
-            cerr << "t:" << vecToStr(targ) << " p:" << vecToStr(pred) << endl;
-        }
     }
 }
 
@@ -65,13 +45,13 @@ void PrepareRecursiveForecastObs(TPG &tpg, EvalData &eval, bool prime) {
             std::copy(eval.obs_list.begin(), eval.obs_list.end(),
                       eval.obs_vec.begin());
 
-            // // TODO(skelly): debugging obs
-            // double c = 1;
-            // for (size_t ov = 0; ov < eval.obs_vec.size(); ov++) {
-            //   eval.obs_vec[ov] = c;
-            //   c += 1.0;
-            // }
-            // cerr << "obs " << vecToStr(eval.obs_vec) << endl;
+            // TODO(skelly): debugging obs
+            double c = 1;
+            for (size_t ov = 0; ov < eval.obs_vec.size(); ov++) {
+              eval.obs_vec[ov] = c;
+              c += 1.0;
+            }
+            cerr << "obs " << vecToStr(eval.obs_vec) << endl;
 
             eval.obs->Set(eval.obs_vec);
         } else {
@@ -90,25 +70,18 @@ void PrepareRecursiveForecastObs(TPG &tpg, EvalData &eval, bool prime) {
             std::copy(eval.obs_list.begin(), eval.obs_list.end(),
                       eval.obs_vec.begin());
 
-            // // TODO(skelly): debugging obs
-            // double c = 1;
-            // for (size_t ov = 0; ov < eval.obs_vec.size(); ov++) {
-            //   eval.obs_vec[ov] = c;
-            //   c += 1.0;
-            // }
-            // cerr << "obs " << vecToStr(eval.obs_vec) << endl;
+            // TODO(skelly): debugging obs
+            double c = 1;
+            for (size_t ov = 0; ov < eval.obs_vec.size(); ov++) {
+              eval.obs_vec[ov] = c;
+              c += 1.0;
+            }
+            cerr << "obs " << vecToStr(eval.obs_vec) << endl;
 
             eval.obs->Set(eval.obs_vec);
         } else {
             std::vector<double> v;
-            if (tpg.GetParam<string>("action_dim") == "1x3") {
-                v = WrapVectorActionSigmoid(eval);  // Prev action
-            } else {  // if (tpg.GetParam<string>("action_dim") == "1x1"){
-                v = eval.n_prediction == 0 ? task->data[eval.sample - 1]
-                                           : task->data[eval.sample];
-                v[tpg.GetParam<int>("predict_var")] =
-                    WrapContinuousActionSigmoid(eval);  // Prev action
-            }
+            v = WrapVectorActionSigmoid(eval);  // Previous action
             eval.obs->Set(v);
         }
     }
