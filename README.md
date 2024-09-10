@@ -16,9 +16,9 @@ sudo xargs --arg-file requirements.txt apt install
 In order to easily access tpg scripts, we must add appropriate folders to the $PATH environment variable.
 To do so, add the following to *~/.profile*
 ```
-export TPG_PATH=<YOUR_PATH_HERE>/tpg
-export PATH=$PATH:$TPG_PATH/scripts/plot
-export PATH=$PATH:$TPG_PATH/scripts/run
+export TPG=<YOUR_PATH_HERE>/tpg
+export PATH=$PATH:$TPG/scripts/plot
+export PATH=$PATH:$TPG/scripts/run
 ```
 Then run:
 ```
