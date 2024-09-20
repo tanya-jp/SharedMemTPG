@@ -46,7 +46,7 @@ Generate classic_control_example_p0.pdf with various statistics:
 ```
 tpg-plot-stats.sh
 ```
-The first page will be a training curve looking something like the plot below. A fitness of 300 indicates the agent balances the pole for 300 timesteps, thus solving the task.
+The first page will be a training curve looking something like the plot below. A fitness of 500 indicates the agent balances the pole for 300 timesteps, thus solving the task.
 
 <img src="./classic_control_example/images/cartpole-example.png" height="300" />
 
