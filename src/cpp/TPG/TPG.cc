@@ -404,6 +404,7 @@ void TPG::ReadParameters(string file_name,
         outcome_fields[0] == "n_stored_outcomes_TEST" ||
         outcome_fields[0] == "forecast_fitness" ||
         outcome_fields[0] == "action_dim" ||
+        outcome_fields[0] == "mj_model_path" ||
         outcome_fields[0] == "experiment_key") {
       params[outcome_fields[0]] = outcome_fields[1];
     }
@@ -860,6 +861,7 @@ vector<team *> TPG::NormalizeScoresAndRankTeams(
     for (size_t task = 0; task < set.size(); task++) {
       if (tm->numOutcomes(GetState("phase"), set[task]) <
           tasks[set[task]]->GetNumEval(GetState("phase"))) {
+      cerr << "phase " << GetState("phase") << "tm5 " << tm->id_ << " no " << tm->numOutcomes(GetState("phase"), set[task]) << " ne " << tasks[set[task]]->GetNumEval(GetState("phase")) << endl;
         die(__FILE__, __FUNCTION__, __LINE__,
             "All root teams should have enough evaluations at this point.");
       }

@@ -28,4 +28,12 @@ vector<double> WrapVectorActionSigmoid(EvalData &eval) {
     return vec;
 }
 
+vector<double> WrapVectorActionTanh(EvalData &eval) {
+    auto mat = eval.program_out->privateMemory_[memoryEigen::VECTOR_TYPE]
+                   ->working_memory_[1];
+    vector<double> vec(mat.data(), mat.data() + mat.rows() * mat.cols());
+    for (auto &v : vec) v = std::tanh(v);  // TODO(skelly): better/faster way?
+    return vec;
+}
+
 #endif

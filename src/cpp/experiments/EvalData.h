@@ -128,15 +128,18 @@ struct EvalData {
     // eval_string stores all evaluation results that must be passed from
     // evaluator mpi jobs back to the main TPG process.
     void EncodeEvalResultString(TPG &tpg) {
-        eval_result += to_string(tm->id_);
-        eval_result += ":4" + vecToStrNoSpace(fingerprint);  // 4?
-        eval_result += ":" + to_string(tpg.GetState("active_task"));
+        // eval_result.erase(std::remove(eval_result.begin(), eval_result.end(), '\0'), eval_result.end());
+        eval_result += to_string(static_cast<long>(tm->id_));
+        eval_result += ":4";// + vecToStrNoSpace(fingerprint);  // 4?
+        eval_result += ":0";// + to_string(tpg.GetState("active_task"));
         for (size_t r = 0; r < stats_double.size(); r++)
             eval_result += ":" + to_string(stats_double[r]);
         for (size_t r = 0; r < stats_int.size(); r++)
             eval_result += ":" + to_string(stats_int[r]);
         eval_result += "\n";
+        // eval_result.erase(std::remove(eval_result.begin(), eval_result.end(), '\0'), eval_result.end());
     }
+
     // Method used by main TPG process to decode and incorporate eval data.
     static void DecodeEvalResultString(TPG &tpg, istringstream &f,
                                        vector<TaskEnv *> &tasks,
@@ -159,9 +162,12 @@ struct EvalData {
             tpg.setOutcome(root_teams_map[rslt_id], fingerprint, r_stats_double,
                            r_stats_int, tpg.GetState("t_current"));
             // For control tasks, re-use training results as validation.
+            // TODO(skelly): fix
             if (r_stats_int[POINT_AUX_INT_PHASE] == _TRAIN_PHASE &&
-                tasks[tpg.GetParam<int>("active_task")]->eval_type_ ==
-                    "Control") {
+                (tasks[tpg.GetParam<int>("active_task")]->eval_type_ ==
+                     "Control" ||
+                 tasks[tpg.GetParam<int>("active_task")]->eval_type_ ==
+                     "Mujoco")) {
                 r_stats_int[POINT_AUX_INT_PHASE] = _VALIDATION_PHASE;
                 tpg.setOutcome(root_teams_map[rslt_id], fingerprint,
                                r_stats_double, r_stats_int,

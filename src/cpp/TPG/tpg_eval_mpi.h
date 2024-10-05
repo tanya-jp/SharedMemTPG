@@ -13,6 +13,7 @@
 #include <ActionWrappers.h>
 #include "evaluators_control.h"
 #include "evaluators_forecast.h"
+#include "evaluators_mujoco.h"
 
 #include <boost/mpi.hpp>
 #include <chrono>
@@ -157,7 +158,8 @@ void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
   unordered_map<string, EvaluatorFunction> evaluator_map;
   evaluator_map["Control"] = &EvalControl;
   evaluator_map["RecursiveForecast"] = &EvalRecursiveForecast;
-  MaybeStartAnimation(tpg);
+  evaluator_map["Mujoco"] = &EvalMujoco;
+  // MaybeStartAnimation(tpg); // TODO(skelly): put back
   EvalData eval(tpg);
   while (NotDoneAndActive(eval)) {
     world.recv(0, 0, eval.checkpointString);
@@ -184,7 +186,7 @@ void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
 
 /******************************************************************************/
 void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
-  MaybeStartAnimation(tpg);
+  // MaybeStartAnimation(tpg); // TODO(skelly): put back
   EvalData eval(tpg);
 
   vector<map<long, double>> teamUseMapPerTask;
@@ -216,9 +218,11 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
         EvalRecursiveForecastViz(tpg, eval, teamUseMapPerTask,
                                  teams_visitedAllTasks,
                                  steps_per_task[tpg.GetState("active_task")]);
-      } else {
+      } else if (eval.task->eval_type_ == "Control") {
         EvalControlViz(tpg, eval, teamUseMapPerTask, teams_visitedAllTasks,
                        steps_per_task[tpg.GetState("active_task")]);
+      } else {
+        EvalMujoco(tpg, eval);
       }
       eval.FinalizeStepData(tpg);
     }

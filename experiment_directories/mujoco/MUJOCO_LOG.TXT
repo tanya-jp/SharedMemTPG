@@ -1,0 +1,51 @@
+Sat Oct  5 16:29:36 2024
+ERROR: Load model error: ParseXML: Error opening file '../mujoco_models/ant.xml': No such file or directory
+
+Sat Oct  5 16:29:36 2024
+ERROR: Load model error: ParseXML: Error opening file '../mujoco_models/ant.xml': No such file or directory
+
+Sat Oct  5 16:29:36 2024
+ERROR: Load model error: ParseXML: Error opening file '../mujoco_models/ant.xml': No such file or directory
+
+Sat Oct  5 16:29:36 2024
+ERROR: Load model error: ParseXML: Error opening file '../mujoco_models/ant.xml': No such file or directory
+
+Sat Oct  5 16:29:36 2024
+ERROR: Load model error: ParseXML: Error opening file '../mujoco_models/ant.xml': No such file or directory
+
+Sat Oct  5 16:29:36 2024
+ERROR: Load model error: ParseXML: Error opening file '../mujoco_models/ant.xml': No such file or directory
+
+Sat Oct  5 16:29:36 2024
+ERROR: Load model error: ParseXML: Error opening file '../mujoco_models/ant.xml': No such file or directory
+
+Sat Oct  5 16:29:36 2024
+ERROR: Load model error: ParseXML: Error opening file '../mujoco_models/ant.xml': No such file or directory
+
+Sat Oct  5 16:29:36 2024
+ERROR: Load model error: ParseXML: Error opening file '../mujoco_models/ant.xml': No such file or directory
+
+Sat Oct  5 16:29:36 2024
+ERROR: Load model error: ParseXML: Error opening file '../mujoco_models/ant.xml': No such file or directory
+
+Sat Oct  5 16:29:36 2024
+ERROR: Load model error: ParseXML: Error opening file '../mujoco_models/ant.xml': No such file or directory
+
+Sat Oct  5 16:29:36 2024
+ERROR: Load model error: ParseXML: Error opening file '../mujoco_models/ant.xml': No such file or directory
+
+Sat Oct  5 16:29:36 2024
+ERROR: Load model error: ParseXML: Error opening file '../mujoco_models/ant.xml': No such file or directory
+
+Sat Oct  5 16:29:36 2024
+ERROR: Load model error: ParseXML: Error opening file '../mujoco_models/ant.xml': No such file or directory
+
+Sat Oct  5 16:29:36 2024
+ERROR: Load model error: ParseXML: Error opening file '../mujoco_models/ant.xml': No such file or directory
+
+Sat Oct  5 16:29:36 2024
+ERROR: Load model error: ParseXML: Error opening file '../mujoco_models/ant.xml': No such file or directory
+
+Sat Oct  5 16:29:36 2024
+ERROR: Load model error: ParseXML: Error opening file '../mujoco_models/ant.xml': No such file or directory
+
