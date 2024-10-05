@@ -33,6 +33,7 @@ class Mujoco_Ant_v4 : public MujocoEnv {
 
         state.resize(obs_size_);
     }
+    
     ~Mujoco_Ant_v4() {
         // Free visualization storage
         mjv_freeScene(&scn_);
