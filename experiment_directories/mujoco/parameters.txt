@@ -64,7 +64,7 @@ n_generations 1000000
 mu_internal 0
 
 # Number of elite teams
-n_elite 500
+n_elite 1000
 
 # n_elite * n_elite_mul new teams are created each generation
 n_elite_mul 2
@@ -233,6 +233,9 @@ forecast_n_eval_val 10
 # This path assumes working directory is:
 # $TPG/experiment_directories/<working_directory>
 mj_model_path ../../datasets/mujoco_models/ant.xml
+
+# Default for ant is 1000 but use 500 for development
+mj_max_timestep 500
 
 ################################################################################
 ## Operations, uncomment to activate ###########################################

@@ -22,7 +22,7 @@ class Mujoco_Ant_v4 : public MujocoEnv {
         n_eval_train_ = 1;
         n_eval_validation_ = 0;
         n_eval_test_ = 1;
-        max_step = 1000;
+        max_step = std::any_cast<int>(params["mj_max_timestep"]);
         model_path_ = std::any_cast<string>(params["mj_model_path"]);
         healthy_z_range_ = {0.2, 1.0};
         contact_force_range_ = {-1.0, 1.0};
