@@ -33,7 +33,7 @@ class Mujoco_Ant_v4 : public MujocoEnv {
 
         state.resize(obs_size_);
     }
-    
+
     ~Mujoco_Ant_v4() {
         // Free visualization storage
         mjv_freeScene(&scn_);
@@ -82,7 +82,8 @@ class Mujoco_Ant_v4 : public MujocoEnv {
             if (!std::isfinite(d_->qpos[i])) return false;
         for (int i = 0; i < m_->nv; i++)
             if (!std::isfinite(d_->qvel[i])) return false;
-        return true;
+        return (d_->qpos[2] >= healthy_z_range_[0] &&
+                d_->qpos[2] <= healthy_z_range_[1]);
     }
 
     bool terminal() {
