@@ -18,11 +18,15 @@ class MujocoEnv : public TaskEnv {
     std::vector<double> init_qpos_;  // Initial positions
     std::vector<double> init_qvel_;  // Initial velocities
 
-    string model_path_;
+    string model_path_;  // Absolute path to model xml file
     int frame_skip_ = 1;  // Number of frames per simlation step
+    int obs_size_;  // Number of variables in observation vector
 
     MujocoEnv() {}
     ~MujocoEnv() {}
+    virtual void reset(mt19937& rng) = 0;
+    virtual bool terminal() = 0;
+    virtual Results sim_step(std::vector<double>& action) = 0;
 
     void initialize_simulation() {
         // Load and compile model
@@ -61,6 +65,8 @@ class MujocoEnv : public TaskEnv {
         // // github.com/openai/gym/issues/1541
         mj_rnePostConstraint(m_, d_);
     }
+
+    int GetObsSize() { return obs_size_; }
 };
 
 #endif

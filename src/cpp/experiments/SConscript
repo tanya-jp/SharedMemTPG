@@ -9,7 +9,7 @@ env['EBROOTOPENCV'] = os.environ.get('EBROOTOPENCV','default')
 env['MUJOCO'] = os.environ.get('MUJOCO','default')
 
 env.Append(CPPPATH = ['../TPG', '../environments', '../genomic',
-                      '../environments/classicRL', '../environments/sequence',
+                      '../environments/classic_control', '../environments/sequence',
                       '../environments/mujoco',
                       "$EBROOTBOOST/include",'/usr/include/hdf5/serial/',
                       '/usr/include/eigen3',"$EBROOTOPENCV/include/opencv4/",

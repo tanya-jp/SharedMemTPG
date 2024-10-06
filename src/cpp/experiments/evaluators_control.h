@@ -18,7 +18,7 @@ void MaybeStartAnimation(TPG &tpg) {
         // glutInitDisplayMode(GLUT_SINGLE |GLUT_RGB);
         glutInitWindowSize(_width, _height);
         glutInitWindowPosition(100, 100);
-        glutCreateWindow("classicRL");
+        glutCreateWindow("ClassicControl");
         // glutHideWindow();
         glScalef(0.5, 0.5, 0.0);
     }
@@ -27,15 +27,15 @@ void MaybeStartAnimation(TPG &tpg) {
 
 /******************************************************************************/
 void MaybeAnimateStep(EvalData &eval) {
-    (void)eval;
+    ClassicControlEnv* task = dynamic_cast<ClassicControlEnv*>(eval.task);
 #if !defined(CCANADA)
     if (eval.animate) {
-        eval.task->display_function(eval.episode, WrapDiscreteAction(eval),
+        task->display_function(eval.episode, WrapDiscreteAction(eval),
                                     WrapContinuousAction(eval));
         char filename[80];
         sprintf(filename, "%s_%05d_%03d_%05d_%05d_%05d.tga", "replay/frames/gl",
                 eval.save_frame++, eval.episode, eval.task->step, 0, 0);
-        eval.task->saveScreenshotToFile(filename, 1200, 1200);
+        task->saveScreenshotToFile(filename, 1200, 1200);
         // this_thread::sleep_for(std::chrono::milliseconds(10)); TODO(skelly): add
     }
 #endif

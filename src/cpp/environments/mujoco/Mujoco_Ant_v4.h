@@ -2,6 +2,7 @@
 #define Mujoco_Ant_v4_h
 
 #include <MujocoEnv.h>
+#include <misc.h>
 
 class Mujoco_Ant_v4 : public MujocoEnv {
    public:
@@ -15,7 +16,6 @@ class Mujoco_Ant_v4 : public MujocoEnv {
     std::vector<double> contact_force_range_;
     double reset_noise_scale_ = 0.1;
     bool exclude_current_positions_from_observation_ = true;
-    int obs_size_ = 27;
 
     Mujoco_Ant_v4(std::unordered_map<std::string, std::any>& params) {
         eval_type_ = "Mujoco";
@@ -23,11 +23,13 @@ class Mujoco_Ant_v4 : public MujocoEnv {
         n_eval_validation_ = 0;
         n_eval_test_ = 1;
         max_step = std::any_cast<int>(params["mj_max_timestep"]);
-        model_path_ = std::any_cast<string>(params["mj_model_path"]);
+        // model_path_ = std::any_cast<string>(params["mj_model_path"]);
+        model_path_ = ExpandEnvVars(std::any_cast<string>(params["mj_model_path"]));
         healthy_z_range_ = {0.2, 1.0};
         contact_force_range_ = {-1.0, 1.0};
         initialize_simulation();
 
+        obs_size_ = 27;
         if (!exclude_current_positions_from_observation_) obs_size_ += 2;
         if (use_contact_forces_) obs_size_ += 84;
 
@@ -134,8 +136,6 @@ class Mujoco_Ant_v4 : public MujocoEnv {
         mj_resetData(m_, d_);
         step = 0;
     }
-
-    int GetObsSize() { return obs_size_; }
 };
 
 #endif

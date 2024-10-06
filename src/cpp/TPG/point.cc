@@ -69,3 +69,5 @@ ostream &operator<<(ostream &os, const point &pt) {
   os << "(" << pt._id << ", " << pt._gtime << ")";
   return os;
 }
+
+
