@@ -33,7 +33,7 @@ void MaybeAnimateStep(EvalData &eval) {
                                WrapContinuousAction(eval));
         char filename[80];
         sprintf(filename, "%s_%05d_%03d_%05d_%05d_%05d.tga", "replay/frames/gl",
-                eval.save_frame++, eval.episode, eval.task->step, 0, 0);
+                eval.save_frame++, eval.episode, eval.task->step_, 0, 0);
         task->saveScreenshotToFile(filename, 1200, 1200);
         // this_thread::sleep_for(std::chrono::milliseconds(10)); TODO(skelly):
         // add
@@ -51,7 +51,7 @@ void EvalControl(TPG &tpg, EvalData &eval) {
     while (!eval.task->terminal()) {
         eval.program_out = tpg.getAction(
             eval.tm, obs, true, eval.teams_visited, eval.instruction_count,
-            eval.task->step, eval.team_path, tpg.rngs_[AUX_SEED], false);
+            eval.task->step_, eval.team_path, tpg.rngs_[AUX_SEED], false);
 
         MaybeAnimateStep(eval);
         TaskEnv::Results r =
@@ -78,7 +78,7 @@ void EvalControlViz(TPG &tpg, EvalData &eval,
     while (!eval.task->terminal()) {
         eval.program_out = tpg.getAction(
             eval.tm, obs, true, eval.teams_visited, eval.instruction_count,
-            eval.task->step, eval.team_path, tpg.rngs_[AUX_SEED], false);
+            eval.task->step_, eval.team_path, tpg.rngs_[AUX_SEED], false);
         eval.n_prediction++;
         for (auto tm : eval.teams_visited) {
             if (teamUseMapPerTask[tpg.state_["active_task"]].find(tm->id_) ==
@@ -101,7 +101,7 @@ void EvalControlViz(TPG &tpg, EvalData &eval,
         obs->Set(eval.task->GetObsVec(eval.partially_observable));
     }
     for (auto p : teamUseMapPerTask[tpg.state_["active_task"]]) {
-        p.second = p.second / eval.task->step;
+        p.second = p.second / eval.task->step_;
     }
     MaybeAnimateStep(eval);
     delete obs;

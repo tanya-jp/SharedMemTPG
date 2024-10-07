@@ -45,41 +45,41 @@ class MountainCarContinuous : public ClassicControlEnv {
         n_eval_test_ = 100;
         disReset = uniform_real_distribution<>(-0.6, -0.4);
         eval_type_ = "Control";
-        max_step = 200;
-        state.reserve(STATE_SIZE);
-        state.resize(STATE_SIZE);
-        state_po.reserve(STATE_SIZE);
-        state_po.resize(STATE_SIZE);
+        max_step_ = 200;
+        state_.reserve(STATE_SIZE);
+        state_.resize(STATE_SIZE);
+        state_po_.reserve(STATE_SIZE);
+        state_po_.resize(STATE_SIZE);
     }
 
     ~MountainCarContinuous() {}
 
     void normalizeState(bool po) {
         if (po) {
-            state_po[_position] = (state_po[_position] - min_position) /
+            state_po_[_position] = (state_po_[_position] - min_position) /
                                   (max_position - min_position);
         }
     }
 
     void reset(mt19937 &rng) {
-        state[_position] = state_po[_position] = disReset(rng);
-        state[_velocity] = 0;
+        state_[_position] = state_po_[_position] = disReset(rng);
+        state_[_velocity] = 0;
 
-        state_po[_velocity] = disNoise(rng);
+        state_po_[_velocity] = disNoise(rng);
 
-        state[2] = disNoise(rng);
-        state[3] = disNoise(rng);
+        state_[2] = disNoise(rng);
+        state_[3] = disNoise(rng);
 
         reward = 0;
 
-        step = 0;
+        step_ = 0;
         terminalState = false;
         normalizeState(true);
     }
 
     bool terminal() {
-        if (step >= max_step || (state[_position] >= goal_position &&
-                                 state[_velocity] >= goal_velocity))
+        if (step_ >= max_step_ || (state_[_position] >= goal_position &&
+                                 state_[_velocity] >= goal_velocity))
             terminalState = true;
         return terminalState;
     }
@@ -87,23 +87,23 @@ class MountainCarContinuous : public ClassicControlEnv {
     Results update(int actionD, double actionC, mt19937 &rng) {
         (void)actionD;
         double force = bound(actionC, min_action, max_action);
-        state[_velocity] += force * power - gravity * cos(3 * state[_position]);
-        state[_velocity] = bound(state[_velocity], -max_speed, max_speed);
-        state[_position] += state[_velocity];
-        state[_position] = bound(state[_position], min_position, max_position);
-        if (state[_position] == min_position && state[_velocity] < 0)
-            state[_velocity] = 0;
+        state_[_velocity] += force * power - gravity * cos(3 * state_[_position]);
+        state_[_velocity] = bound(state_[_velocity], -max_speed, max_speed);
+        state_[_position] += state_[_velocity];
+        state_[_position] = bound(state_[_position], min_position, max_position);
+        if (state_[_position] == min_position && state_[_velocity] < 0)
+            state_[_velocity] = 0;
 
-        state_po[_position] = state[_position];
-        state_po[_velocity] = disNoise(rng);
+        state_po_[_position] = state_[_position];
+        state_po_[_velocity] = disNoise(rng);
 
-        state[2] = disNoise(rng);
-        state[3] = disNoise(rng);
+        state_[2] = disNoise(rng);
+        state_[3] = disNoise(rng);
 
-        step++;
+        step_++;
 
         // reward 2
-        if (terminal() && step < max_step)
+        if (terminal() && step_ < max_step_)
             reward = 100;
         else
             reward = -(pow(force, 2) * 0.1);
@@ -135,8 +135,8 @@ class MountainCarContinuous : public ClassicControlEnv {
         vector<double> xs = linspace(min_position, max_position, 100);
         for (size_t i = 1; i < xs.size() - 1; i++) {
             glVertex2d(x, sin(3 * xs[i]) * .45 + .55);
-            if (state[_position] >= xs[i - 1] &&
-                state[_position] <= xs[i + 1]) {
+            if (state_[_position] >= xs[i - 1] &&
+                state_[_position] <= xs[i + 1]) {
                 carX = x;
                 carXS = xs[i];
             }
@@ -162,7 +162,7 @@ class MountainCarContinuous : public ClassicControlEnv {
         glVertex2d(goalX, (sin(3 * goalXS) * .45 + .55) - 0.1);
         glEnd();
 
-        if (step > 0) {
+        if (step_ > 0) {
             double force = bound(actionC, min_action, max_action);
             glLineWidth(2.0);
             drawTrace(0, "Action:", force, -1.0);
@@ -170,10 +170,10 @@ class MountainCarContinuous : public ClassicControlEnv {
 
         glColor3f(1.0, 1.0, 1.0);
         glLineWidth(1.0);
-        drawEpisodeStepCounter(episode, step, -1.9, -1.9);
+        drawEpisodeStepCounter(episode, step_, -1.9, -1.9);
 
         char c[80];
-        if (step == 0)
+        if (step_ == 0)
             sprintf(c, "MountainCarContinuous Initial Conditions%s", ":");
         else if (terminal())
             sprintf(c, "MountainCarContinuous Terminal%s", ":");

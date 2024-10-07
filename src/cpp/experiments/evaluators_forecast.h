@@ -49,7 +49,7 @@ void EvalRecursiveForecast(TPG &tpg, EvalData &eval) {
         // Execute graph
         eval.program_out = tpg.getAction(
             eval.tm, eval.obs, true, eval.teams_visited, eval.instruction_count,
-            eval.task->step, eval.team_path, tpg.rngs_[AUX_SEED], false);
+            eval.task->step_, eval.team_path, tpg.rngs_[AUX_SEED], false);
         eval.sample++;
     }
     // Predict
@@ -60,7 +60,7 @@ void EvalRecursiveForecast(TPG &tpg, EvalData &eval) {
         // Execute graph
         eval.program_out = tpg.getAction(
             eval.tm, eval.obs, true, eval.teams_visited, eval.instruction_count,
-            task->step, eval.team_path, tpg.rngs_[AUX_SEED], false);
+            task->step_, eval.team_path, tpg.rngs_[AUX_SEED], false);
         SaveRecursiveForecast(tpg, eval);
         eval.sample++;
         eval.AccumulateStepData();
@@ -123,7 +123,7 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalData &eval,
         // Execute graph
         eval.program_out = tpg.getAction(
             eval.tm, eval.obs, true, eval.teams_visited, eval.instruction_count,
-            eval.task->step, eval.team_path, tpg.rngs_[AUX_SEED], false);
+            eval.task->step_, eval.team_path, tpg.rngs_[AUX_SEED], false);
 
         // Team user per task stats TODO(skelly): move to accumulator?
         for (auto tm : eval.teams_visited) {
@@ -150,7 +150,7 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalData &eval,
         // Execute graph
         eval.program_out = tpg.getAction(
             eval.tm, eval.obs, true, eval.teams_visited, eval.instruction_count,
-            task->step, eval.team_path, tpg.rngs_[AUX_SEED], false);
+            task->step_, eval.team_path, tpg.rngs_[AUX_SEED], false);
         // Team user per task stats TODO(skelly): move to accumulator?
         for (auto tm : eval.teams_visited) {
             if (teamUseMapPerTask[tpg.state_["active_task"]].find(tm->id_) ==

@@ -53,11 +53,11 @@ class Acrobot : public ClassicControlEnv {
         actionsDiscrete.push_back(0.0);
         actionsDiscrete.push_back(1.0);
         eval_type_ = "Control";
-        max_step = 200;
-        state.reserve(STATE_SIZE);
-        state.resize(STATE_SIZE);
-        state_po.reserve(STATE_SIZE);
-        state_po.resize(STATE_SIZE);
+        max_step_ = 200;
+        state_.reserve(STATE_SIZE);
+        state_.resize(STATE_SIZE);
+        state_po_.reserve(STATE_SIZE);
+        state_po_.resize(STATE_SIZE);
     }
 
     ~Acrobot() {}
@@ -70,23 +70,23 @@ class Acrobot : public ClassicControlEnv {
 
     void normalizeState(bool po) {
         if (po) {
-            state_po[_theta1] /= maxTheta1;
-            state_po[_theta2] /= maxTheta2;
+            state_po_[_theta1] /= maxTheta1;
+            state_po_[_theta2] /= maxTheta2;
         }
     }
 
     void reset(mt19937 &rng) {
-        state_po[_theta1] = state[_theta1] = disReset(rng);
+        state_po_[_theta1] = state_[_theta1] = disReset(rng);
 
-        state_po[_theta2] = state[_theta2] = disReset(rng);
+        state_po_[_theta2] = state_[_theta2] = disReset(rng);
 
-        state[_theta1Dot] = disReset(rng);
+        state_[_theta1Dot] = disReset(rng);
 
-        state[_theta2Dot] = disReset(rng);
+        state_[_theta2Dot] = disReset(rng);
 
         reward = 0;
 
-        step = 0;
+        step_ = 0;
         terminalState = false;
 
         normalizeState(true);
@@ -112,45 +112,45 @@ class Acrobot : public ClassicControlEnv {
 
             d1 = m1 * pow(lc1, 2) +
                  m2 * (pow(l1, 2) + pow(lc2, 2) +
-                       2 * l1 * lc2 * cos(state[_theta2])) +
+                       2 * l1 * lc2 * cos(state_[_theta2])) +
                  I1 + I2;
-            d2 = m2 * (pow(lc2, 2) + l1 * lc2 * cos(state[_theta2])) + I2;
+            d2 = m2 * (pow(lc2, 2) + l1 * lc2 * cos(state_[_theta2])) + I2;
 
             phi_2 = m2 * lc2 * g *
-                    cos(state[_theta1] + state[_theta2] - M_PI / 2.0);
+                    cos(state_[_theta1] + state_[_theta2] - M_PI / 2.0);
             phi_1 =
-                -(m2 * l1 * lc2 * pow(state[_theta2Dot], 2) *
-                      sin(state[_theta2]) -
-                  2 * m2 * l1 * lc2 * state[_theta1Dot] * state[_theta2Dot] *
-                      sin(state[_theta2])) +
-                (m1 * lc1 + m2 * l1) * g * cos(state[_theta1] - M_PI / 2.0) +
+                -(m2 * l1 * lc2 * pow(state_[_theta2Dot], 2) *
+                      sin(state_[_theta2]) -
+                  2 * m2 * l1 * lc2 * state_[_theta1Dot] * state_[_theta2Dot] *
+                      sin(state_[_theta2])) +
+                (m1 * lc1 + m2 * l1) * g * cos(state_[_theta1] - M_PI / 2.0) +
                 phi_2;
 
             theta2_ddot = (torque + (d2 / d1) * phi_1 -
-                           m2 * l1 * lc2 * pow(state[_theta1Dot], 2) *
-                               sin(state[_theta2]) -
+                           m2 * l1 * lc2 * pow(state_[_theta1Dot], 2) *
+                               sin(state_[_theta2]) -
                            phi_2) /
                           (m2 * pow(lc2, 2) + I2 - pow(d2, 2) / d1);
 
             theta1_ddot = -(d2 * theta2_ddot + phi_1) / d1;
 
-            state[_theta1Dot] += theta1_ddot * dt;
-            state[_theta2Dot] += theta2_ddot * dt;
+            state_[_theta1Dot] += theta1_ddot * dt;
+            state_[_theta2Dot] += theta2_ddot * dt;
 
-            state[_theta1] += state[_theta1Dot] * dt;
-            state[_theta2] += state[_theta2Dot] * dt;
-            state[_theta1] = wrap(state[_theta1], -maxTheta1, maxTheta1);
-            state[_theta2] = wrap(state[_theta2], -maxTheta2, maxTheta2);
-            state[_theta1Dot] =
-                bound(state[_theta1Dot], -maxTheta1Dot, maxTheta1Dot);
-            state[_theta2Dot] =
-                bound(state[_theta2Dot], -maxTheta2Dot, maxTheta2Dot);
+            state_[_theta1] += state_[_theta1Dot] * dt;
+            state_[_theta2] += state_[_theta2Dot] * dt;
+            state_[_theta1] = wrap(state_[_theta1], -maxTheta1, maxTheta1);
+            state_[_theta2] = wrap(state_[_theta2], -maxTheta2, maxTheta2);
+            state_[_theta1Dot] =
+                bound(state_[_theta1Dot], -maxTheta1Dot, maxTheta1Dot);
+            state_[_theta2Dot] =
+                bound(state_[_theta2Dot], -maxTheta2Dot, maxTheta2Dot);
         }
 
-        state_po[_theta1] = state[_theta1];
-        state_po[_theta2] = state[_theta2];
+        state_po_[_theta1] = state_[_theta1];
+        state_po_[_theta2] = state_[_theta2];
 
-        step++;
+        step_++;
 
         reward = -1.0;
 
@@ -159,8 +159,8 @@ class Acrobot : public ClassicControlEnv {
     }
 
     bool terminal() {
-        if (step >= max_step ||
-            (-cos(state[_theta1]) - cos(state[_theta2] + state[_theta1]) >
+        if (step_ >= max_step_ ||
+            (-cos(state_[_theta1]) - cos(state_[_theta2] + state_[_theta1]) >
              AcrobotGoalPosition))
             terminalState = true;
         return terminalState;
@@ -186,15 +186,15 @@ class Acrobot : public ClassicControlEnv {
 
         glLineWidth(5.0);
 
-        x2 = r1 * cos(M_PI / 2 - state[_theta1]);
-        y2 = r1 * sin(M_PI / 2 - state[_theta1]);
+        x2 = r1 * cos(M_PI / 2 - state_[_theta1]);
+        y2 = r1 * sin(M_PI / 2 - state_[_theta1]);
         glColor3f(1.0, 1.0, 1.0);
         glBegin(GL_LINES);
         glVertex2d(0.0, 0.0);
         glVertex2d(-x2, -y2);
 
-        x3 = x2 + r2 * cos(M_PI / 2 - (state[_theta1] + state[_theta2]));
-        y3 = y2 + r2 * sin(M_PI / 2 - (state[_theta1] + state[_theta2]));
+        x3 = x2 + r2 * cos(M_PI / 2 - (state_[_theta1] + state_[_theta2]));
+        y3 = y2 + r2 * sin(M_PI / 2 - (state_[_theta1] + state_[_theta2]));
         glColor3f(1.0, 1.0, 1.0);
         glBegin(GL_LINES);
         glVertex2d(-x2, -y2);
@@ -211,7 +211,7 @@ class Acrobot : public ClassicControlEnv {
 
         glEnd();
 
-        if (step > 0) {
+        if (step_ > 0) {
             glColor3f(1.0, 1.0, 1.0);
             double torque = bound(actionC, -1.0, 1.0);
             glLineWidth(2.0);
@@ -220,10 +220,10 @@ class Acrobot : public ClassicControlEnv {
 
         glColor3f(1.0, 1.0, 1.0);
         glLineWidth(1.0);
-        drawEpisodeStepCounter(episode, step, -1.9, -1.9);
+        drawEpisodeStepCounter(episode, step_, -1.9, -1.9);
 
         char c[80];
-        if (step == 0)
+        if (step_ == 0)
             sprintf(c, "Acrobot Initial Conditions%s", ":");
         else if (terminal())
             sprintf(c, "Acrobot Terminal%s", ":");

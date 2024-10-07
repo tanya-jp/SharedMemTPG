@@ -29,7 +29,7 @@ class Pendulum : public ClassicControlEnv {
     uniform_real_distribution<> disResetDot;
 
     // internal state differs from state for observation
-    vector<double> _state;
+    vector<double> internal_state_;
     // state array indexing
     const int _theta = 0;
     const int _thetaDot = 1;
@@ -44,9 +44,9 @@ class Pendulum : public ClassicControlEnv {
 
     bool discreteActions() const { return false; }
 
-    double theta() { return _state[_theta]; }
+    double theta() { return internal_state_[_theta]; }
 
-    double thetaDot() { return _state[_thetaDot]; }
+    double thetaDot() { return internal_state_[_thetaDot]; }
 
     double maxActionContinuous() const { return maxTorque; }
 
@@ -62,40 +62,40 @@ class Pendulum : public ClassicControlEnv {
         actionsDiscrete.push_back(0.0);
         actionsDiscrete.push_back(maxTorque);
         eval_type_ = "Control";
-        max_step = 300;
-        _state.reserve(PENDULUM_DIM);
-        _state.resize(PENDULUM_DIM);
+        max_step_ = 300;
+        internal_state_.reserve(PENDULUM_DIM);
+        internal_state_.resize(PENDULUM_DIM);
 
         max_costs =
             pow(M_PI, 2) + 0.1 * pow(maxSpeed, 2) + 0.001 * pow(maxTorque, 2);
         // max_costs_all = -(max_costs * max_step);
-        state.reserve(PENDULUM_STATE_SIZE);
-        state.resize(PENDULUM_STATE_SIZE);
-        state_po.reserve(PENDULUM_STATE_SIZE - 1);
-        state_po.resize(PENDULUM_STATE_SIZE - 1);
+        state_.reserve(PENDULUM_STATE_SIZE);
+        state_.resize(PENDULUM_STATE_SIZE);
+        state_po_.reserve(PENDULUM_STATE_SIZE - 1);
+        state_po_.resize(PENDULUM_STATE_SIZE - 1);
     }
 
     ~Pendulum() {}
 
     void reset(mt19937 &rng) {
-        _state[_theta] = disReset(rng);
-        _state[_thetaDot] = disResetDot(rng);
+        internal_state_[_theta] = disReset(rng);
+        internal_state_[_thetaDot] = disResetDot(rng);
 
-        state[0] = state_po[0] = cos(_state[_theta]);
-        state[1] = state_po[1] = sin(_state[_theta]);
+        state_[0] = state_po_[0] = cos(internal_state_[_theta]);
+        state_[1] = state_po_[1] = sin(internal_state_[_theta]);
 
-        state[2] = _state[_thetaDot];
+        state_[2] = internal_state_[_thetaDot];
 
         // state[3] = disNoise(rng);
 
         reward = 0;
 
-        step = 0;
+        step_ = 0;
         terminalState = false;
     }
 
     bool terminal() {
-        terminalState = step >= max_step ? true : false;
+        terminalState = step_ >= max_step_ ? true : false;
         return terminalState;
     }
 
@@ -103,24 +103,24 @@ class Pendulum : public ClassicControlEnv {
         (void)actionD;
         double torque = bound(actionC, -maxTorque, maxTorque);
 
-        double costs = pow(angle_normalize(_state[_theta]), 2) +
-                       0.1 * pow(_state[_thetaDot], 2) + 0.001 * pow(torque, 2);
+        double costs = pow(angle_normalize(internal_state_[_theta]), 2) +
+                       0.1 * pow(internal_state_[_thetaDot], 2) + 0.001 * pow(torque, 2);
         double newThetaDot =
-            _state[_thetaDot] + (-3 * g / (2 * l) * sin(_state[_theta] + M_PI) +
+            internal_state_[_thetaDot] + (-3 * g / (2 * l) * sin(internal_state_[_theta] + M_PI) +
                                  3.0 / (m * pow(l, 2)) * torque) *
                                     dt;
-        _state[_theta] = _state[_theta] + newThetaDot * dt;
-        _state[_thetaDot] = newThetaDot;
-        _state[_thetaDot] = bound(_state[_thetaDot], -maxSpeed, maxSpeed);
+        internal_state_[_theta] = internal_state_[_theta] + newThetaDot * dt;
+        internal_state_[_thetaDot] = newThetaDot;
+        internal_state_[_thetaDot] = bound(internal_state_[_thetaDot], -maxSpeed, maxSpeed);
 
-        state[0] = state_po[0] = cos(_state[_theta]);
-        state[1] = state_po[1] = sin(_state[_theta]);
+        state_[0] = state_po_[0] = cos(internal_state_[_theta]);
+        state_[1] = state_po_[1] = sin(internal_state_[_theta]);
 
-        state[2] = _state[_thetaDot];
+        state_[2] = internal_state_[_thetaDot];
 
         // state[3] = disNoise(rng);
 
-        step++;
+        step_++;
 
         reward = -costs;
 
@@ -139,8 +139,8 @@ class Pendulum : public ClassicControlEnv {
 
         glLineWidth(5.0);
 
-        x2 = r1 * cos(M_PI / 2 - _state[_theta]);
-        y2 = r1 * sin(M_PI / 2 - _state[_theta]);
+        x2 = r1 * cos(M_PI / 2 - internal_state_[_theta]);
+        y2 = r1 * sin(M_PI / 2 - internal_state_[_theta]);
         glColor3f(1.0, 1.0, 1.0);
         glBegin(GL_LINES);
         glVertex2d(0.0, 0.0);
@@ -151,7 +151,7 @@ class Pendulum : public ClassicControlEnv {
         glVertex2d(1.5, 0.0);
         glEnd();
 
-        if (step > 0) {
+        if (step_ > 0) {
             // action
             double torque = bound(actionC, -maxTorque, maxTorque);
             const int sides = 40;
@@ -190,10 +190,10 @@ class Pendulum : public ClassicControlEnv {
         }
         glColor3f(1.0, 1.0, 1.0);
         glLineWidth(1.0);
-        drawEpisodeStepCounter(episode, step, -1.9, -1.9);
+        drawEpisodeStepCounter(episode, step_, -1.9, -1.9);
 
         char c[80];
-        if (step == 0)
+        if (step_ == 0)
             sprintf(c, "Pendulum Initial Conditions%s", ":");
         else if (terminal())
             sprintf(c, "Pendulum Terminal%s", ":");

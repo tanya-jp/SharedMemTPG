@@ -11,15 +11,15 @@
 class TaskEnv {
    public:
     std::string eval_type_;
-    std::vector<double> state;     // state variables TODO(skelly): rename to obs...
-    std::vector<double> state_po;  // state variables (partially observable)
-    std::vector<double> actionsDiscrete;  // discrete actions map to an index into
-                                     // actionDiscrete
+    std::vector<double> state_;     // state variables 
+    std::vector<double> state_po_;  // state variables (partially observable)
+    // discrete actions map to an index into actionDiscrete
+    std::vector<double> actionsDiscrete;
     int previousActionDiscrete;
     double previousActionContinuous;
     double reward;
-    int step;
-    int max_step;
+    int step_;
+    int max_step_;
     bool terminalState;
     // A min reward is useful for filtering very bad or infinitely bad rewards
     // in time series tasks
@@ -38,20 +38,19 @@ class TaskEnv {
     }
     virtual ~TaskEnv() {}
 
-    std::vector<double> &GetObsVec(bool po) { return po ? state_po : state; }
+    std::vector<double> &GetObsVec(bool po) { return po ? state_po_ : state_; }
     double GetObsVar(int var, bool po) {
-        return po ? state_po[var] : state[var];
+        return po ? state_po_[var] : state_[var];
     }
     void setStateVar(int var, double v) {
-        state_po[var] = v;
-        state[var] = v;
+        state_po_[var] = v;
+        state_[var] = v;
     }
-    // void setStep(int s) { step = s; }
     inline std::string EvalType() const { return eval_type_; }
     virtual bool discreteActions() const { return true; }
     virtual double minActionContinuous() const { return 0.0; }
     virtual double maxActionContinuous() const { return 0.0; }
-    virtual void reset(std::mt19937 &) { step = 0; }
+    virtual void reset(std::mt19937 &) { step_ = 0; }
     virtual Results update(int, double, std::mt19937 &) { return {0.0, 0.0}; };
     Results sim_step(std::vector<double> &action) { return {0.0, 0.0}; }
     virtual bool terminal() { return false; }

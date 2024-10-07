@@ -48,11 +48,11 @@ class CartCentering : public ClassicControlEnv {
         actionsDiscrete.push_back(0.0);
         actionsDiscrete.push_back(FORCE_MAG);
         eval_type_ = "Control";
-        max_step = 500;
-        state.reserve(STATE_SIZE);
-        state.resize(STATE_SIZE);
-        state_po.reserve(STATE_SIZE);
-        state_po.resize(STATE_SIZE);
+        max_step_ = 500;
+        state_.reserve(STATE_SIZE);
+        state_.resize(STATE_SIZE);
+        state_po_.reserve(STATE_SIZE);
+        state_po_.resize(STATE_SIZE);
     }
 
     /****************************************************************************/
@@ -61,25 +61,25 @@ class CartCentering : public ClassicControlEnv {
     /****************************************************************************/
     void normalizeState(bool po) {
         if (po) {
-            state_po[X] /= MAX_X;
-            state_po[V] /= M_PI;
+            state_po_[X] /= MAX_X;
+            state_po_[V] /= M_PI;
         }
     }
 
     /****************************************************************************/
     void reset(mt19937 &rng) {
-        step = 0;
+        step_ = 0;
 
         do {
-            state_po[X] = state[X] = disReset(rng);
-            state[V] = disReset(rng);
+            state_po_[X] = state_[X] = disReset(rng);
+            state_[V] = disReset(rng);
             terminalState = false;
         } while (terminal());
 
-        state_po[V] = disNoise(rng);
+        state_po_[V] = disNoise(rng);
 
-        state[2] = disNoise(rng);
-        state[3] = disNoise(rng);
+        state_[2] = disNoise(rng);
+        state_[3] = disNoise(rng);
 
         reward = 0;
 
@@ -88,10 +88,10 @@ class CartCentering : public ClassicControlEnv {
 
     /****************************************************************************/
     bool terminal() {
-        terminalState = step >= max_step ||
-                                (abs(state[X]) <= NEAR_ORIGIN &&
-                                 abs(state[V]) <= NEAR_ORIGIN) ||
-                                abs(state[X]) > MAX_X
+        terminalState = step_ >= max_step_ ||
+                                (abs(state_[X]) <= NEAR_ORIGIN &&
+                                 abs(state_[V]) <= NEAR_ORIGIN) ||
+                                abs(state_[X]) > MAX_X
                             ? true
                             : false;
         return terminalState;
@@ -114,22 +114,22 @@ class CartCentering : public ClassicControlEnv {
 
         double acc_t = force / MASSCART;
 
-        state[X] += TAU * state[V];
-        state_po[X] = state[X];
+        state_[X] += TAU * state_[V];
+        state_po_[X] = state_[X];
 
-        state[V] += TAU * acc_t;
-        state[V] = bound(state[V], -MAX_V, MAX_V);
-        state_po[V] = disNoise(rng);
+        state_[V] += TAU * acc_t;
+        state_[V] = bound(state_[V], -MAX_V, MAX_V);
+        state_po_[V] = disNoise(rng);
 
-        state[2] = disNoise(rng);
-        state[3] = disNoise(rng);
+        state_[2] = disNoise(rng);
+        state_[3] = disNoise(rng);
 
-        step++;
+        step_++;
 
         if (terminal())
             reward =
-                -((((abs(state[X]) / MAX_X) + (abs(state[V]) / MAX_V) / 2)) +
-                  (((double)step / max_step) * 0.1));
+                -((((abs(state_[X]) / MAX_X) + (abs(state_[V]) / MAX_V) / 2)) +
+                  (((double)step_ / max_step_) * 0.1));
         else
             reward = 0;
 
@@ -152,17 +152,17 @@ class CartCentering : public ClassicControlEnv {
         // cart
         glColor3f(0.0, 0.0, 1.0);
         glBegin(GL_TRIANGLES);
-        glVertex2f(state[X] - 0.15, 0.075);
-        glVertex2f(state[X] - 0.15, -0.075);
-        glVertex2f(state[X] + 0.15, 0.075);
-        glVertex2f(state[X] + 0.15, 0.075);
-        glVertex2f(state[X] - 0.15, -0.075);
-        glVertex2f(state[X] + 0.15, -0.075);
+        glVertex2f(state_[X] - 0.15, 0.075);
+        glVertex2f(state_[X] - 0.15, -0.075);
+        glVertex2f(state_[X] + 0.15, 0.075);
+        glVertex2f(state_[X] + 0.15, 0.075);
+        glVertex2f(state_[X] - 0.15, -0.075);
+        glVertex2f(state_[X] + 0.15, -0.075);
         glEnd();
         glColor3f(1.0, 1.0, 1.0);
         glBegin(GL_LINES);
-        glVertex2d(state[X], -0.075);
-        glVertex2d(state[X], 0.075);
+        glVertex2d(state_[X], -0.075);
+        glVertex2d(state_[X], 0.075);
 
         // x bounds surface
         glVertex2d(-MAX_X, 0.0);
@@ -180,7 +180,7 @@ class CartCentering : public ClassicControlEnv {
         }
         glEnd();
 
-        if (step > 0) {
+        if (step_ > 0) {
             // discrete action arrows, action 1 is ignored
             double force = 0;
             if (actionD == 0)
@@ -201,7 +201,7 @@ class CartCentering : public ClassicControlEnv {
             glVertex3f(dir * 0.12, -0.3, 0);
             glEnd();
 
-            if (abs(state[X]) <= NEAR_ORIGIN && abs(state[V]) <= NEAR_ORIGIN) {
+            if (abs(state_[X]) <= NEAR_ORIGIN && abs(state_[V]) <= NEAR_ORIGIN) {
                 glColor3f(0.0, 1.0, 0.0);
                 glBegin(GL_LINE_LOOP);
                 for (int i = 0; i <= 300; i++) {
@@ -218,10 +218,10 @@ class CartCentering : public ClassicControlEnv {
 
         glColor3f(1.0, 1.0, 1.0);
         glLineWidth(1.0);
-        drawEpisodeStepCounter(episode, step, -1.9, -1.9);
+        drawEpisodeStepCounter(episode, step_, -1.9, -1.9);
 
         char c[80];
-        if (step == 0)
+        if (step_ == 0)
             sprintf(c, "CartCentering Initial Conditions%s", ":");
         else if (terminal())
             sprintf(c, "CartCentering Terminal%s", ":");

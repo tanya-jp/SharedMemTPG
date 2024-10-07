@@ -22,8 +22,7 @@ class Mujoco_Ant_v4 : public MujocoEnv {
         n_eval_train_ = 1;
         n_eval_validation_ = 0;
         n_eval_test_ = 1;
-        max_step = std::any_cast<int>(params["mj_max_timestep"]);
-        // model_path_ = std::any_cast<string>(params["mj_model_path"]);
+        max_step_ = std::any_cast<int>(params["mj_max_timestep"]);
         model_path_ = ExpandEnvVars(std::any_cast<string>(params["mj_model_path"]));
         healthy_z_range_ = {0.2, 1.0};
         contact_force_range_ = {-1.0, 1.0};
@@ -33,7 +32,7 @@ class Mujoco_Ant_v4 : public MujocoEnv {
         if (!exclude_current_positions_from_observation_) obs_size_ += 2;
         if (use_contact_forces_) obs_size_ += 84;
 
-        state.resize(obs_size_);
+        state_.resize(obs_size_);
     }
 
     ~Mujoco_Ant_v4() {
@@ -89,7 +88,7 @@ class Mujoco_Ant_v4 : public MujocoEnv {
     }
 
     bool terminal() {
-        return step >= max_step || (terminate_when_unhealthy_ && !is_healthy());
+        return step_ >= max_step_ || (terminate_when_unhealthy_ && !is_healthy());
     }
 
     Results sim_step(std::vector<double>& action) {
@@ -105,8 +104,8 @@ class Mujoco_Ant_v4 : public MujocoEnv {
             costs += contact_cost();
         }
         auto reward = rewards - costs;
-        get_obs(state);
-        step++;
+        get_obs(state_);
+        step_++;
         return {reward, 0.0};  // TODO(skelly): maybe add gym 'info' to results
     }
 
@@ -134,7 +133,7 @@ class Mujoco_Ant_v4 : public MujocoEnv {
         }
         set_state(qpos, qvel);
         mj_resetData(m_, d_);
-        step = 0;
+        step_ = 0;
     }
 };
 

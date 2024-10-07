@@ -164,7 +164,7 @@ void EvalMujoco(TPG& tpg, EvalData& eval) {
     while (!task->terminal()) {
         eval.program_out = tpg.getAction(
             eval.tm, obs, true, eval.teams_visited, eval.instruction_count,
-            task->step, eval.team_path, tpg.rngs_[AUX_SEED], false);
+            task->step_, eval.team_path, tpg.rngs_[AUX_SEED], false);
         auto ctrl = WrapVectorActionTanh(eval);
         TaskEnv::Results r = task->sim_step(ctrl);  // TODO(skelly): slow?
         eval.stats_double[REWARD1_IDX] += r.r1;

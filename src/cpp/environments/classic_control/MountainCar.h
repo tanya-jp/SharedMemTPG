@@ -37,41 +37,41 @@ class MountainCar : public ClassicControlEnv {
         n_eval_test_ = 100;
         disReset = uniform_real_distribution<>(-0.6, -0.4);
         eval_type_ = "Control";
-        max_step = 200;
-        state.reserve(STATE_SIZE);
-        state.resize(STATE_SIZE);
-        state_po.reserve(STATE_SIZE);
-        state_po.resize(STATE_SIZE);
+        max_step_ = 200;
+        state_.reserve(STATE_SIZE);
+        state_.resize(STATE_SIZE);
+        state_po_.reserve(STATE_SIZE);
+        state_po_.resize(STATE_SIZE);
     }
 
     ~MountainCar() {}
 
     void normalizeState(bool po) {
         if (po)
-            state_po[_position] = (state_po[_position] - min_position) /
+            state_po_[_position] = (state_po_[_position] - min_position) /
                                   (max_position - min_position);
     }
 
     void reset(mt19937 &rng) {
-        state[_position] = state_po[_position] = disReset(rng);
-        state[_velocity] = 0;
+        state_[_position] = state_po_[_position] = disReset(rng);
+        state_[_velocity] = 0;
 
-        state_po[_velocity] = disNoise(rng);
+        state_po_[_velocity] = disNoise(rng);
 
-        state[2] = disNoise(rng);
-        state[3] = disNoise(rng);
+        state_[2] = disNoise(rng);
+        state_[3] = disNoise(rng);
 
         reward = 0;
 
-        step = 0;
+        step_ = 0;
         terminalState = false;
         normalizeState(true);
     }
 
     bool terminal() {
-        if (step >= max_step ||
-            (state[_position] >=
-             goal_position))  // && state[_velocity] >= goal_velocity))
+        if (step_ >= max_step_ ||
+            (state_[_position] >=
+             goal_position))  // && state_[_velocity] >= goal_velocity))
             terminalState = true;
         return terminalState;
     }
@@ -79,21 +79,21 @@ class MountainCar : public ClassicControlEnv {
     Results update(int actionD, double actionC, mt19937 &rng) {
         (void)actionC;
 
-        state[_velocity] +=
-            (actionD - 1) * force + cos(3 * state[_position]) * -gravity;
-        state[_velocity] = bound(state[_velocity], -max_speed, max_speed);
-        state[_position] += state[_velocity];
-        state[_position] = bound(state[_position], min_position, max_position);
-        if (state[_position] == min_position && state[_velocity] < 0)
-            state[_velocity] = 0;
+        state_[_velocity] +=
+            (actionD - 1) * force + cos(3 * state_[_position]) * -gravity;
+        state_[_velocity] = bound(state_[_velocity], -max_speed, max_speed);
+        state_[_position] += state_[_velocity];
+        state_[_position] = bound(state_[_position], min_position, max_position);
+        if (state_[_position] == min_position && state_[_velocity] < 0)
+            state_[_velocity] = 0;
 
-        state_po[_position] = state[_position];
-        state_po[_velocity] = disNoise(rng);
+        state_po_[_position] = state_[_position];
+        state_po_[_velocity] = disNoise(rng);
 
-        state[2] = disNoise(rng);
-        state[3] = disNoise(rng);
+        state_[2] = disNoise(rng);
+        state_[3] = disNoise(rng);
 
-        step++;
+        step_++;
 
         reward = -1.0;
 
@@ -124,8 +124,8 @@ class MountainCar : public ClassicControlEnv {
         vector<double> xs = linspace(min_position, max_position, 100);
         for (size_t i = 1; i < xs.size() - 1; i++) {
             glVertex2d(x, sin(3 * xs[i]) * .45 + .55);
-            if (state[_position] >= xs[i - 1] &&
-                state[_position] <= xs[i + 1]) {
+            if (state_[_position] >= xs[i - 1] &&
+                state_[_position] <= xs[i + 1]) {
                 carX = x;
                 carXS = xs[i];
             }
@@ -151,7 +151,7 @@ class MountainCar : public ClassicControlEnv {
         glVertex2d(goalX, (sin(3 * goalXS) * .45 + .55) - 0.1);
         glEnd();
 
-        if (step > 0) {
+        if (step_ > 0) {
             // action arrows
             int dir = 1;
             if (actionD == 0)
@@ -167,7 +167,7 @@ class MountainCar : public ClassicControlEnv {
             glLineWidth(2.0);
             drawTrace(0, "Action:", actionD - 1, -1.0);
         }
-        drawEpisodeStepCounter(episode, step, -1.9, 1.3);
+        drawEpisodeStepCounter(episode, step_, -1.9, 1.3);
         glFlush();
 #endif
     }

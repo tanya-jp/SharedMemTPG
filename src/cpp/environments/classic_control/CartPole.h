@@ -54,16 +54,16 @@ class CartPole : public ClassicControlEnv {
         actionsDiscrete.push_back(0.0);
         actionsDiscrete.push_back(FORCE_MAG);
         eval_type_ = "Control";
-        max_step = 500;
-        state.reserve(STATE_SIZE);
-        state.resize(STATE_SIZE);
-        state_po.reserve(STATE_SIZE - 2);
-        state_po.resize(STATE_SIZE - 2);
+        max_step_ = 500;
+        state_.reserve(STATE_SIZE);
+        state_.resize(STATE_SIZE);
+        state_po_.reserve(STATE_SIZE - 2);
+        state_po_.resize(STATE_SIZE - 2);
     }
 
     ~CartPole() {
-        state.clear();
-        state_po.clear();
+        state_.clear();
+        state_po_.clear();
         actionsDiscrete.clear();
         actionTrace.clear();
     }
@@ -79,25 +79,25 @@ class CartPole : public ClassicControlEnv {
 
     void normalizeState(bool po) {
         if (po) {
-            state_po[_x] /= MAX_X;
-            state_po[_theta] /= TWELVE_DEGREES;
+            state_po_[_x] /= MAX_X;
+            state_po_[_theta] /= TWELVE_DEGREES;
         }
     }
 
     void reset(mt19937 &rng) {
-        state_po[_x] = state[_x] = disReset(rng);
-        state_po[_theta] = state[_theta] = disReset(rng);
-        state[_x_dot] = disReset(rng);
-        state[_theta_dot] = disReset(rng);
+        state_po_[_x] = state_[_x] = disReset(rng);
+        state_po_[_theta] = state_[_theta] = disReset(rng);
+        state_[_x_dot] = disReset(rng);
+        state_[_theta_dot] = disReset(rng);
         reward = 0;
-        step = 0;
+        step_ = 0;
         terminalState = false;
         normalizeState(true);
     }
 
     bool terminal() {
-        if (step >= max_step || abs(state[_theta]) > TWELVE_DEGREES ||
-            abs(state[_x]) > MAX_X)
+        if (step_ >= max_step_ || abs(state_[_theta]) > TWELVE_DEGREES ||
+            abs(state_[_x]) > MAX_X)
             terminalState = true;
         return terminalState;
     }
@@ -121,11 +121,11 @@ class CartPole : public ClassicControlEnv {
         // if (actionC < 0) force = actionsDiscrete[0];
         // else force = actionsDiscrete[2];
 
-        costheta = cos(state[_theta]);
-        sintheta = sin(state[_theta]);
+        costheta = cos(state_[_theta]);
+        sintheta = sin(state_[_theta]);
 
-        temp = (force + POLEMASS_LENGTH * state[_theta_dot] *
-                            state[_theta_dot] * sintheta) /
+        temp = (force + POLEMASS_LENGTH * state_[_theta_dot] *
+                            state_[_theta_dot] * sintheta) /
                TOTAL_MASS;
 
         thetaacc = (GRAVITY * sintheta - costheta * temp) /
@@ -136,17 +136,17 @@ class CartPole : public ClassicControlEnv {
 
         /*** Update the four state variables, using Euler's method. ***/
 
-        state[_x] += TAU * state[_x_dot];
-        state_po[_x] = state[_x];
+        state_[_x] += TAU * state_[_x_dot];
+        state_po_[_x] = state_[_x];
 
-        state[_x_dot] += TAU * xacc;
+        state_[_x_dot] += TAU * xacc;
 
-        state[_theta] += TAU * state[_theta_dot];
-        state_po[_theta] = state[_theta];
+        state_[_theta] += TAU * state_[_theta_dot];
+        state_po_[_theta] = state_[_theta];
 
-        state[_theta_dot] += TAU * thetaacc;
+        state_[_theta_dot] += TAU * thetaacc;
 
-        step++;
+        step_++;
 
         reward = 1.0;
 
@@ -170,20 +170,20 @@ class CartPole : public ClassicControlEnv {
         // cart
         glColor3f(0.0, 0.0, 1.0);
         glBegin(GL_TRIANGLES);
-        glVertex2f(state[_x] - 0.15, 0.075);
-        glVertex2f(state[_x] - 0.15, -0.075);
-        glVertex2f(state[_x] + 0.15, 0.075);
-        glVertex2f(state[_x] + 0.15, 0.075);
-        glVertex2f(state[_x] - 0.15, -0.075);
-        glVertex2f(state[_x] + 0.15, -0.075);
+        glVertex2f(state_[_x] - 0.15, 0.075);
+        glVertex2f(state_[_x] - 0.15, -0.075);
+        glVertex2f(state_[_x] + 0.15, 0.075);
+        glVertex2f(state_[_x] + 0.15, 0.075);
+        glVertex2f(state_[_x] - 0.15, -0.075);
+        glVertex2f(state_[_x] + 0.15, -0.075);
         glEnd();
 
         // pole
-        x2 = state[_x] + r1 * cos(M_PI / 2 - state[_theta]);
-        y2 = r1 * sin(M_PI / 2 - state[_theta]);
+        x2 = state_[_x] + r1 * cos(M_PI / 2 - state_[_theta]);
+        y2 = r1 * sin(M_PI / 2 - state_[_theta]);
         glColor3f(1.0, 1.0, 1.0);
         glBegin(GL_LINES);
-        glVertex2d(state[_x], 0.0);
+        glVertex2d(state_[_x], 0.0);
         glVertex2d(x2, y2);
 
         // x bounds surface
@@ -193,7 +193,7 @@ class CartPole : public ClassicControlEnv {
         glEnd();
 
         // discrete action arrows
-        if (step > 0) {
+        if (step_ > 0) {
             // action 1 is ignored
             double force = 0;
             if (actionD == 0)
@@ -216,11 +216,11 @@ class CartPole : public ClassicControlEnv {
         }
 
         glLineWidth(1.0);
-        drawEpisodeStepCounter(episode, step, -1.9, -1.9);
+        drawEpisodeStepCounter(episode, step_, -1.9, -1.9);
 
         glColor3f(1.0, 1.0, 1.0);
         char c[80];
-        if (step == 0)
+        if (step_ == 0)
             sprintf(c, "CartPole Initial Conditions%s", ":");
         else if (terminal())
             sprintf(c, "CartPole Terminal%s", ":");
