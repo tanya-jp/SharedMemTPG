@@ -5,12 +5,29 @@
 #include <GL/glut.h>
 #include <TaskEnv.h>
 
+using namespace std;
+
 class ClassicControlEnv : public TaskEnv {
    public:
-    ClassicControlEnv() {}
+    uniform_real_distribution<> disReset;
+    uniform_real_distribution<> disNoise;
+    vector<deque<double> > actionTrace;
+    ClassicControlEnv() {
+        actionTrace.reserve(3);
+        actionTrace.resize(3);
+        for (size_t i = 0; i < 200; i++) {
+            actionTrace[0].push_back(0);
+            actionTrace[1].push_back(0);
+            actionTrace[2].push_back(0);
+        }
+        disNoise = uniform_real_distribution<>(-M_PI, M_PI);
+    }
     ~ClassicControlEnv() {}
 
-    /****************************************************************************/
+    double bound(double x, double m, double M) { return min(max(x, m), M); }
+    virtual void display_function(int, int, double) {};
+
+    /**************************************************************************/
     void saveScreenshotToFile(std::string filename, int windowWidth,
                               int windowHeight) {
         const int numberOfPixels = windowWidth * windowHeight * 3;

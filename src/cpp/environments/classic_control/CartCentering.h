@@ -13,7 +13,7 @@
 #endif
 
 #define STATE_SIZE 4
-
+using namespace std;
 /******************************************************************************/
 class CartCentering : public ClassicControlEnv {
    protected:

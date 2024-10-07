@@ -7,7 +7,6 @@
 
 /******************************************************************************/
 void MaybeStartAnimation(TPG &tpg) {
-    (void)tpg;
 #if !defined(CCANADA) && !defined(HPCC)
     if (tpg.GetParam<int>("animate")) {
         double _width = 1200;
@@ -27,22 +26,24 @@ void MaybeStartAnimation(TPG &tpg) {
 
 /******************************************************************************/
 void MaybeAnimateStep(EvalData &eval) {
-    ClassicControlEnv* task = dynamic_cast<ClassicControlEnv*>(eval.task);
+    ClassicControlEnv *task = dynamic_cast<ClassicControlEnv *>(eval.task);
 #if !defined(CCANADA)
     if (eval.animate) {
         task->display_function(eval.episode, WrapDiscreteAction(eval),
-                                    WrapContinuousAction(eval));
+                               WrapContinuousAction(eval));
         char filename[80];
         sprintf(filename, "%s_%05d_%03d_%05d_%05d_%05d.tga", "replay/frames/gl",
                 eval.save_frame++, eval.episode, eval.task->step, 0, 0);
         task->saveScreenshotToFile(filename, 1200, 1200);
-        // this_thread::sleep_for(std::chrono::milliseconds(10)); TODO(skelly): add
+        // this_thread::sleep_for(std::chrono::milliseconds(10)); TODO(skelly):
+        // add
     }
 #endif
 }
 
 /******************************************************************************/
 void EvalControl(TPG &tpg, EvalData &eval) {
+    MaybeStartAnimation(tpg);
     eval.task->reset(tpg.rngs_[AUX_SEED]);
     eval.n_prediction = 0;
     state *obs = new state(tpg.n_input_[tpg.GetState("active_task")]);
@@ -70,6 +71,7 @@ void EvalControlViz(TPG &tpg, EvalData &eval,
                     vector<map<long, double>> &teamUseMapPerTask,
                     set<team *, teamIdComp> &teams_visitedAllTasks,
                     int &steps) {
+    MaybeStartAnimation(tpg);
     eval.task->reset(tpg.rngs_[AUX_SEED]);
     state *obs = new state(tpg.n_input_[tpg.GetState("active_task")]);
     obs->Set(eval.task->GetObsVec(eval.partially_observable));

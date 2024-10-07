@@ -159,7 +159,7 @@ void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
   evaluator_map["Control"] = &EvalControl;
   evaluator_map["RecursiveForecast"] = &EvalRecursiveForecast;
   evaluator_map["Mujoco"] = &EvalMujoco;
-  // MaybeStartAnimation(tpg); // TODO(skelly): put back
+  // MaybeStartAnimation(tpg);
   EvalData eval(tpg);
   while (NotDoneAndActive(eval)) {
     world.recv(0, 0, eval.checkpointString);
@@ -186,7 +186,7 @@ void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
 
 /******************************************************************************/
 void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
-  // MaybeStartAnimation(tpg); // TODO(skelly): put back
+  // MaybeStartAnimation(tpg);
   EvalData eval(tpg);
 
   vector<map<long, double>> teamUseMapPerTask;
