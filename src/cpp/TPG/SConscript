@@ -5,3 +5,4 @@ env.Library('TPG', ['TPG.cc', 'instruction.cc', 'RegisterMachine.h',
                     LIBPATH = ['/lib/x86_64-linux-gnu/'],
                     CPPPATH=['.','../environments','../experiments','/usr/include/eigen3'])
 
+env.Append(CPPPATH = ['../experiments'])
