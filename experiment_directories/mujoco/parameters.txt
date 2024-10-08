@@ -64,7 +64,7 @@ n_generations 1000000
 mu_internal 0
 
 # Number of elite teams
-n_elite 1000
+n_elite 500
 
 # n_elite * n_elite_mul new teams are created each generation
 n_elite_mul 2
