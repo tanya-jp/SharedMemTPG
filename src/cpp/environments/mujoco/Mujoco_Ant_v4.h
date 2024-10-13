@@ -19,11 +19,13 @@ class Mujoco_Ant_v4 : public MujocoEnv {
 
     Mujoco_Ant_v4(std::unordered_map<std::string, std::any>& params) {
         eval_type_ = "Mujoco";
-        n_eval_train_ = 1;
+        n_eval_train_ = std::any_cast<int>(params["mj_n_eval_train"]);
         n_eval_validation_ = 0;
-        n_eval_test_ = 1;
+        n_eval_test_ = n_eval_train_ =
+            std::any_cast<int>(params["mj_n_eval_test"]);
         max_step_ = std::any_cast<int>(params["mj_max_timestep"]);
-        model_path_ = ExpandEnvVars(std::any_cast<string>(params["mj_model_path"]));
+        model_path_ =
+            ExpandEnvVars(std::any_cast<string>(params["mj_model_path"]));
         healthy_z_range_ = {0.2, 1.0};
         contact_force_range_ = {-1.0, 1.0};
         initialize_simulation();
@@ -88,7 +90,8 @@ class Mujoco_Ant_v4 : public MujocoEnv {
     }
 
     bool terminal() {
-        return step_ >= max_step_ || (terminate_when_unhealthy_ && !is_healthy());
+        return step_ >= max_step_ ||
+               (terminate_when_unhealthy_ && !is_healthy());
     }
 
     Results sim_step(std::vector<double>& action) {

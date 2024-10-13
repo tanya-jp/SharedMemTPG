@@ -37,7 +37,7 @@ write_test_checkpoints 1
 write_phylogeny 0
 
 # How frequently to run test procedure
-test_mod 1
+test_mod 100
 
 # Number of tasks used each selection for evaluation. 
 # The rest are estimated with phylogeny.
@@ -64,7 +64,7 @@ n_generations 1000000
 mu_internal 0
 
 # Number of elite teams
-n_elite 500
+n_elite 360
 
 # n_elite * n_elite_mul new teams are created each generation
 n_elite_mul 2
@@ -191,7 +191,7 @@ p_memory_size 0.0
 ## General Task Parameters #####################################################
 ################################################################################
 
-# Which tasks are active
+# Which tasks active
 # Right-hand-side should be a single task name or a comma-separated list
 active_tasks Mujoco_Ant_v4
 
@@ -233,6 +233,9 @@ forecast_n_eval_val 10
 mj_model_path $TPG/datasets/mujoco_models/ant.xml
 
 mj_max_timestep 1000
+
+mj_n_eval_train 5
+mj_n_eval_test 5
 
 ################################################################################
 ## Operations, uncomment to activate ###########################################
