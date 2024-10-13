@@ -131,8 +131,8 @@ class Mujoco_Ant_v4 : public MujocoEnv {
         for (size_t i = 0; i < qvel.size(); i++) {
             qvel[i] = init_qvel_[i] + dis_vel(rng);
         }
-        set_state(qpos, qvel);
         mj_resetData(m_, d_);
+        set_state(qpos, qvel);
         step_ = 0;
     }
 };
