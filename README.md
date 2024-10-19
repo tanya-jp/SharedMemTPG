@@ -11,14 +11,17 @@ From the tpg directory run:
 ```
 sudo xargs --arg-file requirements.txt apt install
 ```
+Note that [MuJoco](https://mujoco.org/) must be downloaded and unpacked separately.
 
 ### 2. Set environment variables
-In order to easily access tpg scripts, we must add appropriate folders to the $PATH environment variable.
+In order to easily access tpg scripts, we add appropriate folders to the $PATH environment variable.
 To do so, add the following to *~/.profile*
 ```
 export TPG=<YOUR_PATH_HERE>/tpg
 export PATH=$PATH:$TPG/scripts/plot
 export PATH=$PATH:$TPG/scripts/run
+export MUJOCO=<YOUR_PATH_TO_MUJOCO>/mujoco-3.2.2
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$MUJOCO/lib/
 ```
 Then run:
 ```
