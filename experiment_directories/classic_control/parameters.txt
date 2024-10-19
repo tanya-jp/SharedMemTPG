@@ -56,13 +56,13 @@ dist_mode 0
 seed_aux 42
 
 # max number of generations
-n_generations 1000000
+n_generations 500
 
 # allow mutation of internal teams (i.e. non-root teams (in-progress))
 mu_internal 0
 
 # number of elite teams
-n_elite 500
+n_elite 400
 
 # n_elite * n_elite_mul new teams are created each generation
 n_elite_mul 2
@@ -122,13 +122,13 @@ pmx_p 0.5
 stateful 1
 
 # skip introns during evaluation
-skip_introns 0
+skip_introns 1
 
 # enable continuous outputs
 continuous_output 1
 
 # number of inputs (aka "features" or "state variables")
-n_input 2,32,32
+n_input 2
 
 # max initial program size
 max_initial_prog_size 10
@@ -143,12 +143,12 @@ memory_indices 8
 # Dimensionality for vector & matrix memory
 memory_size 2
 min_memory_size 2
-max_memory_size 8 
+max_memory_size 32 
 
 # Observations are stored in a buffer with this time window.
 observation_buff_size 1
 min_observation_buff_size 1
-max_observation_buff_size 32
+max_observation_buff_size 1
 
 # program variation: probability of changing a random instruction
 p_bid_mutate 1.0
@@ -178,7 +178,7 @@ p_observation_buff_size 0.0
 p_observation_index 0.2
 
 # program variation: probability of changing memory_size
-p_memory_size 0.2
+p_memory_size 0.0
 
 ################################################################################
 ## General Task Parameters #####################################################
@@ -186,7 +186,7 @@ p_memory_size 0.2
 
 # which tasks are active
 # rhs should be a single task name or a comma-separated list
-active_tasks Pendulum,Mackey,Laser
+active_tasks Cartpole
 
 # use the partially-observable version of a task, if available
 # currently only available for calssic control tasks
@@ -235,22 +235,22 @@ SCALAR_PRODUCT_OP
 SCALAR_DIVISION_OP
 SCALAR_ABS_OP
 SCALAR_RECIPROCAL_OP
-#SCALAR_SIN_OP
+SCALAR_SIN_OP
 SCALAR_COS_OP
-#SCALAR_TAN_OP
-#SCALAR_ARCSIN_OP
-#SCALAR_ARCCOS_OP
-#SCALAR_ARCTAN_OP
+SCALAR_TAN_OP
+SCALAR_ARCSIN_OP
+SCALAR_ARCCOS_OP
+SCALAR_ARCTAN_OP
 SCALAR_EXP_OP
 SCALAR_LOG_OP
 SCALAR_HEAVYSIDE_OP
 SCALAR_CONDITIONAL_OP
-#SCALAR_POW_OP
-#SCALAR_SQR_OP
-#SCALAR_CUBE_OP
-#SCALAR_TANH_OP
-#SCALAR_SQRT_OP
-#SCALAR_CONST_SET_OP
+SCALAR_POW_OP
+SCALAR_SQR_OP
+SCALAR_CUBE_OP
+SCALAR_TANH_OP
+SCALAR_SQRT_OP
+SCALAR_CONST_SET_OP
 SCALAR_MIN_OP
 SCALAR_MAX_OP
 

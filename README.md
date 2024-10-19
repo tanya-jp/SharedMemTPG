@@ -32,9 +32,9 @@ scons --opt
 ```
 
 ### 4. Run an experiment
-The folder tpg/classic_control_example contains scripts to evolve policies for classic control tasks. Parameters are set in parameters.txt. The default settings will evolve a policy for the [CartPole](https://gymnasium.farama.org/environments/classic_control/cart_pole/) task.
+The folder tpg/experiment_directories/classic_control contains scripts to evolve policies for classic control tasks. Parameters are set in parameters.txt. The default settings will evolve a policy for the [CartPole](https://gymnasium.farama.org/environments/classic_control/cart_pole/) task.
 
-To run an experiment using 4 parallel MPI processes, make tpg/classic_control_example your working directory and run:
+To run an experiment using 4 parallel MPI processes, make tpg/experiment_directories/classic_control your working directory and run:
 ```
 tpg-run-mpi.sh -n 4
 ```
@@ -42,13 +42,13 @@ tpg-run-mpi.sh -n 4
 Note that as of right now, the number of assigned processes must be greater than the number of active tasks.
 
 ### 5. Plot results
-Generate classic_control_example_p0.pdf with various statistics:
+Generate classic_control_p0.pdf with various statistics:
 ```
 tpg-plot-stats.sh
 ```
 The first page will be a training curve looking something like the plot below. A fitness of 500 indicates the agent balances the pole for 500 timesteps, thus solving the task.
 
-<img src="./classic_control_example/images/cartpole-example.png" height="300" />
+<img src="./experiment_directories/classic_control/images/cartpole-example.png" height="300" />
 
 ### 6. Visualize the best policy's behaviour
 Display an OpenGL animation of the single best policy interacting with the environment:

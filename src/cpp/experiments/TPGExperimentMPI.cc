@@ -102,7 +102,8 @@ int main(int argc, char **argv) {
         else if (substr == "Bach")
             tasks.push_back(new RecursiveForecast("Bach"));
         else if (substr == "Mujoco_Ant_v4")
-            tasks.push_back(new Mujoco_Ant_v4(tpg.params_)); // TODO(skelly):fix
+            tasks.push_back(
+                new Mujoco_Ant_v4(tpg.params_));  // TODO(skelly):fix
         else {
             cerr << "Unrecognised task:" << substr << endl;
             exit(1);
@@ -187,7 +188,7 @@ int main(int argc, char **argv) {
         auto startReport = chrono::system_clock::now();
         chrono::duration<double> endReport;
 
-        // initialization
+        // Initialization //////////////////////////////////////////////////////
         if (tpg.GetParam<int>("checkpoint")) {
             tpg.readCheckpoint(tpg.GetParam<int>("t_pickup"),
                                tpg.GetParam<int>("checkpoint_in_phase"), -1,
@@ -207,16 +208,14 @@ int main(int argc, char **argv) {
         } else {
             while (tpg.GetState("t_current") <=
                    tpg.GetParam<int>("n_generations")) {
-                /* replacement
-                 * *******************************************************/
+                // Replacement /////////////////////////////////////////////////
                 if (tpg.GetState("t_current") > tpg.GetParam<int>("t_start")) {
                     startGenTeams = chrono::system_clock::now();
                     tpg.GenerateNewTeams();
                     endGenTeams = chrono::system_clock::now() - startGenTeams;
                 }
 
-                /* evaluation
-                 * ********************************************************/
+                // Evaluation //////////////////////////////////////////////////
                 startEval = chrono::system_clock::now();
                 tpg.MarkEffectiveCode();
                 if (tpg.GetState("t_current") > tpg.GetParam<int>("t_start") &&
@@ -239,8 +238,7 @@ int main(int argc, char **argv) {
 
                 endEval = chrono::system_clock::now() - startEval;
 
-                /* selection
-                 * *********************************************************/
+                // Selection /////////////////////////////////////////////////// 
                 startSetEliteTeams = chrono::system_clock::now();
                 tpg.SetEliteTeams(tasks);
                 endSetEliteTeams =
@@ -249,8 +247,7 @@ int main(int argc, char **argv) {
                 tpg.SelectTeams();
                 endSelTeams = chrono::system_clock::now() - startSelTeams;
 
-                /* accounting and reporting
-                 * ******************************************/
+                // Accounting and reporting ////////////////////////////////////
                 startReport = chrono::system_clock::now();
                 if (tpg.GetState("t_current") % tpg.GetParam<int>("test_mod") ==
                     0) {

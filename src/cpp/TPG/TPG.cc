@@ -649,7 +649,6 @@ void TPG::GenerateNewTeams() {
   auto root_size_in = _Mroot.size();
   int new_teams_count = 0;
   auto task_power_set = PowerSet(GetState("n_task"));
-  // cerr << "task_power_set.size() " << task_power_set.size() << endl;
   int n_new_teams_per_set =
       (GetParam<int>("n_elite") * (GetParam<int>("n_elite_mul") - 1)) /
       task_power_set.size();
@@ -904,10 +903,9 @@ void TPG::FindMultiTaskElites(vector<TaskEnv *> &tasks,
     auto teams_normed_scores =
         NormalizeScoresAndRankTeams(tasks, set, min_scores, max_scores);
     
-    // sort(teams_normed_scores.begin(), teams_normed_scores.end(),
-    //      teamFitnessLexicalCompare());
     sort(teams_normed_scores.begin(), teams_normed_scores.end(),
-         teamFitComplexLexCompare());
+         teamFitnessLexicalCompare());
+    // sort(teams_normed_scores.begin(), teams_normed_scores.end(), teamFitComplexLexCompare());
     size_t elite_count = 0;
     for (auto tm : teams_normed_scores) {
       if (!tm->elite(GetState("phase"))) {
@@ -2410,9 +2408,6 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       int observation_buff_size = atoi(outcomeFields[f++].c_str());
       int obs_index = atoi(outcomeFields[f++].c_str());
       int memory_size = atoi(outcomeFields[f++].c_str());
-      // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-      //   memTypeIds[mem_t] = atoi(outcomeFields[f++].c_str());
-      // }
 
       vector<instruction *> bid;
       for (size_t ii = f; ii < outcomeFields.size(); ii++) {
@@ -2432,9 +2427,6 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       }
       l = new RegisterMachine(gtime, action, stateful, params_, id, nrefs, observation_buff_size, memory_size, bid);
       l->obs_index_ = obs_index;
-      // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-      //   l->MemSet(mem_t, _Memory[mem_t][memTypeIds[mem_t]]);
-      // }
 
       AddProgram(l);
     } else if (outcomeFields[0].compare("team") == 0) {
@@ -2445,19 +2437,12 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
       long gtime = atoi(outcomeFields[f++].c_str());
       m = new team(gtime, id);
       m->_n_eval = atoi(outcomeFields[f++].c_str());
-      // m->clearEvalSeeds();
-      // for (size_t es = 0; es < m->numEval(); es++)
-      //    m->addEvalSeed(atoi(outcomeFields[f++].c_str()));
-      // m->taskCode(outcomeFields[f++]);
       // add programs in order
       for (size_t ii = f; ii < outcomeFields.size(); ii++) {
         memberId = atoi(outcomeFields[ii].c_str());
         m->AddProgram(_L[memberId]);
-        // if (m->AddProgram(_L[memberId]) == false)
-        //   m->AddProgramActive(_L[memberId]);
       }
       AddTeam(m);
-      // _Mroot.insert(m);
     } else if (outcomeFields[0].compare("teamIncoming") == 0) {
       f = 1;
       long id = atoi(outcomeFields[f++].c_str());

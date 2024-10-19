@@ -564,6 +564,12 @@ program *team::getAction(state *s, map<long, team *> &teamMap,
 
   int l = 0;
   for (auto prog : members_) {
+
+    // cerr << "dbg getAction tid " << id_;
+    // cerr << " members";
+    // for (auto p : members_) cerr << " " << p->id_;
+    // cerr  << " pid " << prog->id_ << endl;
+    
     prog->bidVal(prog->Run(s, timeStep, visitedTeams.size(), verbose));
     members_run_[l++] = prog;
     decisionInstructions += prog->SizeEffective();

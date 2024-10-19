@@ -64,7 +64,7 @@ n_generations 1000000
 mu_internal 0
 
 # Number of elite teams
-n_elite 360
+n_elite 90
 
 # n_elite * n_elite_mul new teams are created each generation
 n_elite_mul 2
@@ -125,7 +125,7 @@ pmx_p 0.5
 stateful 1
 
 # Whether to skip introns during evaluation
-skip_introns 0
+skip_introns 1
 
 # Enable continuous outputs
 # 0: disabled
