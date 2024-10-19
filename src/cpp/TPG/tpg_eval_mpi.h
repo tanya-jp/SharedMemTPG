@@ -75,15 +75,6 @@ vector<team *> GetTeamsToEval(TPG &tpg, TaskEnv *task) {
 void AssignTeamsToEvaluators(TPG &tpg, mpi::communicator &world,
                              vector<team *> &teams_to_eval,
                              int world_size_per_task, int &mpi_job) {
-    // for (auto dteam : tpg._M) {
-    //     cerr << "t " << tpg.GetState("t_current") << " dteam2 id " << dteam->id_
-    //          << " mbrs";
-    //     for (auto p : dteam->members_) {
-    //         cerr << " " << p->id_;
-    //     }
-    //     cerr << endl;
-    // }
-
   auto teams_per_evaluator = teams_to_eval.size() / world_size_per_task;
   auto remainder = teams_to_eval.size() % world_size_per_task;
   vector<team *> teams;
