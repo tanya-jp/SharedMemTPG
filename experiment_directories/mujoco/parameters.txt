@@ -39,22 +39,22 @@ write_phylogeny 0
 # How frequently to run test procedure
 test_mod 100
 
-# Number of tasks used each selection for evaluation. 
-# The rest are estimated with phylogeny.
+# Number of tasks used each selection for evaluation 
+# The rest are estimated with phylogeny
 #n_sampled_tasks_for_eval 1
 
-# Number of fitness functions available.
+# Number of fitness functions available
 n_fit_mode 1
 
-# Which fitness function to use, if multiple available. 
+# Which fitness function to use, if multiple available
 # Range is [0, n_fit_mode)
 fit_mode 0
 
-# Which behaviour characterization function to use, if multiple available.
+# Which behaviour characterization function to use, if multiple available
 # Range is [0, n_dist_mode)
 dist_mode 0
 
-# Auxilliary seed, e.g. for simulators.
+# Auxilliary seed, e.g. for simulators
 seed_aux 42
 
 # Max number of generations
@@ -64,7 +64,7 @@ n_generations 1000000
 mu_internal 0
 
 # Number of elite teams
-n_elite 90
+n_elite 100
 
 # n_elite * n_elite_mul new teams are created each generation
 n_elite_mul 2
@@ -91,25 +91,25 @@ max_team_size 1000000
 # Max teams per graph
 max_teams_per_graph 1000000
 
-# When changing action pointer, probability of selecting atomic action.
+# When changing action pointer, probability of selecting atomic action
 p_atomic 0.99
 
-# Team mutation: probability of deleting program from team.
+# Team mutation: probability of deleting program from team
 pmd 0.5
 
-# Team mtation: probability of adding program to team.
+# Team mtation: probability of adding program to team
 pma 0.4
 
-# Team mutation: probability of mutating a program.
+# Team mutation: probability of mutating a program
 pmm 1.0
 
-# Team mutation: probability of mutating a program's action pointer.
+# Team mutation: probability of mutating a program's action pointer
 pmn 0.2
 
-# Team mutation: probability of mutating program execution order.
+# Team mutation: probability of mutating program execution order
 pmw 0.2
 
-# Team variation: probability of team crossover.
+# Team variation: probability of team crossover
 pmx 0.5
 
 # Team variation: probability of team crossover adding each parent prog to child
@@ -135,7 +135,8 @@ skip_introns 1
 continuous_output 2
 
 # Number of inputs (aka "features" or "state variables")
-n_input 29
+# Note MuJoco does not use this
+n_input 0
 
 # Max initial program size
 max_initial_prog_size 10
@@ -149,8 +150,8 @@ memory_indices 8
 
 # Dimensionality for vector & matrix memory
 memory_size 8
-min_memory_size 8
-max_memory_size 8 
+min_memory_size 2
+max_memory_size 27
 
 # Observations are stored in a buffer with this time window
 observation_buff_size 1
@@ -185,13 +186,13 @@ p_observation_buff_size 0.0
 p_observation_index 0.2
 
 # Program variation: probability of changing memory_size
-p_memory_size 0.0
+p_memory_size 0.2
 
 ################################################################################
 ## General Task Parameters #####################################################
 ################################################################################
 
-# Which tasks active
+# Which tasks are active
 # Right-hand-side should be a single task name or a comma-separated list
 active_tasks Mujoco_Ant_v4
 

@@ -289,8 +289,6 @@ double RegisterMachine::Run(state *obs, int &time_step,
 
   bool copied_obs_vec = false;
   bool copied_obs_mat = false;
-  // CopyObservationToMemoryBuff(obs, memoryEigen::VECTOR_TYPE);
-  // CopyObservationToMemoryBuff(obs, memoryEigen::MATRIX_TYPE);
 
   for (auto istr : bidEffective_) {
     istr->out_ = privateMemory_[istr->GetOutType()];
