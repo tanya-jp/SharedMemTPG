@@ -1206,6 +1206,55 @@ void TPG::InitTeams() {
 }
 
 /******************************************************************************/
+// Certain parameters must be processed here
+void TPG::ProcessParams() {
+    Seed(TPG_SEED, GetParam<int>("seed_tpg"));
+    Seed(AUX_SEED, GetParam<int>("seed_aux"));
+    // Replaying will require starting from checkpoint
+    if (GetParam<int>("replay")) params_["start_from_checkpoint"] = 1;
+    // Set the starting and current generation (t_start and t_current)
+    if (GetParam<int>("start_from_checkpoint")) {
+        state_["t_start"] = GetParam<int>("checkpoint_in_t") + 1;
+    } else {
+        state_["t_start"] = 0;
+    }
+    state_["t_current"] = GetState("t_start");
+}
+
+/******************************************************************************/
+// Parameters are set in the parameters.txt file.
+// TPG can also process command line parameters in the form: <name>=<value>
+// <name> must be a parameter with a default value in parameters.txt
+// Default values are overwritten by command line parameters
+void TPG::SetParams(int argc, char **argv) {
+  // First read parameters file
+  ReadParameters("parameters.txt", params_);
+    // Parse command line parameters
+    if (argc > 1) {
+        for (int i = 1; i < argc; ++i) {
+            std::string arg = argv[i];
+            size_t pos = arg.find('=');
+            if (pos != std::string::npos) {
+                std::string key = arg.substr(0, pos);
+                std::string val = arg.substr(pos + 1);
+                if (HaveParam(key)) {
+                    if (val.find('.') != std::string::npos) {
+                        params_[key] = stringToDouble(val);
+                    } else {
+                        params_[key] = stringToInt(val);
+                    }
+                } else {
+                    die(__FILE__, __FUNCTION__, __LINE__,
+                        "Command line parameters must have default "
+                        "values in parameters.txt");
+                }
+            }
+        }
+    }
+    ProcessParams();
+}
+
+/******************************************************************************/
 void TPG::policyFeatures(int hostId, set<long> &features, bool active) {
   features.clear();
   set<team *, teamIdComp> visitedTeams;
@@ -2614,9 +2663,6 @@ void TPG::CleanupProgramsWithNoRefs(deque<program *> &programsWithNoRefs,
 }
 
 /******************************************************************************/
-void TPG::setParams() { ReadParameters("parameters.txt", params_); }
-
-/******************************************************************************/
 void TPG::teamTaskRank(int phase, const vector<int> &objectives) {
   oss << "TPG::teamTaskRank <team:avgRank>";
   for (auto teiterA = _M.begin(); teiterA != _M.end(); teiterA++) {
@@ -2650,7 +2696,7 @@ void TPG::updateMODESFilters(bool roots) {
   vector<long> symbiontUnion;
   symbiontUnion.reserve(100);
 
-  if (GetState("t_current") != GetParam<int>("t_start")) {
+  if (GetState("t_current") != GetState("t_start")) {
     _persistenceFilterA.clear();
     for (auto teiter = _Mroot.begin(); teiter != _Mroot.end(); teiter++) {
       vector<long> ancestorIds;

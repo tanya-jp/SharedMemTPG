@@ -18,6 +18,13 @@ track_mod 20
 # Re-evaluate an individual from a checkpoint file
 replay 0
 
+# ID of the individual to replay from checkpoint file
+id_to_replay = 0
+
+# Which task in which to replay the individual
+# Index in active_tasks list starting at 0
+replay_task 0
+
 # Re-evaluate an individual from a checkpoint file and animate behaviour, 
 # if available
 animate 0
@@ -26,8 +33,17 @@ animate 0
 ## GA Parameters ###############################################################
 ################################################################################
 
-# Start from a checkpoint file
-checkpoint 0
+# Whether to start from a checkpoint file
+start_from_checkpoint 0
+
+# Genertion of the checkpoint file
+checkpoint_in_t 0
+
+# Which phase checkpoint file to read
+# Training: 0
+# Validation: 1
+# Test: 2
+checkpoint_in_phase 2
 
 # Save checkpoints during evolution
 write_train_checkpoints 0
@@ -37,7 +53,7 @@ write_test_checkpoints 1
 write_phylogeny 0
 
 # How frequently to run test procedure
-test_mod 100
+test_mod 1
 
 # Number of tasks used each selection for evaluation 
 # The rest are estimated with phylogeny
@@ -53,6 +69,9 @@ fit_mode 0
 # Which behaviour characterization function to use, if multiple available
 # Range is [0, n_dist_mode)
 dist_mode 0
+
+# Main seed for evolution
+seed_tpg 42
 
 # Auxilliary seed, e.g. for simulators
 seed_aux 42
@@ -92,7 +111,7 @@ max_team_size 1000000
 max_teams_per_graph 1000000
 
 # When changing action pointer, probability of selecting atomic action
-p_atomic 0.99
+p_atomic 1.0
 
 # Team mutation: probability of deleting program from team
 pmd 0.5
@@ -235,8 +254,8 @@ mj_model_path $TPG/datasets/mujoco_models/ant.xml
 
 mj_max_timestep 1000
 
-mj_n_eval_train 5
-mj_n_eval_test 5
+mj_n_eval_train 3
+mj_n_eval_test 3
 
 ################################################################################
 ## Operations, uncomment to activate ###########################################
