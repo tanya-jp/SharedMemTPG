@@ -483,6 +483,7 @@ void TPG::finalize() {
   _phyloGraph.clear();
 }
 
+/******************************************************************************/
 void TPG::TeamMutator_ProgramOrder(team *team_to_mu) {
   if ((team_to_mu)->size() > 1 &&
       real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmw")) {
@@ -496,6 +497,7 @@ void TPG::TeamMutator_ProgramOrder(team *team_to_mu) {
   }
 }
 
+/******************************************************************************/
 void TPG::TeamMutator_AddPrograms(team *team_to_mu) {
   double rd = real_dist_(rngs_[TPG_SEED]);
   if ((int)team_to_mu->size() < GetParam<int>("max_team_size") &&
@@ -509,11 +511,13 @@ void TPG::TeamMutator_AddPrograms(team *team_to_mu) {
   }
 }
 
+/******************************************************************************/
 void TPG::TeamMutator_RemovePrograms(team *team_to_mu) {
   if (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmd"))
     team_to_mu->RemoveRandomProgram(rngs_[TPG_SEED]);
 }
 
+/******************************************************************************/
 team *TPG::CloneTeam(team *team_to_clone) {
   team *team_clone = new team(GetState("t_current"), state_["team_count"]++);
   for (auto m : team_to_clone->members_) {
@@ -522,6 +526,7 @@ team *TPG::CloneTeam(team *team_to_clone) {
   return team_clone;
 }
 
+/******************************************************************************/
 program *TPG::CloneProgram(program *prog) {
   program *prog_clone = new RegisterMachine(
       GetState("t_current"), *(dynamic_cast<RegisterMachine *>(prog)), params_,
@@ -531,33 +536,40 @@ program *TPG::CloneProgram(program *prog) {
   return prog_clone;
 }
 
+/******************************************************************************/
 void TPG::ProgramMutator_Instructions(program *prog_to_mu) {
   prog_to_mu->Mutate(params_, rngs_[TPG_SEED], _ops);
 }
 
-void TPG::ProgramMutator_ActionPointer(program *prog_to_mu, team *new_team,
-                                       int &n_new_teams) {
-  if (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmn")) return;
-  uniform_int_distribution<int> disAct(0,
-                                       GetParam<int>("n_discrete_action") - 1);
-  // atomic
-  if (GetState("t_current") == 1 ||  // first generation is atomic
-      (prog_to_mu->action() < 0 &&
-       new_team->n_atomic_ < 2) ||  // always mutate the fail-safe
-                                    // atomic program to another atomic
-      real_dist_(rngs_[TPG_SEED]) < GetParam<double>("p_atomic")) {
-    if (GetParam<int>("n_discrete_action") > 1) {
-      long act;
-      do {
-        act = -1 - disAct(rngs_[TPG_SEED]);  // atomic actions are
-                                             // negatives: -1 down to
-                                             // -numAtomicActions()
-      } while (prog_to_mu->action() == act);
-      if (prog_to_mu->action() >= 0)
-        _teamMap[prog_to_mu->action()]->removeIncomingProgram(prog_to_mu->id_);
-      prog_to_mu->muAction(act);
+/******************************************************************************/
+void TPG::MaybeMutateActionToTerminal(program *prog_to_mu, team *new_team) {
+    // If program is already terminal (action < 0) and there are no discrete
+    // actions there is nothing to change
+    if (prog_to_mu->action() < 0 && GetParam<int>("n_discrete_action") == 0) {
+        return;
+    } else if (GetParam<int>("n_discrete_action") > 1) {
+        uniform_int_distribution<int> dis(
+            0, GetParam<int>("n_discrete_action") - 1);
+        long new_discrete_action;
+        do {
+            // Discrete actions are negatives: -1 down to -n_discrete_action
+            new_discrete_action = -1 - dis(rngs_[TPG_SEED]);
+        } while (prog_to_mu->action() == new_discrete_action);
+        // If changing from team pointer to atomic, update pointee's incoming
+        if (prog_to_mu->action() >= 0) {
+            _teamMap[prog_to_mu->action()]->removeIncomingProgram(
+                prog_to_mu->id_);
+        }
+        prog_to_mu->muAction(new_discrete_action);
     }
-  } else {  // path
+}
+
+/******************************************************************************/
+void TPG::MaybeMutateActionToTeam(program *prog_to_mu, team *new_team, int &n_new_teams) {
+  // All programs remain terminal in the first generation
+  if (GetState("t_current") == 1) {  
+    return; 
+  } else {
     uniform_int_distribution<int> disM(0, _teamMap.size() - 1);
     team *tm;
     int tries = 0;
@@ -570,7 +582,7 @@ void TPG::ProgramMutator_ActionPointer(program *prog_to_mu, team *new_team,
               prog_to_mu->action() == tm->id_));
     if (prog_to_mu->action() >= 0)
       _teamMap[prog_to_mu->action()]->removeIncomingProgram(prog_to_mu->id_);
-    if (!tm->root()) {  // already subsumed, don't clone
+    if (!tm->root()) {  // Already subsumed, don't clone
       prog_to_mu->muAction(tm->id_);
       tm->AddIncomingProgram(prog_to_mu->id_);
     } else {  // clone when subsumed
@@ -589,18 +601,31 @@ void TPG::ProgramMutator_ActionPointer(program *prog_to_mu, team *new_team,
   }
 }
 
+/******************************************************************************/
+void TPG::ProgramMutator_ActionPointer(program *prog_to_mu, team *new_team,
+                                       int &n_new_teams) {
+  if (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("p_atomic")) {
+    MaybeMutateActionToTerminal(prog_to_mu, new_team);  
+  } else {
+    MaybeMutateActionToTeam(prog_to_mu, new_team, n_new_teams);
+  }
+}
+
+/******************************************************************************/
 void TPG::AddAncestorToPhylogeny(team *parent, team *new_team) {
   _phyloGraph[new_team->id_].ancestorIds.insert(parent->id_);
   new_team->addAncestorId(parent->id_);
   _phyloGraph[parent->id_].adj.push_back(new_team->id_);
 }
 
+/******************************************************************************/
 void TPG::AddTeamToPhylogeny(team *new_team) {
   _phyloGraph.insert(pair<long, phyloRecord>(new_team->id_, phyloRecord()));
   _phyloGraph[new_team->id_].gtime = GetState("t_current");
   _phyloGraph[new_team->id_].root = new_team->root_;
 }
 
+/******************************************************************************/
 team *TPG::TeamXover(vector<team *> &parents) {
   uniform_int_distribution<int> disP(0, parents.size() - 1);
   // parent teams
@@ -635,9 +660,10 @@ team *TPG::TeamXover(vector<team *> &parents) {
     if (p2liter != p2programs.end()) p2liter++;
   }
 
-  if (child_team->n_atomic_ < 1)
+  if (child_team->n_atomic_ < 1){
     die(__FILE__, __FUNCTION__, __LINE__,
         "Crossover must leave the fail-safe atomic program!");
+  }
   AddTeamToPhylogeny(child_team);
   AddAncestorToPhylogeny(pm1, child_team);
   AddAncestorToPhylogeny(pm2, child_team);
@@ -798,6 +824,7 @@ team *TPG::getBestTeam() {
   return *teams.begin();
 }
 
+/******************************************************************************/
 void TPG::UpdateTeamPhyloData(team *tm) {
   // MarkEffectiveCode(tm);
   if (tm->runTimeComplexityIns() == 0) {
@@ -812,6 +839,7 @@ void TPG::UpdateTeamPhyloData(team *tm) {
   _phyloGraph[tm->id_].numEffectiveInstructions =
       tm->numEffectiveInstructions();
 }
+
 /******************************************************************************/
 // Find the elite single-task program graphs
 void TPG::FindSingleTaskFitnessRange(vector<TaskEnv *> &tasks,
@@ -860,7 +888,6 @@ vector<team *> TPG::NormalizeScoresAndRankTeams(
     for (size_t task = 0; task < set.size(); task++) {
       if (tm->numOutcomes(GetState("phase"), set[task]) <
           tasks[set[task]]->GetNumEval(GetState("phase"))) {
-      cerr << "phase " << GetState("phase") << "tm5 " << tm->id_ << " no " << tm->numOutcomes(GetState("phase"), set[task]) << " ne " << tasks[set[task]]->GetNumEval(GetState("phase")) << endl;
         die(__FILE__, __FUNCTION__, __LINE__,
             "All root teams should have enough evaluations at this point.");
       }
@@ -995,12 +1022,6 @@ void TPG::SetEliteTeams(vector<TaskEnv *> &tasks) {
       if (GetState("phase") == _TEST_PHASE &&
           elite_team_id_history_.find(elite_id) ==
               elite_team_id_history_.end()) {
-        // cerr << "new elite! checkpoint t " << GetState("t_current") << " id "
-        //      << elite_id << " fit "
-        //      << _eliteTeamPS[vecToStrNoSpace(set)][GetState(
-        //             "fitMode")][GetState("phase")]
-        //             ->getQuickMean(0, GetState("fitMode"), GetState("phase"))
-        //      << endl;
         elite_team_id_history_.insert(elite_id);
         if (GetParam<int>("write_test_checkpoints")) {
           writeCheckpoint(GetState("t_current"), true);
@@ -1168,41 +1189,44 @@ bool compareByDistance(const distanceInstance &a, const distanceInstance &b) {
 
 /******************************************************************************/
 void TPG::InitTeams() {
-  
-  uniform_int_distribution<int> dis_actions(0, GetParam<int>("n_discrete_action") - 1);
-  int initial_team_size = GetParam<int>("n_discrete_action");
-  for (int t = 0; t < GetParam<int>("n_elite") * GetParam<int>("n_elite_mul");
-       t++) {
-    auto new_team = new team(GetState("t_current"), state_["team_count"]++);
-    for (int p = 0; p < initial_team_size; p++) {
-      // discrete atomic actions are negatives -1 to -numAtomicActions()
-      long discrete_action = -1 - dis_actions(rngs_[TPG_SEED]);
-      auto new_prog =
-          new RegisterMachine(GetState("t_current"), discrete_action, params_,
-                              state_["program_count"]++, rngs_[TPG_SEED], _ops);
-      new_team->AddProgram(new_prog);
-      AddProgram(new_prog);  // add program to program population
+    int max_discrete_action = GetParam<int>("n_discrete_action") > 0
+                                  ? GetParam<int>("n_discrete_action") - 1
+                                  : 0;
+    uniform_int_distribution<int> dis_actions(0, max_discrete_action);
+    int initial_team_size = 2;
+    for (int t = 0; t < GetParam<int>("n_elite") * GetParam<int>("n_elite_mul");
+         t++) {
+        auto new_team = new team(GetState("t_current"), state_["team_count"]++);
+        for (int p = 0; p < initial_team_size; p++) {
+            // Discrete atomic actions are negatives -1 to -numAtomicActions()
+            long discrete_action = -1 - dis_actions(rngs_[TPG_SEED]);
+            auto new_prog = new RegisterMachine(
+                GetState("t_current"), discrete_action, params_,
+                state_["program_count"]++, rngs_[TPG_SEED], _ops);
+            new_team->AddProgram(new_prog);
+            AddProgram(new_prog);  // add program to program population
+        }
+        AddTeam(new_team);  // add team to team population
+        _phyloGraph.insert(
+            pair<long, phyloRecord>(new_team->id_, phyloRecord()));
+        _phyloGraph[new_team->id_].gtime = 0;
     }
-    AddTeam(new_team);  // ad team to team population
-    _phyloGraph.insert(pair<long, phyloRecord>(new_team->id_, phyloRecord()));
-    _phyloGraph[new_team->id_].gtime = 0;
-  }
 
-  // Fill teams from learner population
-  uniform_int_distribution<int> dis_team_size(
-      2, GetParam<int>("max_initial_team_size") - 1);
-  uniform_int_distribution<int> dis_programs(0, _L.size() - 1);
-  for (auto tm : _M) {
-    int team_size = dis_team_size(rngs_[TPG_SEED]);
-    while (tm->size() < team_size) tm->AddProgram(_L[dis_programs(rngs_[TPG_SEED])]);
-  }
-
-  oss << "InitTms Msz " << _M.size() << " Lsz " << _L.size() << " rSz "
-      << _Mroot.size() << " mSz";
-  for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-    oss << " " << _Memory[mem_t].size();
-  }
-  oss << " eLSz " << _numEliteTeamsCurrent[GetState("phase")] << endl;
+    // Fill teams from learner population
+    uniform_int_distribution<int> dis_team_size(
+        2, GetParam<int>("max_initial_team_size"));
+    uniform_int_distribution<int> dis_programs(0, _L.size() - 1);
+    for (auto tm : _M) {
+        auto team_size = dis_team_size(rngs_[TPG_SEED]);
+        while (tm->size() < team_size)
+            tm->AddProgram(_L[dis_programs(rngs_[TPG_SEED])]);
+    }
+    oss << "InitTms Msz " << _M.size() << " Lsz " << _L.size() << " rSz "
+        << _Mroot.size() << " mSz";
+    for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+        oss << " " << _Memory[mem_t].size();
+    }
+    oss << " eLSz " << _numEliteTeamsCurrent[GetState("phase")] << endl;
 }
 
 /******************************************************************************/
@@ -2550,6 +2574,7 @@ void TPG::recalculateProgramRefs() {
     for (auto p : tm->members_) p->nrefs_++;
 }
 
+/******************************************************************************/
 void TPG::SanityCheck() { TeamSizesMatchProgRefs(); }
 
 /******************************************************************************/

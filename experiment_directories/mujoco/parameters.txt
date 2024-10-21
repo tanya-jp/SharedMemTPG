@@ -83,10 +83,10 @@ n_generations 1000000
 mu_internal 0
 
 # Number of elite teams
-n_elite 100
+n_elite 20
 
 # n_elite * n_elite_mul new teams are created each generation
-n_elite_mul 2
+n_elite_mul 5
 
 # Whether to use fitness proportional selection
 fit_prop_select 0
@@ -111,7 +111,7 @@ max_team_size 1000000
 max_teams_per_graph 1000000
 
 # When changing action pointer, probability of selecting atomic action
-p_atomic 1.0
+p_atomic 0.99
 
 # Team mutation: probability of deleting program from team
 pmd 0.5
@@ -220,7 +220,7 @@ active_tasks Mujoco_Ant_v4
 partially_observable 0
 
 # Number of discrete actions
-n_discrete_action 3
+n_discrete_action 0
 
 ################################################################################
 ## Parameters Specific to Recursive Forecasting ################################
