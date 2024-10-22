@@ -43,16 +43,19 @@ string team::checkpoint(bool fitnessBins, long id) const {
 }
 
 /******************************************************************************/
-void team::InitMemory(map<long, team *> &teamMap, bool use_evolved_const) {
+void team::InitMemory(map<long, team *> &teamMap,
+                      std::unordered_map<std::string, std::any> &params) {
     set<team *, teamIdComp> teams;
     set<program *, programIdComp> programs;
     GetAllNodes(teamMap, teams, programs);
     for (auto prog : programs) {
-        if (use_evolved_const) {
+        if (!isEqual(std::any_cast<double>(params["p_bid_mu_const"]), 0.0)) {
+            prog->use_evolved_const_ = true;
             // Initialize working memory with evolved constants
             prog->CopyPrivateConstToWorking();
         } else {
             // Initialize working memory with zeros
+            prog->use_evolved_const_ = false;
             prog->ClearWorking();
         }
     }

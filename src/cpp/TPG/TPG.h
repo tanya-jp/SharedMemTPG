@@ -206,9 +206,9 @@ class TPG {
     int GetState(string p) { return state_[p]; }
     void ProcessParams();
     void SetParams(int argc, char **argv);
-    void MaybeMutateActionToTerminal(program *prog_to_mu, team *new_team);
-    void MaybeMutateActionToTeam(program *prog_to_mu, team *new_team,
-                                 int &n_new_teams);
+    void MutateActionToTerminal(program *prog_to_mu, team *new_team);
+    void MutateActionToTeam(program *prog_to_mu, team *new_team,
+                            int &n_new_teams);
 };
 
 #endif

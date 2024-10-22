@@ -173,7 +173,7 @@ void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
         for (eval.episode = 0; eval.episode < eval.tm->_n_eval;
              eval.episode++) {
           tpg.rngs_[AUX_SEED].seed(eval.episode);
-          eval.tm->InitMemory(tpg._teamMap, tpg.HaveParam("p_bid_mu_const"));
+          eval.tm->InitMemory(tpg._teamMap, tpg.params_);
           evaluator_map[eval.task->eval_type_](tpg, eval);
           eval.FinalizeStepData(tpg);
         }
@@ -212,7 +212,7 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
     }
     for (eval.episode = 0; eval.episode < eval.tm->_n_eval; eval.episode++) {
       tpg.rngs_[AUX_SEED].seed(eval.episode);
-      eval.tm->InitMemory(tpg._teamMap, tpg.HaveParam("p_bid_mu_const"));
+      eval.tm->InitMemory(tpg._teamMap, tpg.params_);
 
       if (eval.task->eval_type_ == "RecursiveForecast") {
         EvalRecursiveForecastViz(tpg, eval, teamUseMapPerTask,

@@ -284,8 +284,12 @@ double RegisterMachine::Run(state *obs, int &time_step,
                             const size_t &graph_depth, bool &verbose) {
                               
   // Clear working memory prior to execution, making this program stateless
-  // TODO(skelly): support evolved constants here
-  if (!stateful_) ClearWorking();
+  if (!stateful_) {
+      if (use_evolved_const_) {
+          CopyPrivateConstToWorking();
+      }
+      else { ClearWorking(); }
+  }
 
   bool copied_obs_vec = false;
   bool copied_obs_mat = false;
@@ -330,7 +334,6 @@ double RegisterMachine::Run(state *obs, int &time_step,
             copied_obs_mat = true;
           }
         }
-
         // This copies input data to temporary scalar input variables.
         if (istr->GetInType(in) == memoryEigen::SCALAR_TYPE) {
           istr->SetupScalarIn(in, obs);
@@ -355,29 +358,7 @@ void RegisterMachine::SetupMemory(int memory_indices) {
   }
   for (auto istr : bid_) istr->memory_size_ = memory_size_;
   for (auto istr : bidEffective_) istr->memory_size_ = memory_size_;
-  // CheckMemorySizes(8);
 }
-
-// void RegisterMachine::ResizeMemory(int new_size) {
-//   // for (auto memory : observation_memory_buff_) {
-//   //   // memory->memoryIndices_ = observation_buff_size_;
-//   //   memory->memory_size_ = new_size;
-//   //   memory->ResizeMemory();
-//   // }
-//   for (size_t i = 0; i < observation_memory_buff_.size(); i++) {
-//     observation_memory_buff_[i]->memory_size_ = new_size;
-//     observation_memory_buff_[i]->ResizeMemory();
-//   }
-//   // for (auto memory : privateMemory_) {
-//   //   memory->memory_size_ = new_size;
-//   //   memory->ResizeMemory();
-//   // }
-//   for (size_t i = 0; i < privateMemory_.size(); i++) {
-//     privateMemory_[i]->memory_size_ = new_size;
-//     privateMemory_[i]->ResizeMemory();
-//   }
-//   for (auto istr : bid_) istr->memory_size_ = memory_size_;
-// }
 
 void RegisterMachine::ResizeMemory(int memory_indices) {
   for (size_t i = 0; i < observation_memory_buff_.size(); i++) {
@@ -391,7 +372,6 @@ void RegisterMachine::ResizeMemory(int memory_indices) {
   privateMemory_.clear();
 
   SetupMemory(memory_indices);
-  // CheckMemorySizes(8);
 }
 
 // void RegisterMachine::MutateObsBuffSize(size_t max_observation_buff_size,

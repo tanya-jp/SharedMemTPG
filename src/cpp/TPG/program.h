@@ -13,6 +13,7 @@ class program {
   int action_;         // Action index
   double bid_val_;     // Most recent bid value
   static long count_;  // Next id to use
+  bool use_evolved_const_;
 
   // Features indexed by non-introns in this program, determined in
   // MarkIntrons().

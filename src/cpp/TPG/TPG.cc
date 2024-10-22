@@ -545,7 +545,7 @@ void TPG::ProgramMutator_Instructions(program *prog_to_mu) {
 }
 
 /******************************************************************************/
-void TPG::MaybeMutateActionToTerminal(program *prog_to_mu, team *new_team) {
+void TPG::MutateActionToTerminal(program *prog_to_mu, team *new_team) {
     // If program is already terminal (action < 0) and there are no discrete
     // actions there is nothing to change
     if (prog_to_mu->action() < 0 && GetParam<int>("n_discrete_action") == 0) {
@@ -568,7 +568,7 @@ void TPG::MaybeMutateActionToTerminal(program *prog_to_mu, team *new_team) {
 }
 
 /******************************************************************************/
-void TPG::MaybeMutateActionToTeam(program *prog_to_mu, team *new_team,
+void TPG::MutateActionToTeam(program *prog_to_mu, team *new_team,
                                   int &n_new_teams) {
     // All programs remain terminal in the first generation
     if (GetState("t_current") == 1) {
@@ -611,9 +611,9 @@ void TPG::MaybeMutateActionToTeam(program *prog_to_mu, team *new_team,
 void TPG::ProgramMutator_ActionPointer(program *prog_to_mu, team *new_team,
                                        int &n_new_teams) {
     if (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("p_atomic")) {
-        MaybeMutateActionToTerminal(prog_to_mu, new_team);
+        MutateActionToTerminal(prog_to_mu, new_team);
     } else {
-        MaybeMutateActionToTeam(prog_to_mu, new_team, n_new_teams);
+        MutateActionToTeam(prog_to_mu, new_team, n_new_teams);
     }
 }
 
@@ -743,8 +743,6 @@ void TPG::ApplyVariationOps(team *team_to_modify, int &n_new_teams) {
             team_to_modify->RemoveProgram(prog);
             program *prog_clone = CloneProgram(prog);
             ProgramMutator_Instructions(prog_clone);
-            // TODO(spkelly): remove shared memory code
-            // ProgramMutator_MemoryPointer(prog_clone);
             ProgramMutator_ActionPointer(prog_clone, team_to_modify,
                                          n_new_teams);
             team_to_modify->AddProgram(prog_clone);
