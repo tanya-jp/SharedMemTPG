@@ -210,14 +210,13 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
       changed = true;
     }
 
-    // /* Add noise to constants */
-    // if (params.find("p_bid_mu_const") != params.end() &&
-    //     disR(rng) < std::any_cast<double>(params["p_bid_mu_const"])) {
-    //   for (auto m : sharedMemory_) {
-    //     m->NoiseToConst(rng,
-    //                     std::any_cast<double>(params["bid_mu_const_stddev"]));
-    //   }
-    // }
+    /* Add noise to constants */
+    if (dis_real(rng) < std::any_cast<double>(params["p_bid_mu_const"])) {
+        for (auto m : privateMemory_) {
+            m->NoiseToConst(
+                rng, std::any_cast<double>(params["bid_mu_const_stddev"]));
+        }
+    }
 
     /* Swap positions of two instructions. */
     if (bid_.size() > 1 &&
@@ -285,6 +284,7 @@ double RegisterMachine::Run(state *obs, int &time_step,
                             const size_t &graph_depth, bool &verbose) {
                               
   // Clear working memory prior to execution, making this program stateless
+  // TODO(skelly): support evolved constants here
   if (!stateful_) ClearWorking();
 
   bool copied_obs_vec = false;

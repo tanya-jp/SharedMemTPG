@@ -88,6 +88,11 @@ class program {
   inline bool stateful() { return stateful_; }
   inline void stateful(bool s) { stateful_ = s; }
   inline bool targetMem() { return targetMem_; }
+  void CopyPrivateConstToWorking() {
+    for (auto m : privateMemory_) {
+      m->CopyConstToWorking();
+    }
+  }
 };
 
 struct programIdComp {
