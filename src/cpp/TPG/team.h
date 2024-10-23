@@ -62,6 +62,8 @@ class team {
                    bool) const;
   void GetAllNodes(map<long, team *> &teamMap, set<team *, teamIdComp> &,
                    set<program *, programIdComp> &) const;
+  void GetAllNodes(map<long, team *> &teamMap, set<team *, teamIdComp> &,
+                   set<program *, programIdComp> &, set<memoryEigen*, memoryEigenIdComp> &) const;
   void getBehaviourSequence(vector<int> &, int);
   double getMeanOutcome(int, int, int, bool, bool);
   double getMeanOutcome(int, int, int, int, long, bool, bool);

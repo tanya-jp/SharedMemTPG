@@ -28,6 +28,8 @@ class program {
 
   // Vector storing 1 memoryEigen* of each type (SCALAR, VECTOR, MATRIX)
   vector<memoryEigen *> privateMemory_;
+  // Vecto soring id of each private memory (required for checkpointing)
+  vector<long> private_memory_ids_;
 
   // Vector storing 1 memoryEigen* of each type (SCALAR, VECTOR, MATRIX)
   vector<memoryEigen *> observation_memory_buff_;
@@ -77,8 +79,7 @@ class program {
     return a != action;
   }
   // Mutate bid, return true if any changes occured
-  virtual void Mutate(std::unordered_map<std::string, std::any> &, mt19937 &,
-                     vector<bool> &) = 0;
+  virtual void Mutate(std::unordered_map<std::string, std::any> &, mt19937 &, vector<bool> &) = 0;
   // Not counting introns
   inline long numFeatures() { return features_.size(); }
   inline void op_counts(vector<int> &v) { v = op_counts_; }

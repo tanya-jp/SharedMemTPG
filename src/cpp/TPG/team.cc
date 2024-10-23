@@ -53,6 +53,7 @@ void team::InitMemory(map<long, team *> &teamMap,
             prog->use_evolved_const_ = true;
             // Initialize working memory with evolved constants
             prog->CopyPrivateConstToWorking();
+            // prog->ClearWorking();
         } else {
             // Initialize working memory with zeros
             prog->use_evolved_const_ = false;
@@ -196,27 +197,24 @@ void team::GetAllNodes(map<long, team *> &teamMap,
     }
 }
 
-// /******************************************************************************/
-// void team::GetAllNodes(map<long, team *> &teamMap,
-//                        set<team *, teamIdComp> &visitedTeams,
-//                        set<program *, programIdComp> &programs,
-//                        set<memoryEigen *, memoryEigenIdComp> &memories)
-//                        const {
-//   visitedTeams.insert(teamMap[id_]);
-//   for (auto prog : members_) {
-//     programs.insert(prog);
-//     // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES;
-//     mem_t++) {
-//     //   memories.insert(prog->MemGet(mem_t));
-//     // }
-//     if (prog->action() >= 0 &&
-//         find(visitedTeams.begin(), visitedTeams.end(),
-//              teamMap[prog->action()]) == visitedTeams.end())
-//       teamMap[prog->action()]->GetAllNodes(teamMap, visitedTeams,
-//       programs,
-//                                            memories);
-//   }
-// }
+/******************************************************************************/
+void team::GetAllNodes(map<long, team *> &teamMap,
+                       set<team *, teamIdComp> &visitedTeams,
+                       set<program *, programIdComp> &programs,
+                       set<memoryEigen *, memoryEigenIdComp> &memories)
+                       const {
+  visitedTeams.insert(teamMap[id_]);
+  for (auto prog : members_) {
+    programs.insert(prog);
+    for (auto m : prog->privateMemory_) {
+        memories.insert(m);
+    }
+    if (prog->action() >= 0 &&
+        find(visitedTeams.begin(), visitedTeams.end(),
+             teamMap[prog->action()]) == visitedTeams.end())
+      teamMap[prog->action()]->GetAllNodes(teamMap, visitedTeams, programs, memories);
+  }
+}
 
 /******************************************************************************/
 void team::updatePolicyRoot(map<long, team *> &teamMap,

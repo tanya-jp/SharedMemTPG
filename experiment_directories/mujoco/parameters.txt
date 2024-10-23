@@ -77,13 +77,13 @@ seed_tpg 42
 seed_aux 42
 
 # Max number of generations
-n_generations 1000000
+n_generations 1
 
 # Allow mutation of internal teams (i.e. non-root teams (in-progress))
 mu_internal 0
 
 # Number of elite teams
-n_elite 360
+n_elite 180
 
 # n_elite * n_elite_mul new teams are created each generation
 n_elite_mul 1.0
@@ -193,7 +193,7 @@ p_bid_add 0.4
 p_bid_xover 0.0
 
 # Program variation: probability of adding noise to constants
-p_bid_mu_const 0.0
+p_bid_mu_const 1.0
 
 # Program variation: stddev of normal noise added to each const
 bid_mu_const_stddev 0.05
@@ -205,7 +205,7 @@ p_observation_buff_size 0.0
 p_observation_index 0.2
 
 # Program variation: probability of changing memory_size
-p_memory_size 0.2
+p_memory_size 0.0
 
 ################################################################################
 ## General Task Parameters #####################################################

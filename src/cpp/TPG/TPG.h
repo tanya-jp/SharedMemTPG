@@ -35,9 +35,9 @@ class TPG {
     void Seed(size_t i, uint_fast32_t s);
     void InitExperimentTracking(APIClient *apiClient);
 
-    /*****************************************************************************
+    /***************************************************************************
      * Methods to implement the TPG algorithm.
-     ****************************************************************************/
+     **************************************************************************/
     void checkRefCounts(const char *);
     void CleanupProgramsWithNoRefs(deque<program *> &, bool);
     void clearMemory();
