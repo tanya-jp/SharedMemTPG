@@ -14,28 +14,17 @@ void team::AddProgram(program *prog, int position) {
 }
 
 /******************************************************************************/
-string team::checkpoint(bool fitnessBins, long id) const {
-    long idToWrite = id > -1 ? id : id_;
+string team::checkpoint() const {
     ostringstream oss;
-    if (fitnessBins) {
-        oss << "fBin:" << idToWrite;
-        for (auto iter = fitnessBins_.begin(); iter != fitnessBins_.end();
-             iter++)
-            oss << ":" << (*iter).first << "-" << (*iter).second;
-        oss << endl;
-    } else {
-        oss << "team:" << idToWrite << ":" << gtime_ << ":" << _n_eval;
-        //      for (int s = 0; s < _evalSeeds.size(); s++)
-        //	     oss << ":" << _evalSeeds[s];
-        // oss << ":" << task_code_;
-        for (auto prog : members_) oss << ":" << prog->id_;
-        oss << endl;
-        if (incomingPrograms_.size() > 0 && id == -1) {
-            oss << "teamIncoming:" << idToWrite;
-            for (auto it = incomingPrograms_.begin();
-                 it != incomingPrograms_.end(); it++)
-                oss << ":" << *it;
-            oss << endl;
+    oss << "team:" << id_ << ":" << gtime_ << ":" << _n_eval;
+    for (auto prog : members_) {
+        oss << ":" << prog->id_;
+    }
+    oss << endl;
+    if (incomingPrograms_.size() > 0) {
+        oss << "incoming_progs:" << id_;
+        for (auto &ip : incomingPrograms_) {
+            oss << ":" << ip;
         }
         oss << endl;
     }
@@ -186,7 +175,6 @@ void team::GetAllNodes(map<long, team *> &teamMap,
                        set<team *, teamIdComp> &visitedTeams,
                        set<program *, programIdComp> &programs) const {
     visitedTeams.insert(teamMap[id_]);
-
     for (auto prog : members_) {
         programs.insert(prog);
         if ((prog)->action() >= 0 &&

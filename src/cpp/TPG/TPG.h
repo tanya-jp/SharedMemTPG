@@ -122,7 +122,7 @@ class TPG {
     void programCrossover(RegisterMachine *p1, RegisterMachine *p2,
                           RegisterMachine **c1, RegisterMachine **c2,
                           mt19937 &);
-    void readCheckpoint(long, int, int, bool, const string &);
+    void ReadCheckpoint(long, int, int, bool, const string &);
 
     void ReadParameters(string file_name,
                         std::unordered_map<string, std::any> &params);
@@ -145,12 +145,13 @@ class TPG {
     void SetEliteTeams(vector<TaskEnv *> &tasks);
     void setOutcome(team *tm, string behav, vector<double> &rewards,
                     vector<int> &ints, long gtime);
+    std::string SerializePhylogeny();
     inline void teamMap(map<long, team *> &team_map) const {
         team_map = _teamMap;
     }
     void teamTaskRank(int, const vector<int> &);
     void updateMODESFilters(bool);
-    void writeCheckpoint(long, bool);
+    void WriteCheckpoint(long, bool);
     void WriteMPICheckpoint(string &, vector<team *> &);
 
     /*****************************************************************************

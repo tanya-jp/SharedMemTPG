@@ -193,7 +193,7 @@ p_bid_add 0.4
 p_bid_xover 0.0
 
 # Program variation: probability of adding noise to constants
-p_bid_mu_const 1.0
+p_bid_mu_const 0.0
 
 # Program variation: stddev of normal noise added to each const
 bid_mu_const_stddev 0.05

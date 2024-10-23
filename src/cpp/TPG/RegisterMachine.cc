@@ -10,7 +10,9 @@ string RegisterMachine::checkpoint(bool effective_only) {
         oss << ":" << i;
     }
     auto prog = effective_only ? bidEffective_ : bid_;
-    for (auto istr : prog) oss << ":" << istr->checkpoint();
+    for (auto istr : prog) {
+        oss << ":" << istr->checkpoint();
+    }
     oss << endl;
     return oss.str();
 }

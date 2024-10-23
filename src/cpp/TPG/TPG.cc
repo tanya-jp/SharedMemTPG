@@ -461,7 +461,7 @@ void TPG::finalize() {
     state_["program_count"] = 0;
     state_["memory_count"] = 0;
     task_set_map_.clear();
-    
+
     _teamPairsToCompair.clear();
 
     for (auto teiter = _M.begin(); teiter != _M.end(); teiter++) {
@@ -532,7 +532,8 @@ team *TPG::CloneTeam(team *team_to_clone) {
 
 /******************************************************************************/
 program *TPG::CloneProgram(program *prog) {
-    program *prog_clone = new RegisterMachine(*(dynamic_cast<RegisterMachine *>(prog)), params_, state_);
+    program *prog_clone = new RegisterMachine(
+        *(dynamic_cast<RegisterMachine *>(prog)), params_, state_);
     if (prog_clone->action() >= 0)
         _teamMap[prog_clone->action()]->AddIncomingProgram(prog_clone->id_);
     return prog_clone;
@@ -568,7 +569,7 @@ void TPG::MutateActionToTerminal(program *prog_to_mu, team *new_team) {
 
 /******************************************************************************/
 void TPG::MutateActionToTeam(program *prog_to_mu, team *new_team,
-                                  int &n_new_teams) {
+                             int &n_new_teams) {
     // All programs remain terminal in the first generation
     if (GetState("t_current") == 1) {
         return;
@@ -1050,7 +1051,7 @@ void TPG::SetEliteTeams(vector<TaskEnv *> &tasks) {
                     elite_team_id_history_.end()) {
                 elite_team_id_history_.insert(elite_id);
                 if (GetParam<int>("write_test_checkpoints")) {
-                    writeCheckpoint(GetState("t_current"), true);
+                    WriteCheckpoint(GetState("t_current"), true);
                 }
             }
         }
@@ -1225,7 +1226,8 @@ void TPG::InitTeams() {
         for (int p = 0; p < initial_team_size; p++) {
             // Discrete atomic actions are negatives -1 to -numAtomicActions()
             long discrete_action = -1 - dis_actions(rngs_[TPG_SEED]);
-            auto new_prog = new RegisterMachine(discrete_action, params_, state_, rngs_[TPG_SEED], _ops);
+            auto new_prog = new RegisterMachine(discrete_action, params_,
+                                                state_, rngs_[TPG_SEED], _ops);
             new_team->AddProgram(new_prog);
             AddProgram(new_prog);  // add program to program population
         }
@@ -2426,8 +2428,8 @@ void TPG::programCrossover(RegisterMachine *p1, RegisterMachine *p2,
 
 /******************************************************************************/
 // Read in populations from a checkpoint file.
-// TODO(skelly): move reading logic to "deserialize" constructors
-void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
+// TODO(skelly): move reading logic to "deserialize" constructors and cleanup
+void TPG::ReadCheckpoint(long t, int phase, int chkpID, bool fromString,
                          const string &inString) {
     finalize();  // clear populations
 
@@ -2447,7 +2449,6 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
     }
 
     istringstream iss(str);
-
     string oneline;
     char delim = ':';
     long memberId = 0;
@@ -2470,31 +2471,24 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
             teamPair tp(_teamMap[id1], _teamMap[id2]);
             _teamPairsToCompair.push_back(tp);
         }
-        // TODO(skelly) would we ever want to re-seed here?
-        // else if (outcomeFields[0].compare("seed_tpg") == 0)
-        //   seed(TPG_SEED, atoi(outcomeFields[1].c_str()));
-        // else if (outcomeFields[0].compare("seed_aux") == 0)
-        //   seed(AUX_SEED, atoi(outcomeFields[1].c_str()));
         else if (outcomeFields[0].compare("t") == 0)
             state_["t_current"] = atoi(outcomeFields[1].c_str());
         else if (outcomeFields[0].compare("active_task") == 0)
             state_["active_task"] = atoi(outcomeFields[1].c_str());
-        // else if (outcomeFields[0].compare("internalTestNodeId") == 0)
-        //   state_["internal_test_node_id"] = atoi(outcomeFields[1].c_str());
         else if (outcomeFields[0].compare("fitMode") == 0)
             params_["fit_mode"] = atoi(outcomeFields[1].c_str());
         else if (outcomeFields[0].compare("phase") == 0)
             state_["phase"] = atoi(outcomeFields[1].c_str());
-
         else if (outcomeFields[0].compare("memoryEigen") == 0) {
-            max_memoryCount = std::max(max_memoryCount, atol(outcomeFields[1].c_str()));
+            max_memoryCount =
+                std::max(max_memoryCount, atol(outcomeFields[1].c_str()));
             AddMemory(new memoryEigen(outcomeFields));
         }
-
         else if (outcomeFields[0].compare("RegisterMachine") == 0) {
-            max_programCount = std::max(max_programCount, atol(outcomeFields[1].c_str()));
-            // program* prog = new RegisterMachine(outcomeFields, _Memory, params_, rngs_[TPG_SEED]);
-            AddProgram(new RegisterMachine(outcomeFields, _Memory, params_, rngs_[TPG_SEED]));
+            max_programCount =
+                std::max(max_programCount, atol(outcomeFields[1].c_str()));
+            AddProgram(new RegisterMachine(outcomeFields, _Memory, params_,
+                                           rngs_[TPG_SEED]));
         } else if (outcomeFields[0].compare("team") == 0) {
             team *m;
             f = 1;
@@ -2509,7 +2503,7 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
                 m->AddProgram(_L[memberId]);
             }
             AddTeam(m);
-        } else if (outcomeFields[0].compare("teamIncoming") == 0) {
+        } else if (outcomeFields[0].compare("incoming_progs") == 0) {
             f = 1;
             long id = atoi(outcomeFields[f++].c_str());
             for (size_t ii = f; ii < outcomeFields.size(); ii++) {
@@ -2517,14 +2511,6 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
                 _teamMap[id]->AddIncomingProgram(incomingId);
             }
             _Mroot.erase(_teamMap[id]);
-        } else if (outcomeFields[0].compare("fBin") == 0) {
-            long id = atoi(outcomeFields[1].c_str());
-            team *tm = _teamMap[id];
-            for (size_t ii = 2; ii < outcomeFields.size(); ii++) {
-                vector<string> fb;
-                SplitString(outcomeFields[ii].c_str(), '-', fb);
-                tm->fitnessBin(atoi(fb[0].c_str()), fb[1]);
-            }
         } else if (!fromString && outcomeFields[0].compare("phyloNode") == 0 &&
                    find(outcomeFields.begin(), outcomeFields.end(), "gtime") ==
                        outcomeFields.end()) {
@@ -2554,10 +2540,6 @@ void TPG::readCheckpoint(long t, int phase, int chkpID, bool fromString,
     state_["program_count"] = max_programCount + 1;
     state_["team_count"] = max_teamCount + 1;
     state_["memory_count"] = max_memoryCount + 1;
-
-    // TODO(skelly): this might not make sense for evaluators because
-    // they only receive teams to evaluate
-    // SanityCheck();
 }
 
 /******************************************************************************/
@@ -2828,117 +2810,85 @@ void TPG::updateMODESFilters(bool roots) {
 }
 
 /******************************************************************************/
-void TPG::writeCheckpoint(long t, bool elite) {
+void TPG::WriteCheckpoint(long t, bool elite) {
     ofstream ofs;
     char filename[80];
     sprintf(filename, "%s/%s.%ld.%d.%lu.%d.rslt", "checkpoints", "cp", t,
             GetParam<int>("id"), seeds_[TPG_SEED], GetState("phase"));
-
-    if (fileExists(filename)) {
-        if (remove(filename) != 0)
-            cerr << "error deleting " << filename << endl;
-    }
     ofs.open(filename, ios::out);
     if (!ofs.is_open() || ofs.fail()) {
         cerr << "open failed for file: " << filename
              << " error:" << strerror(errno) << '\n';
         die(__FILE__, __FUNCTION__, __LINE__, "Can't open file.");
     }
-
     ofs << "seed_tpg:" << seeds_[TPG_SEED] << endl;
     ofs << "seed_aux:" << seeds_[AUX_SEED] << endl;
     ofs << "t:" << GetState("t_current") << endl;
     ofs << "active_task:" << GetState("active_task") << endl;
     ofs << "fitMode:" << GetParam<int>("fit_mode") << endl;
 
-    if (elite) {
+    if (elite) {  // Include data for elite teams only
+        set<memoryEigen *, memoryEigenIdComp> memories;
         set<program *, programIdComp> programs;
         set<team *, teamIdComp> teams, teamsAll;
-        // set<memoryEigen *, memoryEigenIdComp> memories;
-
-        for (auto itr1 = _eliteTeamPS.begin(); itr1 != _eliteTeamPS.end();
-             itr1++)  // taskset
-            for (auto itr2 = itr1->second.begin(); itr2 != itr1->second.end();
-                 itr2++)  // fitmode
-            // for (auto itr3 = itr2->second.begin(); itr3 !=
-            // itr2->second.end();
-            //  itr3++) // phase
-            {
-                auto tm = itr2->second[2];
+        // Collect memories, progrms, teams in champions...
+        for (auto ps : _eliteTeamPS) {  // ...for each task set
+            for (auto fm : ps.second) {  // ...for each fitness mode
+                auto tm = fm.second[2];
                 teams.clear();
-                tm->GetAllNodes(_teamMap, teams, programs);
+                tm->GetAllNodes(_teamMap, teams, programs, memories);
                 teamsAll.insert(teams.begin(), teams.end());
             }
-
-        // for (auto meiter = memories.begin(); meiter != memories.end();
-        // meiter++)
-        //   ofs << (*meiter)->checkpoint();
-        for (auto leiter = programs.begin(); leiter != programs.end(); leiter++)
-            ofs << (*leiter)->checkpoint(true);  // all instructions
-        for (auto teiter = teamsAll.begin(); teiter != teamsAll.end(); teiter++)
-            ofs << (*teiter)->checkpoint(false);
-        for (auto teiter = teamsAll.begin(); teiter != teamsAll.end(); teiter++)
-            ofs << (*teiter)->checkpoint(true);
-    } else {
-        // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++)
-        //   for (auto meiter = _Memory[mem_t].begin(); meiter !=
-        //   _Memory[mem_t].end();
-        //        meiter++)
-        //     ofs << meiter->second->checkpoint();
-        for (auto leiter = _L.begin(); leiter != _L.end(); leiter++)
-            ofs << leiter->second->checkpoint(true);  // all instructions
-        for (auto teiter = _M.begin(); teiter != _M.end(); teiter++)
-            ofs << (*teiter)->checkpoint(false);
-        for (auto teiter = _M.begin(); teiter != _M.end(); teiter++)
-            ofs << (*teiter)->checkpoint(true);
-
-        ofs << "phyloNode:id:gtime:dtime:fitness:root" << endl;
-        ofs << "phyloLink:from,to" << endl;
-        for (auto it = _phyloGraph.begin(); it != _phyloGraph.end(); it++) {
-            ofs << "phyloNode:" << (*it).first << ":" << (*it).second.gtime
-                << ":" << (*it).second.dtime << ":" << (*it).second.fitnessBin
-                << ":" << (*it).second.fitness << ":" << (*it).second.root
-                << endl;
-            if ((*it).second.adj.size() > 0)
-                for (size_t i = 0; i < (*it).second.adj.size(); i++)
-                    ofs << "phyloLink:" << (*it).first << ":"
-                        << (*it).second.adj[i] << endl;
-            if ((*it).second.ancestorIds.size() > 0) {
-                ofs << "ancestorIds:" << (*it).first;
-                for (auto it2 = (*it).second.ancestorIds.begin();
-                     it2 != (*it).second.ancestorIds.end(); it2++)
-                    ofs << ":" << *it2;
-                ofs << endl;
+        }
+        for (auto mem : memories) {
+            ofs << mem->checkpoint();
+        }
+        for (auto prog : programs) {
+            ofs << prog->checkpoint(GetParam<int>("skip_introns"));
+        }
+        for (auto tm : teamsAll) {
+            ofs << tm->checkpoint();
+        }
+    } else {  // Include all memories, teams, and programs
+        for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+            for (auto key : _Memory[mem_t]) {
+                ofs << key.second->checkpoint();
             }
         }
+        for (auto key : _L) {
+            ofs << key.second->checkpoint(false);  // Write all instructions
+        }
+        for (auto tm : _M) {
+            ofs << tm->checkpoint();
+        }
+        ofs << SerializePhylogeny();
     }
-
     ofs << "end" << endl;
     ofs.close();
+}
 
-    // if (compress){
-    //    //compress this checkpoint
-    //    oss.str("");
-    //    oss << "tar czpf " << filename << ".tgz -C  checkpoints cp." << t <<
-    //    "."
-    //    << _id << "." << _seed << "." << GetState("phase") << ".rslt"; if
-    //    (system (oss.str().c_str()) != 0)
-    //       cerr << "error with system call" << endl;
-    //    if( remove(filename) != 0 )
-    //       cerr << "error deleting " << filename << endl;
-    //    oss.str("");
-    // }
-    ////delete previous (compressed) checkpoint
-    // if (previousT >= 0){
-    //    sprintf(filename, "%s/%s.%ld.%d.%d.%d.rslt%s", "checkpoints", "cp",
-    //    previousT, _id,_seed, GetState("phase"), compress ? ".tgz": ""); if
-    //    (ifstream(filename))
-    //       if( remove(filename) != 0 )
-    //          cerr << "error deleting " << filename << endl;
-    // }
-
-    oss << "TPG::writeCheckpoint " << " Msize " << _M.size() << " Lsize "
-        << _L.size() << " MrooSize " << _Mroot.size() << endl;
+/******************************************************************************/
+std::string TPG::SerializePhylogeny() {
+    std::stringstream ss;
+    ss << "phyloNode:id:gtime:dtime:fitness:root" << endl;
+    ss << "phyloLink:from,to" << endl;
+    for (auto it = _phyloGraph.begin(); it != _phyloGraph.end(); it++) {
+        ss << "phyloNode:" << (*it).first << ":" << (*it).second.gtime << ":"
+           << (*it).second.dtime << ":" << (*it).second.fitnessBin << ":"
+           << (*it).second.fitness << ":" << (*it).second.root << endl;
+        if ((*it).second.adj.size() > 0)
+            for (size_t i = 0; i < (*it).second.adj.size(); i++)
+                ss << "phyloLink:" << (*it).first << ":" << (*it).second.adj[i]
+                   << endl;
+        if ((*it).second.ancestorIds.size() > 0) {
+            ss << "ancestorIds:" << (*it).first;
+            for (auto it2 = (*it).second.ancestorIds.begin();
+                 it2 != (*it).second.ancestorIds.end(); it2++)
+                ss << ":" << *it2;
+            ss << endl;
+        }
+    }
+    return ss.str();
 }
 
 /******************************************************************************/
@@ -2946,7 +2896,9 @@ void TPG::WriteMPICheckpoint(string &s, vector<team *> &rootTeams) {
     set<memoryEigen *, memoryEigenIdComp> memories;
     set<program *, programIdComp> programs;
     set<team *, teamIdComp> teams;
-    for (auto tm : rootTeams) tm->GetAllNodes(_teamMap, teams, programs, memories);
+    for (auto tm : rootTeams) {
+        tm->GetAllNodes(_teamMap, teams, programs, memories);
+    }
     stringstream ss;
     ss << "seed_tpg:" << seeds_[TPG_SEED] << endl;
     ss << "seed_aux:" << seeds_[AUX_SEED] << endl;
@@ -2961,7 +2913,7 @@ void TPG::WriteMPICheckpoint(string &s, vector<team *> &rootTeams) {
         ss << prog->checkpoint(GetParam<int>("skip_introns"));
     }
     for (auto tm : teams) {
-        ss << tm->checkpoint(false);
+        ss << tm->checkpoint();
     }
     ss << endl;
     s = ss.str();
