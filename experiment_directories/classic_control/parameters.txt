@@ -83,7 +83,7 @@ n_generations 100000
 mu_internal 0
 
 # Number of elite root teams (agents)
-n_elite 300
+n_elite 400
 
 # n_elite * n_elite_mul new teams are created each generation
 n_elite_mul 2.0
