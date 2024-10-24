@@ -1292,9 +1292,11 @@ void TPG::SetParams(int argc, char **argv) {
                         params_[key] = stringToInt(val);
                     }
                 } else {
-                    die(__FILE__, __FUNCTION__, __LINE__,
-                        "Command line parameters must have default values in "
-                        "parameters.txt");
+                    std::string err_message =
+                        "Unreconised command line parameter:" + key +
+                        ". Command line parameters must have default values in "
+                        "parameters.txt";
+                    die(__FILE__, __FUNCTION__, __LINE__, err_message.c_str());
                 }
             }
         }
