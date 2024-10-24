@@ -205,7 +205,7 @@ p_observation_buff_size 0.0
 p_observation_index 0.2
 
 # Program variation: probability of changing memory_size
-p_memory_size 0.0
+p_memory_size 0.2
 
 ################################################################################
 ## General Task Parameters #####################################################
