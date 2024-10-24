@@ -34,7 +34,6 @@ class memoryEigen {
         oss << endl;
         return oss.str();
     }
-
     inline string PrintWorking() {
         ostringstream oss;
         for (auto &m : working_memory_) {
@@ -43,24 +42,19 @@ class memoryEigen {
         oss << endl;
         return oss.str();
     }
-
     inline void ClearWorking() {
-        // for (size_t i = 0; i < working_memory_.size(); i++) {
-        //     working_memory_[i].setZero();
-        // }
-        // cerr << "dbg working_memory_.size() " << working_memory_.size() << endl;
         for (auto &m : working_memory_) {
             m.setZero();
         }
     }
     inline void ClearConst() {
-        for (size_t i = 0; i < const_memory_.size(); i++) {
-            const_memory_[i].setZero();
+        for (auto &m : const_memory_) {
+            m.setZero();
         }
     }
     inline void RandomizeConst() {
-        for (size_t i = 0; i < const_memory_.size(); i++) {
-            const_memory_[i].setRandom();
+        for (auto &m : const_memory_) {
+            m.setRandom();
         }
     }
     inline void NoiseToConst(mt19937 &rng, double stddev) {
@@ -115,19 +109,15 @@ class memoryEigen {
         read_time_.resize(memoryIndices_, 1);
         write_time_.resize(memoryIndices_, 1);
     }
-    inline int type() { return type_; }
-    inline void type(int t) { type_ = t; }
-
     memoryEigen(long i, int type, size_t memoryIndices, size_t memory_size) {
         id_ = i;
         nrefs_ = 0;
         type_ = type;
-
         memoryIndices_ = memoryIndices;
         memory_size_ = memory_size;
         ResizeMemory();
         ClearWorking();
-        ClearConst();
+        RandomizeConst();
         ClearActive();
         ClearReadTime();
         ClearWriteTime();
@@ -142,7 +132,7 @@ class memoryEigen {
         nrefs_ = atoi(outcomeFields[i++].c_str());
         ResizeMemory();
         ClearWorking();
-        ClearConst();
+        // ClearConst();
         ClearActive();
         ClearReadTime();
         ClearWriteTime();
@@ -160,65 +150,6 @@ class memoryEigen {
                             stod(outcomeFields[i++].c_str());
             }
         }
-    }
-
-    memoryEigen(long i, int type,
-                std::unordered_map<std::string, std::any> params) {
-        id_ = i;
-        nrefs_ = 0;
-        type_ = type;
-
-        // memoryIndices_ = 64;
-        // memory_size_ = 64;
-        // ResizeMemory();
-
-        memoryIndices_ = std::any_cast<int>(params["memory_indices"]);
-        memory_size_ = std::any_cast<int>(params["memory_size"]);
-        ResizeMemory();
-        ClearWorking();
-        ClearConst();
-        ClearActive();
-        ClearReadTime();
-        ClearWriteTime();
-    }
-
-    memoryEigen(long i, int type, size_t memoryIndices, size_t memory_size,
-                int nr) {
-        id_ = i;
-        nrefs_ = nr;
-        type_ = type;
-
-        // memoryIndices_ = 64;
-        // memory_size_ = 64;
-        // ResizeMemory();
-
-        memoryIndices_ = memoryIndices;
-        memory_size_ = memory_size;
-        ResizeMemory();
-        ClearWorking();
-        ClearConst();
-        ClearActive();
-        ClearReadTime();
-        ClearWriteTime();
-    }
-
-    memoryEigen(memoryEigen *m) {
-        id_ = m->id();
-        nrefs_ = m->refs();
-        type_ = m->type();
-
-        memoryIndices_ = 64;
-        memory_size_ = 64;
-        ResizeMemory();
-
-        memoryIndices_ = m->memoryIndices_;
-        memory_size_ = m->memory_size_;
-        ResizeMemory();
-        ClearWorking();
-        ClearConst();
-        ClearActive();
-        ClearReadTime();
-        ClearWriteTime();
     }
 
     ~memoryEigen() {}

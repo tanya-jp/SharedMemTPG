@@ -53,7 +53,7 @@ write_test_checkpoints 1
 write_phylogeny 0
 
 # How frequently to run test procedure
-test_mod 1
+test_mod 100
 
 # Number of tasks used each selection for evaluation 
 # The rest are estimated with phylogeny
@@ -193,7 +193,7 @@ p_bid_add 0.4
 p_bid_xover 0.0
 
 # Program variation: probability of adding noise to constants
-p_bid_mu_const 0.0
+p_bid_mu_const 0.5
 
 # Program variation: stddev of normal noise added to each const
 bid_mu_const_stddev 0.05

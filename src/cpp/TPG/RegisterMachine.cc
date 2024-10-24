@@ -35,7 +35,6 @@ RegisterMachine::RegisterMachine(
     const int max_index = 100;
     uniform_int_distribution<int> dis(0, max_index);
     obs_index_ = dis(rng);
-    // uniform_real_distribution<double> disR(0.0, 1.0);
     uniform_int_distribution<int> disP(
         1, std::any_cast<int>(params["max_initial_prog_size"]));
     int prog_size = disP(rng);
@@ -45,13 +44,10 @@ RegisterMachine::RegisterMachine(
         bid_.push_back(in);
     }
     op_counts_.resize(instruction::NUM_OP);
-    SetupMemory(params, state);
     if (!isEqual(std::any_cast<double>(params["p_bid_mu_const"]), 0.0)) {
         use_evolved_const_ = true;
-        for (auto m : privateMemory_) {
-            m->RandomizeConst();
-        }
     }
+    SetupMemory(params, state);
 }
 
 // Create RegisterMachine from another RegisterMachine
@@ -69,12 +65,10 @@ RegisterMachine::RegisterMachine(
     observation_buff_size_ = plr.observation_buff_size_;
     memory_size_ = plr.memory_size_;
     use_evolved_const_ = plr.use_evolved_const_;
-
     for (auto initer = plr.bid_.begin(); initer != plr.bid_.end(); initer++)
         bid_.push_back(new instruction(**initer));
     op_counts_.resize(instruction::NUM_OP);
     SetupMemory(params, state);
-    // Copy evolved constants
     if (use_evolved_const_) {
         CopyEvolvedConstants(plr);
     }
@@ -224,7 +218,7 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
     bool changed = false;
 
     while (!changed) {
-        /* Remove random instruction. */
+        // Remove random instruction
         if (bid_.size() > 1 &&
             dis_real(rng) < std::any_cast<double>(params["p_bid_delete"])) {
             uniform_int_distribution<int> disBid(0, bid_.size() - 1);
@@ -234,7 +228,7 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
             changed = true;
         }
 
-        /* Insert random instruction. */
+        // Insert random instruction
         if ((int)bid_.size() < std::any_cast<int>(params["max_prog_size"]) &&
             dis_real(rng) < std::any_cast<double>(params["p_bid_add"])) {
             instruction *instr = new instruction(params, rng);
@@ -246,7 +240,7 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
             changed = true;
         }
 
-        /* Mutate a random instruction. */
+        // Mutate a random instruction
         if (dis_real(rng) < std::any_cast<double>(params["p_bid_mutate"])) {
             uniform_int_distribution<int> disBid(0, bid_.size() - 1);
             bid_[disBid(rng)]->Mutate(false, legalOps, observation_buff_size_,
@@ -254,7 +248,7 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
             changed = true;
         }
 
-        /* Add noise to constants */
+        // Add noise to constants 
         if (dis_real(rng) < std::any_cast<double>(params["p_bid_mu_const"])) {
             for (auto m : privateMemory_) {
                 m->NoiseToConst(
@@ -262,7 +256,7 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
             }
         }
 
-        /* Swap positions of two instructions. */
+        // Swap positions of two instructions
         if (bid_.size() > 1 &&
             dis_real(rng) < std::any_cast<double>(params["p_bid_swap"])) {
             uniform_int_distribution<int> disBid(0, bid_.size() - 1);
@@ -275,7 +269,7 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
             changed = true;
         }
 
-        // // Change observation buff size.
+        // // Change observation buff size
         // if (dis_real(rng) <
         //     std::any_cast<double>(params["p_observation_buff_size"])) {
         //   MutateObsBuffSize(std::any_cast<int>(params["max_observation_buff_size"]),
@@ -283,13 +277,13 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
         //   changed = true;
         // }
 
-        // Change memory size.
+        // Change memory size
         if (dis_real(rng) < std::any_cast<double>(params["p_memory_size"])) {
             MutateMemorySize(params, rng);
             changed = true;
         }
 
-        // Change observation index.
+        // Change observation index
         if (dis_real(rng) <
             std::any_cast<double>(params["p_observation_index"])) {
             const int max_index = 100;

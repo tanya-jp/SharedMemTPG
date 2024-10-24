@@ -60,20 +60,20 @@ void TPG::RemoveTeam(team *tm, deque<program *> &p) {
 
 /******************************************************************************/
 void TPG::AddMemory(memoryEigen *m) {
-    _Memory[m->type()][m->id_] = m;
-    _Memids[m->type()].push_back(m->id_);
+    _Memory[m->type_][m->id_] = m;
+    _Memids[m->type_].push_back(m->id_);
 }
 
 /******************************************************************************/
 void TPG::removeMemory(memoryEigen *m) {
     auto it =
-        find(_Memids[m->type()].begin(), _Memids[m->type()].end(), m->id_);
-    if (it == _Memids[m->type()].end())
+        find(_Memids[m->type_].begin(), _Memids[m->type_].end(), m->id_);
+    if (it == _Memids[m->type_].end())
         die(__FILE__, __FUNCTION__, __LINE__, "failed to remove memoryEigen");
-    swap(_Memids[m->type()][it - _Memids[m->type()].begin()],
-         _Memids[m->type()].back());
-    _Memids[m->type()].pop_back();
-    _Memory[m->type()].erase(m->id_);
+    swap(_Memids[m->type_][it - _Memids[m->type_].begin()],
+         _Memids[m->type_].back());
+    _Memids[m->type_].pop_back();
+    _Memory[m->type_].erase(m->id_);
 }
 
 /******************************************************************************/
@@ -2892,11 +2892,11 @@ std::string TPG::SerializePhylogeny() {
 }
 
 /******************************************************************************/
-void TPG::WriteMPICheckpoint(string &s, vector<team *> &rootTeams) {
+void TPG::WriteMPICheckpoint(string &s, vector<team *> &root_teams) {
     set<memoryEigen *, memoryEigenIdComp> memories;
     set<program *, programIdComp> programs;
     set<team *, teamIdComp> teams;
-    for (auto tm : rootTeams) {
+    for (auto tm : root_teams) {
         tm->GetAllNodes(_teamMap, teams, programs, memories);
     }
     stringstream ss;

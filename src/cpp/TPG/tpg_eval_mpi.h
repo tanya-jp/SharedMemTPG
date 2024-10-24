@@ -81,9 +81,15 @@ void AssignTeamsToEvaluators(TPG &tpg, mpi::communicator &world,
     if ((remainder > 0 && teams.size() == teams_per_evaluator + 1) ||
         (remainder == 0 && teams.size() == teams_per_evaluator) ||
         next(it) == teams_to_eval.end()) {
-      
       string s = "";
       tpg.WriteMPICheckpoint(s, teams);
+
+      // ofstream ofs;
+      // char filename[80];
+      // sprintf(filename, "eval_main.%d.rslt", tpg.GetState("t_current"));
+      // ofs.open(filename, ios::out);
+      // ofs << s;
+      // ofs.close();
 
       world.send(mpi_job, 0, s);
       mpi_job++;
@@ -165,6 +171,16 @@ void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
     if (NotDoneAndActive(eval)) {
       tpg.ReadCheckpoint(-1, _TRAIN_PHASE, -1, true, eval.checkpointString);
       tpg.getTeams(eval.teams, true);
+
+      // std::string s = "";
+      // tpg.WriteMPICheckpoint(s, eval.teams);
+      // ofstream ofs;
+      // char filename[80];
+      // sprintf(filename, "eval_sub.%d.rslt", tpg.GetState("t_current"));
+      // ofs.open(filename, ios::out);
+      // ofs << s;
+      // ofs.close();
+
       eval.task = tasks[tpg.GetState("active_task")];
       eval.eval_result = "";
       for (auto tm : eval.teams) {
