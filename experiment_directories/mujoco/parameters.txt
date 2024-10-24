@@ -53,7 +53,7 @@ write_test_checkpoints 1
 write_phylogeny 0
 
 # How frequently to run test procedure
-test_mod 100
+test_mod 1
 
 # Number of tasks used each selection for evaluation 
 # The rest are estimated with phylogeny
@@ -111,7 +111,7 @@ max_team_size 1000000
 max_teams_per_graph 1000000
 
 # When changing action pointer, probability of selecting atomic action
-p_atomic 1.0
+p_atomic 0.99
 
 # Team mutation: probability of deleting program from team
 pmd 0.5
