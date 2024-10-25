@@ -739,7 +739,8 @@ void TPG::ApplyVariationOps(team *team_to_modify, int &n_new_teams) {
     set<program *, programIdComp> new_team_programs =
         team_to_modify->CopyMembers();
     for (auto prog : new_team_programs) {
-        if (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmm")) {
+        // Probably modify one program
+        if (real_dist_(rngs_[TPG_SEED]) < 1.0 / new_team_programs.size()) {
             team_to_modify->RemoveProgram(prog);
             program *prog_clone = CloneProgram(prog);
             ProgramMutator_Instructions(prog_clone);
