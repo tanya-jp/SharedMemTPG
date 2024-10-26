@@ -132,10 +132,6 @@ void evaluate_main(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks,
   for (int task : eval_tasks) {
     tpg.state_["active_task"] = task;
     auto teams_to_eval = GetTeamsToEval(tpg, tasks[task]);
-    if (tpg.GetState("phase") == _TRAIN_PHASE) {
-       tpg.oss << string(__FUNCTION__) << " t " << tpg.GetState("t_current")
-               << " n_teams_to_eval " << teams_to_eval.size() << std::endl;
-    }
     AssignTeamsToEvaluators(tpg, world, teams_to_eval, world_size_per_task,
                             evaluator);
   }

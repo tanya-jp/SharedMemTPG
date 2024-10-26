@@ -164,7 +164,7 @@ p_observation_buff_size 0.0
 p_observation_index 0.1
 
 # Program variation: probability of changing memory_size
-p_memory_size 0.0
+p_memory_size 0.1
 
 # Use stateful programs
 # If set to 0, memories are set to 0 prior to each program execution
