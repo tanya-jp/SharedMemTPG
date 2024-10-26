@@ -152,10 +152,10 @@ p_bid_add 0.075
 p_bid_xover 0.0
 
 # Program variation: probability of adding noise to constants
-p_bid_mu_const 0.2
+p_bid_mu_const 0.5
 
 # Program variation: stddev of normal noise added to each const
-bid_mu_const_stddev 0.02
+bid_mu_const_stddev 0.05
 
 # Program variation: probability of changing observation_buff_size
 p_observation_buff_size 0.0
@@ -164,7 +164,7 @@ p_observation_buff_size 0.0
 p_observation_index 0.1
 
 # Program variation: probability of changing memory_size
-p_memory_size 0.1
+p_memory_size 0.0
 
 # Use stateful programs
 # If set to 0, memories are set to 0 prior to each program execution

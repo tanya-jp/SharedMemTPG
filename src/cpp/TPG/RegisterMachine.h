@@ -15,11 +15,11 @@ class RegisterMachine : public program {
   // Bid program, a list of instructions
   std::vector<instruction *> bid_;
   std::vector<instruction *> bidEffective_;
-  // inline void AddToInputMemoryBuff(Matrix<double, Dynamic, Dynamic> &mat,
-  //                                  int mem_t) {
-  //   observation_memory_buff_[mem_t]->working_memory_.push_front(mat);
-  //   observation_memory_buff_[mem_t]->working_memory_.pop_back();
-  // }
+  inline void AddToInputMemoryBuff(Matrix<double, Dynamic, Dynamic> &mat,
+                                   int mem_t) {
+    observation_memory_buff_[mem_t]->working_memory_.push_front(mat);
+    observation_memory_buff_[mem_t]->working_memory_.pop_back();
+  }
   void CopyObservationToMemoryBuff(state *obs, size_t memory_type);
   void MarkFeatures(instruction *istr, int in);
   void MarkIntrons(std::unordered_map<std::string, std::any> &params_);
