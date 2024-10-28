@@ -86,7 +86,7 @@ mu_internal 0
 n_elite 1000
 
 # n_elite * n_elite_mul new teams are created each generation
-n_elite_mul 0.02
+n_elite_mul 0.01
 
 # Whether to use fitness proportional selection
 fit_prop_select 0
@@ -252,7 +252,7 @@ mj_model_path $TPG/datasets/mujoco_models/ant.xml
 
 mj_max_timestep 1000
 
-mj_n_eval_train 1
+mj_n_eval_train 5
 mj_n_eval_test 1
 
 ################################################################################
