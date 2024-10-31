@@ -675,7 +675,8 @@ void TPG::GenerateNewTeams() {
    auto root_size_in = _Mroot.size();
    int new_teams_count = 0;
    auto task_power_set = PowerSet(GetState("n_task"));
-   int n_new_teams_per_set = GetParam<int>("n_root_gen") / task_power_set.size();
+   int n_new_teams_per_set =
+       GetParam<int>("n_root_gen") / task_power_set.size();
    vector<team *> candidate_parent_teams;
    if (!GetParam<int>("parent_select_roots_only")) {
       candidate_parent_teams.resize(_M.size());

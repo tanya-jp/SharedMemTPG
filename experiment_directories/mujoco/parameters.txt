@@ -88,10 +88,10 @@ n_generations 1000000
 mu_internal 0
 
 # Number of root teams (agents) to keep each generation
-n_root 5000
+n_root 720
 
 # Number of new root teams to create each generation
-n_root_gen 500
+n_root_gen 60
 
 # Whether to use fitness proportional selection
 fit_prop_select 0
@@ -257,7 +257,7 @@ mj_model_path $TPG/datasets/mujoco_models/ant.xml
 
 mj_max_timestep 1000
 
-mj_n_eval_train 10
+mj_n_eval_train 3
 mj_n_eval_validation 0
 mj_n_eval_test 0
 
