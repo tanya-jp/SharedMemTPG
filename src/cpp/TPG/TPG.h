@@ -49,7 +49,7 @@ class TPG {
     void TeamMutator_RemovePrograms(team *team_to_mu);
     team *CloneTeam(team *team_to_clone);
     RegisterMachine *CloneProgram(RegisterMachine *prog);
-    void ProgramMutator_Memory(RegisterMachine *&prog_to_mu);
+    // void ProgramMutator_Memory(RegisterMachine *&prog_to_mu);
     void ProgramMutator_Instructions(RegisterMachine *prog_to_mu);
     void ProgramMutator_ActionPointer(RegisterMachine *prog_to_mu, team *new_team,
                                       int &n_new_teams);

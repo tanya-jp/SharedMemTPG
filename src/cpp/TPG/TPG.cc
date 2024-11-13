@@ -456,7 +456,7 @@ void TPG::finalize() {
    _M.clear();
 
    for (auto leiter = _L.begin(); leiter != _L.end(); leiter++) {
-      // cerr << "dbg deleting " << leiter->second->id_ << " world_rank " << GetState("world_rank") << endl;
+      // cerr << "dbg deleting " << leiter->second->id_ << " addr " << leiter->second << endl;
       delete leiter->second;
    }
    _L.clear();
@@ -525,27 +525,27 @@ RegisterMachine *TPG::CloneProgram(RegisterMachine *prog) {
    return prog_clone;
 }
 
-/******************************************************************************/
-void TPG::ProgramMutator_Memory(RegisterMachine *&prog_to_mu) {
-   if (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("p_memory_size")) {
-      std::uniform_int_distribution<> dis(
-          GetParam<int>("min_memory_size"),
-          GetParam<int>("max_memory_size"));
-      size_t new_size;
-      do {
-         new_size = dis(rngs_[TPG_SEED]);
-      } while (new_size == prog_to_mu->privateMemory_[0]->memory_size_);
+// /******************************************************************************/
+// void TPG::ProgramMutator_Memory(RegisterMachine *&prog_to_mu) {
+//    if (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("p_memory_size")) {
+//       std::uniform_int_distribution<> dis(
+//           GetParam<int>("min_memory_size"),
+//           GetParam<int>("max_memory_size"));
+//       size_t new_size;
+//       do {
+//          new_size = dis(rngs_[TPG_SEED]);
+//       } while (new_size == prog_to_mu->private_memory_[0]->memory_size_);
 
-      auto prog_new = new RegisterMachine(*prog_to_mu, params_, state_, GetParam<int>("n_memories"), new_size);
-      // auto prog_new = new RegisterMachine(*prog_to_mu, params_, state_);
-      prog_new->id_ = prog_to_mu->id_;
-      prog_new->gtime_ = prog_to_mu->gtime_;
+//       auto prog_new = new RegisterMachine(*prog_to_mu, params_, state_, GetParam<int>("n_memories"), new_size);
+//       // auto prog_new = new RegisterMachine(*prog_to_mu, params_, state_);
+//       prog_new->id_ = prog_to_mu->id_;
+//       prog_new->gtime_ = prog_to_mu->gtime_;
 
-      // prog_new->MutateMemorySize(params_, state_, rngs_[TPG_SEED]);
-      delete prog_to_mu;
-      prog_to_mu = prog_new;
-   }
-}
+//       // prog_new->MutateMemorySize(params_, state_, rngs_[TPG_SEED]);
+//       delete prog_to_mu;
+//       prog_to_mu = prog_new;
+//    }
+// }
 
 /******************************************************************************/
 void TPG::ProgramMutator_Instructions(RegisterMachine *prog_to_mu) {
@@ -2617,7 +2617,7 @@ void TPG::CleanupProgramsWithNoRefs(deque<RegisterMachine *> &programsWithNoRefs
       }
       removeProgram(prog, updateLidsImmediately);
       if (!updateLidsImmediately) deletedIds.push_back(prog->id_);
-      // cerr << "dbg deleting " << prog->id_  << " rank " << GetState("world_rank") << endl;
+      // cerr << "dbg 01 deleting " << prog->id_  << " addr " << prog << endl;
       delete prog;
       programsWithNoRefs.pop_front();
    }

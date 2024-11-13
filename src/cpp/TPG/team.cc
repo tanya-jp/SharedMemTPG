@@ -194,7 +194,7 @@ void team::GetAllNodes(
    visitedTeams.insert(teamMap[id_]);
    for (auto prog : members_) {
       RegisterMachines.insert(prog);
-      for (auto m : prog->privateMemory_) {
+      for (auto m : prog->private_memory_) {
          memories.insert(m);
       }
       if (prog->action_ >= 0 &&

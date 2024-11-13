@@ -107,8 +107,8 @@ double linearM::run(state *obs, int timeStep, int graphDepth, mt19937 &rng) {
   // reset memory
   if (!stateful_) CopySharedConstToWorking();
 
-  privateMemory_[memoryEigen::kScalarType_]->working_memory_[0].setZero();
-  privateMemory_[memoryEigen::kScalarType_]->working_memory_[1].setZero();
+  private_memory_[memoryEigen::kScalarType_]->working_memory_[0].setZero();
+  private_memory_[memoryEigen::kScalarType_]->working_memory_[1].setZero();
 
   for (auto istr : instructions_effective_) {
     // read inputs
@@ -151,15 +151,15 @@ double linearM::run(state *obs, int timeStep, int graphDepth, mt19937 &rng) {
   }
   // if (dbg) {
   //   dbg_file << "id: " << id_ << " outs ";
-  //   dbg_file << privateMemory_[memoryEigen::kScalarType_]
+  //   dbg_file << private_memory_[memoryEigen::kScalarType_]
   //               ->working_memory_[0](0, 0);
   //   dbg_file << " ";
-  //   dbg_file << privateMemory_[memoryEigen::kScalarType_]
+  //   dbg_file << private_memory_[memoryEigen::kScalarType_]
   //               ->working_memory_[1](0, 0);
   //   dbg_file << endl;
   // }
   // dbg_file.close();
-  return privateMemory_[memoryEigen::kScalarType_]->working_memory_[0](0, 0);
+  return private_memory_[memoryEigen::kScalarType_]->working_memory_[0](0, 0);
 }
 
 // /******************************************************************************
@@ -195,7 +195,7 @@ double linearM::run(state *obs, int timeStep, int graphDepth, mt19937 &rng) {
 //       instructions_effective_.insert(instructions_effective_.begin(), *riter);
 //       op_counts_[(*riter)->op_]++;
 //       // output TODO(spkelly) this is always true now
-//       (*riter)->out_ = privateMemory_[(*riter)->outType()];
+//       (*riter)->out_ = private_memory_[(*riter)->outType()];
 //       // inputs
 //       for (int in = 0; in < 2; in++) {
 //         // if this input is actually used for this op
@@ -222,7 +222,7 @@ double linearM::run(state *obs, int timeStep, int graphDepth, mt19937 &rng) {
 //             }
 //           } else {  // this input is a memory ref
 //             (*riter)->inMem(in,
-//             privateMemory_[(*riter)->inType(in)]);
+//             private_memory_[(*riter)->inType(in)]);
 //             Reff[(*riter)->inType(in)][(*riter)->inIdx(in)] = true;
 //           }
 //         }

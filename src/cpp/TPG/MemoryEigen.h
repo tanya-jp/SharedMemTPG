@@ -1,11 +1,11 @@
 #ifndef MemoryEigen_h
 #define MemoryEigen_h
 
+#include <Eigen/Dense>
 #include <deque>
 #include <random>
-#include <string>
 #include <sstream>
-#include <Eigen/Dense>
+#include <string>
 
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> MatrixDynamic;
 
@@ -37,7 +37,7 @@ class MemoryEigen {
    // Always same size as working memory
    std::vector<MatrixDynamic> const_memory_;
 
-   // Store latest read time of each memory index  
+   // Store latest read time of each memory index
    std::vector<double> read_time_;
 
    // Store latest write time of each memory index
@@ -49,8 +49,31 @@ class MemoryEigen {
          type_(type),
          n_memories_(n_indices),
          memory_size_(memory_size) {
-      memory_size_ = memory_size;
       ResizeMemory();
+      ClearWorking();
+      RandomizeConst();
+      ClearReadTime();
+      ClearWriteTime();
+   }
+
+   // Copy constructor
+   MemoryEigen(MemoryEigen &m) {
+      id_ = m.id_;
+      type_ = m.type_;
+      n_memories_ = m.n_memories_;
+      memory_size_ = m.memory_size_;
+      ResizeMemory();
+      ClearWorking();
+      ClearReadTime();
+      ClearWriteTime();
+      for (size_t i = 0; i < const_memory_.size(); i++) {
+         const_memory_[i] = m.const_memory_[i];
+      }
+   }
+
+   // Copy assignment operator
+   MemoryEigen& operator=(MemoryEigen &m) {
+      return *this;
    }
 
    // Construct MemoryEigen from strings split into outcome_fields vector
@@ -62,12 +85,15 @@ class MemoryEigen {
       memory_size_ = std::atoi(outcome_fields[i++].c_str());
 
       size_t expected_size;
-      if (type_ == 0) expected_size = 5 + 8;
-      else if (type_ == 1) expected_size = 5 + (8 * memory_size_);
-      else expected_size = 5 + (8 * (memory_size_ * memory_size_));
+      if (type_ == 0)
+         expected_size = 5 + 8;
+      else if (type_ == 1)
+         expected_size = 5 + (8 * memory_size_);
+      else
+         expected_size = 5 + (8 * (memory_size_ * memory_size_));
       if (outcome_fields.size() != expected_size) {
-         cerr << "dbg memory_size_ " << memory_size_ << " sz " <<
-         outcome_fields.size() << " ex " << expected_size << endl;
+         cerr << "dbg memory_size_ " << memory_size_ << " sz "
+              << outcome_fields.size() << " ex " << expected_size << endl;
          cerr << "str " << vecToStr(outcome_fields) << endl;
          die(__FILE__, __FUNCTION__, __LINE__, "Bad memory size.");
       }
@@ -78,7 +104,6 @@ class MemoryEigen {
             const_memory_[idx](0, 0) = std::stod(outcome_fields[i++].c_str());
          } else if (type_ == MemoryEigen::kVectorType_) {
             for (size_t r = 0; r < memory_size_; r++) {
-               // cerr << "dbg sz (" << const_memory_[idx].rows() << "," << const_memory_[idx].cols() << ")" << endl;
                const_memory_[idx](r, 0) =
                    std::stod(outcome_fields[i++].c_str());
             }
@@ -144,24 +169,12 @@ class MemoryEigen {
       }
       read_time_.resize(n_memories_);
       write_time_.resize(n_memories_);
-
-      ClearWorking();
-      RandomizeConst();
-      ClearReadTime();
-      ClearWriteTime();
    }
 
    std::string ToString() {
       std::ostringstream oss;
-      const static Eigen::IOFormat CPFormat(Eigen::FullPrecision,
-                                            Eigen::DontAlignCols, ":", ":");
       oss << "MemoryEigen:" << id_ << ":" << type_ << ":" << n_memories_ << ":"
           << memory_size_;
-      // TODO(skelly): this way of printing bugs out with memory resizing    
-      // for (auto m : const_memory_) {
-      //    cerr << "dbg m sz (" << m.rows() << "," << m.cols() << ")" << endl;
-      //    oss << ":" << m.format(CPFormat);
-      // }
       if (type_ == kScalarType_) {
          for (auto m : const_memory_) {
             oss << ":" << m(0, 0);

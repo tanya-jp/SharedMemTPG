@@ -7,7 +7,7 @@
 
 class RegisterMachine {
   public:
-  bool from_string_;
+   bool from_string_;        // TODO(skelly):remove
    bool use_evolved_const_;  // Fixed parameter: whether to use constants
    bool stateful_;           // Fixed parameter: whether memories maintain state
 
@@ -20,7 +20,7 @@ class RegisterMachine {
    vector<int> op_counts_;  // Count op each op in instructions_effective_
 
    // Vector storing 1 MemoryEigen* of each type (SCALAR, VECTOR, MATRIX)
-   vector<MemoryEigen *> privateMemory_;
+   vector<MemoryEigen *> private_memory_;
 
    // Vector storing id of each private memory (required for ToString)
    vector<long> private_memory_ids_;
@@ -40,15 +40,16 @@ class RegisterMachine {
                    std::unordered_map<std::string, int> &state, mt19937 &rng,
                    std::vector<bool> &legalOps);
 
-   // Create RegisterMachine from another RegisterMachine
+   // Copy contructor
+   RegisterMachine(RegisterMachine &rm);
+
+   // Copy assignment operator
+   RegisterMachine &operator=(RegisterMachine &rm);
+
+    // Clone RegisterMachine with new id
    RegisterMachine(RegisterMachine &plr,
                    std::unordered_map<std::string, std::any> &params,
                    std::unordered_map<std::string, int> &state);
-
-   RegisterMachine(RegisterMachine &plr,
-                   std::unordered_map<std::string, std::any> &params,
-                   std::unordered_map<std::string, int> &state, 
-                   int n_memories, int memory_size);                
 
    // Create RegisterMachine from checkpoint string
    RegisterMachine(std::vector<std::string> outcomeFields,
@@ -64,12 +65,12 @@ class RegisterMachine {
    }
 
    inline void ClearWorkingMemory() {
-      for (auto memory : privateMemory_) memory->ClearWorking();
+      for (auto memory : private_memory_) memory->ClearWorking();
       for (auto memory : observation_memory_buff_) memory->ClearWorking();
    }
 
    inline void CopyPrivateConstToWorkingMemory() {
-      for (auto m : privateMemory_) {
+      for (auto m : private_memory_) {
          m->CopyConstToWorking();
       }
    }
@@ -101,16 +102,15 @@ class RegisterMachine {
                      std::unordered_map<std::string, int> &state,
                      int new_memory_size);
 
-   // void SetupMemory(std::unordered_map<std::string, std::any> &params,
-   //                  std::unordered_map<std::string, int> &state);
-   void SetupMemory(std::unordered_map<std::string, int> &state, int n_memories, int memory_size);
+   void SetupMemory(std::unordered_map<std::string, int> &state, int n_memories,
+                    int memory_size);
 
    // Copy constants from prog to this register machine
    void CopyEvolvedConstants(RegisterMachine &prog) {
-      for (size_t m = 0; m < privateMemory_.size(); m++) {
-         for (size_t i = 0; i < privateMemory_[m]->n_memories_; i++) {
-            privateMemory_[m]->const_memory_[i] =
-                prog.privateMemory_[m]->const_memory_[i];
+      for (size_t m = 0; m < private_memory_.size(); m++) {
+         for (size_t i = 0; i < private_memory_[m]->n_memories_; i++) {
+            private_memory_[m]->const_memory_[i] =
+                prog.private_memory_[m]->const_memory_[i];
          }
       }
    }

@@ -15,18 +15,18 @@ int WrapDiscreteAction(EvalData &eval) {
 }
 
 double WrapContinuousAction(EvalData &eval) {
-    return eval.program_out->privateMemory_[MemoryEigen::kScalarType_]
+    return eval.program_out->private_memory_[MemoryEigen::kScalarType_]
         ->working_memory_[1](0, 0);
 }
 
 double WrapContinuousActionSigmoid(EvalData &eval) {
-    double p = eval.program_out->privateMemory_[MemoryEigen::kScalarType_]
+    double p = eval.program_out->private_memory_[MemoryEigen::kScalarType_]
                    ->working_memory_[1](0, 0);
     return 1 / (1 + exp(-p));
 }
 
 vector<double> WrapVectorActionSigmoid(EvalData &eval) {
-    auto mat = eval.program_out->privateMemory_[MemoryEigen::kVectorType_]
+    auto mat = eval.program_out->private_memory_[MemoryEigen::kVectorType_]
                    ->working_memory_[1];
     vector<double> vec(mat.data(), mat.data() + mat.rows() * mat.cols());
     for (auto &v : vec) v = sigmoid(v);  // TODO(skelly): better/faster way?
@@ -34,7 +34,7 @@ vector<double> WrapVectorActionSigmoid(EvalData &eval) {
 }
 
 vector<double> WrapVectorActionTanh(EvalData &eval) {
-    auto mat = eval.program_out->privateMemory_[MemoryEigen::kVectorType_]
+    auto mat = eval.program_out->private_memory_[MemoryEigen::kVectorType_]
                    ->working_memory_[1];
     vector<double> vec(mat.data(), mat.data() + mat.rows() * mat.cols());
     for (auto &v : vec) v = std::tanh(v);  // TODO(skelly): better/faster way?

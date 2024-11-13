@@ -93,7 +93,7 @@ class instruction {
    mt19937 rng_;
 
    // Mutable instruction parameters
-
+   // TODO(skelly) synch variable naming with index naming in1_ -> in0_, etc
    // Whether in1 is a memory or input reference
    // 0: memory ref
    // 1: observation ref
@@ -241,8 +241,6 @@ class instruction {
       if (IsObs(in)) {
          // TODO (skelly): should this also be range limited to memory_size?
          *scalar = obs->stateValueAtIndex(*index % obs->dim_);
-         // TODO(skelly): debugging output
-         // cerr << "scalar_in idx "  << " val " << *scalar << endl;
       } else {
          MemoryEigen* input_memory = in == 0 ? in1_ : in2_;
          *scalar =
@@ -503,15 +501,6 @@ class instruction {
    }
 
    inline void ExecuteVectorProductOp(bool dbg) {
-      // cerr << "outIdxE_ " << outIdxE_ << " in0IdxE_ " << in0IdxE_ << "
-      // in1IdxE_ " << in1IdxE_; cerr << " " <<
-      // out_->working_memory_[outIdxE_].rows() << "," <<
-      // out_->working_memory_[outIdxE_].cols(); cerr << " " <<
-      // in1_->working_memory_[in0IdxE_].rows() << "," <<
-      // in1_->working_memory_[in0IdxE_].cols(); cerr << " " <<
-      // in2_->working_memory_[in1IdxE_].rows() << "," <<
-      // in2_->working_memory_[in1IdxE_].cols() << endl;
-
       out_->working_memory_[outIdxE_] =
           in1_->working_memory_[in0IdxE_].array() *
           in2_->working_memory_[in1IdxE_].array();
@@ -528,6 +517,10 @@ class instruction {
    }
 
    inline void ExecuteVectorInnerProductOp(bool dbg) {
+      // cerr << "dbg (" << out_->working_memory_[outIdxE_].rows() << "," << out_->working_memory_[outIdxE_].cols() << ") ";
+      // cerr << "dbg (" << in1_->working_memory_[in0IdxE_].rows() << "," << in1_->working_memory_[in0IdxE_].cols() << ") ";
+      // cerr << "dbg (" << in2_->working_memory_[in1IdxE_].rows() << "," << in2_->working_memory_[in1IdxE_].cols() << ") " << endl;
+
       out_->working_memory_[outIdxE_](0, 0) =
           in1_->working_memory_[in0IdxE_].col(0).dot(
               in2_->working_memory_[in1IdxE_].col(0));
