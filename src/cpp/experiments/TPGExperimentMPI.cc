@@ -33,6 +33,7 @@ int main(int argc, char **argv) {
    mpi::communicator world;
    TPG tpg;
    tpg.params_["id"] = -1;  // remove later
+   tpg.state_["world_rank"] = world.rank();
    tpg.SetParams(argc, argv);
 
    APIClient *apiClient = nullptr;

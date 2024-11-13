@@ -4,8 +4,8 @@
 TPG::TPG() {
    instruction::SetupOps();
    real_dist_ = uniform_real_distribution<>(0.0, 1.0);
-   _Memids.resize(memoryEigen::NUM_MEMORY_TYPES);
-   _Memory.resize(memoryEigen::NUM_MEMORY_TYPES);
+   _Memids.resize(MemoryEigen::kNumMemoryType_);
+   _Memory.resize(MemoryEigen::kNumMemoryType_);
    for (size_t i = 0; i < _NUM_PHASE; i++) _numEliteTeamsCurrent.push_back(0);
    _ops.resize(instruction::NUM_OP);
    fill(_ops.begin(), _ops.end(), false);
@@ -17,13 +17,13 @@ TPG::TPG() {
 TPG::~TPG() {}
 
 /******************************************************************************/
-void TPG::AddProgram(program *p) {
+void TPG::AddProgram(RegisterMachine *p) {
    _L[p->id_] = p;
    _Lids.push_back(p->id_);
 }
 
 /******************************************************************************/
-void TPG::removeProgram(program *p, bool updateLids) {
+void TPG::removeProgram(RegisterMachine *p, bool updateLids) {
    if (updateLids) {
       auto it = find(_Lids.begin(), _Lids.end(), p->id_);
       if (it == _Lids.end())
@@ -44,7 +44,7 @@ void TPG::AddTeam(team *tm) {
 }
 
 /******************************************************************************/
-void TPG::RemoveTeam(team *tm, deque<program *> &p) {
+void TPG::RemoveTeam(team *tm, deque<RegisterMachine *> &p) {
    // decrement program refs
    for (auto prog : tm->members_) {
       prog->nrefs_--;
@@ -59,20 +59,9 @@ void TPG::RemoveTeam(team *tm, deque<program *> &p) {
 }
 
 /******************************************************************************/
-void TPG::AddMemory(memoryEigen *m) {
+void TPG::AddMemory(MemoryEigen *m) {
    _Memory[m->type_][m->id_] = m;
    _Memids[m->type_].push_back(m->id_);
-}
-
-/******************************************************************************/
-void TPG::removeMemory(memoryEigen *m) {
-   auto it = find(_Memids[m->type_].begin(), _Memids[m->type_].end(), m->id_);
-   if (it == _Memids[m->type_].end())
-      die(__FILE__, __FUNCTION__, __LINE__, "failed to remove memoryEigen");
-   swap(_Memids[m->type_][it - _Memids[m->type_].begin()],
-        _Memids[m->type_].back());
-   _Memids[m->type_].pop_back();
-   _Memory[m->type_].erase(m->id_);
 }
 
 /******************************************************************************/
@@ -100,7 +89,7 @@ void TPG::InitExperimentTracking(APIClient *apiClient) {
 
 /******************************************************************************/
 void TPG::clearMemory() {
-   for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+   for (size_t mem_t = 0; mem_t < MemoryEigen::kNumMemoryType_; mem_t++) {
       for (auto meiter = _Memory[mem_t].begin(); meiter != _Memory[mem_t].end();
            meiter++) {
          meiter->second->ClearWorking();
@@ -111,7 +100,7 @@ void TPG::clearMemory() {
 }
 
 /******************************************************************************/
-program *TPG::getAction(team *tm, state *s, bool updateActive,
+RegisterMachine *TPG::getAction(team *tm, state *s, bool updateActive,
                         set<team *, teamIdComp> &visitedTeams,
                         long &decisionInstructions, int timeStep,
                         vector<team *> &teamPath, mt19937 &rng, bool verbose) {
@@ -123,12 +112,12 @@ program *TPG::getAction(team *tm, state *s, bool updateActive,
 }
 
 /******************************************************************************/
-program *TPG::getAction(
+RegisterMachine *TPG::getAction(
     team *tm, state *s, bool updateActive,
     set<team *, teamIdComp> &visitedTeams, long &decisionInstructions,
-    int timeStep, vector<program *> &allPrograms,
-    vector<program *> &winningPrograms, vector<set<long>> &decisionFeatures,
-    // vector<set<memoryEigen *, memoryEigenIdComp>> &decisionMemories,
+    int timeStep, vector<RegisterMachine *> &allPrograms,
+    vector<RegisterMachine *> &winningPrograms, vector<set<long>> &decisionFeatures,
+    // vector<set<MemoryEigen *, MemoryEigenIdComp>> &decisionMemories,
     vector<team *> &teamPath, mt19937 &rng, bool verbose) {
    allPrograms.clear();
    winningPrograms.clear();
@@ -144,7 +133,7 @@ program *TPG::getAction(
 
 /******************************************************************************/
 void TPG::GetAllNodes(team *tm, set<team *, teamIdComp> &teams,
-                      set<program *, programIdComp> &programs) {
+                      set<RegisterMachine *, RegisterMachineIdComp> &programs) {
    teams.clear();
    programs.clear();
    tm->GetAllNodes(_teamMap, teams, programs);
@@ -152,8 +141,8 @@ void TPG::GetAllNodes(team *tm, set<team *, teamIdComp> &teams,
 
 // /******************************************************************************/
 // void TPG::GetAllNodes(team *tm, set<team *, teamIdComp> &teams,
-//                       set<program *, programIdComp> &programs,
-//                       set<memoryEigen *, memoryEigenIdComp> &memories) {
+//                       set<RegisterMachine *, RegisterMachineIdComp> &programs,
+//                       set<MemoryEigen *, MemoryEigenIdComp> &memories) {
 //   teams.clear();
 //   programs.clear();
 //   memories.clear();
@@ -448,7 +437,7 @@ void TPG::finalize() {
    _teamMap.clear();
    _Lids.clear();
    _Memids.clear();
-   _Memids.resize(memoryEigen::NUM_MEMORY_TYPES);
+   _Memids.resize(MemoryEigen::kNumMemoryType_);
    state_["memory_count"] = 0;
    _numEliteTeamsCurrent.clear();
    for (size_t i = 0; i < _NUM_PHASE; i++) _numEliteTeamsCurrent.push_back(0);
@@ -460,26 +449,26 @@ void TPG::finalize() {
    state_["memory_count"] = 0;
    task_set_map_.clear();
 
-   _teamPairsToCompair.clear();
-
    for (auto teiter = _M.begin(); teiter != _M.end(); teiter++) {
       (*teiter)->resetOutcomes(-1);
       delete *teiter;
    }
    _M.clear();
 
-   for (auto leiter = _L.begin(); leiter != _L.end(); leiter++)
+   for (auto leiter = _L.begin(); leiter != _L.end(); leiter++) {
+      // cerr << "dbg deleting " << leiter->second->id_ << " world_rank " << GetState("world_rank") << endl;
       delete leiter->second;
+   }
    _L.clear();
 
-   // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+   // for (size_t mem_t = 0; mem_t < MemoryEigen::kNumMemoryType_; mem_t++) {
    //     for (auto meiter = _Memory[mem_t].begin();
    //          meiter != _Memory[mem_t].end(); meiter++)
    //         delete meiter->second;
    //     _Memory[mem_t].clear();
    // }
    _Memory.clear();
-   _Memory.resize(memoryEigen::NUM_MEMORY_TYPES);
+   _Memory.resize(MemoryEigen::kNumMemoryType_);
 
    _phyloGraph.clear();
 }
@@ -507,7 +496,7 @@ void TPG::TeamMutator_AddPrograms(team *team_to_mu) {
       uniform_int_distribution<int> dis_team_size(0, team_to_mu->size() - 1);
       int rand_p = dis_programs(rngs_[TPG_SEED]);
       int rand_ts = dis_team_size(rngs_[TPG_SEED]);
-      program *p = _L[_Lids[rand_p]];
+      RegisterMachine *p = _L[_Lids[rand_p]];
       team_to_mu->AddProgram(p, rand_ts);
    }
 }
@@ -528,24 +517,46 @@ team *TPG::CloneTeam(team *team_to_clone) {
 }
 
 /******************************************************************************/
-program *TPG::CloneProgram(program *prog) {
-   program *prog_clone = new RegisterMachine(
+RegisterMachine *TPG::CloneProgram(RegisterMachine *prog) {
+   RegisterMachine *prog_clone = new RegisterMachine(
        *(dynamic_cast<RegisterMachine *>(prog)), params_, state_);
-   if (prog_clone->action() >= 0)
-      _teamMap[prog_clone->action()]->AddIncomingProgram(prog_clone->id_);
+   if (prog_clone->action_ >= 0)
+      _teamMap[prog_clone->action_]->AddIncomingProgram(prog_clone->id_);
    return prog_clone;
 }
 
 /******************************************************************************/
-void TPG::ProgramMutator_Instructions(program *prog_to_mu) {
-   prog_to_mu->Mutate(params_, rngs_[TPG_SEED], _ops);
+void TPG::ProgramMutator_Memory(RegisterMachine *&prog_to_mu) {
+   if (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("p_memory_size")) {
+      std::uniform_int_distribution<> dis(
+          GetParam<int>("min_memory_size"),
+          GetParam<int>("max_memory_size"));
+      size_t new_size;
+      do {
+         new_size = dis(rngs_[TPG_SEED]);
+      } while (new_size == prog_to_mu->privateMemory_[0]->memory_size_);
+
+      auto prog_new = new RegisterMachine(*prog_to_mu, params_, state_, GetParam<int>("n_memories"), new_size);
+      // auto prog_new = new RegisterMachine(*prog_to_mu, params_, state_);
+      prog_new->id_ = prog_to_mu->id_;
+      prog_new->gtime_ = prog_to_mu->gtime_;
+
+      // prog_new->MutateMemorySize(params_, state_, rngs_[TPG_SEED]);
+      delete prog_to_mu;
+      prog_to_mu = prog_new;
+   }
 }
 
 /******************************************************************************/
-void TPG::MutateActionToTerminal(program *prog_to_mu, team *new_team) {
+void TPG::ProgramMutator_Instructions(RegisterMachine *prog_to_mu) {
+   prog_to_mu->Mutate(params_, state_, rngs_[TPG_SEED], _ops);
+}
+
+/******************************************************************************/
+void TPG::MutateActionToTerminal(RegisterMachine *prog_to_mu, team *new_team) {
    // If program is already terminal (action < 0) and there are no discrete
    // actions there is nothing to change
-   if (prog_to_mu->action() < 0 && GetParam<int>("n_discrete_action") == 0) {
+   if (prog_to_mu->action_ < 0 && GetParam<int>("n_discrete_action") == 0) {
       return;
    } else if (GetParam<int>("n_discrete_action") > 1) {
       uniform_int_distribution<int> dis(0,
@@ -554,17 +565,17 @@ void TPG::MutateActionToTerminal(program *prog_to_mu, team *new_team) {
       do {
          // Discrete actions are negatives: -1 down to -n_discrete_action
          new_discrete_action = -1 - dis(rngs_[TPG_SEED]);
-      } while (prog_to_mu->action() == new_discrete_action);
+      } while (prog_to_mu->action_ == new_discrete_action);
       // If changing from team pointer to atomic, update pointee's incoming
-      if (prog_to_mu->action() >= 0) {
-         _teamMap[prog_to_mu->action()]->removeIncomingProgram(prog_to_mu->id_);
+      if (prog_to_mu->action_ >= 0) {
+         _teamMap[prog_to_mu->action_]->removeIncomingProgram(prog_to_mu->id_);
       }
-      prog_to_mu->muAction(new_discrete_action);
+      prog_to_mu->action_ = new_discrete_action;
    }
 }
 
 /******************************************************************************/
-void TPG::MutateActionToTeam(program *prog_to_mu, team *new_team,
+void TPG::MutateActionToTeam(RegisterMachine *prog_to_mu, team *new_team,
                              int &n_new_teams) {
    // All programs remain terminal in the first generation
    if (GetState("t_current") == 1) {
@@ -579,16 +590,16 @@ void TPG::MutateActionToTeam(program *prog_to_mu, team *new_team,
          tm = it->second;
       } while (tries++ < 20 &&
                (tm->gtime_ == GetState("t_current") || tm->clones_ > 0 ||
-                prog_to_mu->action() == tm->id_));
-      if (prog_to_mu->action() >= 0)
-         _teamMap[prog_to_mu->action()]->removeIncomingProgram(prog_to_mu->id_);
+                prog_to_mu->action_ == tm->id_));
+      if (prog_to_mu->action_ >= 0)
+         _teamMap[prog_to_mu->action_]->removeIncomingProgram(prog_to_mu->id_);
       if (!tm->root()) {  // Already subsumed, don't clone
-         prog_to_mu->muAction(tm->id_);
+         prog_to_mu->action_ = tm->id_;
          tm->AddIncomingProgram(prog_to_mu->id_);
       } else {  // clone when subsumed
          team *sub = new team(GetState("t_current"), state_["team_count"]++);
          tm->clone(_phyloGraph, &sub);
-         prog_to_mu->muAction(sub->id_);
+         prog_to_mu->action_ = sub->id_;
          sub->AddIncomingProgram(prog_to_mu->id_);
          // TODO(skelly): put in PhyloGraph functions
          _phyloGraph[tm->id_].adj.push_back(sub->id_);
@@ -602,12 +613,14 @@ void TPG::MutateActionToTeam(program *prog_to_mu, team *new_team,
 }
 
 /******************************************************************************/
-void TPG::ProgramMutator_ActionPointer(program *prog_to_mu, team *new_team,
+void TPG::ProgramMutator_ActionPointer(RegisterMachine *prog_to_mu, team *new_team,
                                        int &n_new_teams) {
-   if (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("p_atomic")) {
-      MutateActionToTerminal(prog_to_mu, new_team);
-   } else {
-      MutateActionToTeam(prog_to_mu, new_team, n_new_teams);
+   if (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmn")) {
+      if (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("p_atomic")) {
+         MutateActionToTerminal(prog_to_mu, new_team);
+      } else {
+         MutateActionToTeam(prog_to_mu, new_team, n_new_teams);
+      }
    }
 }
 
@@ -630,18 +643,18 @@ team *TPG::TeamXover(vector<team *> &parents) {
    uniform_int_distribution<int> disP(0, parents.size() - 1);
    // parent teams
    team *pm1 = parents[disP(rngs_[TPG_SEED])];
-   std::list<program *> p1programs = pm1->members_;
+   std::list<RegisterMachine *> p1programs = pm1->members_;
    auto p1liter = p1programs.begin();
 
    team *pm2 = parents[disP(rngs_[TPG_SEED])];
-   std::list<program *> p2programs = pm2->members_;
+   std::list<RegisterMachine *> p2programs = pm2->members_;
    auto p2liter = p2programs.begin();
 
    team *child_team = new team(GetState("t_current"), state_["team_count"]++);
 
    while (p1liter != p1programs.end() || p2liter != p2programs.end()) {
       if (p1liter != p1programs.end()) {
-         if ((*p1liter)->action() < 0 && child_team->n_atomic_ < 1) {
+         if ((*p1liter)->action_ < 0 && child_team->n_atomic_ < 1) {
             child_team->AddProgram(*p1liter);
          } else if ((int)child_team->size() < GetParam<int>("max_team_size") &&
                     real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmx_p")) {
@@ -649,7 +662,7 @@ team *TPG::TeamXover(vector<team *> &parents) {
          }
       }
       if (p2liter != p2programs.end()) {
-         if ((*p2liter)->action() < 0 && child_team->n_atomic_ < 1) {
+         if ((*p2liter)->action_ < 0 && child_team->n_atomic_ < 1) {
             child_team->AddProgram(*p2liter);
          } else if ((int)child_team->size() < GetParam<int>("max_team_size") &&
                     real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmx_p")) {
@@ -707,7 +720,7 @@ void TPG::GenerateNewTeams() {
    oss << "genTms t " << GetState("t_current") << " Msz " << _M.size()
        << " Lsz " << _L.size() << " rSz " << _Mroot.size() << " rSzIn "
        << root_size_in << " mSz";
-   for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+   for (size_t mem_t = 0; mem_t < MemoryEigen::kNumMemoryType_; mem_t++) {
       oss << " " << _Memory[mem_t].size();
    }
    oss << _Memory.size() << " eLSz "
@@ -723,17 +736,30 @@ void TPG::ApplyVariationOps(team *team_to_modify, int &n_new_teams) {
    TeamMutator_AddPrograms(team_to_modify);
    TeamMutator_ProgramOrder(team_to_modify);
    // Mutate programs
-   set<program *, programIdComp> new_team_programs =
-       team_to_modify->CopyMembers();
-   for (auto prog : new_team_programs) {
-      // Probably modify one program
-      if (real_dist_(rngs_[TPG_SEED]) < 1.0 / new_team_programs.size()) {
-         team_to_modify->RemoveProgram(prog);
-         program *prog_clone = CloneProgram(prog);
-         ProgramMutator_Instructions(prog_clone);
-         ProgramMutator_ActionPointer(prog_clone, team_to_modify, n_new_teams);
-         team_to_modify->AddProgram(prog_clone);
-         AddProgram(prog_clone);  // Add new program to program pop
+   // Clone before modifying ?
+   if (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("p_clone_program")) {
+      set<RegisterMachine *, RegisterMachineIdComp> new_team_programs =
+          team_to_modify->CopyMembers();
+      for (auto prog : new_team_programs) {
+         if (real_dist_(rngs_[TPG_SEED]) < 1.0 / new_team_programs.size()) {
+            // TODO(skelly): add/remove changes order and thus behaviour?
+            team_to_modify->RemoveProgram(prog);
+            RegisterMachine *prog_clone = CloneProgram(prog);
+            // ProgramMutator_Memory(prog_clone);
+            ProgramMutator_Instructions(prog_clone);
+            ProgramMutator_ActionPointer(prog_clone, team_to_modify,
+                                         n_new_teams);
+            team_to_modify->AddProgram(prog_clone);
+            AddProgram(prog_clone);
+         }
+      }
+   } else {  // Modify without cloning
+      for (auto prog : team_to_modify->members_) {
+         if (real_dist_(rngs_[TPG_SEED]) < 1.0 / team_to_modify->size()) {
+            // ProgramMutator_Memory(prog);
+            ProgramMutator_Instructions(prog);
+            ProgramMutator_ActionPointer(prog, team_to_modify, n_new_teams);
+         }
       }
    }
 }
@@ -1224,7 +1250,7 @@ void TPG::InitTeams() {
    }
    oss << "InitTms Msz " << _M.size() << " Lsz " << _L.size() << " rSz "
        << _Mroot.size() << " mSz";
-   for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+   for (size_t mem_t = 0; mem_t < MemoryEigen::kNumMemoryType_; mem_t++) {
       oss << " " << _Memory[mem_t].size();
    }
    oss << " eLSz " << _numEliteTeamsCurrent[GetState("phase")] << endl;
@@ -1299,9 +1325,9 @@ void TPG::policyFeatures(int hostId, set<long> &features, bool active) {
 // // Print graph defined by <rootTeam> in DOT format for GraphViz
 // void TPG::printGraphDot(
 //     team *rootTeam, size_t frame, int episode, int step, size_t depth,
-//     vector<program *> allPrograms, vector<program *> winningPrograms,
+//     vector<RegisterMachine *> allPrograms, vector<RegisterMachine *> winningPrograms,
 //     vector<set<long>> decisionFeatures,
-//     vector<set<memoryEigen *, memoryEigenIdComp>> decisionMemories,
+//     vector<set<MemoryEigen *, MemoryEigenIdComp>> decisionMemories,
 //     vector<team *> teamPath, bool drawPath,
 //     set<team *, teamIdComp> visitedTeamsAllTasks) {
 //   // unused arguments
@@ -1313,7 +1339,7 @@ void TPG::policyFeatures(int hostId, set<long> &features, bool active) {
 //   // vector<program*> winningProgramsDepth(winningPrograms.begin(),
 //   // winningPrograms.begin()+depth);
 
-//   vector<program *> winningProgramsDepth(winningPrograms.begin(),
+//   vector<RegisterMachine *> winningProgramsDepth(winningPrograms.begin(),
 //                                          winningPrograms.end());
 
 //   double nodeWidth = 2.0;
@@ -1326,18 +1352,18 @@ void TPG::policyFeatures(int hostId, set<long> &features, bool active) {
 //   ofstream ofs;
 
 //   set<team *, teamIdComp> teams;
-//   set<program *, programIdComp> programs;
-//   set<memoryEigen *, memoryEigenIdComp> memories;
+//   set<RegisterMachine *, RegisterMachineIdComp> programs;
+//   set<MemoryEigen *, MemoryEigenIdComp> memories;
 
 //   //(void)visitedTeamsAllTasks;
 //   for (auto it = visitedTeamsAllTasks.begin(); it !=
 //   visitedTeamsAllTasks.end();
 //        it++) {
-//     set<program *, programIdComp> p = (*it)->CopyMembers();
+//     set<RegisterMachine *, RegisterMachineIdComp> p = (*it)->CopyMembers();
 //     programs.insert(p.begin(), p.end());
 //   }
 //   for (auto it = programs.begin(); it != programs.end(); it++) {
-//     for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+//     for (size_t mem_t = 0; mem_t < MemoryEigen::kNumMemoryType_; mem_t++) {
 //       memories.insert((*it)->MemGet(mem_t));
 //     }
 //   }
@@ -1353,8 +1379,8 @@ void TPG::policyFeatures(int hostId, set<long> &features, bool active) {
 
 //   ////atomic actions
 //   // for(auto leiter = programs.begin(); leiter != programs.end(); leiter++)
-//   //    if ((*leiter)->action() < 0)
-//   //       ofs << " a_" << ((*leiter)->action()*-1)-1 << "_" <<
+//   //    if ((*leiter)->action_ < 0)
+//   //       ofs << " a_" << ((*leiter)->action_*-1)-1 << "_" <<
 //   (*leiter)->id_
 //   //       << " [shape=point, label=\"\", regular=1, width=0.1]" << endl;
 
@@ -1411,7 +1437,7 @@ void TPG::policyFeatures(int hostId, set<long> &features, bool active) {
 //              "fontsize=84, regular=1, width="
 //           << nodeWidth * 2 << "]" << endl;
 
-//   ////memoryEigen registers
+//   ////MemoryEigen registers
 //   // for(auto meiter = memories.begin(); meiter != memories.end(); meiter++)
 //   //    ofs << " m_" << (*meiter)->id_ << " [shape=invhouse, style=filled,
 //   //    fillcolor=grey, label=\"\", regular=1, width=" << nodeWidth << "]" <<
@@ -1419,9 +1445,9 @@ void TPG::policyFeatures(int hostId, set<long> &features, bool active) {
 
 //   // program -> team edges
 //   for (auto leiter = programs.begin(); leiter != programs.end(); leiter++) {
-//     if ((*leiter)->action() >= 0 &&
+//     if ((*leiter)->action_ >= 0 &&
 //         find(visitedTeamsAllTasks.begin(), visitedTeamsAllTasks.end(),
-//              _teamMap[(*leiter)->action()]) != visitedTeamsAllTasks.end()) {
+//              _teamMap[(*leiter)->action_]) != visitedTeamsAllTasks.end()) {
 //       double w = find(winningProgramsDepth.begin(),
 //       winningProgramsDepth.end(),
 //                       *leiter) == winningProgramsDepth.end() ||
@@ -1441,12 +1467,12 @@ void TPG::policyFeatures(int hostId, set<long> &features, bool active) {
 //               ? "black"
 //               : "green";
 //       ofs << " p_" << (*leiter)->id_ << "->"
-//           << "t_" << (*leiter)->action() << " [arrowsize=" << as
+//           << "t_" << (*leiter)->action_ << " [arrowsize=" << as
 //           << ", penwidth=" << w << " color=" << col.c_str() << "];" << endl;
 //     }
 //   }
 
-//   ////program -> memoryEigen edges
+//   ////program -> MemoryEigen edges
 //   // for(auto leiter = programs.begin(); leiter != programs.end(); leiter++){
 //   //    double w = find(winningProgramsDepth.begin(),
 //   //    winningProgramsDepth.end(), *leiter) == winningProgramsDepth.end() ?
@@ -1465,7 +1491,7 @@ void TPG::policyFeatures(int hostId, set<long> &features, bool active) {
 //   // for(auto teiter = teams.begin(); teiter != teams.end(); teiter++){
 //   for (auto teiter = visitedTeamsAllTasks.begin();
 //        teiter != visitedTeamsAllTasks.end(); teiter++) {
-//     list<program *> mem;
+//     list<RegisterMachine *> mem;
 //     (*teiter)->members(&mem);
 //     for (auto leiter = mem.begin(); leiter != mem.end(); leiter++) {
 //       double w =
@@ -1537,17 +1563,17 @@ void TPG::policyFeatures(int hostId, set<long> &features, bool active) {
 //   ofstream ofs;
 
 //   set<team *, teamIdComp> teams;
-//   set<program *, programIdComp> programs;
-//   set<memoryEigen *, memoryEigenIdComp> memories;
+//   set<RegisterMachine *, RegisterMachineIdComp> programs;
+//   set<MemoryEigen *, MemoryEigenIdComp> memories;
 
 //   for (auto it = visitedTeamsAllTasks.begin(); it !=
 //   visitedTeamsAllTasks.end();
 //        it++) {
-//     set<program *, programIdComp> p = (*it)->CopyMembers();  // no need o
+//     set<RegisterMachine *, RegisterMachineIdComp> p = (*it)->CopyMembers();  // no need o
 //     copy programs.insert(p.begin(), p.end());
 //   }
 //   for (auto it = programs.begin(); it != programs.end(); it++) {
-//     for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+//     for (size_t mem_t = 0; mem_t < MemoryEigen::kNumMemoryType_; mem_t++) {
 //       memories.insert((*it)->MemGet(mem_t));
 //     }
 //   }
@@ -1626,11 +1652,11 @@ void TPG::policyFeatures(int hostId, set<long> &features, bool active) {
 
 //   ////program -> team edges
 //   // for(auto leiter = programs.begin(); leiter != programs.end(); leiter++){
-//   //    if ((*leiter)->action() >= 0 && find(visitedTeamsAllTasks.begin(),
-//   //    visitedTeamsAllTasks.end(), _teamMap[(*leiter)->action()]) !=
+//   //    if ((*leiter)->action_ >= 0 && find(visitedTeamsAllTasks.begin(),
+//   //    visitedTeamsAllTasks.end(), _teamMap[(*leiter)->action_]) !=
 //   //    visitedTeamsAllTasks.end()){
 //   //       ofs << " p_" << (*leiter)->id_ << "->" << "t_"<<
-//   (*leiter)->action()
+//   (*leiter)->action_
 //   //       << " [arrowsize=" << arrowSize_1 << ", penwidth=" << "1" << "
 //   color="
 //   //       << "black" << "];" << endl;
@@ -1640,7 +1666,7 @@ void TPG::policyFeatures(int hostId, set<long> &features, bool active) {
 //   ////team -> program edges
 //   // for(auto teiter = visitedTeamsAllTasks.begin(); teiter !=
 //   // visitedTeamsAllTasks.end(); teiter++){
-//   //    list < program * > mem;
+//   //    list < RegisterMachine * > mem;
 //   //    (*teiter)->members(&mem);
 //   //    for(auto leiter = mem.begin(); leiter != mem.end(); leiter++){
 //   //       ofs << " t_" << (*teiter)->id_ << "->p_" << (*leiter)->id_ << "
@@ -1653,17 +1679,17 @@ void TPG::policyFeatures(int hostId, set<long> &features, bool active) {
 //   // team -> team edges
 //   for (auto teiter = visitedTeamsAllTasks.begin();
 //        teiter != visitedTeamsAllTasks.end(); teiter++) {
-//     list<program *> mem;
+//     list<RegisterMachine *> mem;
 //     (*teiter)->members(&mem);
 //     for (auto leiter = mem.begin(); leiter != mem.end(); leiter++) {
 //       // ofs << " t_" << (*teiter)->id_ << "->p_" << (*leiter)->id_ << "
 //       // [arrowsize=" << arrowSize_1  << ", penwidth=" << "1" << " color=" <<
 //       // "black" << "];" << endl;
-//       if ((*leiter)->action() >= 0 &&
+//       if ((*leiter)->action_ >= 0 &&
 //           find(visitedTeamsAllTasks.begin(), visitedTeamsAllTasks.end(),
-//                _teamMap[(*leiter)->action()]) != visitedTeamsAllTasks.end())
+//                _teamMap[(*leiter)->action_]) != visitedTeamsAllTasks.end())
 //                {
-//         ofs << " t_" << (*teiter)->id_ << "->t_" << (*leiter)->action()
+//         ofs << " t_" << (*teiter)->id_ << "->t_" << (*leiter)->action_
 //             << " [arrowsize=" << arrowSize_1 << ", penwidth="
 //             << "1"
 //             << " color="
@@ -1761,10 +1787,10 @@ void TPG::printGraphDotGPTPXXI(long rootTeamId,
    for (auto tm : visitedTeamsAllTasks) {
       // auto mem = tm->members_;
       for (auto prog : tm->members_) {
-         if (prog->action() >= 0 &&
+         if (prog->action_ >= 0 &&
              find(visitedTeamsAllTasks.begin(), visitedTeamsAllTasks.end(),
-                  _teamMap[prog->action()]) != visitedTeamsAllTasks.end()) {
-            ofs << " t_" << tm->id_ << "->t_" << prog->action()
+                  _teamMap[prog->action_]) != visitedTeamsAllTasks.end()) {
+            ofs << " t_" << tm->id_ << "->t_" << prog->action_
                 << " [arrowsize=" << arrowSize_1 << ", penwidth=" << "1"
                 << " color=" << "black" << "];" << endl;
          }
@@ -1794,7 +1820,7 @@ void TPG::printGraphDotGPTPXXI(long rootTeamId,
 // /******************************************************************************/
 // void TPG::printGraphDotGPEMAnimate(
 //     long rootTeamId, size_t frame, int episode, int step, size_t depth,
-//     vector<program *> allPrograms, vector<program *> winningPrograms,
+//     vector<RegisterMachine *> allPrograms, vector<RegisterMachine *> winningPrograms,
 //     set<team *, teamIdComp> &visitedTeamsAllTasks,
 //     vector<map<long, double>> &teamUseMapPerTask, vector<team *> teamPath) {
 //   team *rootTeam = _teamMap[rootTeamId];
@@ -1838,19 +1864,19 @@ void TPG::printGraphDotGPTPXXI(long rootTeamId,
 //   ofstream ofs;
 
 //   set<team *, teamIdComp> teams;
-//   set<program *, programIdComp> programs;
-//   set<memoryEigen *, memoryEigenIdComp> memories;
-//   vector<program *> winningProgramsDepth(winningPrograms.begin(),
+//   set<RegisterMachine *, RegisterMachineIdComp> programs;
+//   set<MemoryEigen *, MemoryEigenIdComp> memories;
+//   vector<RegisterMachine *> winningProgramsDepth(winningPrograms.begin(),
 //                                          winningPrograms.end());
 
 //   for (auto it = visitedTeamsAllTasks.begin(); it !=
 //   visitedTeamsAllTasks.end();
 //        it++) {
-//     set<program *, programIdComp> p = (*it)->CopyMembers();  // no need to
+//     set<RegisterMachine *, RegisterMachineIdComp> p = (*it)->CopyMembers();  // no need to
 //     copy programs.insert(p.begin(), p.end());
 //   }
 //   for (auto it = programs.begin(); it != programs.end(); it++) {
-//     for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+//     for (size_t mem_t = 0; mem_t < MemoryEigen::kNumMemoryType_; mem_t++) {
 //       memories.insert((*it)->MemGet(mem_t));
 //     }
 //   }
@@ -1929,13 +1955,13 @@ void TPG::printGraphDotGPTPXXI(long rootTeamId,
 //   ////team -> team edges
 //   // for(auto teiter = visitedTeamsAllTasks.begin(); teiter !=
 //   // visitedTeamsAllTasks.end(); teiter++){
-//   //    list < program * > mem;
+//   //    list < RegisterMachine * > mem;
 //   //    (*teiter)->members(&mem);
 //   //    for(auto leiter = mem.begin(); leiter != mem.end(); leiter++){
-//   //       if ((*leiter)->action() >= 0 && find(visitedTeamsAllTasks.begin(),
-//   //       visitedTeamsAllTasks.end(), _teamMap[(*leiter)->action()]) !=
+//   //       if ((*leiter)->action_ >= 0 && find(visitedTeamsAllTasks.begin(),
+//   //       visitedTeamsAllTasks.end(), _teamMap[(*leiter)->action_]) !=
 //   //       visitedTeamsAllTasks.end()){
-//   //          ofs << " t_" << (*teiter)->id_ << "->t_" << (*leiter)->action()
+//   //          ofs << " t_" << (*teiter)->id_ << "->t_" << (*leiter)->action_
 //   //          << " [arrowsize=" << arrowSize_1  << ", penwidth=" << "1" << "
 //   //          color=" << "black" << "];" << endl;
 //   //       }
@@ -1945,13 +1971,13 @@ void TPG::printGraphDotGPTPXXI(long rootTeamId,
 //   ////team -> team edges path
 //   // if (step > 0){
 //   //    for(size_t t = 0; t < teamPath.size()-1; t++){
-//   //       list < program * > mem;
+//   //       list < RegisterMachine * > mem;
 //   //       teamPath[t]->members(&mem);
 //   //       for(auto leiter = mem.begin(); leiter != mem.end(); leiter++){
-//   //          if ((*leiter)->action() >= 0 && teamPath[t+1]->id_ ==
-//   //          _teamMap[(*leiter)->action()]->id_){
+//   //          if ((*leiter)->action_ >= 0 && teamPath[t+1]->id_ ==
+//   //          _teamMap[(*leiter)->action_]->id_){
 //   //             ofs << " t_" << teamPath[t]->id_ << "->t_" <<
-//   //             (*leiter)->action() << " [arrowsize=" << arrowSize_2  << ",
+//   //             (*leiter)->action_ << " [arrowsize=" << arrowSize_2  << ",
 //   //             penwidth=" << edgeWidth_2 << " color=" << "black" << "];" <<
 //   //             endl;
 //   //          }
@@ -1961,9 +1987,9 @@ void TPG::printGraphDotGPTPXXI(long rootTeamId,
 
 //   // program -> team edges
 //   for (auto leiter = programs.begin(); leiter != programs.end(); leiter++) {
-//     if ((*leiter)->action() >= 0 &&
+//     if ((*leiter)->action_ >= 0 &&
 //         find(visitedTeamsAllTasks.begin(), visitedTeamsAllTasks.end(),
-//              _teamMap[(*leiter)->action()]) != visitedTeamsAllTasks.end()) {
+//              _teamMap[(*leiter)->action_]) != visitedTeamsAllTasks.end()) {
 //       double w = find(winningProgramsDepth.begin(),
 //       winningProgramsDepth.end(),
 //                       *leiter) == winningProgramsDepth.end() ||
@@ -1983,7 +2009,7 @@ void TPG::printGraphDotGPTPXXI(long rootTeamId,
 //               ? "black"
 //               : "green";
 //       ofs << " p_" << (*leiter)->id_ << "->"
-//           << "t_" << (*leiter)->action() << " [arrowsize=" << as
+//           << "t_" << (*leiter)->action_ << " [arrowsize=" << as
 //           << ", penwidth=" << w << " color=" << col.c_str() << "];" << endl;
 //     }
 //   }
@@ -1991,7 +2017,7 @@ void TPG::printGraphDotGPTPXXI(long rootTeamId,
 //   // team -> program edges
 //   for (auto teiter = visitedTeamsAllTasks.begin();
 //        teiter != visitedTeamsAllTasks.end(); teiter++) {
-//     list<program *> mem;
+//     list<RegisterMachine *> mem;
 //     (*teiter)->members(&mem);
 //     for (auto leiter = mem.begin(); leiter != mem.end(); leiter++) {
 //       double w =
@@ -2139,8 +2165,8 @@ void TPG::printTeamInfo(long t, int phase, bool singleBest, long teamId) {
              << accumulate(effectiveProgramInstructionCounts.begin(),
                            effectiveProgramInstructionCounts.end(), 0);
          oss << " mnEProgIns " << vecMean(effectiveProgramInstructionCounts);
-         set<program *, programIdComp> programs;
-         // set<memoryEigen *, memoryEigenIdComp> memories;
+         set<RegisterMachine *, RegisterMachineIdComp> programs;
+         // set<MemoryEigen *, MemoryEigenIdComp> memories;
          set<team *, teamIdComp> visitedTeams2;
          (*teiter)->GetAllNodes(_teamMap, visitedTeams2, programs);
          oss << " nP " << programs.size();
@@ -2159,7 +2185,7 @@ void TPG::printTeamInfo(long t, int phase, bool singleBest, long teamId) {
 
          fill(op_countsTally.begin(), op_countsTally.end(), 0);
          for (auto it = programs.begin(); it != programs.end(); it++) {
-            (*it)->op_counts(op_countsSingle);
+            op_countsSingle = (*it)->op_counts_;
             for (size_t i = 0; i < op_countsSingle.size(); i++)
                op_countsTally[i] += op_countsSingle[i];
          }
@@ -2272,8 +2298,8 @@ void TPG::trackTeamInfo(long t, int phase, bool singleBest, long teamId) {
          api_client_->LogMetric("teamInfo/mnEProgIns",
                                 std::to_string(mnEProgIns), "", gen);
 
-         set<program *, programIdComp> programs;
-         // set<memoryEigen *, memoryEigenIdComp> memories;
+         set<RegisterMachine *, RegisterMachineIdComp> programs;
+         // set<MemoryEigen *, MemoryEigenIdComp> memories;
          set<team *, teamIdComp> visitedTeams2;
          (*teiter)->GetAllNodes(_teamMap, visitedTeams2, programs);
          api_client_->LogMetric("teamInfo/nP", std::to_string(programs.size()),
@@ -2290,7 +2316,7 @@ void TPG::trackTeamInfo(long t, int phase, bool singleBest, long teamId) {
 
          fill(op_countsTally.begin(), op_countsTally.end(), 0);
          for (auto it = programs.begin(); it != programs.end(); it++) {
-            (*it)->op_counts(op_countsSingle);
+            op_countsSingle = (*it)->op_counts_;
             for (size_t i = 0; i < op_countsSingle.size(); i++)
                op_countsTally[i] += op_countsSingle[i];
          }
@@ -2318,10 +2344,10 @@ void TPG::trackTeamInfo(long t, int phase, bool singleBest, long teamId) {
 
 /******************************************************************************/
 // Algorithm 5.1 (linear crossover)
-void TPG::programCrossover(RegisterMachine *p1, RegisterMachine *p2,
+void TPG::RegisterMachineCrossover(RegisterMachine *p1, RegisterMachine *p2,
                            RegisterMachine **c1, RegisterMachine **c2,
                            mt19937 &rng) {
-   int dcMax = min(p1->Size(), p2->Size());
+   int dcMax = min(p1->instructions_.size(), p2->instructions_.size());
    int dsMax = dcMax;
    int lsMax = dcMax;
 
@@ -2330,23 +2356,23 @@ void TPG::programCrossover(RegisterMachine *p1, RegisterMachine *p2,
 
    int pos1, pos2;
 
-   vector<program *> parents{p1, p2};
+   vector<RegisterMachine *> parents{p1, p2};
    vector<int> segLengths{1, 1};
 
-   if (p1->Size() > p2->Size()) swap(parents[0], parents[1]);
+   if (p1->instructions_.size() > p2->instructions_.size()) swap(parents[0], parents[1]);
 
    // 1
-   uniform_int_distribution<> dis1(0, parents[0]->Size() - 1);
+   uniform_int_distribution<> dis1(0, parents[0]->instructions_.size() - 1);
    pos1 = dis1(rng);
-   uniform_int_distribution<> dis2(0, parents[1]->Size() - 1);
+   uniform_int_distribution<> dis2(0, parents[1]->instructions_.size() - 1);
    do {
       pos2 = dis2(rng);
-   } while (abs(pos1 - pos2) > min(parents[0]->Size() - 1, dcMax));
+   } while (abs(pos1 - pos2) > min(static_cast<int>(parents[0]->instructions_.size()) - 1, dcMax));
 
    // 2,3
-   uniform_int_distribution<> dis3(1, min(parents[0]->Size() - pos1, lsMax));
+   uniform_int_distribution<> dis3(1, min(static_cast<int>(parents[0]->instructions_.size()) - pos1, lsMax));
    segLengths[0] = dis3(rng);
-   uniform_int_distribution<> dis4(1, min(parents[1]->Size() - pos2, lsMax));
+   uniform_int_distribution<> dis4(1, min(static_cast<int>(parents[1]->instructions_.size()) - pos2, lsMax));
    do {
       segLengths[1] = dis4(rng);
    } while (abs(segLengths[0] - segLengths[1]) > dsMax);
@@ -2355,23 +2381,23 @@ void TPG::programCrossover(RegisterMachine *p1, RegisterMachine *p2,
    if (segLengths[0] > segLengths[1]) swap(segLengths[0], segLengths[1]);
 
    // 5
-   if (p1->Size() - (segLengths[1] - segLengths[0]) < 1 ||
-       p2->Size() + (segLengths[1] - segLengths[0]) >
+   if (static_cast<int>(p1->instructions_.size()) - (segLengths[1] - segLengths[0]) < 1 ||
+       static_cast<int>(p2->instructions_.size()) + (segLengths[1] - segLengths[0]) >
            GetParam<int>("max_prog_size")) {
       if (real_dist_(rng) < 0.5)
          segLengths[1] = segLengths[0];
       else
          segLengths[0] = segLengths[1];
 
-      if (pos1 + segLengths[0] > p1->Size())
-         segLengths[0] = segLengths[1] = p1->Size() - pos1;
+      if (pos1 + segLengths[0] > static_cast<int>(p1->instructions_.size()))
+         segLengths[0] = segLengths[1] = p1->instructions_.size() - pos1;
    }
 
-   vector<instruction *> parentProg1 = p1->bid_;
-   vector<instruction *> parentProg2 = p2->bid_;
+   vector<instruction *> parentProg1 = p1->instructions_;
+   vector<instruction *> parentProg2 = p2->instructions_;
 
-   vector<instruction *> childProg1 = p1->bid_;
-   vector<instruction *> childProg2 = p2->bid_;
+   vector<instruction *> childProg1 = p1->instructions_;
+   vector<instruction *> childProg2 = p2->instructions_;
 
    // exchange seg1 in p1 by seg2 in p2
    childProg1.clear();
@@ -2404,7 +2430,6 @@ void TPG::programCrossover(RegisterMachine *p1, RegisterMachine *p2,
 void TPG::ReadCheckpoint(long t, int phase, int chkpID, bool fromString,
                          const string &inString) {
    finalize();  // clear populations
-
    string str;
 
    if (fromString) {
@@ -2422,87 +2447,78 @@ void TPG::ReadCheckpoint(long t, int phase, int chkpID, bool fromString,
 
    istringstream iss(str);
    string oneline;
-   char delim = ':';
    long memberId = 0;
    long max_teamCount = -1;
    long max_programCount = -1;
    long max_memoryCount = -1;
    int f;
 
-   vector<string> outcomeFields;
-
    while (getline(iss, oneline)) {
       if (oneline.size() == 0) continue;
-      outcomeFields.clear();
+      auto outcome_fields = SplitString(oneline, ':');
 
-      SplitString(oneline, delim, outcomeFields);
-
-      if (outcomeFields[0].compare("teamPair") == 0) {
-         long id1 = atoi(outcomeFields[1].c_str());
-         long id2 = atoi(outcomeFields[2].c_str());
-         teamPair tp(_teamMap[id1], _teamMap[id2]);
-         _teamPairsToCompair.push_back(tp);
-      } else if (outcomeFields[0].compare("t") == 0)
-         state_["t_current"] = atoi(outcomeFields[1].c_str());
-      else if (outcomeFields[0].compare("active_task") == 0)
-         state_["active_task"] = atoi(outcomeFields[1].c_str());
-      else if (outcomeFields[0].compare("fitMode") == 0)
-         params_["fit_mode"] = atoi(outcomeFields[1].c_str());
-      else if (outcomeFields[0].compare("phase") == 0)
-         state_["phase"] = atoi(outcomeFields[1].c_str());
-      else if (outcomeFields[0].compare("memoryEigen") == 0) {
+      if (outcome_fields[0].compare("t") == 0)
+         state_["t_current"] = atoi(outcome_fields[1].c_str());
+      else if (outcome_fields[0].compare("active_task") == 0)
+         state_["active_task"] = atoi(outcome_fields[1].c_str());
+      else if (outcome_fields[0].compare("fitMode") == 0)
+         params_["fit_mode"] = atoi(outcome_fields[1].c_str());
+      else if (outcome_fields[0].compare("phase") == 0)
+         state_["phase"] = atoi(outcome_fields[1].c_str());
+      else if (outcome_fields[0].compare("MemoryEigen") == 0) {
          max_memoryCount =
-             std::max(max_memoryCount, atol(outcomeFields[1].c_str()));
-         AddMemory(new memoryEigen(outcomeFields));
-      } else if (outcomeFields[0].compare("RegisterMachine") == 0) {
+             std::max(max_memoryCount, atol(outcome_fields[1].c_str()));
+            //  cerr << "strr sz " << outcome_fields.size() << ":" << oneline << endl;
+         AddMemory(new MemoryEigen(outcome_fields));
+      } else if (outcome_fields[0].compare("RegisterMachine") == 0) {
          max_programCount =
-             std::max(max_programCount, atol(outcomeFields[1].c_str()));
-         AddProgram(new RegisterMachine(outcomeFields, _Memory, params_,
+             std::max(max_programCount, atol(outcome_fields[1].c_str()));
+         AddProgram(new RegisterMachine(outcome_fields, _Memory, params_,
                                         rngs_[TPG_SEED]));
-      } else if (outcomeFields[0].compare("team") == 0) {
+      } else if (outcome_fields[0].compare("team") == 0) {
          team *m;
          f = 1;
-         long id = atoi(outcomeFields[f++].c_str());
+         long id = atoi(outcome_fields[f++].c_str());
          if (id > max_teamCount) max_teamCount = id;
-         long gtime = atoi(outcomeFields[f++].c_str());
+         long gtime = atoi(outcome_fields[f++].c_str());
          m = new team(gtime, id);
-         m->_n_eval = atoi(outcomeFields[f++].c_str());
+         m->_n_eval = atoi(outcome_fields[f++].c_str());
          // add programs in order
-         for (size_t ii = f; ii < outcomeFields.size(); ii++) {
-            memberId = atoi(outcomeFields[ii].c_str());
+         for (size_t ii = f; ii < outcome_fields.size(); ii++) {
+            memberId = atoi(outcome_fields[ii].c_str());
             m->AddProgram(_L[memberId]);
          }
          AddTeam(m);
-      } else if (outcomeFields[0].compare("incoming_progs") == 0) {
+      } else if (outcome_fields[0].compare("incoming_progs") == 0) {
          f = 1;
-         long id = atoi(outcomeFields[f++].c_str());
-         for (size_t ii = f; ii < outcomeFields.size(); ii++) {
-            long incomingId = atoi(outcomeFields[ii].c_str());
+         long id = atoi(outcome_fields[f++].c_str());
+         for (size_t ii = f; ii < outcome_fields.size(); ii++) {
+            long incomingId = atoi(outcome_fields[ii].c_str());
             _teamMap[id]->AddIncomingProgram(incomingId);
          }
          _Mroot.erase(_teamMap[id]);
-      } else if (!fromString && outcomeFields[0].compare("phyloNode") == 0 &&
-                 find(outcomeFields.begin(), outcomeFields.end(), "gtime") ==
-                     outcomeFields.end()) {
+      } else if (!fromString && outcome_fields[0].compare("phyloNode") == 0 &&
+                 find(outcome_fields.begin(), outcome_fields.end(), "gtime") ==
+                     outcome_fields.end()) {
          f = 1;
-         long id = atoi(outcomeFields[f++].c_str());
+         long id = atoi(outcome_fields[f++].c_str());
          _phyloGraph.insert(pair<long, phyloRecord>(id, phyloRecord()));
-         _phyloGraph[id].gtime = atoi(outcomeFields[f++].c_str());
-         _phyloGraph[id].dtime = atoi(outcomeFields[f++].c_str());
-         _phyloGraph[id].fitnessBin = atoi(outcomeFields[f++].c_str());
-         _phyloGraph[id].fitness = atof(outcomeFields[f++].c_str());
+         _phyloGraph[id].gtime = atoi(outcome_fields[f++].c_str());
+         _phyloGraph[id].dtime = atoi(outcome_fields[f++].c_str());
+         _phyloGraph[id].fitnessBin = atoi(outcome_fields[f++].c_str());
+         _phyloGraph[id].fitness = atof(outcome_fields[f++].c_str());
          _phyloGraph[id].root =
-             atoi(outcomeFields[f++].c_str()) > 0 ? true : false;
-      } else if (!fromString && outcomeFields[0].compare("phyloLink") == 0 &&
-                 find(outcomeFields.begin(), outcomeFields.end(), "from") ==
-                     outcomeFields.end())
-         _phyloGraph[atoi(outcomeFields[1].c_str())].adj.push_back(
-             atoi(outcomeFields[2].c_str()));
-      else if (!fromString && outcomeFields[0].compare("ancestorIds") == 0) {
+             atoi(outcome_fields[f++].c_str()) > 0 ? true : false;
+      } else if (!fromString && outcome_fields[0].compare("phyloLink") == 0 &&
+                 find(outcome_fields.begin(), outcome_fields.end(), "from") ==
+                     outcome_fields.end())
+         _phyloGraph[atoi(outcome_fields[1].c_str())].adj.push_back(
+             atoi(outcome_fields[2].c_str()));
+      else if (!fromString && outcome_fields[0].compare("ancestorIds") == 0) {
          f = 1;
-         long id = atoi(outcomeFields[f++].c_str());
-         for (size_t ii = f; ii < outcomeFields.size(); ii++) {
-            long aid = atoi(outcomeFields[ii].c_str());
+         long id = atoi(outcome_fields[f++].c_str());
+         for (size_t ii = f; ii < outcome_fields.size(); ii++) {
+            long aid = atoi(outcome_fields[ii].c_str());
             _phyloGraph[id].ancestorIds.insert(aid);
          }
       }
@@ -2543,7 +2559,7 @@ void TPG::SelectTeams() {
    int numOldDeleted = 0;
    int numDeleted = 0;
 
-   deque<program *> programsWithNoRefs;
+   deque<RegisterMachine *> programsWithNoRefs;
 
    for (auto teiter = _Mroot.begin(); teiter != _Mroot.end();) {
       if (!(*teiter)->elite(GetState("phase")) &&
@@ -2561,7 +2577,7 @@ void TPG::SelectTeams() {
 
    oss << "selTms t " << GetState("t_current") << " Msz " << _M.size()
        << " Lsz " << _L.size() << " mrSz " << _Mroot.size() << " mSz";
-   for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+   for (size_t mem_t = 0; mem_t < MemoryEigen::kNumMemoryType_; mem_t++) {
       oss << " " << _Memory[mem_t].size();
    }
    oss << " eLSz " << _numEliteTeamsCurrent[GetState("phase")] << " nDel "
@@ -2571,7 +2587,7 @@ void TPG::SelectTeams() {
 }
 
 /******************************************************************************/
-void TPG::CleanupProgramsWithNoRefs(deque<program *> &programsWithNoRefs,
+void TPG::CleanupProgramsWithNoRefs(deque<RegisterMachine *> &programsWithNoRefs,
                                     bool updateLidsImmediately) {
    vector<long> deletedIds;
    while (programsWithNoRefs.size() > 0) {
@@ -2580,35 +2596,28 @@ void TPG::CleanupProgramsWithNoRefs(deque<program *> &programsWithNoRefs,
          programsWithNoRefs.pop_front();
          continue;
       }
-      if (prog->action() >= 0) {
-         if (_teamMap[prog->action()]->inDeg() == 1) {
-            _Mroot.insert(_teamMap[prog->action()]);
-            _phyloGraph[_teamMap[prog->action()]->id_].root = true;
+      if (prog->action_ >= 0) {
+         if (_teamMap[prog->action_]->inDeg() == 1) {
+            _Mroot.insert(_teamMap[prog->action_]);
+            _phyloGraph[_teamMap[prog->action_]->id_].root = true;
          }
-         _teamMap[prog->action()]->removeIncomingProgram(prog->id_);
+         _teamMap[prog->action_]->removeIncomingProgram(prog->id_);
          // if team was a subsumed root clone that has now become a root
          // itself, just delete it
-         if (_teamMap[prog->action()]->root() &&
-             _teamMap[prog->action()]->cloneId_ != -1) {
-            auto it = _teamMap.find(_teamMap[prog->action()]->cloneId_);
+         if (_teamMap[prog->action_]->root() &&
+             _teamMap[prog->action_]->cloneId_ != -1) {
+            auto it = _teamMap.find(_teamMap[prog->action_]->cloneId_);
             if (it != _teamMap.end())
                it->second->clones_ = it->second->clones_ - 1;
-            team *tm = _teamMap[prog->action()];
+            team *tm = _teamMap[prog->action_];
             _phyloGraph[tm->id_].dtime = GetState("t_current");
             _Mroot.erase(tm);
             RemoveTeam(tm, programsWithNoRefs);
          }
       }
-      // TODO(spkelly): remove shared memory code
-      // for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
-      //   prog->MemGet(mem_t)->refDec();
-      //   if (prog->MemGet(mem_t)->refs() == 0) {
-      //     removeMemory(prog->MemGet(mem_t));
-      //     delete prog->MemGet(mem_t);
-      //   }
-      // }
       removeProgram(prog, updateLidsImmediately);
       if (!updateLidsImmediately) deletedIds.push_back(prog->id_);
+      // cerr << "dbg deleting " << prog->id_  << " rank " << GetState("world_rank") << endl;
       delete prog;
       programsWithNoRefs.pop_front();
    }
@@ -2674,15 +2683,15 @@ void TPG::updateMODESFilters(bool roots) {
                    pair<long, modesRecord>((*teiter)->id_, modesRecord()));
                // store active programs for novelty metric
                set<team *, teamIdComp> teams;
-               set<program *, programIdComp> programs;
-               // set<memoryEigen *, memoryEigenIdComp> memories;
+               set<RegisterMachine *, RegisterMachineIdComp> programs;
+               // set<MemoryEigen *, MemoryEigenIdComp> memories;
                (*teiter)->GetAllNodes(_teamMap, teams, programs);
                for (auto leiter = programs.begin(); leiter != programs.end();
                     leiter++) {
                   _persistenceFilterA[(*teiter)->id_].activeProgramIds.insert(
                       (*leiter)->id_);
                   _persistenceFilterA[(*teiter)->id_]
-                      .effectiveInstructionsTotal += (*leiter)->SizeEffective();
+                      .effectiveInstructionsTotal += static_cast<int>((*leiter)->instructions_effective_.size());
                }
                for (auto teiter2 = teams.begin(); teiter2 != teams.end();
                     teiter2++)
@@ -2797,8 +2806,8 @@ void TPG::WriteCheckpoint(long t, bool elite) {
    ofs << "fitMode:" << GetParam<int>("fit_mode") << endl;
 
    if (elite) {  // Include data for elite teams only
-      set<memoryEigen *, memoryEigenIdComp> memories;
-      set<program *, programIdComp> programs;
+      set<MemoryEigen *, MemoryEigenIdComp> memories;
+      set<RegisterMachine *, RegisterMachineIdComp> programs;
       set<team *, teamIdComp> teams, teamsAll;
       // Collect memories, progrms, teams in champions...
       for (auto ps : _eliteTeamPS) {  // ...for each task set
@@ -2810,22 +2819,22 @@ void TPG::WriteCheckpoint(long t, bool elite) {
          }
       }
       for (auto mem : memories) {
-         ofs << mem->checkpoint();
+         ofs << mem->ToString();
       }
       for (auto prog : programs) {
-         ofs << prog->checkpoint(GetParam<int>("skip_introns"));
+         ofs << prog->ToString(GetParam<int>("skip_introns"));
       }
       for (auto tm : teamsAll) {
          ofs << tm->checkpoint();
       }
    } else {  // Include all memories, teams, and programs
-      for (int mem_t = 0; mem_t < memoryEigen::NUM_MEMORY_TYPES; mem_t++) {
+      for (size_t mem_t = 0; mem_t < MemoryEigen::kNumMemoryType_; mem_t++) {
          for (auto key : _Memory[mem_t]) {
-            ofs << key.second->checkpoint();
+            ofs << key.second->ToString();
          }
       }
       for (auto key : _L) {
-         ofs << key.second->checkpoint(false);  // Write all instructions
+         ofs << key.second->ToString(false);  // Write all instructions
       }
       for (auto tm : _M) {
          ofs << tm->checkpoint();
@@ -2862,8 +2871,8 @@ std::string TPG::SerializePhylogeny() {
 
 /******************************************************************************/
 void TPG::WriteMPICheckpoint(string &s, vector<team *> &root_teams) {
-   set<memoryEigen *, memoryEigenIdComp> memories;
-   set<program *, programIdComp> programs;
+   set<MemoryEigen *, MemoryEigenIdComp> memories;
+   set<RegisterMachine *, RegisterMachineIdComp> programs;
    set<team *, teamIdComp> teams;
    for (auto tm : root_teams) {
       tm->GetAllNodes(_teamMap, teams, programs, memories);
@@ -2876,10 +2885,10 @@ void TPG::WriteMPICheckpoint(string &s, vector<team *> &root_teams) {
    ss << "fitMode:" << GetParam<int>("fit_mode") << endl;
    ss << "phase:" << GetState("phase") << endl;
    for (auto mem : memories) {
-      ss << mem->checkpoint();
+      ss << mem->ToString();
    }
    for (auto prog : programs) {
-      ss << prog->checkpoint(GetParam<int>("skip_introns"));
+      ss << prog->ToString(GetParam<int>("skip_introns"));
    }
    for (auto tm : teams) {
       ss << tm->checkpoint();
