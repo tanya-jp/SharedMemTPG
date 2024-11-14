@@ -89,6 +89,7 @@ class RegisterMachine {
    void Run(state *, int &time_step, const size_t &graph_depth, bool &verbose);
 
    std::string ToString(bool);
+   std::string ToStringMemory();
 
    void Mutate(std::unordered_map<std::string, std::any> &params,
                std::unordered_map<std::string, int> &state, mt19937 &rng,

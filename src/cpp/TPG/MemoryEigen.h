@@ -16,7 +16,7 @@ class MemoryEigen {
    static inline constexpr size_t kMatrixType_ = 2;
    static inline constexpr size_t kNumMemoryType_ = 3;
 
-   long id_;
+   // long id_;
 
    // Memory type (kScalarType_, kVectorType_, or kMatrixType_)
    size_t type_;
@@ -44,9 +44,8 @@ class MemoryEigen {
    std::vector<double> write_time_;
 
    // Construct random MemoryEigen
-   MemoryEigen(long i, int type, size_t n_indices, size_t memory_size)
-       : id_(i),
-         type_(type),
+   MemoryEigen(int type, size_t n_indices, size_t memory_size)
+       : type_(type),
          n_memories_(n_indices),
          memory_size_(memory_size) {
       ResizeMemory();
@@ -58,7 +57,6 @@ class MemoryEigen {
 
    // Copy constructor
    MemoryEigen(MemoryEigen &m) {
-      id_ = m.id_;
       type_ = m.type_;
       n_memories_ = m.n_memories_;
       memory_size_ = m.memory_size_;
@@ -78,8 +76,8 @@ class MemoryEigen {
 
    // Construct MemoryEigen from strings split into outcome_fields vector
    MemoryEigen(std::vector<std::string> &outcome_fields) {
-      size_t i = 1;
-      id_ = std::atoi(outcome_fields[i++].c_str());
+      size_t i = 2;  // Skip program id
+      // id_ = std::atoi(outcome_fields[i++].c_str());
       type_ = std::atoi(outcome_fields[i++].c_str());
       n_memories_ = std::atoi(outcome_fields[i++].c_str());
       memory_size_ = std::atoi(outcome_fields[i++].c_str());
@@ -171,9 +169,9 @@ class MemoryEigen {
       write_time_.resize(n_memories_);
    }
 
-   std::string ToString() {
+   std::string ToString(long prog_id) {
       std::ostringstream oss;
-      oss << "MemoryEigen:" << id_ << ":" << type_ << ":" << n_memories_ << ":"
+      oss << "MemoryEigen:" << prog_id << ":" << type_ << ":" << n_memories_ << ":"
           << memory_size_;
       if (type_ == kScalarType_) {
          for (auto m : const_memory_) {
@@ -199,10 +197,10 @@ class MemoryEigen {
    }
 };
 
-struct MemoryEigenIdComp {
-   bool operator()(MemoryEigen *m1, MemoryEigen *m2) const {
-      return m1->id_ < m2->id_;
-   }
-};
+// struct MemoryEigenIdComp {
+//    bool operator()(MemoryEigen *m1, MemoryEigen *m2) const {
+//       return m1->id_ < m2->id_;
+//    }
+// };
 
 #endif

@@ -28,7 +28,7 @@ class TPG {
     void removeProgram(RegisterMachine *p, bool updateLids);
     void AddTeam(team *tm);
     void RemoveTeam(team *tm, deque<RegisterMachine *> &RegisterMachinesWithNoRefs);
-    void AddMemory(MemoryEigen *m);
+    void AddMemory(long prog_id, MemoryEigen *m);
     team *getTeamByID(long id);
     bool haveEliteTeam(string taskset, int fitMode, int phase);
     void Seed(size_t i, uint_fast32_t s);

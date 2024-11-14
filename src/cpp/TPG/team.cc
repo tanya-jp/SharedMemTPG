@@ -190,7 +190,7 @@ void team::GetAllNodes(
 void team::GetAllNodes(
     map<long, team *> &teamMap, set<team *, teamIdComp> &visitedTeams,
     set<RegisterMachine *, RegisterMachineIdComp> &RegisterMachines,
-    set<MemoryEigen *, MemoryEigenIdComp> &memories) const {
+    set<MemoryEigen *> &memories) const {
    visitedTeams.insert(teamMap[id_]);
    for (auto prog : members_) {
       RegisterMachines.insert(prog);
@@ -606,7 +606,7 @@ RegisterMachine *team::getAction(
    set<long> features;
    set<long> featuresSingle;
    // set<MemoryEigen *, MemoryEigenIdComp> memories;
-   set<MemoryEigen *, MemoryEigenIdComp> memoriesSingle;
+   set<MemoryEigen *> memoriesSingle;
 
    int l = 0;
    for (auto prog : members_) {

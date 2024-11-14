@@ -8,10 +8,18 @@ std::string RegisterMachine::ToString(bool effective_only) {
    oss << "RegisterMachine:" << id_ << ":" << gtime_ << ":" << action_ << ":"
        << stateful_ << ":" << nrefs_ << ":" << observation_buff_size_ << ":"
        << obs_index_;
-   for (auto &i : private_memory_ids_) oss << ":" << i;
+   // for (auto &i : private_memory_ids_) oss << ":" << i;
    auto prog = effective_only ? instructions_effective_ : instructions_;
    for (auto istr : prog) oss << ":" << istr->checkpoint();
    oss << endl;
+   for (auto *m : private_memory_) oss << m->ToString(id_);
+   return oss.str();
+}
+
+/******************************************************************************/
+std::string RegisterMachine::ToStringMemory() {
+   std::ostringstream oss;
+   for (auto *m : private_memory_) oss << m->ToString(id_);
    return oss.str();
 }
 
@@ -58,9 +66,6 @@ RegisterMachine::RegisterMachine(RegisterMachine &rm) {
    stateful_ = rm.stateful_;
    observation_buff_size_ = rm.observation_buff_size_;
    use_evolved_const_ = rm.use_evolved_const_;
-   for (auto instr : rm.instructions_) {
-      instructions_.push_back(new instruction(*instr));
-   }
    op_counts_.resize(instruction::NUM_OP);
    for (size_t i = 0; i < MemoryEigen::kNumMemoryType_; i++) {
       private_memory_.push_back(new MemoryEigen(*(rm.private_memory_[i])));
@@ -86,12 +91,18 @@ RegisterMachine::RegisterMachine(
    stateful_ = rm.stateful_;
    observation_buff_size_ = rm.observation_buff_size_;
    use_evolved_const_ = rm.use_evolved_const_;
+   op_counts_.resize(instruction::NUM_OP);
+   // for (size_t i = 0; i < MemoryEigen::kNumMemoryType_; i++) {
+   //    private_memory_.push_back(new MemoryEigen(*(rm.private_memory_[i])));
+   //    observation_memory_buff_.push_back(
+   //        new MemoryEigen(*(rm.observation_memory_buff_[i])));
+   // }
+   // private_memory_ids_ = rm.private_memory_ids_;
    for (auto instr : rm.instructions_) {
       instructions_.push_back(new instruction(*instr));
    }
-   op_counts_.resize(instruction::NUM_OP);
    SetupMemory(state, std::any_cast<int>(params["n_memories"]),
-               std::any_cast<int>(params["memory_size"]));
+               rm.private_memory_[MemoryEigen::kScalarType_]->memory_size_);
    if (use_evolved_const_) {
       CopyEvolvedConstants(rm);
    }
@@ -112,12 +123,12 @@ RegisterMachine::RegisterMachine(
    obs_index_ = atoi(outcomeFields[f++].c_str());   
    // SetupMemry() but from existing memory pointers
    for (size_t mem_t = 0; mem_t < MemoryEigen::kNumMemoryType_; mem_t++) {
-      long id = atoi(outcomeFields[f++].c_str());
-      private_memory_.push_back(memory_maps[mem_t][id]);
-      private_memory_ids_.push_back(id);
-      auto memory_size = memory_maps[mem_t][id]->memory_size_;
+      // long id = atoi(outcomeFields[f++].c_str());
+      private_memory_.push_back(memory_maps[mem_t][id_]);
+      // private_memory_ids_.push_back(id);
+      auto memory_size = memory_maps[mem_t][id_]->memory_size_;
       observation_memory_buff_.push_back(
-          new MemoryEigen(-1, mem_t, observation_buff_size_, memory_size));
+          new MemoryEigen(mem_t, observation_buff_size_, memory_size));
    }
    for (size_t ii = f; ii < outcomeFields.size(); ii++) {
       vector<string> instructionString;
@@ -374,15 +385,10 @@ void RegisterMachine::Run(state *obs, int &time_step, const size_t &graph_depth,
          if (istr->GetInType(in) != -1) {
             if (istr->IsMemoryRef(in)) {
                istr->SetInMem(in, private_memory_[istr->GetInType(in)]);
-               // cerr << "dbg 01 " << in;
-               // cerr << " " << istr->GetInIdx(in);
-               // cerr << istr->GetInMem(in)->n_memories_ << endl;
                istr->SetInIdxE(
                    in, istr->GetInIdx(in) % istr->GetInMem(in)->n_memories_);
 
                // Input is a memory ref. Track read time
-               // cerr << "dbg 02 " << istr->GetInMem(in)->read_time_.size() << " " << istr->GetInMem(in)->n_memories_;
-               // cerr << " " << istr->GetInIdxE(in) << endl;
                istr->GetInMem(in)->read_time_[istr->GetInIdxE(in)] =
                    time_step + (graph_depth / MAX_GRAPH_DEPTH);
             } else {  // Input is an observation reference
@@ -419,15 +425,15 @@ void RegisterMachine::Run(state *obs, int &time_step, const size_t &graph_depth,
 void RegisterMachine::SetupMemory(std::unordered_map<std::string, int> &state,
                                   int n_memories, int memory_size) {
    for (size_t mem_t = 0; mem_t < MemoryEigen::kNumMemoryType_; mem_t++) {
-      long id = state["memory_count"]++;
+      // long id = state["memory_count"]++;
       private_memory_.push_back(
-          new MemoryEigen(id, mem_t, n_memories, memory_size));
-      private_memory_ids_.push_back(id);
+          new MemoryEigen(mem_t, n_memories, memory_size));
+      // private_memory_ids_.push_back(id);
       if (use_evolved_const_) {
          private_memory_.back()->RandomizeConst();
       }
       observation_memory_buff_.push_back(
-          new MemoryEigen(-1, mem_t, observation_buff_size_, memory_size));
+          new MemoryEigen(mem_t, observation_buff_size_, memory_size));
    }
 }
 

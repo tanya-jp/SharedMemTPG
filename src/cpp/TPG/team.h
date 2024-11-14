@@ -57,13 +57,13 @@ class team {
   }
   inline map<long, string> fitnessBins() { return fitnessBins_; }
   void GetAllMemories(map<long, team *> &, set<team *, teamIdComp> &,
-                      set<MemoryEigen *, MemoryEigenIdComp> &) const;
+                      set<MemoryEigen *> &) const;
   void GetAllNodes(map<long, team *> &teamMap, set<team *, teamIdComp> &, long,
                    bool) const;
   void GetAllNodes(map<long, team *> &teamMap, set<team *, teamIdComp> &,
                    set<RegisterMachine *, RegisterMachineIdComp> &) const;
   void GetAllNodes(map<long, team *> &teamMap, set<team *, teamIdComp> &,
-                   set<RegisterMachine *, RegisterMachineIdComp> &, set<MemoryEigen*, MemoryEigenIdComp> &) const;
+                   set<RegisterMachine *, RegisterMachineIdComp> &, set<MemoryEigen*> &) const;
   void getBehaviourSequence(vector<int> &, int);
   double getMeanOutcome(int, int, int, bool, bool);
   double getMeanOutcome(int, int, int, int, long, bool, bool);

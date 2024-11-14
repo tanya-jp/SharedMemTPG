@@ -517,10 +517,6 @@ class instruction {
    }
 
    inline void ExecuteVectorInnerProductOp(bool dbg) {
-      // cerr << "dbg (" << out_->working_memory_[outIdxE_].rows() << "," << out_->working_memory_[outIdxE_].cols() << ") ";
-      // cerr << "dbg (" << in1_->working_memory_[in0IdxE_].rows() << "," << in1_->working_memory_[in0IdxE_].cols() << ") ";
-      // cerr << "dbg (" << in2_->working_memory_[in1IdxE_].rows() << "," << in2_->working_memory_[in1IdxE_].cols() << ") " << endl;
-
       out_->working_memory_[outIdxE_](0, 0) =
           in1_->working_memory_[in0IdxE_].col(0).dot(
               in2_->working_memory_[in1IdxE_].col(0));

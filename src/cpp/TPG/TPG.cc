@@ -59,9 +59,8 @@ void TPG::RemoveTeam(team *tm, deque<RegisterMachine *> &p) {
 }
 
 /******************************************************************************/
-void TPG::AddMemory(MemoryEigen *m) {
-   _Memory[m->type_][m->id_] = m;
-   _Memids[m->type_].push_back(m->id_);
+void TPG::AddMemory(long prog_id, MemoryEigen *m) {
+   _Memory[m->type_][prog_id] = m;
 }
 
 /******************************************************************************/
@@ -436,7 +435,7 @@ void TPG::finalize() {
    _Mroot.clear();
    _teamMap.clear();
    _Lids.clear();
-   _Memids.clear();
+   _Memids.clear();  //TODO(skelly): remove 
    _Memids.resize(MemoryEigen::kNumMemoryType_);
    state_["memory_count"] = 0;
    _numEliteTeamsCurrent.clear();
@@ -2450,7 +2449,7 @@ void TPG::ReadCheckpoint(long t, int phase, int chkpID, bool fromString,
    long memberId = 0;
    long max_teamCount = -1;
    long max_programCount = -1;
-   long max_memoryCount = -1;
+   // long max_memoryCount = -1;
    int f;
 
    while (getline(iss, oneline)) {
@@ -2466,10 +2465,10 @@ void TPG::ReadCheckpoint(long t, int phase, int chkpID, bool fromString,
       else if (outcome_fields[0].compare("phase") == 0)
          state_["phase"] = atoi(outcome_fields[1].c_str());
       else if (outcome_fields[0].compare("MemoryEigen") == 0) {
-         max_memoryCount =
-             std::max(max_memoryCount, atol(outcome_fields[1].c_str()));
-            //  cerr << "strr sz " << outcome_fields.size() << ":" << oneline << endl;
-         AddMemory(new MemoryEigen(outcome_fields));
+         // max_memoryCount =
+            //  std::max(max_memoryCount, atol(outcome_fields[1].c_str()));
+            long prog_id = atol(outcome_fields[1].c_str());
+         AddMemory(prog_id, new MemoryEigen(outcome_fields));
       } else if (outcome_fields[0].compare("RegisterMachine") == 0) {
          max_programCount =
              std::max(max_programCount, atol(outcome_fields[1].c_str()));
@@ -2525,7 +2524,7 @@ void TPG::ReadCheckpoint(long t, int phase, int chkpID, bool fromString,
    }
    state_["program_count"] = max_programCount + 1;
    state_["team_count"] = max_teamCount + 1;
-   state_["memory_count"] = max_memoryCount + 1;
+   // state_["memory_count"] = max_memoryCount + 1;
 }
 
 /******************************************************************************/
@@ -2806,7 +2805,7 @@ void TPG::WriteCheckpoint(long t, bool elite) {
    ofs << "fitMode:" << GetParam<int>("fit_mode") << endl;
 
    if (elite) {  // Include data for elite teams only
-      set<MemoryEigen *, MemoryEigenIdComp> memories;
+      set<MemoryEigen *> memories;
       set<RegisterMachine *, RegisterMachineIdComp> programs;
       set<team *, teamIdComp> teams, teamsAll;
       // Collect memories, progrms, teams in champions...
@@ -2818,8 +2817,11 @@ void TPG::WriteCheckpoint(long t, bool elite) {
             teamsAll.insert(teams.begin(), teams.end());
          }
       }
-      for (auto mem : memories) {
-         ofs << mem->ToString();
+      // for (auto mem : memories) {
+      //    ofs << mem->ToString();
+      // }
+      for (auto prog : programs) {
+         ofs << prog->ToStringMemory();
       }
       for (auto prog : programs) {
          ofs << prog->ToString(GetParam<int>("skip_introns"));
@@ -2828,10 +2830,13 @@ void TPG::WriteCheckpoint(long t, bool elite) {
          ofs << tm->checkpoint();
       }
    } else {  // Include all memories, teams, and programs
-      for (size_t mem_t = 0; mem_t < MemoryEigen::kNumMemoryType_; mem_t++) {
-         for (auto key : _Memory[mem_t]) {
-            ofs << key.second->ToString();
-         }
+      // for (size_t mem_t = 0; mem_t < MemoryEigen::kNumMemoryType_; mem_t++) {
+      //    for (auto key : _Memory[mem_t]) {
+      //       ofs << key.second->ToString();
+      //    }
+      // }
+      for (auto key : _L) {
+         ofs << key.second->ToStringMemory();
       }
       for (auto key : _L) {
          ofs << key.second->ToString(false);  // Write all instructions
@@ -2871,7 +2876,7 @@ std::string TPG::SerializePhylogeny() {
 
 /******************************************************************************/
 void TPG::WriteMPICheckpoint(string &s, vector<team *> &root_teams) {
-   set<MemoryEigen *, MemoryEigenIdComp> memories;
+   set<MemoryEigen *> memories;
    set<RegisterMachine *, RegisterMachineIdComp> programs;
    set<team *, teamIdComp> teams;
    for (auto tm : root_teams) {
@@ -2884,8 +2889,11 @@ void TPG::WriteMPICheckpoint(string &s, vector<team *> &root_teams) {
    ss << "active_task:" << GetState("active_task") << endl;
    ss << "fitMode:" << GetParam<int>("fit_mode") << endl;
    ss << "phase:" << GetState("phase") << endl;
-   for (auto mem : memories) {
-      ss << mem->ToString();
+   // for (auto mem : memories) {
+   //    ss << mem->ToString();
+   // }
+   for (auto prog : programs) {
+      ss << prog->ToStringMemory();
    }
    for (auto prog : programs) {
       ss << prog->ToString(GetParam<int>("skip_introns"));
