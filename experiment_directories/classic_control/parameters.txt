@@ -23,7 +23,7 @@ id_to_replay = 0
 
 # Which task in which to replay the individual
 # Index in active_tasks list starting at 0
-replay_task 0
+task_to_replay 0
 
 # Re-evaluate an individual from a checkpoint file and animate behaviour, 
 # if available

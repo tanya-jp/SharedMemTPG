@@ -198,7 +198,7 @@ int main(int argc, char **argv) {
       tpg.state_["phase"] = _TRAIN_PHASE;
       if (tpg.GetParam<int>("replay")) {
          tpg.state_["phase"] = _TEST_PHASE;
-         tpg.state_["active_task"] = tpg.state_["replay_task"];
+         tpg.state_["active_task"] = tpg.state_["task_to_replay"];
          tpg.ProcessParams();
          replayer_viz(tpg, tasks);
       } else {
