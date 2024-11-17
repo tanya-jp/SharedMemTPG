@@ -38,7 +38,8 @@ void team::InitMemory(map<long, team *> &teamMap,
    set<RegisterMachine *, RegisterMachineIdComp> RegisterMachines;
    GetAllNodes(teamMap, teams, RegisterMachines);
    for (auto prog : RegisterMachines) {
-      if (!isEqual(std::any_cast<double>(params["p_instructions_mu_const"]), 0.0)) {
+      if (!isEqual(std::any_cast<double>(params["p_instructions_mu_const"]),
+                   0.0)) {
          prog->use_evolved_const_ = true;
          // Initialize working memory with evolved constants
          prog->CopyPrivateConstToWorkingMemory();
@@ -570,10 +571,12 @@ RegisterMachine *team::getAction(state *s, map<long, team *> &teamMap,
    for (auto prog : members_) {
       prog->Run(s, timeStep, visitedTeams.size(), verbose);
       members_run_[l++] = prog;
-      decisionInstructions += static_cast<int>(prog->instructions_effective_.size());
+      decisionInstructions +=
+          static_cast<int>(prog->instructions_effective_.size());
    }
 
-   sort(members_run_.begin(), members_run_.end(), RegisterMachineBidLexicalCompare());
+   sort(members_run_.begin(), members_run_.end(),
+        RegisterMachineBidLexicalCompare());
    long teamIdToFollow = 0;
    for (size_t i = 0; i < members_run_.size(); i++) {
       if (members_run_[i]->action_ < 0) {
@@ -613,7 +616,8 @@ RegisterMachine *team::getAction(
       prog->Run(s, timeStep, visitedTeams.size(), verbose);
       allPrograms.push_back(prog);
       members_run_[l++] = prog;
-      decisionInstructions += static_cast<int>(prog->instructions_effective_.size());
+      decisionInstructions +=
+          static_cast<int>(prog->instructions_effective_.size());
 
       featuresSingle = prog->features_;
       features.insert(featuresSingle.begin(), featuresSingle.end());
@@ -626,7 +630,8 @@ RegisterMachine *team::getAction(
    decisionFeatures.push_back(features);
    // decisionMemories.push_back(memories);
 
-   sort(members_run_.begin(), members_run_.end(), RegisterMachineBidLexicalCompare());
+   sort(members_run_.begin(), members_run_.end(),
+        RegisterMachineBidLexicalCompare());
    long teamIdToFollow = 0;
    for (size_t i = 0; i < members_run_.size(); i++) {
       if (members_run_[i]->action_ < 0) {  // atomic
