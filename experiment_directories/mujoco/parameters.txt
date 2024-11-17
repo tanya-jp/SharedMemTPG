@@ -91,7 +91,7 @@ mu_internal 0
 n_root 1000
 
 # Number of new root teams to create each generation
-n_root_gen 500
+n_root_gen 200
 
 # Which diversity mode to use, if available
 diversity_mode 0
@@ -136,7 +136,7 @@ pmw 0.1
 # Program variation: probability of cloning program before modifying
 # If program is cloned, modify the clone only (adds 1 new program to pop)
 # If not cloned, all other variation ops will modify the program in place
-p_clone_program 0.5
+p_clone_program 1.0
 
 # Program variation: probability of mutating a program's action pointer
 pmn 0.0
@@ -156,10 +156,10 @@ p_instructions_delete 0.1
 p_instructions_add 0.075
 
 # Program variation: probability of linear crossover with another team
-p_instructions_xover 0.0
+p_instructions_xover 0.5
 
 # Program variation: probability of adding noise to constants
-p_instructions_mu_const 0.5
+p_instructions_mu_const 0.0
 
 # Program variation: stddev of normal noise added to each const
 instructions_mu_const_stddev 0.05
@@ -203,7 +203,7 @@ max_prog_size 1000000
 n_memories 8
 
 # Dimensionality for vector & matrix memory
-memory_size 2
+memory_size 8
 min_memory_size 2
 max_memory_size 29
 

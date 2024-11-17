@@ -92,20 +92,12 @@ RegisterMachine::RegisterMachine(
    observation_buff_size_ = rm.observation_buff_size_;
    use_evolved_const_ = rm.use_evolved_const_;
    op_counts_.resize(instruction::NUM_OP);
-   // for (size_t i = 0; i < MemoryEigen::kNumMemoryType_; i++) {
-   //    private_memory_.push_back(new MemoryEigen(*(rm.private_memory_[i])));
-   //    observation_memory_buff_.push_back(
-   //        new MemoryEigen(*(rm.observation_memory_buff_[i])));
-   // }
-   // private_memory_ids_ = rm.private_memory_ids_;
    for (auto instr : rm.instructions_) {
       instructions_.push_back(new instruction(*instr));
    }
    SetupMemory(state, std::any_cast<int>(params["n_memories"]),
                rm.private_memory_[MemoryEigen::kScalarType_]->memory_size_);
-   if (use_evolved_const_) {
       CopyEvolvedConstants(rm);
-   }
 }
 
 // Create RegisterMachine from string
@@ -425,13 +417,9 @@ void RegisterMachine::Run(state *obs, int &time_step, const size_t &graph_depth,
 void RegisterMachine::SetupMemory(std::unordered_map<std::string, int> &state,
                                   int n_memories, int memory_size) {
    for (size_t mem_t = 0; mem_t < MemoryEigen::kNumMemoryType_; mem_t++) {
-      // long id = state["memory_count"]++;
       private_memory_.push_back(
           new MemoryEigen(mem_t, n_memories, memory_size));
-      // private_memory_ids_.push_back(id);
-      if (use_evolved_const_) {
          private_memory_.back()->RandomizeConst();
-      }
       observation_memory_buff_.push_back(
           new MemoryEigen(mem_t, observation_buff_size_, memory_size));
    }
@@ -444,9 +432,7 @@ void RegisterMachine::ResizeMemory(
       m->memory_size_ = new_memory_size;
       m->n_memories_ = std::any_cast<int>(params["n_memories"]);
       m->ResizeMemory();
-      if (use_evolved_const_) {
          m->RandomizeConst();
-      }
    }
    for (auto *m : observation_memory_buff_) {
       m->memory_size_ = new_memory_size;
