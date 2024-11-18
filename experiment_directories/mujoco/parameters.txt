@@ -84,7 +84,7 @@ n_generations 1000000
 n_root 500
 
 # Number of new root teams to create each generation
-n_root_gen 100
+n_root_gen 250
 
 # Whether to constrain parent selection to root teams
 parent_select_roots_only 0
@@ -126,7 +126,7 @@ pmw 0.1
 # Program variation: probability of cloning program before modifying
 # If program is cloned, modify the clone only (adds 1 new program to pop)
 # If not cloned, all other variation ops will modify the program in place
-p_clone_program 0.5
+p_clone_program 1.0
 
 # Program variation: probability of mutating a program's action pointer
 pmn 0.1
@@ -146,7 +146,7 @@ p_instructions_delete 0.1
 p_instructions_add 0.075
 
 # Program variation: probability of linear crossover with another team
-p_instructions_xover 0.5
+p_instructions_xover 0.0
 
 # Program variation: probability of adding noise to constants
 p_instructions_mu_const 0.5
@@ -249,7 +249,7 @@ mj_model_path $TPG/datasets/mujoco_models/ant.xml
 
 mj_max_timestep 1000
 
-mj_n_eval_train 20
+mj_n_eval_train 10
 mj_n_eval_validation 0
 mj_n_eval_test 0
 
