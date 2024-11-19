@@ -208,7 +208,7 @@ max_observation_buff_size 1
 
 # Which tasks are active
 # Right-hand-side should be a single task name or a comma-separated list
-active_tasks Mujoco_Ant_v4
+active_tasks Mujoco_Reacher_v4
 
 # Use the partially-observable version of a task, if available
 # Currently only available for calssic control and Mujoco tasks
@@ -245,9 +245,9 @@ forecast_n_eval_val 10
 ## Parameters Specific to Mujoco ###############################################
 ################################################################################
 
-mj_model_path $TPG/datasets/mujoco_models/ant.xml
+mj_model_path $TPG/datasets/mujoco_models/reacher.xml
 
-mj_max_timestep 1000
+mj_max_timestep 50
 
 mj_n_eval_train 5
 mj_n_eval_validation 0
