@@ -4,6 +4,7 @@
 #include <MountainCar.h>
 #include <MountainCarContinuous.h>
 #include <Mujoco_Ant_v4.h>
+#include <Mujoco_Reacher_v4.h>
 #include <Pendulum.h>
 #include <RecursiveForecast.h>
 #include <TPG.h>
@@ -102,6 +103,8 @@ int main(int argc, char **argv) {
          tasks.push_back(new RecursiveForecast("Bach"));
       else if (substr == "Mujoco_Ant_v4")
          tasks.push_back(new Mujoco_Ant_v4(tpg.params_));  // TODO(skelly):fix
+      else if (substr == "Mujoco_Reacher_v4")
+	 tasks.push_back(new Mujoco_Reacher_v4(tpg.params_)); // TODO 
       else {
          cerr << "Unrecognised task:" << substr << endl;
          exit(1);
@@ -312,7 +315,7 @@ int main(int argc, char **argv) {
                                     gen);
                apiClient->LogMetric("lost", std::to_string(lost), "", gen);
             }
-
+	    // std::cout << "Here" << std::endl;
             os << setprecision(5) << fixed;
             os << "gTime t " << tpg.GetState("t_current");
             os << " sec " << endGen.count();
