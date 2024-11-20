@@ -104,15 +104,15 @@ int main(int argc, char **argv) {
       else if (substr == "Bach")
          tasks.push_back(new RecursiveForecast("Bach"));
       else if (substr == "Mujoco_Ant_v4")
-         tasks.push_back(new Mujoco_Ant_v4(tpg.params_));  // TODO(skelly):fix
+         tasks.push_back(new Mujoco_Ant_v4(tpg.params_));
       else if (substr == "Mujoco_Inverted_Pendulum_v4")
          tasks.push_back(
-             new Mujoco_Inverted_Pendulum_v4(tpg.params_));  // TODO(skelly):fix
+             new Mujoco_Inverted_Pendulum_v4(tpg.params_));
       else if (substr == "Mujoco_Half_Cheetah_v4")
          tasks.push_back(
-             new Mujoco_Half_Cheetah_v4(tpg.params_));  // TODO(skelly):fix
+             new Mujoco_Half_Cheetah_v4(tpg.params_));
       else if (substr == "Mujoco_Reacher_v4")
-	 tasks.push_back(new Mujoco_Reacher_v4(tpg.params_)); // TODO 
+	 tasks.push_back(new Mujoco_Reacher_v4(tpg.params_));
       else {
          cerr << "Unrecognised task:" << substr << endl;
          exit(1);
