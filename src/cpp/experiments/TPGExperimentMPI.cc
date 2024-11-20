@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
          tasks.push_back(new CartCentering());
       else if (substr == "Pendulum")
          tasks.push_back(new Pendulum());
-      else if (substr == "Mountaincar")
+      else if (substr == "MountainCar")
          tasks.push_back(new MountainCar());
       else if (substr == "MountainCarContinuous")
          tasks.push_back(new MountainCarContinuous());
@@ -315,7 +315,6 @@ int main(int argc, char **argv) {
                                     gen);
                apiClient->LogMetric("lost", std::to_string(lost), "", gen);
             }
-	    // std::cout << "Here" << std::endl;
             os << setprecision(5) << fixed;
             os << "gTime t " << tpg.GetState("t_current");
             os << " sec " << endGen.count();
