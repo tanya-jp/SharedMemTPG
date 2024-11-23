@@ -81,10 +81,10 @@ seed_aux 42
 n_generations 100000
 
 # Number of root teams (agents) to keep each generation
-n_root 1000
+n_root 500
 
 # Number of new root teams to create each generation
-n_root_gen 200
+n_root_gen 100
 
 # Whether to constrain parent selection to root teams
 parent_select_roots_only 0
@@ -161,7 +161,7 @@ p_observation_buff_size 0.0
 p_observation_index 0.1
 
 # Program variation: probability of changing memory_size
-p_memory_size 0.1
+p_memory_size 0.0
 
 # Use stateful programs
 # If set to 0, memories are set to 0 prior to each program execution
@@ -193,7 +193,7 @@ max_prog_size 1000000
 n_memories 8
 
 # Dimensionality for vector & matrix memory
-memory_size 8
+memory_size 10
 min_memory_size 2
 max_memory_size 32
 
