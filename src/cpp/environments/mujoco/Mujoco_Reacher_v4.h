@@ -50,8 +50,8 @@ class Mujoco_Reacher_v4 : public MujocoEnv {
 
    Results sim_step(std::vector<double>& action) {
 
-      // xpos id : fingertip = 3 , target = 4 , 
-      // found by  fingertip_id = mj_name2id(m_ , 
+      // xpos id : fingertip = 3 , target = 4 ,
+      // found by  fingertip_id = mj_name2id(m_ ,
       // mjOBJ_BODY, "fingertip") or "target";
       std::vector<double> dist_diff = {
           *(d_->xpos + 3 * 3) - *(d_->xpos + 3 * 4),
@@ -81,8 +81,9 @@ class Mujoco_Reacher_v4 : public MujocoEnv {
       std::transform(theta.begin(), theta.end(), sin_theta.begin(),
                      [](double x) { return sin(x); });
 
-      // sin(theta)
+      // cos(theta)
       std::copy_n(cos_theta.begin(), 2, obs.begin());
+      // sin(theta)
       std::copy_n(sin_theta.begin(), 2, obs.begin() + 2);
       // qpos[2:]
       std::copy_n(d_->qpos + 2, m_->nq - 2, obs.begin() + 4);
@@ -121,7 +122,7 @@ class Mujoco_Reacher_v4 : public MujocoEnv {
       for (size_t i = 0; i < qvel.size(); i++) {
          qvel[i] = init_qvel_[i] + dis_vel(rng);
       }
-      std::fill_n(std::back_inserter(qvel), 2, 0.0);
+      std::fill_n(qvel.begin() + 2, 2, 0.0);
       mj_resetData(m_, d_);
       set_state(qpos, qvel);
       step_ = 0;

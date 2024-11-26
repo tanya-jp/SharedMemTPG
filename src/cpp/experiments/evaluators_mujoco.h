@@ -173,6 +173,8 @@ void EvalMujoco(TPG& tpg, EvalData& eval) {
         eval.n_prediction++;
         obs->Set(task->GetObsVec(eval.partially_observable));
         MaybeAnimateStep(tpg);
+
+        // cerr << vecToStr(task->GetObsVec(eval.partially_observable)) << endl;
     }
     delete obs;
 }
