@@ -5,6 +5,10 @@
 #include <misc.h>
 
 class Mujoco_Reacher_v4 : public MujocoEnv {
+  private:
+   int id_fingertip_;
+   int id_target_;
+
   public:
    // Parameters
    double reward_distance_weight = 1.0;
@@ -19,6 +23,9 @@ class Mujoco_Reacher_v4 : public MujocoEnv {
           ExpandEnvVars(std::any_cast<string>(params["mj_model_path"]));
 
       initialize_simulation();
+
+      id_fingertip_ = mj_name2id(m_, mjOBJ_XBODY, "fingertip");
+      id_target_ = mj_name2id(m_, mjOBJ_XBODY, "target");
 
       obs_size_ = 10;
       state_.resize(obs_size_);
@@ -46,16 +53,15 @@ class Mujoco_Reacher_v4 : public MujocoEnv {
       return reward_control_weight * cost;
    }
 
+   std::vector<double> get_dist() {
+      return {d_->xpos[id_fingertip_ * 3 + 0] - d_->xpos[id_target_ * 3 + 0],
+              d_->xpos[id_fingertip_ * 3 + 1] - d_->xpos[id_target_ * 3 + 1]};
+   }
+
    bool terminal() { return step_ >= max_step_; }
 
    Results sim_step(std::vector<double>& action) {
-
-      // xpos id : fingertip = 3 , target = 4 ,
-      // found by  fingertip_id = mj_name2id(m_ ,
-      // mjOBJ_BODY, "fingertip") or "target";
-      std::vector<double> dist_diff = {
-          *(d_->xpos + 3 * 3) - *(d_->xpos + 3 * 4),
-          *(d_->xpos + 3 * 3 + 1) - *(d_->xpos + 3 * 4 + 1)};
+      auto dist_diff = get_dist();
       double reward_dist =
           -reward_distance_weight *
           std::sqrt(std::pow(dist_diff[0], 2) + std::pow(dist_diff[1], 2));
@@ -71,7 +77,6 @@ class Mujoco_Reacher_v4 : public MujocoEnv {
 
    void get_obs(std::vector<double>& obs) {
       // get 10 obs : theta = qpos[0:2]
-
       std::vector<double> theta(2);
       std::copy_n(d_->qpos, 2, theta.begin());
       std::vector<double> cos_theta(2);
@@ -80,7 +85,6 @@ class Mujoco_Reacher_v4 : public MujocoEnv {
                      [](double x) { return cos(x); });
       std::transform(theta.begin(), theta.end(), sin_theta.begin(),
                      [](double x) { return sin(x); });
-
       // cos(theta)
       std::copy_n(cos_theta.begin(), 2, obs.begin());
       // sin(theta)
@@ -90,9 +94,7 @@ class Mujoco_Reacher_v4 : public MujocoEnv {
       // qvel[0:2]
       std::copy_n(d_->qvel, 2, obs.begin() + 4 + m_->nq - 2);
       // xpos[0:2]
-      std::vector<double> dist_diff = {
-          *(d_->xpos + 3 * 3) - *(d_->xpos + 3 * 4),
-          *(d_->xpos + 3 * 3 + 1) - *(d_->xpos + 3 * 4 + 1)};
+      auto dist_diff = get_dist();
       std::copy_n(dist_diff.begin(), 2, obs.begin() + 6 + m_->nq - 2);
    }
 
