@@ -137,7 +137,7 @@ void StepVisualization() {
 
     // process pending GUI events, call GLFW callbacks
     glfwPollEvents();
-}:
+}
 
 void MaybeStartAnimation(TPG& tpg, TaskEnv* task) {
     if (tpg.GetParam<int>("animate")) {
