@@ -1194,7 +1194,9 @@ void TPG::InitTeams() {
                                  ? GetParam<int>("n_discrete_action") - 1
                                  : 0;
    uniform_int_distribution<int> dis_actions(0, max_discrete_action);
-   int initial_team_size = 2;
+   uniform_int_distribution<int> dis_team_size(
+       1, GetParam<int>("max_initial_team_size"));
+   int initial_team_size = dis_team_size(rngs_[TPG_SEED]);
    for (int t = 0; t < GetParam<int>("n_root"); t++) {
       auto new_team = new team(GetState("t_current"), state_["team_count"]++);
       for (int p = 0; p < initial_team_size; p++) {
@@ -1208,15 +1210,6 @@ void TPG::InitTeams() {
       AddTeam(new_team);  // add team to team population
       _phyloGraph.insert(pair<long, phyloRecord>(new_team->id_, phyloRecord()));
       _phyloGraph[new_team->id_].gtime = 0;
-   }
-   // Fill teams from learner population
-   uniform_int_distribution<int> dis_team_size(
-       1, GetParam<int>("max_initial_team_size"));
-   uniform_int_distribution<int> dis_programs(0, _L.size() - 1);
-   for (auto tm : _M) {
-      auto team_size = dis_team_size(rngs_[TPG_SEED]);
-      while (tm->size() < team_size)
-         tm->AddProgram(_L[dis_programs(rngs_[TPG_SEED])]);
    }
    oss << "InitTms Msz " << _M.size() << " Lsz " << _L.size() << " rSz "
        << _Mroot.size() << " mSz";

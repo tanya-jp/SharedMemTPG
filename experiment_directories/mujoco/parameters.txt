@@ -161,7 +161,7 @@ p_observation_buff_size 0.0
 p_observation_index 0.1
 
 # Program variation: probability of changing memory_size
-p_memory_size 0.0
+p_memory_size 0.1
 
 # Use stateful programs
 # If set to 0, memories are set to 0 prior to each program execution
@@ -183,14 +183,14 @@ continuous_output 2
 n_input 0
 
 # Max initial program size
-max_initial_prog_size 10
+max_initial_prog_size 100
 
 # Max program size
 max_prog_size 1000000
 
 # Number of memory indices
 # Each memory index points to a data structure (scalar, vector, or matrix)
-n_memories 4
+n_memories 8
 
 # Dimensionality for vector & matrix memory
 memory_size 10
