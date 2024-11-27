@@ -166,7 +166,7 @@ void EvalMujoco(TPG& tpg, EvalData& eval) {
         eval.program_out = tpg.getAction(
             eval.tm, obs, true, eval.teams_visited, eval.instruction_count,
             task->step_, eval.team_path, tpg.rngs_[AUX_SEED], false);
-        auto ctrl = WrapVectorActionTanh(eval);
+        auto ctrl = WrapVectorAction(eval);
         TaskEnv::Results r = task->sim_step(ctrl);
         eval.stats_double[REWARD1_IDX] += r.r1;
         eval.AccumulateStepData();

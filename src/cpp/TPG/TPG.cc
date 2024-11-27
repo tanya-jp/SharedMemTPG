@@ -1211,7 +1211,7 @@ void TPG::InitTeams() {
    }
    // Fill teams from learner population
    uniform_int_distribution<int> dis_team_size(
-       2, GetParam<int>("max_initial_team_size"));
+       1, GetParam<int>("max_initial_team_size"));
    uniform_int_distribution<int> dis_programs(0, _L.size() - 1);
    for (auto tm : _M) {
       auto team_size = dis_team_size(rngs_[TPG_SEED]);

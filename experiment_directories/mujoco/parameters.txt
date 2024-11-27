@@ -94,16 +94,16 @@ parent_select_roots_only 0
 ################################################################################
 
 # Initial team size
-max_initial_team_size 10
+max_initial_team_size 1
 
 # Max team size
-max_team_size 1000000
+max_team_size 1
 
 ### Independent team mutation ops #############################################
 ###############################################################################
 
 # Team variation: probability of team crossover
-pmx 0.5
+pmx 0.0
 # Team variation: probability of team crossover adding each parent prog to child
 pmx_p 0.5
 
@@ -131,7 +131,7 @@ p_clone_program 1.0
 # Program variation: probability of mutating a program's action pointer
 pmn 0.1
 # When changing action pointer, probability of selecting atomic action
-p_atomic 0.99
+p_atomic 1.0
 
 # Program variation: probability of changing a random instruction
 p_instructions_mutate 0.1
@@ -161,7 +161,7 @@ p_observation_buff_size 0.0
 p_observation_index 0.1
 
 # Program variation: probability of changing memory_size
-p_memory_size 0.1
+p_memory_size 0.0
 
 # Use stateful programs
 # If set to 0, memories are set to 0 prior to each program execution
@@ -190,7 +190,7 @@ max_prog_size 1000000
 
 # Number of memory indices
 # Each memory index points to a data structure (scalar, vector, or matrix)
-n_memories 8
+n_memories 4
 
 # Dimensionality for vector & matrix memory
 memory_size 10
@@ -251,9 +251,9 @@ forecast_n_eval_val 10
 #mj_model_path $TPG/datasets/mujoco_models/inverted_pendulum.xml
 mj_model_path $TPG/datasets/mujoco_models/reacher.xml
 
-mj_max_timestep 50
+mj_max_timestep 100
 
-mj_n_eval_train 100
+mj_n_eval_train 1
 mj_n_eval_validation 0
 mj_n_eval_test 0
 
