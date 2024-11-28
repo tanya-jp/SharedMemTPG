@@ -2781,9 +2781,6 @@ void TPG::WriteCheckpoint(long t, bool elite) {
             teamsAll.insert(teams.begin(), teams.end());
          }
       }
-      // for (auto mem : memories) {
-      //    ofs << mem->ToString();
-      // }
       for (auto prog : programs) {
          ofs << prog->ToStringMemory();
       }
@@ -2794,11 +2791,6 @@ void TPG::WriteCheckpoint(long t, bool elite) {
          ofs << tm->checkpoint();
       }
    } else {  // Include all memories, teams, and programs
-      // for (size_t mem_t = 0; mem_t < MemoryEigen::kNumMemoryType_; mem_t++) {
-      //    for (auto key : _Memory[mem_t]) {
-      //       ofs << key.second->ToString();
-      //    }
-      // }
       for (auto key : _L) {
          ofs << key.second->ToStringMemory();
       }
