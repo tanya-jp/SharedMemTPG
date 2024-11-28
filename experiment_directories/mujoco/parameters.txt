@@ -81,10 +81,10 @@ seed_aux 42
 n_generations 100000
 
 # Number of root teams (agents) to keep each generation
-n_root 1000
+n_root 500
 
 # Number of new root teams to create each generation
-n_root_gen 100
+n_root_gen 500
 
 # Whether to constrain parent selection to root teams
 parent_select_roots_only 0
@@ -149,7 +149,7 @@ p_instructions_add 0.075
 p_instructions_xover 0.0
 
 # Program variation: probability of adding noise to constants
-p_instructions_mu_const 0.5
+p_instructions_mu_const 1.0
 
 # Program variation: stddev of normal noise added to each const
 instructions_mu_const_stddev 0.05
@@ -183,10 +183,10 @@ continuous_output 2
 n_input 0
 
 # Max initial program size
-max_initial_prog_size 5
+max_initial_prog_size 100
 
 # Max program size
-max_prog_size 100
+max_prog_size 1000000
 
 # Number of memory indices
 # Each memory index points to a data structure (scalar, vector, or matrix)
@@ -253,7 +253,7 @@ mj_model_path $TPG/datasets/mujoco_models/reacher.xml
 
 mj_max_timestep 100
 
-mj_n_eval_train 20
+mj_n_eval_train 100
 mj_n_eval_validation 0
 mj_n_eval_test 0
 

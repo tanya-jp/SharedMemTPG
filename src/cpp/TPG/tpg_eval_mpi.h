@@ -204,6 +204,7 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
 
     vector<int> steps_per_task(tpg.GetState("n_task"), 0);
     // TODO(skelly): clean up
+    tpg.rngs_[AUX_SEED].seed(tpg.GetParam<int>("seed_aux"));
     for (int task = 0; task < tpg.GetState("n_task"); task++) {
         tpg.state_["active_task"] = task;
         eval.task = tasks[tpg.GetState("active_task")];
@@ -215,7 +216,6 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
         }
         for (eval.episode = 0; eval.episode < eval.tm->_n_eval;
              eval.episode++) {
-            tpg.rngs_[AUX_SEED].seed(eval.episode);
             eval.tm->InitMemory(tpg._teamMap, tpg.params_);
 
             if (eval.task->eval_type_ == "RecursiveForecast") {
