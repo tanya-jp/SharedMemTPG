@@ -81,16 +81,18 @@ seed_aux 42
 n_generations 100000
 
 # Number of root teams (agents) to keep each generation
-n_root 500
+n_root 180
 
 # Number of new root teams to create each generation
-n_root_gen 500
+n_root_gen 180
 
 # Whether to constrain parent selection to root teams
 parent_select_roots_only 0
 
+tournament_size 3
+
 # Whether to keep evaluation outcome over time or re-evaluate each generation
-keep_old_outcomes 0
+keep_old_outcomes 1
 
 ################################################################################
 ## Team  parameters ############################################################
@@ -256,7 +258,7 @@ mj_model_path $TPG/datasets/mujoco_models/reacher.xml
 
 mj_max_timestep 100
 
-mj_n_eval_train 5
+mj_n_eval_train 50
 mj_n_eval_validation 0
 mj_n_eval_test 0
 

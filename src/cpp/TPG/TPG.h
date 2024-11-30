@@ -43,6 +43,7 @@ class TPG {
     void countRefs();
     void finalize();
     void genSampleSets(size_t);
+    team* TeamSelector_Tournament(vector<team*> &candidate_parent_teams);
     void GenerateNewTeams();
     void TeamMutator_ProgramOrder(team *team_to_mu);
     void TeamMutator_AddPrograms(team *team_to_mu);

@@ -653,6 +653,19 @@ team *TPG::TeamXover(vector<team *> &parents) {
    return child_team;
 }
 
+team* TPG::TeamSelector_Tournament(vector<team*>& candidate_parent_teams) {
+   uniform_int_distribution<int> dis(0, candidate_parent_teams.size() - 1);
+   auto tournament_size = GetParam<int>("tournament_size");
+   auto tm = candidate_parent_teams[dis(rngs_[TPG_SEED])];
+   while (tournament_size-- > 0) {
+      auto i = dis(rngs_[TPG_SEED]);
+      if (candidate_parent_teams[i]->fit_ > tm->fit_) {
+         tm = candidate_parent_teams[i];
+      }
+   }
+   return tm;
+}
+
 /******************************************************************************/
 void TPG::GenerateNewTeams() {
    auto root_size_in = _Mroot.size();
@@ -666,6 +679,7 @@ void TPG::GenerateNewTeams() {
       std::copy(_M.begin(), _M.end(), candidate_parent_teams.begin());
    }
    for (auto &subset : task_power_set) {
+      //TODO(skelly): put selection in a separate function
       if (GetParam<int>("parent_select_roots_only")) {
          if (task_set_map_[vecToStrNoSpace(subset)].size() == 0) continue;
          candidate_parent_teams = task_set_map_[vecToStrNoSpace(subset)];
@@ -674,9 +688,14 @@ void TPG::GenerateNewTeams() {
       for (int i = 0; i < n_new_teams_per_set; i++) {
          team *child_team;
          if (real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmx"))
-            child_team = TeamXover(candidate_parent_teams);
+            child_team = TeamXover(candidate_parent_teams);   
          else {
-            auto parent_team = candidate_parent_teams[disP(rngs_[TPG_SEED])];
+            team* parent_team;
+            if (GetParam<int>("tournament_size") > 0) {
+              parent_team = TeamSelector_Tournament(candidate_parent_teams);
+            } else {  // Random selection
+              parent_team = candidate_parent_teams[disP(rngs_[TPG_SEED])];
+            }
             child_team = CloneTeam(parent_team);
             AddTeamToPhylogeny(child_team);
             AddAncestorToPhylogeny(parent_team, child_team);
