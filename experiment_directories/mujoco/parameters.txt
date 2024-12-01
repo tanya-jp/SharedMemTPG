@@ -78,13 +78,13 @@ seed_tpg 42
 seed_aux 42
 
 # Max number of generations
-n_generations 100000
+n_generations 1000000
 
 # Number of root teams (agents) to keep each generation
-n_root 180
+n_root 1000
 
 # Number of new root teams to create each generation
-n_root_gen 180
+n_root_gen 1000
 
 # Whether to constrain parent selection to root teams
 parent_select_roots_only 0
@@ -191,7 +191,7 @@ n_input 0
 max_initial_prog_size 10
 
 # Max program size
-max_prog_size 1000000
+max_prog_size 100
 
 # Number of memory indices
 # Each memory index points to a data structure (scalar, vector, or matrix)
@@ -256,7 +256,7 @@ forecast_n_eval_val 10
 #mj_model_path $TPG/datasets/mujoco_models/inverted_pendulum.xml
 mj_model_path $TPG/datasets/mujoco_models/reacher.xml
 
-mj_max_timestep 100
+mj_max_timestep 50
 
 mj_n_eval_train 50
 mj_n_eval_validation 0
