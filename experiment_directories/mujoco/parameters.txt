@@ -188,7 +188,7 @@ continuous_output 2
 n_input 0
 
 # Max initial program size
-max_initial_prog_size 100
+max_initial_prog_size 10
 
 # Max program size
 max_prog_size 1000000

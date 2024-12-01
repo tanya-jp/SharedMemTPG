@@ -168,7 +168,7 @@ class instruction {
       // This "protects" output memory by filtering nan value.
       out_->working_memory_[outIdxE_].array() =
           out_->working_memory_[outIdxE_].array().unaryExpr(
-              [](double v) { return std::isfinite(v) ? v : 0.1; });
+              [](double v) { return std::isfinite(v) ? v : 0.0; });
    }
 
    inline int GetInIdx(int i) const {

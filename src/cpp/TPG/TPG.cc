@@ -1247,7 +1247,8 @@ void TPG::InitTeams() {
          AddProgram(new_prog);  // add program to program population
       }
       AddTeam(new_team);  // add team to team population
-      _phyloGraph.insert(pair<long, phyloRecord>(new_team->id_, phyloRecord()));
+      phyloRecord p;  // TODO(skelly): make pointer?
+      _phyloGraph.insert(pair<long, phyloRecord>(new_team->id_, p));
       _phyloGraph[new_team->id_].gtime = 0;
    }
    oss << "InitTms Msz " << _M.size() << " Lsz " << _L.size() << " rSz "
