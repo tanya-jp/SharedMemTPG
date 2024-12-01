@@ -159,7 +159,6 @@ void EvalMujoco(TPG& tpg, EvalData& eval) {
     MaybeStartAnimation(tpg, task);
     MaybeAnimateStep(tpg);
     eval.n_prediction = 0;
-    vector<double> ctrl_d(2, 0.0);
     state* obs = new state(task->GetObsSize());
     obs->Set(task->GetObsVec(eval.partially_observable));
     while (!task->terminal()) {
@@ -167,7 +166,7 @@ void EvalMujoco(TPG& tpg, EvalData& eval) {
             eval.tm, obs, true, eval.teams_visited, eval.instruction_count,
             task->step_, eval.team_path, tpg.rngs_[AUX_SEED], false);
         auto ctrl = WrapVectorActionTanh(eval);
-        TaskEnv::Results r = task->sim_step(ctrl_d);
+        TaskEnv::Results r = task->sim_step(ctrl);
         eval.stats_double[REWARD1_IDX] += r.r1;
         eval.AccumulateStepData();
         eval.n_prediction++;
