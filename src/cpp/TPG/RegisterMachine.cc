@@ -172,68 +172,69 @@ void RegisterMachine::MarkFeatures(instruction *istr, int in) {
 
 void RegisterMachine::MarkIntrons(
     std::unordered_map<std::string, std::any> &params) {
-   // memories_effective keeps track of which memories are effective, i.e. used
-   // in the program. memories_effective maps [memory type][index]->true/false.
-   auto n_memories = std::any_cast<int>(params["n_memories"]);
-   map<int, vector<bool>> memories_effective;
-   memories_effective[MemoryEigen::kScalarType_] =
-       vector<bool>(n_memories, false);
-   memories_effective[MemoryEigen::kVectorType_] =
-       vector<bool>(n_memories, false);
-   memories_effective[MemoryEigen::kMatrixType_] =
-       vector<bool>(n_memories, false);
+   // // memories_effective keeps track of which memories are effective, i.e. used
+   // // in the program. memories_effective maps [memory type][index]->true/false.
+   // auto n_memories = std::any_cast<int>(params["n_memories"]);
+   // map<int, vector<bool>> memories_effective;
+   // memories_effective[MemoryEigen::kScalarType_] =
+   //     vector<bool>(n_memories, false);
+   // memories_effective[MemoryEigen::kVectorType_] =
+   //     vector<bool>(n_memories, false);
+   // memories_effective[MemoryEigen::kMatrixType_] =
+   //     vector<bool>(n_memories, false);
 
-   // Mark bid output memory
-   memories_effective[MemoryEigen::kScalarType_][0] = true;
+   // // Mark bid output memory
+   // memories_effective[MemoryEigen::kScalarType_][0] = true;
 
-   // Mark continuous output memory
-   if (std::any_cast<int>(params["continuous_output"]) == 1)
-      memories_effective[MemoryEigen::kScalarType_][1] = true;
-   else if (std::any_cast<int>(params["continuous_output"]) == 2)
-      memories_effective[MemoryEigen::kVectorType_][1] = true;
-   else if (std::any_cast<int>(params["continuous_output"]) == 3)
-      memories_effective[MemoryEigen::kMatrixType_][1] = true;
+   // // Mark continuous output memory
+   // if (std::any_cast<int>(params["continuous_output"]) == 1)
+   //    memories_effective[MemoryEigen::kScalarType_][1] = true;
+   // else if (std::any_cast<int>(params["continuous_output"]) == 2)
+   //    memories_effective[MemoryEigen::kVectorType_][1] = true;
+   // else if (std::any_cast<int>(params["continuous_output"]) == 3)
+   //    memories_effective[MemoryEigen::kMatrixType_][1] = true;
 
-   // Backward pass to find effective instructions when stateless
-   std::vector<instruction *> instructions_effective_stateless;
-   for (auto riter = instructions_.rbegin(); riter != instructions_.rend();
-        riter++) {
-      auto istr = *riter;
-      if (memories_effective[istr->GetOutType()][istr->outIdx_ % n_memories]) {
-         instructions_effective_stateless.push_back(istr);
-         for (int in = 0; in < 2; in++) {
-            if (istr->IsMemoryRef(in)) {
-               memories_effective[istr->GetInType(in)]
-                                 [istr->GetInIdx(in) % n_memories] = true;
-            }
-         }
-      }
-   }
+   // // Backward pass to find effective instructions when stateless
+   // std::vector<instruction *> instructions_effective_stateless;
+   // for (auto riter = instructions_.rbegin(); riter != instructions_.rend();
+   //      riter++) {
+   //    auto istr = *riter;
+   //    if (memories_effective[istr->GetOutType()][istr->outIdx_ % n_memories]) {
+   //       instructions_effective_stateless.push_back(istr);
+   //       for (int in = 0; in < 2; in++) {
+   //          if (istr->IsMemoryRef(in)) {
+   //             memories_effective[istr->GetInType(in)]
+   //                               [istr->GetInIdx(in) % n_memories] = true;
+   //          }
+   //       }
+   //    }
+   // }
 
-   // TODO(skelly): Is this the most efficient method? Currently O(n^2)
-   for (size_t t = 0; t < instructions_.size(); t++) {
-      instructions_effective_.clear();
-      // Count occurance of each op.
-      std::fill(op_counts_.begin(), op_counts_.end(), 0);
-      for (auto istr : instructions_) {
-         if (memories_effective[istr->GetOutType()]
-                               [istr->outIdx_ % n_memories] ||
-             std::find(instructions_effective_stateless.begin(),
-                       instructions_effective_stateless.end(),
-                       istr) != instructions_effective_stateless.end()) {
-            instructions_effective_.push_back(istr);
-            op_counts_[istr->op_]++;
-            for (int in = 0; in < 2; in++) {
-               if (istr->IsMemoryRef(in)) {
-                  memories_effective[istr->GetInType(in)]
-                                    [istr->GetInIdx(in) % n_memories] = true;
-               } else if (istr->IsObs(in)) {
-                  MarkFeatures(istr, in);
-               }
-            }
-         }
-      }
-   }
+   // // TODO(skelly): Is this the most efficient method? Currently O(n^2)
+   // for (size_t t = 0; t < instructions_.size(); t++) {
+   //    instructions_effective_.clear();
+   //    // Count occurance of each op.
+   //    std::fill(op_counts_.begin(), op_counts_.end(), 0);
+   //    for (auto istr : instructions_) {
+   //       if (memories_effective[istr->GetOutType()]
+   //                             [istr->outIdx_ % n_memories] ||
+   //           std::find(instructions_effective_stateless.begin(),
+   //                     instructions_effective_stateless.end(),
+   //                     istr) != instructions_effective_stateless.end()) {
+   //          instructions_effective_.push_back(istr);
+   //          op_counts_[istr->op_]++;
+   //          for (int in = 0; in < 2; in++) {
+   //             if (istr->IsMemoryRef(in)) {
+   //                memories_effective[istr->GetInType(in)]
+   //                                  [istr->GetInIdx(in) % n_memories] = true;
+   //             } else if (istr->IsObs(in)) {
+   //                MarkFeatures(istr, in);
+   //             }
+   //          }
+   //       }
+   //    }
+   // }
+   instructions_effective_ = instructions_;
 }
 
 void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
@@ -366,14 +367,33 @@ void RegisterMachine::Run(state *obs, int &time_step, const size_t &graph_depth,
    bool copied_obs_mat = false;
 
    for (auto istr : instructions_effective_) {
-      istr->out_ = private_memory_[istr->GetOutType()];
 
-      istr->outIdxE_ = istr->outIdx_ % istr->out_->n_memories_;
+      if (istr->GetOutType() != sharedMemoryEigen::SHARED_MEM_TYPE){
+         istr->out_ = private_memory_[istr->GetOutType()];
+
+         istr->outIdxE_ = istr->outIdx_ % istr->out_->n_memories_;
+      }
+
+      else {
+         // TODO(Tan):if writing function acts with some receieved values
+         // this needs to have some pointer assignments
+         istr->memory_out_ = team_memory_;
+         // cout << "istr->GetOutType(): " << istr->GetOutType() << endl;
+      }
 
       for (size_t in = 0; in < 2; in++) {
          // Check if this input is used in the operation.
-         if (istr->GetInType(in) != -1) {
-            if (istr->IsMemoryRef(in)) {
+         if (istr->GetInType(in) == sharedMemoryEigen::SHARED_MEM_TYPE){
+            istr->ClearObsRef(in);
+            istr->SetInSharedMem(team_memory_);
+            istr->SetInIdxE(
+               in, istr->GetInIdx(in) % 
+               (istr->GetInSharedMem()->rows_ * istr->GetInSharedMem()->cols_));
+         }
+
+         else if (istr->GetInType(in) != -1) {
+            if (istr->IsMemoryRef(in) || 
+                  istr->GetOutType() == sharedMemoryEigen::SHARED_MEM_TYPE) {
                istr->SetInMem(in, private_memory_[istr->GetInType(in)]);
                istr->SetInIdxE(
                    in, istr->GetInIdx(in) % istr->GetInMem(in)->n_memories_);
@@ -404,8 +424,11 @@ void RegisterMachine::Run(state *obs, int &time_step, const size_t &graph_depth,
          }
       }
       // Track write times for temporal memory
-      istr->out_->write_time_[istr->outIdxE_] =
-          time_step + (graph_depth / MAX_GRAPH_DEPTH);
+      if (istr->GetOutType() != 4){
+         // TODO (Tan): make it work for write instruction
+         istr->out_->write_time_[istr->outIdxE_] =
+            time_step + (graph_depth / MAX_GRAPH_DEPTH);
+      }
       istr->exec(verbose);  // Execute instruction
    }
    bid_val_ =

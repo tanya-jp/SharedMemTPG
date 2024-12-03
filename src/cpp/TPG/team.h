@@ -11,6 +11,7 @@
 #include "point.h"
 #include "state.h"
 #include "RegisterMachine.h"
+#include "sharedMemoryEigen.h"
 
 #define MEMBERS_RUN_ENTROPY_INDEX 3
 #define NUM_TEAM_DISTANCE_MEASURES 3
@@ -191,6 +192,8 @@ class team {
     root_ = true;
     runTimeComplexityIns_ = 0;
     runTimeComplexityTms_ = 0;
+
+    team_memory_ = sharedMemoryEigen();
   };
 
   ~team() {  // TODO(skelly) clean outcome data structure
@@ -286,6 +289,8 @@ class team {
   double runTimeComplexityIns_;
   double runTimeComplexityTms_;
   string task_code_;
+
+  sharedMemoryEigen team_memory_;  // Private shared memory for the programs in this team
 };
 
 struct teamIdComp {

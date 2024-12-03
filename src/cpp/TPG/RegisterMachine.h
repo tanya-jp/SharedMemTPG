@@ -28,6 +28,9 @@ class RegisterMachine {
    // Vector storing 1 MemoryEigen* of each type (SCALAR, VECTOR, MATRIX)
    vector<MemoryEigen *> observation_memory_buff_;
 
+   // Team memory
+   sharedMemoryEigen *team_memory_;
+
    long id_;             // Unique id
    double bid_val_;      // Temporarily store the most recent bid value
    set<long> features_;  // Features indexed by this RegisterMachine
@@ -58,6 +61,8 @@ class RegisterMachine {
                    mt19937 &rng);
 
    ~RegisterMachine();
+
+   inline void SetMemory(sharedMemoryEigen *team_memory) { team_memory_ = team_memory; }
 
    inline void AddToInputMemoryBuff(MatrixDynamic &mat, int mem_t) {
       observation_memory_buff_[mem_t]->working_memory_.push_front(mat);

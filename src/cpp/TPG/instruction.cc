@@ -361,6 +361,15 @@ void instruction::SetupOps() {
   op_signatures_[OBS_BUFF_SLICE_OP_] =
       {MemoryEigen::kVectorType_, MemoryEigen::kVectorType_};
   op_list_[OBS_BUFF_SLICE_OP_] = {&instruction::ExecuteObsBuffSliceOp};
+
+  op_signatures_[MEM_WRITE_OP_] = 
+      {sharedMemoryEigen::SHARED_MEM_TYPE, MemoryEigen::kScalarType_};
+  op_list_[MEM_WRITE_OP_] =
+      (&instruction::ExecuteMemWriteOp);
+
+  op_signatures_[MEM_READ_OP_] =
+      {MemoryEigen::kScalarType_, sharedMemoryEigen::SHARED_MEM_TYPE};
+  op_list_[MEM_READ_OP_] = {&instruction::ExecuteMemReadOp};
 }
 
 // Constructor

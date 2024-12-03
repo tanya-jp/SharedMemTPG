@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "MemoryEigen.h"
+#include "sharedMemoryEigen.h"
 
 class instruction {
   public:
@@ -86,8 +87,10 @@ class instruction {
    static const int SCALAR_VECTOR_ASSIGN_OP_ = 70;
    static const int SCALAR_MATRIX_ASSIGN_OP_ = 71;
    static const int OBS_BUFF_SLICE_OP_ = 73;
-
-   static const int NUM_OP = 74;
+   static const int MEM_WRITE_OP_ = 74;
+   static const int MEM_READ_OP_ = 75;
+   
+   static const int NUM_OP = 76;
 
    static const vector<double> constants_;
    mt19937 rng_;
@@ -126,6 +129,10 @@ class instruction {
    int in2IdxE_ = 0;
    int in3IdxE_ = 0;
 
+   //indecies to the shared memory
+   int in4Idx_ = 0;
+   int in4IdxE_ = 0;
+
    /****************************************************************************/
    // The number of private memories of each type (scalar, vector, matrix)
    int memIndices_ = 0;
@@ -139,6 +146,11 @@ class instruction {
    MemoryEigen* out_;
    MemoryEigen* in1_;
    MemoryEigen* in2_;
+
+   // Pointers to i/o for memory instructions
+   sharedMemoryEigen* memory_out_;
+   sharedMemoryEigen* memory_in1_;
+   sharedMemoryEigen* memory_in2_;
 
    // op_signatures_ maps operations to memory types for {out, in1, in2}
    // Each operation requires unique i/o memory types. For example:
@@ -166,9 +178,12 @@ class instruction {
       // TODO(skelly): set to 1.0 instead of 0.0?
       // Change infinite values to 0.0 in output memory
       // This "protects" output memory by filtering nan value.
+      // TODO (Tan) have this for the shared memory
+      if (GetOutType()!=sharedMemoryEigen::SHARED_MEM_TYPE ){
       out_->working_memory_[outIdxE_].array() =
           out_->working_memory_[outIdxE_].array().unaryExpr(
               [](double v) { return std::isfinite(v) ? v : 0.0; });
+      }
    }
 
    inline int GetInIdx(int i) const {
@@ -178,8 +193,10 @@ class instruction {
          return in1Idx_;
       else if (i == 2)
          return in2Idx_;
-      else
+      else if (i == 3)
          return in3Idx_;
+      else
+         return in4Idx_;
    }
 
    inline int GetInIdxE(int i) const {
@@ -189,8 +206,10 @@ class instruction {
          return in1IdxE_;
       else if (i == 2)
          return in2IdxE_;
-      else
+      else if (i == 3)
          return in3IdxE_;
+      else
+         return in4IdxE_;
    }
 
    inline void SetInIdx(int i, int idx) {
@@ -200,8 +219,10 @@ class instruction {
          in1Idx_ = idx;
       else if (i == 2)
          in2Idx_ = idx;
-      else
+      else if (i == 3)
          in3Idx_ = idx;
+      else
+         in4Idx_ = idx;
    }
 
    inline void SetInIdxE(int i, int idx) {
@@ -211,12 +232,17 @@ class instruction {
          in1IdxE_ = idx;
       else if (i == 2)
          in2IdxE_ = idx;
-      else
+      else if (i == 3)
          in3IdxE_ = idx;
+      else
+         in4IdxE_ = idx;
    }
 
+   inline void ClearObsRef(int i) { (i == 0 ? in1Src_ : in2Src_) = 0; } 
    inline MemoryEigen* GetInMem(int i) const { return i == 0 ? in1_ : in2_; }
+   inline sharedMemoryEigen* GetInSharedMem() const { return memory_in1_; }
    inline void SetInMem(int i, MemoryEigen* m) { (i == 0 ? in1_ : in2_) = m; }
+   inline void SetInSharedMem(sharedMemoryEigen* m) { memory_in1_ = m; }
    inline int GetInType(size_t i) const {
       return op_signatures_[op_].size() > i + 1 ? op_signatures_[op_][i + 1]
                                                 : -1;
@@ -937,6 +963,52 @@ class instruction {
          }
          cerr << endl;
       }
+   }
+
+   /* Teams' memory*/
+   inline void ExecuteMemWriteOp(bool dbg) {
+      // if (in1_->working_memory_.size() != 1 && in1_->working_memory_.size() != 8){
+         // cout << "size  " << in1_->working_memory_.size()<< endl;
+      // }
+
+      int halfRows = static_cast<int>(memory_out_->rows_ / 2);
+      for (int i = 0; i < halfRows; ++i) {
+         // Probability to write (gets smaller as i increases)
+         double writeProb = memory_out_->memWriteProb_cauchy1(i);
+
+         for (int col = 0; col < static_cast<int>(memory_out_->cols_); ++col){
+
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_real_distribution<> dis(0.0, 1.0);
+
+            double randomValue = dis(gen);
+
+            if (randomValue < writeProb){
+               int lower_row = halfRows - i - 1;
+               // memory_out_->team_memory_(lower_row, col) = regs[col]
+               memory_out_->setMatrixValue(lower_row, col, in1_->working_memory_[col](0, 0));
+               
+               int upper_row = halfRows + i;
+               // memory_out_->team_memory_(upper_row, col) = regs[col]
+               memory_out_->setMatrixValue(upper_row, col, in1_->working_memory_[col](0, 0));
+               // memory_out_->team_memory_(upper_row, col) = in1_->working_memory_[col](0, 0);
+            }
+
+         }
+      }
+      // memory_out_->printTeamMemory();
+   }
+
+   inline void ExecuteMemReadOp(bool dbg) {
+      int row = in0IdxE_ / memory_in1_->rows_; 
+      int col = in0IdxE_ % memory_in1_->cols_; 
+      if (out_->working_memory_ .size()< static_cast<size_t>(col))
+         out_->working_memory_[in0IdxE_](0, 0) = memory_in1_->team_memory_(row, col);
+      // memory_in1_->printTeamMemory();
+      if (dbg){
+
+      } 
    }
 };
 #endif
