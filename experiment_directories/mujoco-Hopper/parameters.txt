@@ -84,7 +84,7 @@ n_generations 1000000
 n_root 1000
 
 # Number of new root teams to create each generation
-n_root_gen 100
+n_root_gen 200
 
 # Whether to constrain parent selection to root teams
 parent_select_roots_only 0
@@ -191,7 +191,7 @@ n_input 0
 max_initial_prog_size 10
 
 # Max program size
-max_prog_size 100
+max_prog_size 1000000
 
 # Number of memory indices
 # Each memory index points to a data structure (scalar, vector, or matrix)
