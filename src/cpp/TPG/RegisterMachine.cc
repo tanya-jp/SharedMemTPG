@@ -275,13 +275,11 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
          changed = true;
       }
 
-      // Add noise to constants
+      // Mutate constants
       if (dis_real(rng) <
           std::any_cast<double>(params["p_instructions_mu_const"])) {
          for (auto m : private_memory_) {
-            m->AddNoiseToConst(
-                rng,
-                std::any_cast<double>(params["instructions_mu_const_stddev"]));
+            m->MutateConstants(rng);
          }
       }
 

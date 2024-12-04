@@ -154,10 +154,7 @@ p_instructions_add 0.075
 p_instructions_xover 0.0
 
 # Program variation: probability of adding noise to constants
-p_instructions_mu_const 1.0
-
-# Program variation: stddev of normal noise added to each const
-instructions_mu_const_stddev 0.05
+p_instructions_mu_const 0.5
 
 # Program variation: probability of changing observation_buff_size
 p_observation_buff_size 0.0
@@ -191,7 +188,7 @@ n_input 0
 max_initial_prog_size 10
 
 # Max program size
-max_prog_size 100
+max_prog_size 1000000
 
 # Number of memory indices
 # Each memory index points to a data structure (scalar, vector, or matrix)
@@ -250,12 +247,8 @@ forecast_n_eval_val 10
 ## Parameters Specific to Mujoco ###############################################
 ################################################################################
 
-# Uncomment one model path
-#mj_model_path $TPG/datasets/mujoco_models/ant.xml
-#mj_model_path $TPG/datasets/mujoco_models/half_cheetah.xml
-#mj_model_path $TPG/datasets/mujoco_models/inverted_pendulum.xml
+# Model path
 mj_model_path $TPG/datasets/mujoco_models/inverted_double_pendulum.xml
-#mj_model_path $TPG/datasets/mujoco_models/reacher.xml
 
 mj_max_timestep 1000
 
