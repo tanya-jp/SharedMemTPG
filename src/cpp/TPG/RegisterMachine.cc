@@ -45,7 +45,7 @@ RegisterMachine::RegisterMachine(
       instructions_.push_back(in);
    }
    op_counts_.resize(instruction::NUM_OP);
-   if (!isEqual(std::any_cast<double>(params["p_instructions_mu_const"]),
+   if (!isEqual(std::any_cast<double>(params["p_memory_mu_const"]),
                 0.0)) {
       use_evolved_const_ = true;
    }
@@ -276,8 +276,8 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
       }
 
       // Mutate constants
-      if (dis_real(rng) <
-          std::any_cast<double>(params["p_instructions_mu_const"])) {
+      if (use_evolved_const_ && dis_real(rng) <
+          std::any_cast<double>(params["p_memory_mu_const"])) {
          for (auto m : private_memory_) {
             m->MutateConstants(rng);
          }

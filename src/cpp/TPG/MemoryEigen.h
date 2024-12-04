@@ -116,13 +116,13 @@ class MemoryEigen {
 
    ~MemoryEigen() {}
 
-   // From https://doi.org/10.48550/arXiv.2003.03384
+   // From AutoML-Zero https://doi.org/10.48550/arXiv.2003.03384
    // When modifying a real-valued constant, we multiply it by a
    // uniform random number in [0.5, 2.0] and flip its sign with
    // 10% probability
    inline void MutateConstants(std::mt19937 &rng) {
-      auto dis1 = std::uniform_real_distribution<double>(0.0, 1.0);
-      auto dis2 = std::uniform_real_distribution<double>(0.5, 2.0);
+      auto dis1 = std::uniform_real_distribution<double>(0.5, 2.0);
+      auto dis2 = std::uniform_real_distribution<double>(0.0, 1.0);
       for (size_t i = 0; i < const_memory_.size(); i++) {
          for (auto &x : const_memory_[i].reshaped()) {
             x *= dis1(rng);

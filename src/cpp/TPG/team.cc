@@ -38,12 +38,11 @@ void team::InitMemory(map<long, team *> &teamMap,
    set<RegisterMachine *, RegisterMachineIdComp> RegisterMachines;
    GetAllNodes(teamMap, teams, RegisterMachines);
    for (auto prog : RegisterMachines) {
-      if (!isEqual(std::any_cast<double>(params["p_instructions_mu_const"]),
+      if (!isEqual(std::any_cast<double>(params["p_memory_mu_const"]),
                    0.0)) {
          prog->use_evolved_const_ = true;
          // Initialize working memory with evolved constants
          prog->CopyPrivateConstToWorkingMemory();
-         // prog->ClearWorking();
       } else {
          // Initialize working memory with zeros
          prog->use_evolved_const_ = false;
