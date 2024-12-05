@@ -631,9 +631,11 @@ team *TPG::TeamXover(vector<team *> &parents) {
       RegisterMachineCrossover(parent_1, parent_2, &child_1, &child_2);
       if (real_dist_(rngs_[TPG_SEED]) < 0.5) {
          child_team->AddProgram(child_1);
+         AddProgram(child_1);
          delete child_2;
       } else {
          child_team->AddProgram(child_2);
+         AddProgram(child_2);
          delete child_1;
       }
    } else {

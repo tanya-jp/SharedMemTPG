@@ -95,10 +95,9 @@ fi
 
 # Valgrind #####################################################################
 if [ $mode -eq 3 ]; then
-  mpirun --oversubscribe -np $num_mpi_proc valgrind --leak-check=yes \ 
-    --show-reachable=yes --log-file=vg.%p \ 
-    --suppressions=/usr/share/openmpi/openmpi-valgrind.supp \ 
-    $TPG/build/release/cpp/experiments/TPGExperimentMPI seed_tpg=${seed_tpg} \ 
+  mpirun --oversubscribe -np $num_mpi_proc \
+  valgrind --leak-check=yes --show-reachable=yes --log-file=vg.%p --suppressions=/usr/share/openmpi/openmpi-valgrind.supp \
+  $TPG/build/release/cpp/experiments/TPGExperimentMPI seed_tpg=${seed_tpg} \
     1> tpg.$seed_tpg.$$.std \ 
     2> tpg.$seed_tpg.$$.err &
 fi

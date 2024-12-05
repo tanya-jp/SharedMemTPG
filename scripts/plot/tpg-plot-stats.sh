@@ -328,5 +328,5 @@ Rscript  $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-gt-Rsize.rslt "Root Pop
 
 pdfunite 0*.pdf ${wd}_p${phs}.pdf
 rm 0*.pdf
-rm *rslt
+# rm *rslt
 
