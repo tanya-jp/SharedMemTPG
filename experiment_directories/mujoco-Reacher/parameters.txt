@@ -154,9 +154,6 @@ p_instructions_add 0.075
 # If set to 0.0, evolved constants are not used & memory is initialized to zero
 p_memory_mu_const 0.5
 
-# Program variation: stddev of normal noise added to each const
-instructions_mu_const_stddev 0.05
-
 # Program variation: probability of changing observation_buff_size
 p_observation_buff_size 0.0
 
@@ -248,15 +245,12 @@ forecast_n_eval_val 10
 ## Parameters Specific to Mujoco ###############################################
 ################################################################################
 
-# Uncomment one model path
-#mj_model_path $TPG/datasets/mujoco_models/ant.xml
-#mj_model_path $TPG/datasets/mujoco_models/half_cheetah.xml
-#mj_model_path $TPG/datasets/mujoco_models/inverted_pendulum.xml
+# Model path
 mj_model_path $TPG/datasets/mujoco_models/reacher.xml
 
 mj_max_timestep 100
 
-mj_n_eval_train 50
+mj_n_eval_train 20
 mj_n_eval_validation 0
 mj_n_eval_test 0
 
