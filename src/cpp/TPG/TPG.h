@@ -118,8 +118,11 @@ class TPG {
     void printOss(ostringstream &o);
     void printTeamInfo(long, int, bool, long teamId = -1);
     void trackTeamInfo(long, int, bool, long teamId = -1);
+    
     void RegisterMachineCrossover(RegisterMachine *p1, RegisterMachine *p2,
                           RegisterMachine **c1, RegisterMachine **c2);
+
+
     void ReadCheckpoint(long, int, int, bool, const string &);
 
     void ReadParameters(string file_name,
