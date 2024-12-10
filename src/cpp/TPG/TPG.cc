@@ -578,21 +578,12 @@ void TPG::AddTeamToPhylogeny(team *new_team) {
 team* TPG::TeamCrossover(team* parent1, team* parent2) {
    team* child_team = new team(GetState("t_current"), state_["team_count"]++);
    // TODO(skelly): linear crossover
-<<<<<<< HEAD
-   if (parent1->size() == 1 && parent2->size() == 1) {
-      RegisterMachine* child_1;
-      RegisterMachine* child_2;
-      RegisterMachineCrossover(parent1->members_.front(),
-                               parent2->members_.front(),
-                               &child_1, &child_2);
-=======
    if (parent1->size() == 1 && parent2->size() == 1 &&
        parent1->members_.size() > 1 && parent2->members_.size() > 1) {
       RegisterMachine* child_1;
       RegisterMachine* child_2;
       RegisterMachineCrossover(parent1->members_.front(),
                                parent2->members_.front(), &child_1, &child_2);
->>>>>>> skdev
       if (real_dist_(rngs_[TPG_SEED]) < 0.5) {
          child_team->AddProgram(child_1);
          AddProgram(child_1);
@@ -2098,51 +2089,6 @@ void TPG::trackTeamInfo(long t, int phase, bool singleBest, long teamId) {
 }
 
 /******************************************************************************/
-<<<<<<< HEAD
-// Algorithm 5.1 (linear crossover)
-void TPG::RegisterMachineCrossover(RegisterMachine *p1, RegisterMachine *p2,
-                           RegisterMachine **c1, RegisterMachine **c2) {
-   int dcMax = min(p1->instructions_.size(), p2->instructions_.size());
-   int dsMax = dcMax;
-   int lsMax = dcMax;
-   int pos1, pos2;
-
-   vector<RegisterMachine *> parents{p1, p2};
-   vector<int> segLengths{1, 1};
-
-   if (p1->instructions_.size() > p2->instructions_.size()) swap(parents[0], parents[1]);
-
-   // 1
-   uniform_int_distribution<> dis1(0, parents[0]->instructions_.size() - 1);
-   pos1 = dis1(rngs_[TPG_SEED]);
-   uniform_int_distribution<> dis2(0, parents[1]->instructions_.size() - 1);
-   do {
-      pos2 = dis2(rngs_[TPG_SEED]);
-   } while (abs(pos1 - pos2) > min(static_cast<int>(parents[0]->instructions_.size()) - 1, dcMax));
-
-   // 2,3
-   uniform_int_distribution<> dis3(1, min(static_cast<int>(parents[0]->instructions_.size()) - pos1, lsMax));
-   segLengths[0] = dis3(rngs_[TPG_SEED]);
-   uniform_int_distribution<> dis4(1, min(static_cast<int>(parents[1]->instructions_.size()) - pos2, lsMax));
-   do {
-      segLengths[1] = dis4(rngs_[TPG_SEED]);
-   } while (abs(segLengths[0] - segLengths[1]) > dsMax);
-
-   // 4
-   if (segLengths[0] > segLengths[1]) swap(segLengths[0], segLengths[1]);
-
-   // 5
-   if (static_cast<int>(p1->instructions_.size()) - (segLengths[1] - segLengths[0]) < 1 ||
-       static_cast<int>(p2->instructions_.size()) + (segLengths[1] - segLengths[0]) >
-           GetParam<int>("max_prog_size")) {
-      if (real_dist_(rngs_[TPG_SEED]) < 0.5)
-         segLengths[1] = segLengths[0];
-      else
-         segLengths[0] = segLengths[1];
-
-      if (pos1 + segLengths[0] > static_cast<int>(p1->instructions_.size()))
-         segLengths[0] = segLengths[1] = p1->instructions_.size() - pos1;
-=======
 void TPG::RegisterMachineCrossover(RegisterMachine* p1, RegisterMachine* p2,
                                    RegisterMachine** c1, RegisterMachine** c2) {
    int split1, split2;
@@ -2154,7 +2100,6 @@ void TPG::RegisterMachineCrossover(RegisterMachine* p1, RegisterMachine* p2,
    split2 = dis1(rngs_[TPG_SEED]);
    while (split2 == split1) {
       split2 = dis1(rngs_[TPG_SEED]);
->>>>>>> skdev
    }
    if (split1 > split2) {
       std::swap(split1, split2);
@@ -2195,39 +2140,6 @@ void TPG::RegisterMachineCrossover(RegisterMachine* p1, RegisterMachine* p2,
    *c1 = new RegisterMachine(p1->action_, c1_instructions, params_, state_,
                              rngs_[TPG_SEED], _ops);
 
-<<<<<<< HEAD
-   // // exchange seg1 in p1 by seg2 in p2
-   // childProg1.clear();
-   // auto start = parentProg1.begin();
-   // auto end = parentProg1.begin() + pos1;
-   // std::copy(start, end, back_inserter(childProg1));
-   // start = parentProg2.begin() + pos2;
-   // end = parentProg2.begin() + pos2 + segLengths[1];
-   // std::copy(start, end, back_inserter(childProg1));
-   // start = parentProg1.begin() + pos1 + segLengths[0];
-   // end = parentProg1.end();
-   // std::copy(start, end, back_inserter(childProg1));
-
-   // cerr << "dbg sz " << childProg1.size() << ":";
-   // for (auto i : childProg1) {
-   //    cerr << " " << i->memIndices_;
-   // }
-
-   // // exchange seg2 in p2 by seg1 in p1
-   // childProg2.clear();
-   // start = parentProg2.begin();
-   // end = parentProg2.begin() + pos2;
-   // copy(start, end, back_inserter(childProg2));
-   // start = parentProg1.begin() + pos1;
-   // end = parentProg1.begin() + pos1 + segLengths[0];
-   // copy(start, end, back_inserter(childProg2));
-   // start = parentProg2.begin() + pos2 + segLengths[1];
-   // end = parentProg2.end();
-   // copy(start, end, back_inserter(childProg2));
-
-   *c1 = new RegisterMachine(p1->action_, childProg1, params_, state_, rngs_[TPG_SEED], _ops);
-   *c2 = new RegisterMachine(p2->action_, childProg2, params_, state_, rngs_[TPG_SEED], _ops);
-=======
    // Cretae child 2 (c2) from parent chunks {p2-0, p1-1, p2-2}
    std::vector<instruction*> c2_instructions;
    c2_instructions.insert(c2_instructions.end(), p2_chunks[0].begin(),
@@ -2238,7 +2150,6 @@ void TPG::RegisterMachineCrossover(RegisterMachine* p1, RegisterMachine* p2,
                           p2_chunks[2].end());
    *c2 = new RegisterMachine(p2->action_, c2_instructions, params_, state_,
                              rngs_[TPG_SEED], _ops);
->>>>>>> skdev
 }
 
 // /******************************************************************************/

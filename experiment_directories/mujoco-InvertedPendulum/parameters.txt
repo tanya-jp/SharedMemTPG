@@ -78,13 +78,13 @@ seed_tpg 42
 seed_aux 42
 
 # Max number of generations
-n_generations 3
+n_generations 1000000
 
 # Number of root teams (agents) to keep each generation
-n_root 10
+n_root 1000
 
 # Number of new root teams to create each generation
-n_root_gen 10
+n_root_gen 100
 
 # Whether to constrain parent selection to root teams
 parent_select_roots_only 0
