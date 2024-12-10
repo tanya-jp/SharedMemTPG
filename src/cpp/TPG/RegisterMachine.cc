@@ -53,6 +53,31 @@ RegisterMachine::RegisterMachine(
                std::any_cast<int>(params["memory_size"]));
 }
 
+// Create RegisterMachine and copy instructions
+RegisterMachine::RegisterMachine(
+    long action, std::vector<instruction*> &instructions,
+    std::unordered_map<std::string, std::any> &params,
+    std::unordered_map<std::string, int> &state, mt19937 &rng,
+    std::vector<bool> &legal_ops) {
+   action_ = action;
+   stateful_ = std::any_cast<int>(params["stateful"]);
+   gtime_ = state["t_current"];
+   id_ = state["program_count"]++;
+   nrefs_ = 0;
+   observation_buff_size_ = std::any_cast<int>(params["observation_buff_size"]);
+   obs_index_ = 0;
+   for (auto i : instructions) {
+      instructions_.push_back(new instruction(*i));
+   }
+   op_counts_.resize(instruction::NUM_OP);
+   if (!isEqual(std::any_cast<double>(params["p_memory_mu_const"]),
+                0.0)) {
+      use_evolved_const_ = true;
+   }
+   SetupMemory(state, std::any_cast<int>(params["n_memories"]),
+               std::any_cast<int>(params["memory_size"]));
+}
+
 // Copy Contructor
 RegisterMachine::RegisterMachine(RegisterMachine &rm) {
    action_ = rm.action_;

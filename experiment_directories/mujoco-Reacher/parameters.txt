@@ -108,7 +108,7 @@ max_team_size 1
 ###############################################################################
 
 # Team variation: probability of team crossover
-pmx 0.5
+pmx 1.0
 # Team variation: probability of team crossover adding each parent prog to child
 pmx_p 0.5
 
@@ -250,7 +250,7 @@ mj_model_path $TPG/datasets/mujoco_models/reacher.xml
 
 mj_max_timestep 100
 
-mj_n_eval_train 100
+mj_n_eval_train 50
 mj_n_eval_validation 0
 mj_n_eval_test 0
 
