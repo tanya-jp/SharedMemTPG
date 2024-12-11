@@ -250,7 +250,7 @@ mj_model_path $TPG/datasets/mujoco_models/inverted_double_pendulum.xml
 
 mj_max_timestep 1000
 
-mj_n_eval_train 20
+mj_n_eval_train 5
 mj_n_eval_validation 0
 mj_n_eval_test 0
 
