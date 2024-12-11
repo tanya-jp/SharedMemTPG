@@ -630,7 +630,7 @@ team* TPG::TeamCrossover(team* parent1, team* parent2) {
       }
       if (child_team->n_atomic_ < 1) {
          die(__FILE__, __FUNCTION__, __LINE__,
-             "Crossover must leave the fail-safe atomic program!");
+             "Crossover must leave the fail-safe atomic program.");
       }
    }
    return child_team;
