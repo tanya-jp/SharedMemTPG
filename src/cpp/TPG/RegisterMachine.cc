@@ -384,7 +384,7 @@ void RegisterMachine::Run(state *obs, int &time_step, const size_t &graph_depth,
       for (size_t in = 0; in < 2; in++) {
          // Check if this input is used in the operation.
          if (istr->GetInType(in) == sharedMemoryEigen::SHARED_MEM_TYPE){
-            istr->ClearObsRef(in);
+           // istr->ClearObsRef(in);
             istr->SetInSharedMem(team_memory_);
             istr->SetInIdxE(
                in, istr->GetInIdx(in) % 

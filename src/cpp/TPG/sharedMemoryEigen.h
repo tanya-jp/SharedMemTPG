@@ -2,7 +2,7 @@
 #define sharedMemoryEigen_h
 
 
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include <cmath>
 #include <iostream> 
 #include <iomanip>  
@@ -10,7 +10,7 @@
 class sharedMemoryEigen {
 public:
     // Constructor
-    sharedMemoryEigen(int rows=10, int cols=8){
+    sharedMemoryEigen(int rows=30, int cols=8){
         rows_ = rows;
         cols_ = cols;
         team_memory_.resize(rows, cols); 

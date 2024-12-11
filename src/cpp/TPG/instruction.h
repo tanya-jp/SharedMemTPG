@@ -978,11 +978,9 @@ class instruction {
 
          for (int col = 0; col < static_cast<int>(memory_out_->cols_); ++col){
 
-            std::random_device rd;
-            std::mt19937 gen(rd());
-            std::uniform_real_distribution<> dis(0.0, 1.0);
+            uniform_real_distribution<double> dis;
 
-            double randomValue = dis(gen);
+            double randomValue = dis(rng_);
 
             if (randomValue < writeProb){
                int lower_row = halfRows - i - 1;
@@ -1003,8 +1001,8 @@ class instruction {
    inline void ExecuteMemReadOp(bool dbg) {
       int row = in0IdxE_ / memory_in1_->rows_; 
       int col = in0IdxE_ % memory_in1_->cols_; 
-      if (out_->working_memory_ .size()< static_cast<size_t>(col))
-         out_->working_memory_[in0IdxE_](0, 0) = memory_in1_->team_memory_(row, col);
+      //if (out_->working_memory_ .size()< static_cast<size_t>(col))
+         out_->working_memory_[outIdxE_](0, 0) = memory_in1_->team_memory_(row, col);
       // memory_in1_->printTeamMemory();
       if (dbg){
 
