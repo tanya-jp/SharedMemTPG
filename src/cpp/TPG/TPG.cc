@@ -452,9 +452,10 @@ void TPG::TeamMutator_AddPrograms(team *team_to_mu) {
        rd < GetParam<double>("pma")) {
       uniform_int_distribution<int> dis_programs(0, program_pop_.size() - 1);
       uniform_int_distribution<int> dis_team_size(0, team_to_mu->size() - 1);
-      // int rand_p = dis_programs(rngs_[TPG_SEED]);
-      // int rand_ts = dis_team_size(rngs_[TPG_SEED]);
-      RegisterMachine *p = program_pop_[dis_programs(rngs_[TPG_SEED])];
+      int random_prog_index = dis_programs(rngs_[TPG_SEED]);
+      auto it = program_pop_.begin();
+      std::advance(it, random_prog_index);
+      RegisterMachine *p = it->second;
       team_to_mu->AddProgram(p, dis_team_size(rngs_[TPG_SEED]));
    }
 }
