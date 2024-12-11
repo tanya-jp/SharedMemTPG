@@ -99,10 +99,10 @@ keep_old_outcomes 1
 ################################################################################
 
 # Initial team size
-max_initial_team_size 1
+max_initial_team_size 5
 
 # Max team size
-max_team_size 1
+max_team_size 32
 
 ### Independent team mutation ops #############################################
 ###############################################################################
