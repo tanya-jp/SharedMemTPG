@@ -102,7 +102,7 @@ keep_old_outcomes 1
 max_initial_team_size 1
 
 # Max team size
-max_team_size 1
+max_team_size 10
 
 ### Independent team mutation ops #############################################
 ###############################################################################
@@ -116,10 +116,10 @@ pmx_p 0.5
 pmd 0.1
 
 # Team variation: probability of adding program to team
-pma 0.075
+pma 0.05
 
 # Team variation: probability of mutating program execution order
-pmw 0.1
+pmw 0.0
 
 ################################################################################
 ## Program  parameters #########################################################
@@ -136,7 +136,7 @@ p_clone_program 1.0
 # Program variation: probability of mutating a program's action pointer
 pmn 0.1
 # When changing action pointer, probability of selecting atomic action
-p_atomic 1.0
+p_atomic 0.99
 
 # Program variation: probability of changing a random instruction
 p_instructions_mutate 0.1
@@ -248,9 +248,9 @@ forecast_n_eval_val 10
 # Model path
 mj_model_path $TPG/datasets/mujoco_models/reacher.xml
 
-mj_max_timestep 100
+mj_max_timestep 1000
 
-mj_n_eval_train 50
+mj_n_eval_train 20
 mj_n_eval_validation 0
 mj_n_eval_test 0
 
