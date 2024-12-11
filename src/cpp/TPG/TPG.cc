@@ -579,8 +579,10 @@ void TPG::AddTeamToPhylogeny(team *new_team) {
 team* TPG::TeamCrossover(team* parent1, team* parent2) {
    team* child_team = new team(GetState("t_current"), state_["team_count"]++);
    // TODO(skelly): linear crossover
-   if (parent1->size() == 1 && parent2->size() == 1 &&
-       parent1->members_.size() > 1 && parent2->members_.size() > 1) {
+   if (parent1->size() == 1 && 
+       parent2->size() == 1 &&
+       parent1->members_.front()->instructions_.size() > 1 && 
+       parent2->members_.front()->instructions_.size() > 1) {
       RegisterMachine* child_1;
       RegisterMachine* child_2;
       RegisterMachineCrossover(parent1->members_.front(),
@@ -2150,7 +2152,7 @@ void TPG::RegisterMachineCrossover(RegisterMachine* p1, RegisterMachine* p2,
    c2_instructions.insert(c2_instructions.end(), p2_chunks[2].begin(),
                           p2_chunks[2].end());
    *c2 = new RegisterMachine(p2->action_, c2_instructions, params_, state_,
-                             rngs_[TPG_SEED], _ops);
+                             rngs_[TPG_SEED], _ops);                         
 }
 
 // /******************************************************************************/
