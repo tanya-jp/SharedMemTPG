@@ -604,22 +604,18 @@ team* TPG::TeamCrossover(team* parent1, team* parent2) {
       // TODO(skelly): intertwine crossover
       while (p1liter != p1programs.end() || p2liter != p2programs.end()) {
          if (p1liter != p1programs.end()) {
-            if ((*p1liter)->action_ < 0 && child_team->n_atomic_ < 1) {
+            if (parent1->size() == 1 ||
+              ((*p1liter)->action_ < 0 && child_team->n_atomic_ < 1)) {
                child_team->AddProgram(*p1liter);
-            } else if ((int)child_team->size() <
-                           GetParam<int>("max_team_size") &&
-                       real_dist_(rngs_[TPG_SEED]) <
-                           GetParam<double>("pmx_p")) {
+            } else if ((int)child_team->size() < GetParam<int>("max_team_size") && real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmx_p")) {
                child_team->AddProgram(*p1liter);
             }
          }
          if (p2liter != p2programs.end()) {
-            if ((*p2liter)->action_ < 0 && child_team->n_atomic_ < 1) {
+            if (parent2->size() == 1 ||
+            ((*p2liter)->action_ < 0 && child_team->n_atomic_ < 1)) {
                child_team->AddProgram(*p2liter);
-            } else if ((int)child_team->size() <
-                           GetParam<int>("max_team_size") &&
-                       real_dist_(rngs_[TPG_SEED]) <
-                           GetParam<double>("pmx_p")) {
+            } else if ((int)child_team->size() < GetParam<int>("max_team_size") && real_dist_(rngs_[TPG_SEED]) < GetParam<double>("pmx_p")) {
                child_team->AddProgram(*p2liter);
             }
          }
@@ -629,6 +625,14 @@ team* TPG::TeamCrossover(team* parent1, team* parent2) {
             p2liter++;
       }
       if (child_team->n_atomic_ < 1) {
+         cerr << "dbg p1 " << parent1->n_atomic_ << " " << parent1->size() << " " << parent1->members_.front()->instructions_.size() << endl;
+         cerr << "dbg p2 " << parent2->n_atomic_ << " " << parent2->size() << " " << parent2->members_.front()->instructions_.size() << endl;
+         cerr << "c " << child_team->size() << endl;
+         cerr << "c acts";
+         for (auto p : child_team->members_) {
+            cerr << " " << p->action_;
+         }
+         cerr << endl;
          die(__FILE__, __FUNCTION__, __LINE__,
              "Crossover must leave the fail-safe atomic program.");
       }

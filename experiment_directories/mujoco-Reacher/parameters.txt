@@ -81,10 +81,10 @@ seed_aux 42
 n_generations 1000000
 
 # Number of root teams (agents) to keep each generation
-n_root 1000
+n_root 100
 
 # Number of new root teams to create each generation
-n_root_gen 100
+n_root_gen 10
 
 # Whether to constrain parent selection to root teams
 parent_select_roots_only 0
@@ -131,7 +131,7 @@ pmw 0.0
 # Program variation: probability of cloning program before modifying
 # If program is cloned, modify the clone only (adds 1 new program to pop)
 # If not cloned, all other variation ops will modify the program in place
-p_clone_program 0.75
+p_clone_program 0.5
 
 # Program variation: probability of mutating a program's action pointer
 pmn 0.1
