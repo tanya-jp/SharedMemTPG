@@ -81,10 +81,10 @@ seed_aux 42
 n_generations 1000000
 
 # Number of root teams (agents) to keep each generation
-n_root 100
+n_root 1000
 
 # Number of new root teams to create each generation
-n_root_gen 10
+n_root_gen 100
 
 # Whether to constrain parent selection to root teams
 parent_select_roots_only 0
@@ -102,7 +102,7 @@ keep_old_outcomes 1
 max_initial_team_size 1
 
 # Max team size
-max_team_size 10
+max_team_size 1
 
 ### Independent team mutation ops #############################################
 ###############################################################################
@@ -116,10 +116,10 @@ pmx_p 0.5
 pmd 0.1
 
 # Team variation: probability of adding program to team
-pma 0.05
+pma 0.1
 
 # Team variation: probability of mutating program execution order
-pmw 0.0
+pmw 0.1
 
 ################################################################################
 ## Program  parameters #########################################################
@@ -131,12 +131,12 @@ pmw 0.0
 # Program variation: probability of cloning program before modifying
 # If program is cloned, modify the clone only (adds 1 new program to pop)
 # If not cloned, all other variation ops will modify the program in place
-p_clone_program 0.5
+p_clone_program 1.0
 
 # Program variation: probability of mutating a program's action pointer
 pmn 0.1
 # When changing action pointer, probability of selecting atomic action
-p_atomic 0.99
+p_atomic 1.0
 
 # Program variation: probability of changing a random instruction
 p_instructions_mutate 0.1
@@ -148,7 +148,7 @@ p_instructions_swap 0.1
 p_instructions_delete 0.1
 
 # program variation: probability of adding an instruction
-p_instructions_add 0.075
+p_instructions_add 0.1
 
 # Program variation: probability of mutating constants
 # If set to 0.0, evolved constants are not used & memory is initialized to zero
