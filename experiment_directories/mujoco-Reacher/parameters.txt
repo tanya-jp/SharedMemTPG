@@ -248,9 +248,9 @@ forecast_n_eval_val 10
 # Model path
 mj_model_path $TPG/datasets/mujoco_models/reacher.xml
 
-mj_max_timestep 1000
+mj_max_timestep 200
 
-mj_n_eval_train 20
+mj_n_eval_train 100
 mj_n_eval_validation 0
 mj_n_eval_test 0
 
@@ -332,7 +332,7 @@ MATRIX_ST_DEV_OP
 
 ## noise ##########################
 ##SCALAR_UNIFORM_SET_OP
-#SCALAR_GAUSSIAN_SET_OP
+SCALAR_GAUSSIAN_SET_OP
 ##VECTOR_UNIFORM_SET_OP
 #VECTOR_GAUSSIAN_SET_OP
 ##MATRIX_UNIFORM_SET_OP
