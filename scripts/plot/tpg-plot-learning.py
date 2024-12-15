@@ -17,30 +17,24 @@ def AddToPlot(reps, lab):
     plt.legend()
 
 # %%
+path_1="~/experiments/mujoco-Reacher/mujoco-Reacher-2024-12-14/mujoco-Reacher-2024-12-13-20-48-50-e5fd300"
+path_2="~/experiments/mujoco-Reacher/mujoco-Reacher-2024-12-14-14-01-24-e5fd300"
+path_3="~/experiments/mujoco-Reacher/mujoco-Reacher-2024-12-14-14-01-31-e5fd300"
 
-# path_1="~/experiments/mujoco-Reacher/mujoco-Reacher-2024-12-13/mujoco-Reacher-2024-12-12-20-47-56-ded0204"
-# path_2="~/experiments/mujoco-Reacher/mujoco-Reacher-2024-12-13/mujoco-Reacher-2024-12-12-20-48-01-ded0204"
-path_3="~/experiments/mujoco-Reacher/mujoco-Reacher-2024-12-13/mujoco-Reacher-2024-12-12-20-48-06-ded0204"
-# path_4="~/experiments/mujoco-Reacher/mujoco-Reacher-2024-12-13/mujoco-Reacher-2024-12-12-20-58-14-ded0204"
-# path_5="~/experiments/mujoco-Reacher/mujoco-Reacher-2024-12-13/mujoco-Reacher-2024-12-12-21-00-04-ded0204"
-path_6="~/experiments/mujoco-Reacher/mujoco-Reacher-2024-12-13/mujoco-Reacher-2024-12-12-21-01-36-ded0204"
+
 
 result_to_compare="aux_0_ST_0_p0.csv"
-max_generations=1000
-# df1 = pd.read_csv(path_1 + "/" + result_to_compare, sep='\s+', header=None, usecols=range(0,max_generations))
-# df2 = pd.read_csv(path_2 + "/" + result_to_compare, sep='\s+', header=None, usecols=range(0,max_generations))
+max_generations=500
+df1 = pd.read_csv(path_1 + "/" + result_to_compare, sep='\s+', header=None, usecols=range(0,max_generations))
+df2 = pd.read_csv(path_2 + "/" + result_to_compare, sep='\s+', header=None, usecols=range(0,max_generations))
 df3 = pd.read_csv(path_3 + "/" + result_to_compare, sep='\s+', header=None, usecols=range(0,max_generations))
-# df4 = pd.read_csv(path_4 + "/" + result_to_compare, sep='\s+', header=None, usecols=range(0,max_generations))
-# df5 = pd.read_csv(path_5 + "/" + result_to_compare, sep='\s+', header=None, usecols=range(0,max_generations))
-df6 = pd.read_csv(path_6 + "/" + result_to_compare, sep='\s+', header=None, usecols=range(0,max_generations))
+
 
 fig = plt.figure(figsize=(6, 4))
-# AddToPlot(df1.to_numpy(),"1")
-# AddToPlot(df2.to_numpy(), "2")
-AddToPlot(df3.to_numpy(), "3")
-# AddToPlot(df4.to_numpy(), "4")
-# AddToPlot(df5.to_numpy(), "5")
-AddToPlot(df6.to_numpy(), "6")
+AddToPlot(df1.to_numpy(),"LGP")
+AddToPlot(df2.to_numpy(), "SBB")
+AddToPlot(df3.to_numpy(), "TPG")
+
 # df1.T.plot()
 # df2.T.plot()
 plt.show()

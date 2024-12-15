@@ -116,7 +116,7 @@ pmx_p 0.5
 pmd 0.1
 
 # Team variation: probability of adding program to team
-pma 0.1
+pma 0.05
 
 # Team variation: probability of mutating program execution order
 pmw 0.1
@@ -148,7 +148,7 @@ p_instructions_swap 0.1
 p_instructions_delete 0.1
 
 # program variation: probability of adding an instruction
-p_instructions_add 0.1
+p_instructions_add 0.05
 
 # Program variation: probability of mutating constants
 # If set to 0.0, evolved constants are not used & memory is initialized to zero
@@ -250,7 +250,7 @@ mj_model_path $TPG/datasets/mujoco_models/reacher.xml
 
 mj_max_timestep 200
 
-mj_n_eval_train 100
+mj_n_eval_train 50
 mj_n_eval_validation 0
 mj_n_eval_test 0
 
