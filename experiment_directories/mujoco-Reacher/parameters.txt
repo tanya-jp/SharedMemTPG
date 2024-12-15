@@ -92,7 +92,7 @@ parent_select_roots_only 0
 tournament_size 3
 
 # Whether to keep evaluation outcome over time or re-evaluate each generation
-keep_old_outcomes 1
+keep_old_outcomes 0
 
 ################################################################################
 ## Team  parameters ############################################################
@@ -250,7 +250,7 @@ mj_model_path $TPG/datasets/mujoco_models/reacher.xml
 
 mj_max_timestep 200
 
-mj_n_eval_train 50
+mj_n_eval_train 20
 mj_n_eval_validation 0
 mj_n_eval_test 0
 
