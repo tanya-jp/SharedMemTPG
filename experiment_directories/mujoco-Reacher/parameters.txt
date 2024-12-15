@@ -102,7 +102,7 @@ keep_old_outcomes 0
 max_initial_team_size 1
 
 # Max team size
-max_team_size 1
+max_team_size 1000000
 
 ### Independent team mutation ops #############################################
 ###############################################################################
@@ -131,12 +131,12 @@ pmw 0.1
 # Program variation: probability of cloning program before modifying
 # If program is cloned, modify the clone only (adds 1 new program to pop)
 # If not cloned, all other variation ops will modify the program in place
-p_clone_program 1.0
+p_clone_program 0.9
 
 # Program variation: probability of mutating a program's action pointer
 pmn 0.1
 # When changing action pointer, probability of selecting atomic action
-p_atomic 1.0
+p_atomic 0.9
 
 # Program variation: probability of changing a random instruction
 p_instructions_mutate 0.1
