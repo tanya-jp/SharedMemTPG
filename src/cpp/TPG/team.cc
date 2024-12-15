@@ -346,6 +346,7 @@ double team::GetMedianOutcome(int phase, int task, int auxDouble) {
       }
    }
    if (outcomes.size() == 0) {
+      cerr << "phase " << phase << endl;
       die(__FILE__, __FUNCTION__, __LINE__, "no outcomes");
    }
    return VectorMedian<double>(outcomes);
