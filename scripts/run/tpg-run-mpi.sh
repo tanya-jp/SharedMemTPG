@@ -8,13 +8,15 @@ seed_aux=42
 task_to_replay=0
 replay_gen=0
 tm_id=0
+parameters_file="parameters.txt"
 
-while getopts g:m:n:r:s:T:t: flag
+while getopts g:m:n:p:r:s:T:t: flag
 do
    case "${flag}" in
       g) seed_aux=${OPTARG};;
       m) mode=${OPTARG};;
       n) num_mpi_proc=${OPTARG};;
+      p) parameters_file=${OPTARG};;
       s) seed_tpg=${OPTARG};;
       T) tm_id=${OPTARG};;
       t) replay_gen=${OPTARG};;
@@ -27,6 +29,7 @@ if [ $mode -eq 0 ]; then
    echo "Starting run $seed_tpg..."
    mpirun --oversubscribe -np $num_mpi_proc \
      $TPG/build/release/cpp/experiments/TPGExperimentMPI \
+     parameters_file=${parameters_file} \
      seed_tpg=${seed_tpg} \
      1> tpg.$seed_tpg.$$.std \
      2> tpg.$seed_tpg.$$.err &
@@ -77,6 +80,7 @@ if [ $mode -eq 1 ]; then
   #  mpirun --oversubscribe -np 1 xterm -hold -e gdb -ex run \
     mpirun --oversubscribe -np 1 \
      $TPG/build/release/cpp/experiments/TPGExperimentMPI \
+     parameters_file=${parameters_file} \
      replay=1 animate=1 id_to_replay=$tm_id task_to_replay=$task_to_replay \
      checkpoint_in_phase=$phase checkpoint_in_t=$checkpoint_in_t \
      seed_tpg=$seed_tpg seed_aux=$seed_aux \
@@ -88,6 +92,7 @@ fi
 if [ $mode -eq 2 ]; then
    mpirun --oversubscribe -np $num_mpi_proc xterm -hold -e gdb -ex run \
      --args $TPG/build/release/cpp/experiments/TPGExperimentMPI \
+     parameters_file=${parameters_file} \
      seed_tpg=${seed_tpg} n_root=10 n_root_gen=10 \
      1> tpg.$seed_tpg.$$.std \
      2> tpg.$seed_tpg.$$.err &
@@ -99,6 +104,7 @@ if [ $mode -eq 3 ]; then
   valgrind --leak-check=yes --show-reachable=yes \
   --log-file=vg.%p --suppressions=/usr/share/openmpi/openmpi-valgrind.supp \
   $TPG/build/release/cpp/experiments/TPGExperimentMPI \
+  parameters_file=${parameters_file} \
   seed_tpg=${seed_tpg} n_root=10 n_root_gen=10 n_generations=3 \
   mj_max_timestep=1 mj_n_eval_train=1
 

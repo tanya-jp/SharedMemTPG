@@ -598,14 +598,12 @@ team* TPG::TeamCrossover(team* parent1, team* parent2) {
       RegisterMachine* child_2;
       RegisterMachineCrossover(parent1->members_.front(),
                                parent2->members_.front(), &child_1, &child_2);
+      AddProgram(child_1);
+      AddProgram(child_2);                         
       if (real_dist_(rngs_[TPG_SEED]) < 0.5) {
          child_team->AddProgram(child_1);
-         AddProgram(child_1);
-         delete child_2;
       } else {
          child_team->AddProgram(child_2);
-         AddProgram(child_2);
-         delete child_1;
       }
    } else {
       std::list<RegisterMachine*> p1_progs = parent1->members_;
@@ -731,7 +729,8 @@ void TPG::ApplyVariationOps(team* team_to_modify, int& n_new_teams) {
       set<RegisterMachine*, RegisterMachineIdComp> new_team_programs =
           team_to_modify->CopyMembers();
       for (auto prog : new_team_programs) {
-         if (real_dist_(rngs_[TPG_SEED]) < 1.0 / new_team_programs.size()) {
+         if (GetParam<int>("max_team_size") == 1 ||  //Always clone in this mode
+             real_dist_(rngs_[TPG_SEED]) < 1.0 / new_team_programs.size()) {
             // TODO(skelly): add/remove changes order and thus behaviour?
             team_to_modify->RemoveProgram(prog);
             RegisterMachine* prog_clone = CloneProgram(prog);
@@ -1045,7 +1044,7 @@ void TPG::ProcessParams() {
 // Default values are overwritten by command line parameters
 void TPG::SetParams(int argc, char** argv) {
    // First read parameters file
-   ReadParameters("parameters.txt", params_);
+   // ReadParameters("parameters.txt", params_);
    // Parse command line parameters
    if (argc > 1) {
       for (int i = 1; i < argc; ++i) {
@@ -1054,7 +1053,10 @@ void TPG::SetParams(int argc, char** argv) {
          if (pos != std::string::npos) {
             std::string key = arg.substr(0, pos);
             std::string val = arg.substr(pos + 1);
-            if (HaveParam(key)) {
+            if (key == "parameters_file") {
+               ReadParameters(val, params_);
+            }
+            else if (HaveParam(key)) {
                if (val.find('.') != std::string::npos) {
                   params_[key] = stringToDouble(val);
                } else {

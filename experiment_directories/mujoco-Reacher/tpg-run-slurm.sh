@@ -9,17 +9,20 @@
 #defaults
 mode=0 #Train:0, Replay:1, Debug:2
 seed=1
+parameters_file="parameters.txt"
 
-while getopts m:s: flag
+while getopts m:p:s: flag
 do
    case "${flag}" in
       m) mode=${OPTARG};;
+      p) parameters_file=${OPTARG};;
       s) seed=${OPTARG};;
    esac
 done
 
 if [ $mode -eq 0 ]; then
   srun $TPG/build/release/cpp/experiments/TPGExperimentMPI \
+  parameters_file=$parameters_file \
   seed_tpg=$seed \
   1> tpg.$seed.$$.std \
   2> tpg.$seed.$$.err
