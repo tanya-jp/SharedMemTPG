@@ -94,6 +94,9 @@ tournament_size 3
 # Whether to keep evaluation outcome over time or re-evaluate each generation
 keep_old_outcomes 1
 
+# Whether to seed the environment with the episode number
+seed_with_episode_number 1
+
 ################################################################################
 ## Team  parameters ############################################################
 ################################################################################

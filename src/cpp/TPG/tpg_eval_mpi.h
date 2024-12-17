@@ -177,9 +177,8 @@ void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
       for (auto tm : eval.teams) {
         eval.tm = tm;
         for (eval.episode = 0; eval.episode < eval.tm->_n_eval;
-             eval.episode++) {
-           // TODO(skelly): eval with same set of seeds or not?   
-           if (tpg.GetParam<int>("replay")) {
+             eval.episode++) {   
+           if (tpg.GetParam<int>("seed_with_episode_number")) {
               tpg.rngs_[AUX_SEED].seed(eval.episode);
            }
           eval.tm->InitMemory(tpg._teamMap, tpg.params_);

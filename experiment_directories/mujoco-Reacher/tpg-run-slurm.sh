@@ -2,7 +2,7 @@
 #SBATCH --account=def-skelly
 
 # cpus anywhere
-#SBATCH --ntasks=21               
+#SBATCH --ntasks=51               
 #SBATCH --mem-per-cpu=6G      
 #SBATCH --time=0-03:00  # time (DD-HH:MM)
 

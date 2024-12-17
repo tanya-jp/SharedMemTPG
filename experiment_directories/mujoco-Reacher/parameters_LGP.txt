@@ -81,10 +81,10 @@ seed_aux 42
 n_generations 1000000
 
 # Number of root teams (agents) to keep each generation
-n_root 500
+n_root 3000
 
 # Number of new root teams to create each generation
-n_root_gen 500
+n_root_gen 3000
 
 # Whether to constrain parent selection to root teams
 parent_select_roots_only 0
@@ -93,6 +93,9 @@ tournament_size 3
 
 # Whether to keep evaluation outcome over time or re-evaluate each generation
 keep_old_outcomes 1
+
+# Whether to seed the environment with the episode number
+seed_with_episode_number 1
 
 ################################################################################
 ## Team  parameters ############################################################
@@ -116,7 +119,7 @@ pmx_p 0.5
 pmd 0.1
 
 # Team variation: probability of adding program to team
-pma 0.05
+pma 0.075
 
 # Team variation: probability of mutating program execution order
 pmw 0.1
@@ -148,7 +151,7 @@ p_instructions_swap 0.1
 p_instructions_delete 0.1
 
 # program variation: probability of adding an instruction
-p_instructions_add 0.05
+p_instructions_add 0.075
 
 # Program variation: probability of mutating constants
 # If set to 0.0, evolved constants are not used & memory is initialized to zero
@@ -250,7 +253,7 @@ mj_model_path $TPG/datasets/mujoco_models/reacher.xml
 
 mj_max_timestep 200
 
-mj_n_eval_train 100
+mj_n_eval_train 20
 mj_n_eval_validation 0
 mj_n_eval_test 0
 
@@ -334,6 +337,6 @@ MATRIX_ST_DEV_OP
 ##SCALAR_UNIFORM_SET_OP
 SCALAR_GAUSSIAN_SET_OP
 ##VECTOR_UNIFORM_SET_OP
-#VECTOR_GAUSSIAN_SET_OP
+VECTOR_GAUSSIAN_SET_OP
 ##MATRIX_UNIFORM_SET_OP
-#MATRIX_GAUSSIAN_SET_OP
+MATRIX_GAUSSIAN_SET_OP
