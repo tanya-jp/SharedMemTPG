@@ -186,7 +186,7 @@ continuous_output 2
 n_input 0
 
 # Max initial program size
-max_initial_prog_size 10
+max_initial_prog_size 100
 
 # Max program size
 max_prog_size 1000000
@@ -253,7 +253,7 @@ mj_model_path $TPG/datasets/mujoco_models/reacher.xml
 
 mj_max_timestep 100
 
-mj_n_eval_train 100
+mj_n_eval_train 50
 mj_n_eval_validation 0
 mj_n_eval_test 0
 
