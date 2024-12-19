@@ -92,10 +92,10 @@ parent_select_roots_only 0
 tournament_size 3
 
 # Whether to keep evaluation outcome over time or re-evaluate each generation
-keep_old_outcomes 1
+keep_old_outcomes 0
 
 # Whether to seed the environment with the episode number
-seed_with_episode_number 1
+seed_with_episode_number 0
 
 ################################################################################
 ## Team  parameters ############################################################
@@ -186,7 +186,7 @@ continuous_output 2
 n_input 0
 
 # Max initial program size
-max_initial_prog_size 100
+max_initial_prog_size 20
 
 # Max program size
 max_prog_size 1000000
@@ -253,7 +253,7 @@ mj_model_path $TPG/datasets/mujoco_models/reacher.xml
 
 mj_max_timestep 100
 
-mj_n_eval_train 200
+mj_n_eval_train 50
 mj_n_eval_validation 0
 mj_n_eval_test 0
 
