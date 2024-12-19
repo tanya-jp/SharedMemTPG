@@ -100,14 +100,14 @@ class Mujoco_Reacher_v4 : public MujocoEnv {
 
    void reset(mt19937& rng) {
 
-      std::uniform_real_distribution<> dis_pos(-0.1, 0.1);
+      std::uniform_real_distribution<>dis_pos(-0.1, 0.1);
       std::vector<double> qpos(m_->nq);
       for (size_t i = 0; i < qpos.size(); i++) {
          qpos[i] = init_qpos_[i] + dis_pos(rng);
       }
 
       std::vector<double> goal(2);
-      std::normal_distribution<double> dis_goal(-0.2, 0.2);
+      std::uniform_real_distribution<>dis_goal(-0.2, 0.2);
       while (true) {
 
          goal[0] = dis_goal(rng);
@@ -119,7 +119,7 @@ class Mujoco_Reacher_v4 : public MujocoEnv {
 
       std::copy_n(goal.begin(), 2, qpos.end() - 2);
 
-      std::normal_distribution<double> dis_vel(-0.005, 0.005);
+      std::uniform_real_distribution<>dis_vel(-0.005, 0.005);
       std::vector<double> qvel(m_->nv);
       for (size_t i = 0; i < qvel.size(); i++) {
          qvel[i] = init_qvel_[i] + dis_vel(rng);
