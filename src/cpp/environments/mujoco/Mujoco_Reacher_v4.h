@@ -108,18 +108,15 @@ class Mujoco_Reacher_v4 : public MujocoEnv {
       }
 
       std::vector<double> goal(2);
-      // std::uniform_real_distribution<>dis_goal(-0.2, 0.2);
-      // while (true) {
+      std::uniform_real_distribution<>dis_goal(-0.2, 0.2);
+      while (true) {
 
-      //    goal[0] = dis_goal(rng);
-      //    goal[1] = dis_goal(rng);
+         goal[0] = dis_goal(rng);
+         goal[1] = dis_goal(rng);
 
-      //    if (goal[0] * goal[0] + goal[1] * goal[1] < 0.04)
-      //       break;
-      // }
-
-      goal[0] = -0.1;
-      goal[1] = 0.1;
+         if (goal[0] * goal[0] + goal[1] * goal[1] < 0.04)
+            break;
+      }
 
       std::copy_n(goal.begin(), 2, qpos.end() - 2);
 
