@@ -72,7 +72,8 @@ class Mujoco_Reacher_v4 : public MujocoEnv {
       do_simulation(action, frame_skip_);
       get_obs(state_);
       step_++;
-      return {reward, 0.0};  // TODO(skelly): maybe add gym 'info' to results
+      //TODO(skelly): temporarilly remove control costs
+      return {reward_dist, 0.0};  // TODO(skelly): maybe add gym 'info' to results
    }
 
    void get_obs(std::vector<double>& obs) {
@@ -107,15 +108,18 @@ class Mujoco_Reacher_v4 : public MujocoEnv {
       }
 
       std::vector<double> goal(2);
-      std::uniform_real_distribution<>dis_goal(-0.2, 0.2);
-      while (true) {
+      // std::uniform_real_distribution<>dis_goal(-0.2, 0.2);
+      // while (true) {
 
-         goal[0] = dis_goal(rng);
-         goal[1] = dis_goal(rng);
+      //    goal[0] = dis_goal(rng);
+      //    goal[1] = dis_goal(rng);
 
-         if (goal[0] * goal[0] + goal[1] * goal[1] < 0.04)
-            break;
-      }
+      //    if (goal[0] * goal[0] + goal[1] * goal[1] < 0.04)
+      //       break;
+      // }
+
+      goal[0] = -0.1;
+      goal[1] = 0.1;
 
       std::copy_n(goal.begin(), 2, qpos.end() - 2);
 
