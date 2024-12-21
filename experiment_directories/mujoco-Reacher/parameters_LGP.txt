@@ -251,7 +251,7 @@ forecast_n_eval_val 10
 # Model path
 mj_model_path $TPG/datasets/mujoco_models/reacher.xml
 
-mj_max_timestep 50
+mj_max_timestep 100
 
 mj_reward_control_weight 0.0
 
