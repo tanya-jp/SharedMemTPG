@@ -414,7 +414,7 @@ void instruction::Mutate(bool randomize, vector<bool> &legal_ops,
     in3Idx_ = dis_index(rng);
 
   } else {  // Randomly change one part of this instruction.
-    std::uniform_int_distribution<> dis(0, 5);
+    std::uniform_int_distribution<> dis(0, 7);
     int i = dis(rng);
     if (i == 0) {  // Change in1 src to private memory or observation.
       MutateInt(in1Src_, 0, 1, rng);
@@ -426,19 +426,14 @@ void instruction::Mutate(bool randomize, vector<bool> &legal_ops,
       do {
         MutateInt(op_, 0, int(legal_ops.size() - 1), rng);
       } while (!legal_ops[op_]);
-    } else if (i == 4) {  // Change in1 index.
+    } else if (i == 4) {  // Change in0 index.
       MutateInt(in0Idx_, 0, max_index, rng);
-    } else if (i == 5) {  // Change in2 index.
+    } else if (i == 5) {  // Change in1 index.
       MutateInt(in1Idx_, 0, max_index, rng);
+    } else if (i == 6) {  // Change in2 index. 
+      MutateInt(in2Idx_, 0, max_index, rng);
+    } else if (i == 7) {  // Change in3 index. 
+      MutateInt(in3Idx_, 0, max_index, rng);
     }
-    // else if (i == 6) {  // Change in3 index. Used as index to vector or matrix
-    //                       // memory.
-    //   MutateInt(in2Idx_, 0, max_index, rng);
-    // } else if (i == 7) {  // Change in4 index. Used as index to vector or matrix
-    //                       // memory.
-    //   MutateInt(in3Idx_, 0, max_index, rng);
-    // }
   }
-//   BoundMemoryIndices(observation_buff_size);
-//   if (op_ == OBS_BUFF_SLICE_OP_) in1Src_  = 1;
 }

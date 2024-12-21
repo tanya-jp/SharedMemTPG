@@ -81,10 +81,10 @@ seed_aux 42
 n_generations 1000000
 
 # Number of root teams (agents) to keep each generation
-n_root 900
+n_root 500
 
 # Number of new root teams to create each generation
-n_root_gen 100
+n_root_gen 500
 
 # Whether to constrain parent selection to root teams
 parent_select_roots_only 0
@@ -186,7 +186,7 @@ continuous_output 2
 n_input 0
 
 # Max initial program size
-max_initial_prog_size 50
+max_initial_prog_size 10
 
 # Max program size
 max_prog_size 1000000
@@ -251,9 +251,11 @@ forecast_n_eval_val 10
 # Model path
 mj_model_path $TPG/datasets/mujoco_models/reacher.xml
 
-mj_max_timestep 100
+mj_max_timestep 50
 
-mj_n_eval_train 200
+mj_reward_control_weight 0.0
+
+mj_n_eval_train 100
 mj_n_eval_validation 0
 mj_n_eval_test 0
 
@@ -305,7 +307,7 @@ VECTOR_MAX_OP
 VECTOR_MEAN_OP
 VECTOR_ST_DEV_OP
 VECTOR_CONST_SET_OP
-#SCALAR_VECTOR_ASSIGN_OP
+SCALAR_VECTOR_ASSIGN_OP
  
 # matrix #########################
 VECTOR_OUTER_PRODUCT_OP
@@ -331,7 +333,7 @@ MATRIX_ROW_MEAN_OP
 MATRIX_ROW_ST_DEV_OP
 MATRIX_ST_DEV_OP
 MATRIX_CONST_SET_OP
-#SCALAR_MATRIX_ASSIGN_OP
+SCALAR_MATRIX_ASSIGN_OP
 
 ## noise ##########################
 ##SCALAR_UNIFORM_SET_OP
