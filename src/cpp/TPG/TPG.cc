@@ -789,7 +789,7 @@ void TPG::FindSingleTaskFitnessRange(vector<TaskEnv*>& tasks,
          tm->elite(GetState("phase"), false);  // mark team as not elite
          if (tm->numOutcomes(GetState("phase"), task) >=
              tasks[task]->GetNumEval(GetState("phase"))) {
-            tm->fit_ = tm->GetMedianOutcome(GetState("phase"), task,
+            tm->fit_ = tm->GetMeanOutcome(GetState("phase"), task,
                                             GetState("fitMode"));
             teamsRankedVec.push_back(tm);
             if (GetState("phase") == _TEST_PHASE) {
@@ -829,7 +829,7 @@ vector<team*> TPG::NormalizeScoresAndRankTeams(
                 "All root teams should have enough evaluations at this "
                 "point.");
          }
-         auto raw_mean_score = tm->GetMedianOutcome(
+         auto raw_mean_score = tm->GetMeanOutcome(
              GetState("phase"), set[task], GetState("fitMode"));
          // guards for same min and max
          if (!isEqual(min_scores[GetState("fitMode")][set[task]],
@@ -889,7 +889,7 @@ void TPG::FindMultiTaskElites(vector<TaskEnv*>& tasks,
                phylo_graph_[tm->id_].taskFitnesses.clear();
                for (int task = 0; task < GetState("n_task"); task++) {
                   phylo_graph_[tm->id_].taskFitnesses.push_back(
-                      tm->GetMedianOutcome(GetState("phase"), task,
+                      tm->GetMeanOutcome(GetState("phase"), task,
                                            GetState("fitMode")));
                }
             }
@@ -1910,7 +1910,7 @@ void TPG::printTeamInfo(long t, int phase, bool singleBest, long teamId) {
                for (int i = 0; i < GetParam<int>("n_point_aux_double"); i++) {
                   if ((*teiter)->numOutcomes(phs, task) > 0) {
                      oss << " p" << phs << "t" << task << "a" << i << " ";
-                     oss << (*teiter)->GetMedianOutcome(phs, task, i);
+                     oss << (*teiter)->GetMeanOutcome(phs, task, i);
                   } else
                      oss << " p" << phs << "t" << task << "a" << i << " x";
                }

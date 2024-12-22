@@ -220,7 +220,7 @@ int main(int argc, char** argv) {
          tpg.state_["phase"] = _TEST_PHASE;
          tpg.state_["active_task"] = tpg.state_["task_to_replay"];
          tpg.ProcessParams();
-         replayer_viz(tpg, tasks);
+         replayer(tpg, tasks);
       } else {
          while (tpg.GetState("t_current") <=
                 tpg.GetParam<int>("n_generations")) {

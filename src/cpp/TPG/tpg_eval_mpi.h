@@ -192,7 +192,7 @@ void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
 }
 
 /******************************************************************************/
-void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
+void replayer(TPG &tpg, vector<TaskEnv *> &tasks) {
   // MaybeStartAnimation(tpg);
   EvalData eval(tpg);
 
@@ -205,21 +205,26 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
   for (auto tm : eval.teams) {
     if (tm->id_ != tpg.GetParam<int>("id_to_replay")) continue;
     eval.tm = tm;
-
+    
     vector<int> steps_per_task(tpg.GetState("n_task"), 0);
     // TODO(skelly): clean up
-    tpg.rngs_[AUX_SEED].seed(tpg.GetParam<int>("seed_aux"));
+    // tpg.rngs_[AUX_SEED].seed(tpg.GetParam<int>("seed_aux"));
+    std::vector<double> outcomes;
     for (int task = 0; task < tpg.GetState("n_task"); task++) {
         tpg.state_["active_task"] = task;
         eval.task = tasks[tpg.GetState("active_task")];
         if (eval.animate) {
             eval.tm->_n_eval = 1;
+            tpg.rngs_[AUX_SEED].seed(tpg.GetParam<int>("seed_aux"));
         } else {
             eval.tm->_n_eval =
                 eval.task->GetNumEval(tpg.GetParam<int>("checkpoint_in_phase"));
         }
         for (eval.episode = 0; eval.episode < eval.tm->_n_eval;
              eval.episode++) {
+              if (!eval.animate) {
+                tpg.rngs_[AUX_SEED].seed(eval.episode);
+              }
             eval.tm->InitMemory(tpg._teamMap, tpg.params_);
 
             if (eval.task->eval_type_ == "RecursiveForecast") {
@@ -234,13 +239,15 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
                 EvalMujoco(tpg, eval);
             }
             eval.FinalizeStepData(tpg);
+            outcomes.push_back(eval.stats_double[REWARD1_IDX]);
         }
     }
     tpg.printGraphDotGPTPXXI(eval.tm->id_, teams_visitedAllTasks,
                              teamUseMapPerTask, steps_per_task);
-    cout << " Evaluation result team:" << eval.tm->id_ << 
-      " score:" << eval.stats_double[REWARD1_IDX] << endl;
-
+    cout << " Evaluation result team:" << eval.tm->id_ << " n_outcomes "
+         << outcomes.size() << " mean " << VectorMean(outcomes) << " median "
+         << VectorMedian(outcomes) << endl;
+    cout << vecToStr(outcomes) << endl;
   }
 }
 
