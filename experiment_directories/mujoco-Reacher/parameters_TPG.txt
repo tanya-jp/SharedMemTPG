@@ -116,13 +116,13 @@ pmx 0.5
 pmx_p 0.5
 
 # Team variation: probability of deleting program from team
-pmd 0.25
+pmd 0.3
 
 # Team variation: probability of adding program to team
-pma 0.2
+pma 0.15
 
 # Team variation: probability of mutating program execution order
-pmw 0.25
+pmw 0.3
 
 ################################################################################
 ## Program  parameters #########################################################
@@ -137,21 +137,21 @@ pmw 0.25
 p_clone_program 1.0
 
 # Program variation: probability of mutating a program's action pointer
-pmn 0.25
+pmn 0.3
 # When changing action pointer, probability of selecting atomic action
-p_atomic 0.9
+p_atomic 0.99
 
 # Program variation: probability of changing a random instruction
-p_instructions_mutate 0.25
+p_instructions_mutate 0.3
 
 # Program variation: probability of swaping the position of two instructions
-p_instructions_swap 0.25
+p_instructions_swap 0.3
 
 # Program variation: probability of deleting an instruction
-p_instructions_delete 0.25
+p_instructions_delete 0.3
 
 # program variation: probability of adding an instruction
-p_instructions_add 0.2
+p_instructions_add 0.15
 
 # Program variation: probability of mutating constants
 # If set to 0.0, evolved constants are not used & memory is initialized to zero
