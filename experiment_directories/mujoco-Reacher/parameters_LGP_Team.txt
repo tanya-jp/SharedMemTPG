@@ -27,7 +27,7 @@ task_to_replay 0
 
 # Re-evaluate an individual from a checkpoint file and animate behaviour, 
 # if available
-animate 1
+animate 0
 
 ################################################################################
 ## GA Parameters ###############################################################
@@ -81,7 +81,7 @@ seed_aux 42
 n_generations 1000000
 
 # Number of root teams (agents) to keep each generation
-n_root 500
+n_root 1000
 
 # Number of new root teams to create each generation
 n_root_gen 100
