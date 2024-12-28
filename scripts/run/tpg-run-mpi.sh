@@ -2,6 +2,7 @@
 
 # Default command line args
 mode=0 #Train:0, Replay:1, Debug:2
+animate=1
 num_mpi_proc=2
 seed_tpg=42
 seed_aux=42
@@ -10,9 +11,10 @@ replay_gen=0
 tm_id=0
 parameters_file="parameters.txt"
 
-while getopts g:m:n:p:r:s:T:t: flag
+while getopts a:g:m:n:p:r:s:T:t: flag
 do
    case "${flag}" in
+      a) animate=${OPTARG};;
       g) seed_aux=${OPTARG};;
       m) mode=${OPTARG};;
       n) num_mpi_proc=${OPTARG};;
@@ -81,7 +83,7 @@ if [ $mode -eq 1 ]; then
     mpirun --oversubscribe -np 1 \
      $TPG/build/release/cpp/experiments/TPGExperimentMPI \
      parameters_file=${parameters_file} \
-     replay=1 animate=1 id_to_replay=$tm_id task_to_replay=$task_to_replay \
+     replay=1 animate=$animate id_to_replay=$tm_id task_to_replay=$task_to_replay \
      checkpoint_in_phase=$phase checkpoint_in_t=$checkpoint_in_t \
      seed_tpg=$seed_tpg seed_aux=$seed_aux \
      1> tpg.$seed_tpg.$seed_aux.replay.std \

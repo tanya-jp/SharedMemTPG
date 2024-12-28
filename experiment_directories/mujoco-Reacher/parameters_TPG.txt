@@ -189,7 +189,7 @@ n_input 0
 max_initial_prog_size 50
 
 # Max program size
-max_prog_size 1000000
+max_prog_size 50
 
 # Number of memory indices
 # Each memory index points to a data structure (scalar, vector, or matrix)
@@ -251,7 +251,7 @@ forecast_n_eval_val 10
 # Model path
 mj_model_path $TPG/datasets/mujoco_models/reacher.xml
 
-mj_max_timestep 200
+mj_max_timestep 50
 
 mj_reward_control_weight 0.0
 
