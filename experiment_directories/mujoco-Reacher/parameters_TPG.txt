@@ -87,7 +87,7 @@ n_root 1000
 n_root_gen 200
 
 # Whether to constrain parent selection to root teams
-parent_select_roots_only 0
+parent_select_roots_only 1
 
 tournament_size 3
 
@@ -105,7 +105,7 @@ seed_with_episode_number 1
 max_initial_team_size 1
 
 # Max team size
-max_team_size 1000000
+max_team_size 30
 
 ### Independent team mutation ops #############################################
 ###############################################################################

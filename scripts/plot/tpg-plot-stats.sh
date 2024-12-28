@@ -85,10 +85,10 @@ do
 
    # echo $(tac $f | sed '/restart/q' | tac | grep "setElTmsMTA fm ${fitMode} " | grep " phs $phs " | head -n $maxT | awk -F " nP " '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-pCount-mt.csv
    # echo $(tac $f | sed '/restart/q' | tac | grep "setElTmsMTA fm ${fitMode} " | grep " phs $phs " | head -n $maxT | awk -F " nT " '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-tCount-mt.csv
-   echo $(tac $f | sed '/restart/q' | tac | grep setElTmsMTA | grep " fm ${fitMode} "  | grep " phs $phs " | head -n $maxT | awk -F "age" '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-age-mt.csv   
+   echo $(tac $f | sed '/restart/q' | tac | grep setElTmsMTA | grep " fm ${fitMode} " | grep " phs $phs " | head -n $maxT | awk -F "age" '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-age-mt.csv   
 
-   #echo $(tac $f | sed '/restart/q' | tac | grep "setElTmsMTA fm ${fitMode} " | grep " phs $phs " | head -n $maxT | awk -F " mnProgIns " '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-meanPIns.csv
-   #echo $(tac $f | sed '/restart/q' | tac | grep "setElTmsMTA fm ${fitMode} " | grep " phs $phs " | head -n $maxT | awk -F " mnEProgIns " '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-meanEPIns.csv
+   echo $(tac $f | sed '/restart/q' | tac | grep setElTmsMTA | grep " fm ${fitMode} " | grep " phs $phs " | head -n $maxT | awk -F " mnProgIns " '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-meanPIns.csv
+   echo $(tac $f | sed '/restart/q' | tac | grep setElTmsMTA | grep " fm ${fitMode} " | grep " phs $phs " | head -n $maxT | awk -F " mnEProgIns " '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-meanEPIns.csv
 
 #echo $(tac $f | sed '/restart/q' | tac | grep "setElTmsMTA fm ${fitMode} " | grep " phs $phs " | head -n $maxT | awk -F " pF " '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-policyFeatures.csv
 #echo $(tac $f | sed '/restart/q' | tac | grep "setElTmsMTA fm ${fitMode} " | grep " phs $phs " | head -n $maxT | awk -F " pF " '{print $2}' | awk '{print $1}' | tr '\n' ' ') >> tpg-policyFeatures.csv
@@ -291,10 +291,10 @@ if [ $modes -gt 0 ]; then
    Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R ${wd}-MODES-ecology.csv "MODES - Ecology" 5 "$(printf "%03d" $i)" 0 
 fi
 
-#i=$((i+1))
-#Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-meanPIns.csv "Mean Instructions per Program (best graph)" "$winSize" "$(printf "%03d" $i)" 0 
-#i=$((i+1))
-#Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-meanEPIns.csv "Mean Effective Instructions per Program (best graph)" "$winSize" "$(printf "%03d" $i)" 0 
+i=$((i+1))
+Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-meanPIns.csv "Mean Instructions per Program (best graph)" "$winSize" "$(printf "%03d" $i)" 0 
+i=$((i+1))
+Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-meanEPIns.csv "Mean Effective Instructions per Program (best graph)" "$winSize" "$(printf "%03d" $i)" 0 
 #i=$((i+1))
 #Rscript $TPG/scripts/plot/plot-tpg-trainingCurves.R tpg-policyFeatures.csv "Features (best graph)" "$winSize" "$(printf "%03d" $i)" 0
 # i=$((i+1))

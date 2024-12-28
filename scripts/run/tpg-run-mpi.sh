@@ -81,7 +81,7 @@ if [ $mode -eq 1 ]; then
     mpirun --oversubscribe -np 1 \
      $TPG/build/release/cpp/experiments/TPGExperimentMPI \
      parameters_file=${parameters_file} \
-     replay=1 id_to_replay=$tm_id task_to_replay=$task_to_replay \
+     replay=1 animate=1 id_to_replay=$tm_id task_to_replay=$task_to_replay \
      checkpoint_in_phase=$phase checkpoint_in_t=$checkpoint_in_t \
      seed_tpg=$seed_tpg seed_aux=$seed_aux \
      1> tpg.$seed_tpg.$seed_aux.replay.std \
