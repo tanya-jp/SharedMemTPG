@@ -105,7 +105,7 @@ seed_with_episode_number 1
 max_initial_team_size 1
 
 # Max team size
-max_team_size 30
+max_team_size 10
 
 ### Independent team mutation ops #############################################
 ###############################################################################
@@ -186,10 +186,10 @@ continuous_output 2
 n_input 0
 
 # Max initial program size
-max_initial_prog_size 50
+max_initial_prog_size 10
 
 # Max program size
-max_prog_size 50
+max_prog_size 10
 
 # Number of memory indices
 # Each memory index points to a data structure (scalar, vector, or matrix)

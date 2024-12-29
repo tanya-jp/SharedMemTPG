@@ -213,13 +213,8 @@ void replayer(TPG &tpg, vector<TaskEnv *> &tasks) {
     for (int task = 0; task < tpg.GetState("n_task"); task++) {
         tpg.state_["active_task"] = task;
         eval.task = tasks[tpg.GetState("active_task")];
-        if (eval.animate) {
-            eval.tm->_n_eval = 1;
-            tpg.rngs_[AUX_SEED].seed(tpg.GetParam<int>("seed_aux"));
-        } else {
             eval.tm->_n_eval =
                 eval.task->GetNumEval(tpg.GetParam<int>("checkpoint_in_phase"));
-        }
         for (eval.episode = 0; eval.episode < eval.tm->_n_eval;
              eval.episode++) {
               if (!eval.animate) {
@@ -249,6 +244,7 @@ void replayer(TPG &tpg, vector<TaskEnv *> &tasks) {
          << VectorMedian(outcomes) << endl;
     cout << vecToStr(outcomes) << endl;
   }
+  cerr << "TEST";
 }
 
 #endif

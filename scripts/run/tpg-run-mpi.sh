@@ -10,11 +10,14 @@ task_to_replay=0
 replay_gen=0
 tm_id=0
 parameters_file="parameters.txt"
+checkpoint_in_phase=0
 
-while getopts a:g:m:n:p:r:s:T:t: flag
+# TODO(skelly): change to full name parameters
+while getopts a:c:g:m:n:p:r:s:T:t: flag
 do
    case "${flag}" in
       a) animate=${OPTARG};;
+      c) checkpoint_in_phase=${OPTARG};;
       g) seed_aux=${OPTARG};;
       m) mode=${OPTARG};;
       n) num_mpi_proc=${OPTARG};;
@@ -112,7 +115,28 @@ if [ $mode -eq 3 ]; then
 
 fi
 
+# Pickup from checkpoint #######################################################
+if [ $mode -eq 4 ]; then
+  checkpoint_in_phase=0
+  checkpoint_in_t=$(grep -iRl end \
+  checkpoints/cp.*.-1.${seed_tpg}.${checkpoint_in_phase}.rslt | \
+  cut -d '.' -f 2 | sort -n | tail -n 1)
+  pid=$(ls tpg.${seed_tpg}.*.std | cut -d '.' -f 3 | tail -n 1)
+  echo "pid $pid"
+  echo "Starting run ${seed_tpg} t ${checkpoint_in_t}"
+  mpirun --oversubscribe -np $num_mpi_proc \
+    $TPG/build/release/cpp/experiments/TPGExperimentMPI \
+    parameters_file=${parameters_file} \
+    seed_tpg=${seed_tpg} \
+    start_from_checkpoint=1 \
+    checkpoint_in_phase=${checkpoint_in_phase} \
+    checkpoint_in_t=${checkpoint_in_t} \
+    1>> tpg.${seed_tpg}.${pid}.std \
+    2>> tpg.${seed_tpg}.${pid}.err &
+fi
+
 # below this line is just sketches to be cleaned ###############################
+################################################################################
 
 # # Check for memoy leaks
 # if [ $mode -eq 3 ]; then

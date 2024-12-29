@@ -963,13 +963,13 @@ void TPG::SetEliteTeams(vector<TaskEnv*>& tasks) {
          }
 
          // Keep track of elite team history and only save checkpoints
-         // when we have a new test champion for this phase
+         // when we have a new champion for this phase
          if (HaveParam("save_champ_checkpoints") &&
              GetState("phase") == GetParam<int>("save_champ_checkpoints") &&
              elite_team_id_history_.find(elite_id) ==
                  elite_team_id_history_.end()) {
             elite_team_id_history_.insert(elite_id);
-            WriteCheckpoint(GetState("t_current"), true);
+            WriteCheckpoint(GetState("t_current"), false);
          }
       }
    }
@@ -2333,6 +2333,8 @@ void TPG::ReadCheckpoint(long t, int phase, int chkpID, bool fromString,
          for (size_t ii = f; ii < outcome_fields.size(); ii++) {
             memberId = atoi(outcome_fields[ii].c_str());
             m->AddProgram(program_pop_[memberId]);
+            // nrefs_ is loaded from checkpoint, so dec here TODO(skelly):fix
+            program_pop_[memberId]->nrefs_--;
          }
          AddTeam(m);
       } else if (outcome_fields[0].compare("incoming_progs") == 0) {
@@ -2355,10 +2357,11 @@ void TPG::ReadCheckpoint(long t, int phase, int chkpID, bool fromString,
          phylo_graph_[id].root =
              atoi(outcome_fields[f++].c_str()) > 0 ? true : false;
       } else if (!fromString && outcome_fields[0].compare("phyloLink") == 0 &&
-                 find(outcome_fields.begin(), outcome_fields.end(), "from") ==
-                     outcome_fields.end())
+                 find(outcome_fields.begin(), outcome_fields.end(), "from,to") ==
+                     outcome_fields.end()) {
          phylo_graph_[atoi(outcome_fields[1].c_str())].adj.push_back(
              atoi(outcome_fields[2].c_str()));
+                     }
       else if (!fromString && outcome_fields[0].compare("ancestorIds") == 0) {
          f = 1;
          long id = atoi(outcome_fields[f++].c_str());

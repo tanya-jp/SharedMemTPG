@@ -139,8 +139,8 @@ void StepVisualization() {
     glfwPollEvents();
 }
 
-void MaybeStartAnimation(TPG& tpg, TaskEnv* task) {
-    if (tpg.GetParam<int>("animate")) {
+void MaybeStartAnimation(TPG& tpg, TaskEnv* task, EvalData& eval) {
+    if (tpg.GetParam<int>("animate") && eval.episode == 0) {
         MujocoEnv* t = dynamic_cast<MujocoEnv*>(task);
         InitVisualization(t->m_, t->d_);
     }
@@ -149,6 +149,7 @@ void MaybeStartAnimation(TPG& tpg, TaskEnv* task) {
 void MaybeAnimateStep(TPG& tpg) {
     if (tpg.GetParam<int>("animate")) {
         StepVisualization();
+        this_thread::sleep_for(std::chrono::milliseconds(25));
     }
 }
 
@@ -156,7 +157,7 @@ void MaybeAnimateStep(TPG& tpg) {
 void EvalMujoco(TPG& tpg, EvalData& eval) {
     MujocoEnv* task = dynamic_cast<MujocoEnv*>(eval.task);
     task->reset(tpg.rngs_[AUX_SEED]);
-    MaybeStartAnimation(tpg, task);
+    MaybeStartAnimation(tpg, task, eval);
     MaybeAnimateStep(tpg);
     eval.n_prediction = 0;
     state* obs = new state(task->GetObsSize());

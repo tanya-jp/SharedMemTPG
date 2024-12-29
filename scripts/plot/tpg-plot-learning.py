@@ -17,25 +17,25 @@ def AddToPlot(reps, lab):
     plt.legend()
 
 # %%
-# path_1="~/experiments/mujoco-Reacher/mujoco-Reacher-2024-12-21-20-29-03-cc759d5"
-path_1="~/experiments/mujoco-Reacher/mujoco-Reacher-2024-12-22-18-27-11-b0181ad" #TPG
-path_2="~/experiments/mujoco-Reacher/mujoco-Reacher-2024-12-22-09-42-06-b0181ad" #TPGp
-path_3="~/experiments/mujoco-Reacher/mujoco-Reacher-2024-12-22-09-42-11-b0181ad" #TPGd
+
+path_1="~/experiments/mujoco-Reacher/mujoco-Reacher-2024-12-25-23-26-18-bb48342"
+path_2="~/experiments/mujoco-Reacher/mujoco-Reacher-2024-12-26-22-37-35-bb48342"
+# path_3="~/experiments/mujoco-Reacher/mujoco-Reacher-2024-12-22-09-42-11-b0181ad"
 
 
 
 result_to_compare="aux_0_ST_0_p0.csv"
-max_generations=500
+max_generations=200
 df1 = pd.read_csv(path_1 + "/" + result_to_compare, sep='\s+', header=None, usecols=range(0,max_generations))
 df2 = pd.read_csv(path_2 + "/" + result_to_compare, sep='\s+', header=None, usecols=range(0,max_generations))
-df3 = pd.read_csv(path_3 + "/" + result_to_compare, sep='\s+', header=None, usecols=range(0,max_generations))
+# df3 = pd.read_csv(path_3 + "/" + result_to_compare, sep='\s+', header=None, usecols=range(0,max_generations))
 # df4 = pd.read_csv(path_4 + "/" + result_to_compare, sep='\s+', header=None, usecols=range(0,max_generations))
 
 
 fig = plt.figure(figsize=(6, 4))
-AddToPlot(df1.to_numpy(),"TPG")
-AddToPlot(df2.to_numpy(), "TPGp")
-AddToPlot(df3.to_numpy(), "TPGd")
+AddToPlot(df1.to_numpy(),"LGPa")
+AddToPlot(df2.to_numpy(), "LGPb")
+# AddToPlot(df3.to_numpy(), "TPGd")
 # AddToPlot(df4.to_numpy(), "TPGp")
 
 plt.show()
