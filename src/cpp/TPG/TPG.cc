@@ -969,7 +969,7 @@ void TPG::SetEliteTeams(vector<TaskEnv*>& tasks) {
              elite_team_id_history_.find(elite_id) ==
                  elite_team_id_history_.end()) {
             elite_team_id_history_.insert(elite_id);
-            WriteCheckpoint(GetState("t_current"), false);
+            WriteCheckpoint(false);
          }
       }
    }
@@ -2271,7 +2271,7 @@ void TPG::RegisterMachineCrossover(RegisterMachine* p1, RegisterMachine* p2,
 /******************************************************************************/
 // Read in populations from a checkpoint file.
 // TODO(skelly): move reading logic to "deserialize" constructors and cleanup
-void TPG::ReadCheckpoint(long t, int phase, int chkpID, bool fromString,
+void TPG::ReadCheckpoint(long t, int phase, bool fromString,
                          const string& inString) {
    finalize();  // clear populations
    string str;
@@ -2280,8 +2280,10 @@ void TPG::ReadCheckpoint(long t, int phase, int chkpID, bool fromString,
       str = inString;
    } else {
       char filename[80];
-      sprintf(filename, "%s/%s.%ld.%d.%lu.%d.rslt", "checkpoints", "cp", t,
-              chkpID, seeds_[TPG_SEED], phase);
+      // sprintf(filename, "%s/%s.%ld.%d.%lu.%d.rslt", "checkpoints", "cp", t,
+      //         chkpID, seeds_[TPG_SEED], phase);
+      sprintf(filename, "%s.%d.%lu.%d.rslt", "checkpoints/cp",
+           GetState("t_current") - 1, seeds_[TPG_SEED], GetState("phase"));        
       ifstream t(filename);
       t.seekg(0, ios::end);
       str.reserve(t.tellg());
@@ -2624,11 +2626,11 @@ void TPG::updateMODESFilters(bool roots) {
 }
 
 /******************************************************************************/
-void TPG::WriteCheckpoint(long t, bool elite) {
+void TPG::WriteCheckpoint(bool elite) {
    ofstream ofs;
    char filename[80];
-   sprintf(filename, "%s/%s.%ld.%d.%lu.%d.rslt", "checkpoints", "cp", t,
-           GetParam<int>("id"), seeds_[TPG_SEED], GetState("phase"));
+   sprintf(filename, "%s.%d.%lu.%d.rslt", "checkpoints/cp",
+           GetState("t_current"), seeds_[TPG_SEED], GetState("phase"));
    ofs.open(filename, ios::out);
    if (!ofs.is_open() || ofs.fail()) {
       cerr << "open failed for file: " << filename
@@ -2661,7 +2663,7 @@ void TPG::WriteCheckpoint(long t, bool elite) {
          ofs << prog->ToString(GetParam<int>("skip_introns"));
       }
       for (auto tm : teamsAll) {
-         ofs << tm->checkpoint();
+         ofs << tm->ToString();
       }
    } else {  // Include all memories, teams, and programs
       for (auto key : program_pop_) {
@@ -2671,12 +2673,18 @@ void TPG::WriteCheckpoint(long t, bool elite) {
          ofs << key.second->ToString(false);  // Write all instructions
       }
       for (auto tm : team_pop_) {
-         ofs << tm->checkpoint();
+         ofs << tm->ToString();
       }
       ofs << PhylogenyToString();
    }
    ofs << "end" << endl;
    ofs.close();
+   sprintf(filename, "%s.%d.%lu.%d.rslt", "checkpoints/cp",
+           GetState("t_current") - 1, seeds_[TPG_SEED], GetState("phase"));
+   if (std::filesystem::exists(filename) && remove(filename) != 0) {
+      std::cerr << "Error removing old checkpoint file t "
+                << GetState("t_current)") << endl;
+   }
 }
 
 /******************************************************************************/
@@ -2728,7 +2736,7 @@ void TPG::WriteMPICheckpoint(string& s, vector<team*>& root_teams) {
       ss << prog->ToString(GetParam<int>("skip_introns"));
    }
    for (auto tm : teams) {
-      ss << tm->checkpoint();
+      ss << tm->ToString();
    }
    ss << endl;
    s = ss.str();

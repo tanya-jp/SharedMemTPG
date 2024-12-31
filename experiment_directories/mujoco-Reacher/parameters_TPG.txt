@@ -52,7 +52,7 @@ checkpoint_in_phase 2
 save_champ_checkpoints 0
 
 Whether to save training checkpoints at each generation
-write_train_checkpoints 0
+write_train_checkpoints 1
 
 # Save phylogenetic data
 write_phylogeny 0
@@ -78,13 +78,13 @@ seed_tpg 42
 seed_aux 42
 
 # Max number of generations
-n_generations 1000000
+n_generations 20
 
 # Number of root teams (agents) to keep each generation
-n_root 1000
+n_root 100
 
 # Number of new root teams to create each generation
-n_root_gen 200
+n_root_gen 20
 
 # Whether to constrain parent selection to root teams
 parent_select_roots_only 1
@@ -251,7 +251,7 @@ forecast_n_eval_val 10
 # Model path
 mj_model_path $TPG/datasets/mujoco_models/reacher.xml
 
-mj_max_timestep 50
+mj_max_timestep 200
 
 mj_reward_control_weight 0.0
 

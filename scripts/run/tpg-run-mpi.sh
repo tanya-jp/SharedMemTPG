@@ -9,7 +9,7 @@ seed_aux=42
 task_to_replay=0
 replay_gen=0
 tm_id=0
-parameters_file="parameters.txt"
+parameters_file="parameters_TPG.txt"
 checkpoint_in_phase=0
 
 # TODO(skelly): change to full name parameters
@@ -119,7 +119,7 @@ fi
 if [ $mode -eq 4 ]; then
   checkpoint_in_phase=0
   checkpoint_in_t=$(grep -iRl end \
-  checkpoints/cp.*.-1.${seed_tpg}.${checkpoint_in_phase}.rslt | \
+  checkpoints/cp.*.${seed_tpg}.${checkpoint_in_phase}.rslt | \
   cut -d '.' -f 2 | sort -n | tail -n 1)
   pid=$(ls tpg.${seed_tpg}.*.std | cut -d '.' -f 3 | tail -n 1)
   echo "pid $pid"

@@ -3,7 +3,7 @@
 vector<vector<size_t> > instruction::op_signatures_(NUM_OP);
 vector<instruction::operation> instruction::op_list_(NUM_OP);
 
-string instruction::checkpoint() {
+string instruction::ToString() {
   ostringstream oss;
   oss << in1Src_ << "_";
   oss << in2Src_ << "_";

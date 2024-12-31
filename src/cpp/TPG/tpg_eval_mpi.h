@@ -170,7 +170,7 @@ void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
   while (NotDoneAndActive(eval)) {
     world.recv(0, 0, eval.checkpointString);
     if (NotDoneAndActive(eval)) {
-      tpg.ReadCheckpoint(-1, _TRAIN_PHASE, -1, true, eval.checkpointString);
+      tpg.ReadCheckpoint(-1, _TRAIN_PHASE, true, eval.checkpointString);
       eval.teams = tpg.GetRootTeamsInVec();
       eval.task = tasks[tpg.GetState("active_task")];
       eval.eval_result = "";

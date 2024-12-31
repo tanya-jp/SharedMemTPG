@@ -147,7 +147,7 @@ class instruction {
    // example: op_signatures_[SCALAR_COS_OP_] = {kScalarType_, kScalarType_};
    static vector<vector<size_t> > op_signatures_;
 
-   string checkpoint();
+   string ToString();
 
    // Constructor
    instruction(std::unordered_map<string, std::any>&, mt19937&);

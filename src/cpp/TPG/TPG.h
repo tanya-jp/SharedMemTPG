@@ -3,6 +3,7 @@
 #include <TaskEnv.h>
 
 #include <any>
+#include <filesystem>
 #include <iomanip>
 #include <random>
 
@@ -123,7 +124,7 @@ class TPG {
                           RegisterMachine **c1, RegisterMachine **c2);
 
 
-    void ReadCheckpoint(long, int, int, bool, const string &);
+    void ReadCheckpoint(long, int, bool, const string &);
 
     void ReadParameters(string file_name,
                         std::unordered_map<string, std::any> &params);
@@ -152,7 +153,7 @@ class TPG {
     }
     // void teamTaskRank(int, const vector<int> &);
     void updateMODESFilters(bool);
-    void WriteCheckpoint(long, bool);
+    void WriteCheckpoint(bool);
     void WriteMPICheckpoint(string &, vector<team *> &);
 
     /*****************************************************************************

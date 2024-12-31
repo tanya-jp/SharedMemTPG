@@ -218,7 +218,7 @@ class team {
   }
   void AddProgram(RegisterMachine *, int position = -1);
   // bool AddProgramActive(RegisterMachine *);
-  string checkpoint() const;
+  string ToString() const;
   void clone(map<long, phyloRecord> &, team **);
   inline void clearDistances() {
     distances_0_.clear();

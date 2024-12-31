@@ -14,7 +14,7 @@ void team::AddProgram(RegisterMachine *prog, int position) {
 }
 
 /******************************************************************************/
-string team::checkpoint() const {
+string team::ToString() const {
    ostringstream oss;
    oss << "team:" << id_ << ":" << gtime_ << ":" << _n_eval;
    for (auto prog : members_) {
