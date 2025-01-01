@@ -244,7 +244,7 @@ void replayer(TPG &tpg, vector<TaskEnv *> &tasks) {
          << VectorMedian(outcomes) << endl;
     cout << VectorToString(outcomes) << endl;
   }
-  WriteStringToFile("op_use.csv", tpg.AgentOpUseToString(eval.tm));
+  WriteStringToFile("op_use_" + to_string(tpg.seeds_[TPG_SEED]) + ".csv", tpg.AgentOpUseToString(eval.tm));
 }
 
 #endif

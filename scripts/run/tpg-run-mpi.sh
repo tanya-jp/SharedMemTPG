@@ -11,6 +11,7 @@ replay_gen=0
 tm_id=0
 parameters_file="parameters_TPG.txt"
 checkpoint_in_phase=0
+min_fitness=-1000000
 
 # TODO(skelly): change to full name parameters
 while getopts a:c:g:m:n:p:r:s:T:t: flag
@@ -42,12 +43,12 @@ fi
 
 # Replay mode ##################################################################
 if [ $mode -eq 1 ]; then
+   min_fitness=-15
    # Training phase
    phase=0
    if ls replay/frames/* 1> /dev/null 2>&1; then rm replay/frames/*; fi
    if ls rplay/graphs/* 1> /dev/null 2>&1; then rm replay/graphs/*; fi
    if ls rplay/graphs/* 1> /dev/null 2>&1; then rm replay/graphs/*; fi
-  
   
    # Get fitness of best team
    best_fitness=$(grep setElTmsMTA  tpg.${seed_tpg}.*.std | \
@@ -60,6 +61,8 @@ if [ $mode -eq 1 ]; then
      uniq | \
      tail -n 1)
 
+  if (( $(echo "$best_fitness > $min_fitness" |bc -l) )); then 
+ 
   # Get generation of best team
    best_fitness_t=$(grep setElTmsMTA tpg.${seed_tpg}.*.std | \
      grep " fm 0 " | \
@@ -101,6 +104,7 @@ if [ $mode -eq 1 ]; then
     task_to_replay=${task_to_replay} \
     1> tpg.${seed_tpg}.${seed_aux}.replay.std \
     2> tpg.${seed_tpg}.${seed_aux}.replay.err &
+
 fi
 
 # Debug mode ###################################################################
@@ -143,6 +147,7 @@ if [ $mode -eq 4 ]; then
     checkpoint_in_t=${checkpoint_in_t} \
     1>> tpg.${seed_tpg}.${pid}.std \
     2>> tpg.${seed_tpg}.${pid}.err &
+fi
 fi
 
 # below this line is just sketches to be cleaned ###############################
