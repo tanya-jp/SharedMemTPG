@@ -2754,5 +2754,9 @@ string TPG::AgentOpUseToString(team* agent) {
          op_use[i] += prog->op_counts_[i];
       }
    }
-   return VectorToString(op_use);
+   stringstream ss;
+   for (size_t i = 0; i < op_use.size(); i++) {
+      ss << instruction::op_names_[i] << "," << op_use[i] << endl;
+   }
+   return ss.str();//VectorToString(op_use);
 }

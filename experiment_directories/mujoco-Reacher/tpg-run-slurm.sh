@@ -4,12 +4,12 @@
 # cpus anywhere
 #SBATCH --ntasks=21               
 #SBATCH --mem-per-cpu=4G      
-#SBATCH --time=0-12:00  # time (DD-HH:MM)
+#SBATCH --time=0-3:00  # time (DD-HH:MM)
 
 #defaults
 mode=0 #Train:0, Replay:1, Debug:2
 seed=1
-parameters_file="parameters.txt"
+parameters_file="parameters_TPG.txt"
 
 while getopts m:p:s: flag
 do
