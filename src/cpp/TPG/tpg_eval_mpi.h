@@ -50,7 +50,7 @@ vector<team *> GetTeamsToEval(TPG &tpg, TaskEnv *task) {
     auto PS = PowerSet(tpg.GetState("n_task"));
     for (auto &set : PS) {
       auto tm =
-          tpg._eliteTeamPS[vecToStrNoSpace(set)][tpg.GetParam<int>("fit_mode")]
+          tpg._eliteTeamPS[VectorToStringNoSpace(set)][tpg.GetParam<int>("fit_mode")]
                           [_VALIDATION_PHASE];
       tm->_n_eval =
           task->GetNumEval(tpg.GetState("phase")) -
@@ -181,7 +181,7 @@ void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
            if (tpg.GetParam<int>("seed_with_episode_number")) {
               tpg.rngs_[AUX_SEED].seed(eval.episode);
            }
-          eval.tm->InitMemory(tpg._teamMap, tpg.params_);
+          eval.tm->InitMemory(tpg.team_map_, tpg.params_);
           evaluator_map[eval.task->eval_type_](tpg, eval);
           eval.FinalizeStepData(tpg);
         }
@@ -220,7 +220,7 @@ void replayer(TPG &tpg, vector<TaskEnv *> &tasks) {
               if (!eval.animate) {
                 tpg.rngs_[AUX_SEED].seed(eval.episode);
               }
-            eval.tm->InitMemory(tpg._teamMap, tpg.params_);
+            eval.tm->InitMemory(tpg.team_map_, tpg.params_);
 
             if (eval.task->eval_type_ == "RecursiveForecast") {
                 EvalRecursiveForecastViz(
@@ -242,9 +242,9 @@ void replayer(TPG &tpg, vector<TaskEnv *> &tasks) {
     cout << " Evaluation result team:" << eval.tm->id_ << " n_outcomes "
          << outcomes.size() << " mean " << VectorMean(outcomes) << " median "
          << VectorMedian(outcomes) << endl;
-    cout << vecToStr(outcomes) << endl;
+    cout << VectorToString(outcomes) << endl;
   }
-  cerr << "TEST";
+  WriteStringToFile("op_use.csv", tpg.AgentOpUseToString(eval.tm));
 }
 
 #endif

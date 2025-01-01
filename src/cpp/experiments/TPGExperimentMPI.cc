@@ -38,7 +38,6 @@ int main(int argc, char** argv) {
    mpi::environment env(argc, argv);
    mpi::communicator world;
    TPG tpg;
-   tpg.params_["id"] = -1;  // remove later
    tpg.state_["world_rank"] = world.rank();
    tpg.SetParams(argc, argv);
 
@@ -209,7 +208,7 @@ int main(int argc, char** argv) {
       if (tpg.GetParam<int>("start_from_checkpoint")) {
          tpg.ReadCheckpoint(tpg.GetParam<int>("checkpoint_in_t"),
                             tpg.GetParam<int>("checkpoint_in_phase"), false,
-                            "");                  
+                            "");                                   
       } else {
          tpg.InitTeams();
       }
@@ -220,6 +219,7 @@ int main(int argc, char** argv) {
          tpg.state_["phase"] = _TEST_PHASE;
          tpg.state_["active_task"] = tpg.state_["task_to_replay"];
          tpg.ProcessParams();
+         tpg.MarkEffectiveCode();
          replayer(tpg, tasks);
       } else {
          while (tpg.GetState("t_current") <=

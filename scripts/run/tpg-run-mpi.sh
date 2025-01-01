@@ -60,37 +60,47 @@ if [ $mode -eq 1 ]; then
      uniq | \
      tail -n 1)
 
-   # Get generation of best team
-   checkpoint_in_t=$(grep setElTmsMTA tpg.${seed_tpg}.*.std | \
+  # Get generation of best team
+   best_fitness_t=$(grep setElTmsMTA tpg.${seed_tpg}.*.std | \
      grep " fm 0 " | \
      grep "p${phase}t${task_to_replay}a0 ${best_fitness} " | \
      grep " phs $phase " | \
      head -n 1 | \
      awk -F" t " '{print $2}' | \
-     awk '{print $1}')
-   
+     awk '{print $1}')  
+
+   # Get phase and generation of checkpoint file
+   checkpoint_in_phase=$(grep -iRl end \
+    checkpoints/cp.*.${seed_tpg}.*.rslt | \
+    cut -d '.' -f 4 | sort -n | tail -n 1)
+   checkpoint_in_t=$(grep -iRl end \
+    checkpoints/cp.*.${seed_tpg}.${checkpoint_in_phase}.rslt | \
+    cut -d '.' -f 2 | sort -n | tail -n 1) 
+
    # Get id of best team
    tm_id=$(grep "setElTmsMTA" tpg.${seed_tpg}.*.std | \
      grep " fm 0 " | \
      grep "p${phase}t${task_to_replay}a0 ${best_fitness} " | \
      grep " phs $phase " | \
-     grep " t $checkpoint_in_t " | \
+     grep " t $best_fitness_t " | \
      head -n 1 | \
      awk -F"id" '{print $2}' | \
-     awk '{print $1}')
-
+     awk '{print $1}')  
+   
    echo "Fitness:$best_fitness Generation:$checkpoint_in_t Team:$tm_id"
    
-   #  for dbg 
-  #  mpirun --oversubscribe -np 1 xterm -hold -e gdb -ex run \
-    mpirun --oversubscribe -np 1 \
-     $TPG/build/release/cpp/experiments/TPGExperimentMPI \
-     parameters_file=${parameters_file} \
-     replay=1 animate=$animate id_to_replay=$tm_id task_to_replay=$task_to_replay \
-     checkpoint_in_phase=$phase checkpoint_in_t=$checkpoint_in_t \
-     seed_tpg=$seed_tpg seed_aux=$seed_aux \
-     1> tpg.$seed_tpg.$seed_aux.replay.std \
-     2> tpg.$seed_tpg.$seed_aux.replay.err &
+  #  mpirun --oversubscribe -np 1 xterm -hold -e gdb -ex run --args \
+   mpirun --oversubscribe -np 1 \
+    $TPG/build/release/cpp/experiments/TPGExperimentMPI \
+    parameters_file=${parameters_file} \
+    seed_tpg=${seed_tpg} seed_aux=${seed_aux} \
+    start_from_checkpoint=1 \
+    checkpoint_in_phase=${checkpoint_in_phase} \
+    checkpoint_in_t=${checkpoint_in_t} \
+    replay=1 animate=${animate} id_to_replay=${tm_id} \
+    task_to_replay=${task_to_replay} \
+    1> tpg.${seed_tpg}.${seed_aux}.replay.std \
+    2> tpg.${seed_tpg}.${seed_aux}.replay.err &
 fi
 
 # Debug mode ###################################################################

@@ -126,7 +126,7 @@ struct EvalData {
     void EncodeEvalResultString(TPG &tpg) {
         // eval_result.erase(std::remove(eval_result.begin(), eval_result.end(), '\0'), eval_result.end());
         eval_result += to_string(static_cast<long>(tm->id_));
-        eval_result += ":4";// + vecToStrNoSpace(fingerprint);  // 4?
+        eval_result += ":4";// + VectorToStringNoSpace(fingerprint);  // 4?
         eval_result += ":0";// + to_string(tpg.GetState("active_task"));
         for (size_t r = 0; r < stats_double.size(); r++)
             eval_result += ":" + to_string(stats_double[r]);

@@ -25,7 +25,7 @@ void TPG::AddProgram(RegisterMachine* p) {
 /******************************************************************************/
 void TPG::AddTeam(team* tm) {
    team_pop_.insert(tm);
-   _teamMap[tm->id_] = tm;
+   team_map_[tm->id_] = tm;
 }
 
 /******************************************************************************/
@@ -35,9 +35,9 @@ void TPG::RemoveTeam(team* tm) {
       prog->nrefs_--;
    }
    // TODO(skelly): test cloning
-   if (_teamMap.find(tm->cloneId_) != _teamMap.end())
-      _teamMap[tm->cloneId_]->clones_--;
-   _teamMap.erase(tm->id_);
+   if (team_map_.find(tm->cloneId_) != team_map_.end())
+      team_map_[tm->cloneId_]->clones_--;
+   team_map_.erase(tm->id_);
    team_pop_.erase(tm);
    delete tm;
 }
@@ -92,7 +92,7 @@ RegisterMachine* TPG::getAction(team* tm, state* s, bool updateActive,
    visitedTeams.clear();
    decisionInstructions = 0;
    teamPath.clear();
-   return tm->getAction(s, _teamMap, updateActive, visitedTeams,
+   return tm->getAction(s, team_map_, updateActive, visitedTeams,
                         decisionInstructions, timeStep, teamPath, rng, verbose);
 }
 
@@ -113,7 +113,7 @@ RegisterMachine* TPG::getAction(
    // visitedTeams.clear();
    teamPath.clear();
    return tm->getAction(
-       s, _teamMap, updateActive, visitedTeams, decisionInstructions, timeStep,
+       s, team_map_, updateActive, visitedTeams, decisionInstructions, timeStep,
        allPrograms, winningPrograms, decisionFeatures, teamPath, rng, verbose);
 }
 
@@ -122,7 +122,7 @@ void TPG::GetAllNodes(team* tm, set<team*, teamIdComp>& teams,
                       set<RegisterMachine*, RegisterMachineIdComp>& programs) {
    teams.clear();
    programs.clear();
-   tm->GetAllNodes(_teamMap, teams, programs);
+   tm->GetAllNodes(team_map_, teams, programs);
 }
 
 /******************************************************************************/
@@ -398,7 +398,7 @@ void TPG::finalize() {
    _allComponentsAt.clear();
    _eliteTeams.clear();
    _eliteTeamPS.clear();
-   _teamMap.clear();
+   team_map_.clear();
    _Memids.clear();  //TODO(skelly): remove
    _Memids.resize(MemoryEigen::kNumMemoryType_);
    state_["memory_count"] = 0;
@@ -485,7 +485,7 @@ RegisterMachine* TPG::CloneProgram(RegisterMachine* prog) {
    RegisterMachine* prog_clone = new RegisterMachine(
        *(dynamic_cast<RegisterMachine*>(prog)), params_, state_);
    if (prog_clone->action_ >= 0)
-      _teamMap[prog_clone->action_]->AddIncomingProgram(prog_clone->id_);
+      team_map_[prog_clone->action_]->AddIncomingProgram(prog_clone->id_);
    return prog_clone;
 }
 
@@ -514,7 +514,7 @@ void TPG::MutateActionToTerminal(RegisterMachine* prog_to_mu, team* new_team) {
       // If changing from team pointer to atomic, update pointee's incoming
       if (prog_to_mu->action_ >= 0) {
          new_team->n_atomic_++;
-         _teamMap[prog_to_mu->action_]->removeIncomingProgram(prog_to_mu->id_);
+         team_map_[prog_to_mu->action_]->removeIncomingProgram(prog_to_mu->id_);
       }
       prog_to_mu->action_ = new_discrete_action;
    }
@@ -530,18 +530,18 @@ void TPG::MutateActionToTeam(RegisterMachine* prog_to_mu, team* new_team,
       if (prog_to_mu->action_ < 0) {
         new_team->n_atomic_--;
       }
-      uniform_int_distribution<int> disM(0, _teamMap.size() - 1);
+      uniform_int_distribution<int> disM(0, team_map_.size() - 1);
       team* tm;
       int tries = 0;
       do {
-         auto it = _teamMap.begin();
+         auto it = team_map_.begin();
          advance(it, disM(rngs_[TPG_SEED]));
          tm = it->second;
       } while (tries++ < 20 &&
                (tm->gtime_ == GetState("t_current") || tm->clones_ > 0 ||
                 prog_to_mu->action_ == tm->id_));
       if (prog_to_mu->action_ >= 0)
-         _teamMap[prog_to_mu->action_]->removeIncomingProgram(prog_to_mu->id_);
+         team_map_[prog_to_mu->action_]->removeIncomingProgram(prog_to_mu->id_);
       if (!tm->root()) {  // Already subsumed, don't clone
          prog_to_mu->action_ = tm->id_;
          tm->AddIncomingProgram(prog_to_mu->id_);
@@ -674,9 +674,9 @@ void TPG::GenerateNewTeams() {
    for (auto& subset : task_power_set) {
       //TODO(skelly): put selection in a separate function
       if (GetParam<int>("parent_select_roots_only")) {
-         if (task_set_map_[vecToStrNoSpace(subset)].size() == 0)
+         if (task_set_map_[VectorToStringNoSpace(subset)].size() == 0)
             continue;
-         candidate_parent_teams = task_set_map_[vecToStrNoSpace(subset)];
+         candidate_parent_teams = task_set_map_[VectorToStringNoSpace(subset)];
       }
       uniform_int_distribution<int> disP(0, candidate_parent_teams.size() - 1);
       for (int i = 0; i < n_new_teams_per_set; i++) {
@@ -766,7 +766,7 @@ void TPG::UpdateTeamPhyloData(team* tm) {
    // MarkEffectiveCode(tm);
    if (tm->runTimeComplexityIns() == 0) {
       // TODO(skelly): clean out magic number - 2
-      tm->updateComplexityRecord(_teamMap,
+      tm->updateComplexityRecord(team_map_,
                                  GetParam<int>("n_point_aux_double") - 2);
    }
    phylo_graph_[tm->id_].fitness = tm->fit_;
@@ -816,7 +816,7 @@ vector<team*> TPG::NormalizeScoresAndRankTeams(
    vector<team*> vec;
    for (auto tm : GetRootTeamsInVec()) {
       if (GetState("phase") == _TEST_PHASE &&
-          tm->id_ != (_eliteTeamPS[vecToStrNoSpace(set)][GetParam<int>(
+          tm->id_ != (_eliteTeamPS[VectorToStringNoSpace(set)][GetParam<int>(
                           "fit_mode")][_VALIDATION_PHASE])
                          ->id_) {
          continue;
@@ -851,7 +851,7 @@ vector<team*> TPG::NormalizeScoresAndRankTeams(
       // TODO(skelly): debug, test, and cleanup complexity record
       // GetParam<int>("n_point_aux_double") - 2 refers to
       // decision_instructions
-      tm->updateComplexityRecord(_teamMap,
+      tm->updateComplexityRecord(team_map_,
                                  GetParam<int>("n_point_aux_double") - 1);
       vec.push_back(tm);
    }
@@ -866,7 +866,7 @@ void TPG::FindMultiTaskElites(vector<TaskEnv*>& tasks,
    size_t n_elite_per_task = GetParam<int>("n_root") / PS.size();
    for (auto& set : PS) {
       if (GetState("phase") == _TRAIN_PHASE)
-         task_set_map_[vecToStrNoSpace(set)]
+         task_set_map_[VectorToStringNoSpace(set)]
              .clear();  // TODO(skelly): check this
       auto teams_normed_scores =
           NormalizeScoresAndRankTeams(tasks, set, min_scores, max_scores);
@@ -882,7 +882,7 @@ void TPG::FindMultiTaskElites(vector<TaskEnv*>& tasks,
             _numEliteTeamsCurrent[GetState("phase")]++;
             tm->elite(GetState("phase"), true);
             if (GetState("phase") == _TRAIN_PHASE) {
-               tm->fitnessBin(GetState("t_current"), vecToStrNoSpace(set));
+               tm->fitnessBin(GetState("t_current"), VectorToStringNoSpace(set));
                phylo_graph_[tm->id_].fitnessBin = tm->fitnessBin();
                phylo_graph_[tm->id_].fitness = tm->fit_;
 
@@ -894,13 +894,13 @@ void TPG::FindMultiTaskElites(vector<TaskEnv*>& tasks,
                }
             }
             if (GetState("phase") == _TRAIN_PHASE)
-               task_set_map_[vecToStrNoSpace(set)].push_back(tm);
+               task_set_map_[VectorToStringNoSpace(set)].push_back(tm);
          }
          if (elite_count >= n_elite_per_task)
             break;
       }
       // Always keep track of single elite team for each task set
-      _eliteTeamPS[vecToStrNoSpace(set)][GetState("fitMode")]
+      _eliteTeamPS[VectorToStringNoSpace(set)][GetState("fitMode")]
                   [GetState("phase")] = *(teams_normed_scores.begin());
    }
 }
@@ -921,16 +921,16 @@ void TPG::SetEliteTeams(vector<TaskEnv*>& tasks) {
 
    auto PS = PowerSet(GetState("n_task"));
    for (auto& set : PS) {
-      auto elite_id = _eliteTeamPS[vecToStrNoSpace(set)][GetState("fitMode")]
+      auto elite_id = _eliteTeamPS[VectorToStringNoSpace(set)][GetState("fitMode")]
                                   [GetState("phase")]
                                       ->id_;
       if (set.size() == 1 &&
-          haveEliteTeam(vecToStrNoSpace(set), GetState("fitMode"),
+          haveEliteTeam(VectorToStringNoSpace(set), GetState("fitMode"),
                         GetState("phase"))) {
          oss << "setElTmsST eLSz " << _numEliteTeamsCurrent[GetState("phase")]
-             << " ss " << vecToStrNoSpace(set) << " fm " << GetState("fitMode")
+             << " ss " << VectorToStringNoSpace(set) << " fm " << GetState("fitMode")
              << " minThr "
-             << _eliteTeamPS[vecToStrNoSpace(set)][GetState("fitMode")]
+             << _eliteTeamPS[VectorToStringNoSpace(set)][GetState("fitMode")]
                             [GetState("phase")]
                                 ->fit_
              << " ";
@@ -944,12 +944,12 @@ void TPG::SetEliteTeams(vector<TaskEnv*>& tasks) {
          }
       }
       if (set.size() == (size_t)GetState("n_task") &&
-          haveEliteTeam(vecToStrNoSpace(set), GetState("fitMode"),
+          haveEliteTeam(VectorToStringNoSpace(set), GetState("fitMode"),
                         GetState("phase"))) {
          oss << "setElTmsMTA eLSz " << _numEliteTeamsCurrent[GetState("phase")]
-             << " ss " << vecToStrNoSpace(set) << " fm " << GetState("fitMode")
+             << " ss " << VectorToStringNoSpace(set) << " fm " << GetState("fitMode")
              << " minThr "
-             << _eliteTeamPS[vecToStrNoSpace(set)][GetState("fitMode")]
+             << _eliteTeamPS[VectorToStringNoSpace(set)][GetState("fitMode")]
                             [GetState("phase")]
                                 ->fit_
              << " ";
@@ -1083,11 +1083,11 @@ void TPG::GetPolicyFeatures(int hostId, set<long>& features, bool active) {
       for (auto tm : team_pop_) {
          if (tm->root_) {
             visited_teams.clear();
-            tm->policyFeatures(_teamMap, visited_teams, features, active);
+            tm->policyFeatures(team_map_, visited_teams, features, active);
          }
       }
    } else {
-      _teamMap[hostId]->policyFeatures(_teamMap, visited_teams, features,
+      team_map_[hostId]->policyFeatures(team_map_, visited_teams, features,
                                        active);
    }
 }
@@ -1218,7 +1218,7 @@ void TPG::GetPolicyFeatures(int hostId, set<long>& features, bool active) {
 //   for (auto leiter = programs.begin(); leiter != programs.end(); leiter++) {
 //     if ((*leiter)->action_ >= 0 &&
 //         find(visitedTeamsAllTasks.begin(), visitedTeamsAllTasks.end(),
-//              _teamMap[(*leiter)->action_]) != visitedTeamsAllTasks.end()) {
+//              team_map_[(*leiter)->action_]) != visitedTeamsAllTasks.end()) {
 //       double w = find(winningProgramsDepth.begin(),
 //       winningProgramsDepth.end(),
 //                       *leiter) == winningProgramsDepth.end() ||
@@ -1296,7 +1296,7 @@ void TPG::GetPolicyFeatures(int hostId, set<long>& features, bool active) {
 // void TPG::printGraphDotGPEM(long rootTeamId, map<long, string> &teamColMap,
 //                             set<team *, teamIdComp> &visitedTeamsAllTasks,
 //                             vector<map<long, double>> &teamUseMapPerTask) {
-//   team *rootTeam = _teamMap[rootTeamId];
+//   team *rootTeam = team_map_[rootTeamId];
 
 //   (void)teamColMap;
 //   vector<string> taskCol;
@@ -1424,7 +1424,7 @@ void TPG::GetPolicyFeatures(int hostId, set<long>& features, bool active) {
 //   ////program -> team edges
 //   // for(auto leiter = programs.begin(); leiter != programs.end(); leiter++){
 //   //    if ((*leiter)->action_ >= 0 && find(visitedTeamsAllTasks.begin(),
-//   //    visitedTeamsAllTasks.end(), _teamMap[(*leiter)->action_]) !=
+//   //    visitedTeamsAllTasks.end(), team_map_[(*leiter)->action_]) !=
 //   //    visitedTeamsAllTasks.end()){
 //   //       ofs << " p_" << (*leiter)->id_ << "->" << "t_"<<
 //   (*leiter)->action_
@@ -1458,7 +1458,7 @@ void TPG::GetPolicyFeatures(int hostId, set<long>& features, bool active) {
 //       // "black" << "];" << endl;
 //       if ((*leiter)->action_ >= 0 &&
 //           find(visitedTeamsAllTasks.begin(), visitedTeamsAllTasks.end(),
-//                _teamMap[(*leiter)->action_]) != visitedTeamsAllTasks.end())
+//                team_map_[(*leiter)->action_]) != visitedTeamsAllTasks.end())
 //                {
 //         ofs << " t_" << (*teiter)->id_ << "->t_" << (*leiter)->action_
 //             << " [arrowsize=" << arrowSize_1 << ", penwidth="
@@ -1505,7 +1505,7 @@ void TPG::printGraphDotGPTPXXI(long rootTeamId,
                                set<team*, teamIdComp>& visitedTeamsAllTasks,
                                vector<map<long, double>>& teamUseMapPerTask,
                                vector<int>& steps_per_task) {
-   team* rootTeam = _teamMap[rootTeamId];
+   team* rootTeam = team_map_[rootTeamId];
    vector<string> taskCol;
    taskCol.push_back("#7fc97f");
    taskCol.push_back("#beaed4");
@@ -1562,7 +1562,7 @@ void TPG::printGraphDotGPTPXXI(long rootTeamId,
       for (auto prog : tm->members_) {
          if (prog->action_ >= 0 &&
              find(visitedTeamsAllTasks.begin(), visitedTeamsAllTasks.end(),
-                  _teamMap[prog->action_]) != visitedTeamsAllTasks.end()) {
+                  team_map_[prog->action_]) != visitedTeamsAllTasks.end()) {
             ofs << " t_" << tm->id_ << "->t_" << prog->action_
                 << " [arrowsize=" << arrowSize_1 << ", penwidth=" << "1"
                 << " color=" << "black" << "];" << endl;
@@ -1596,7 +1596,7 @@ void TPG::printGraphDotGPTPXXI(long rootTeamId,
 //     vector<RegisterMachine *> allPrograms, vector<RegisterMachine *> winningPrograms,
 //     set<team *, teamIdComp> &visitedTeamsAllTasks,
 //     vector<map<long, double>> &teamUseMapPerTask, vector<team *> teamPath) {
-//   team *rootTeam = _teamMap[rootTeamId];
+//   team *rootTeam = team_map_[rootTeamId];
 
 //   vector<string> taskCol;
 //   taskCol.push_back("#7fc97f");
@@ -1732,7 +1732,7 @@ void TPG::printGraphDotGPTPXXI(long rootTeamId,
 //   //    (*teiter)->members(&mem);
 //   //    for(auto leiter = mem.begin(); leiter != mem.end(); leiter++){
 //   //       if ((*leiter)->action_ >= 0 && find(visitedTeamsAllTasks.begin(),
-//   //       visitedTeamsAllTasks.end(), _teamMap[(*leiter)->action_]) !=
+//   //       visitedTeamsAllTasks.end(), team_map_[(*leiter)->action_]) !=
 //   //       visitedTeamsAllTasks.end()){
 //   //          ofs << " t_" << (*teiter)->id_ << "->t_" << (*leiter)->action_
 //   //          << " [arrowsize=" << arrowSize_1  << ", penwidth=" << "1" << "
@@ -1748,7 +1748,7 @@ void TPG::printGraphDotGPTPXXI(long rootTeamId,
 //   //       teamPath[t]->members(&mem);
 //   //       for(auto leiter = mem.begin(); leiter != mem.end(); leiter++){
 //   //          if ((*leiter)->action_ >= 0 && teamPath[t+1]->id_ ==
-//   //          _teamMap[(*leiter)->action_]->id_){
+//   //          team_map_[(*leiter)->action_]->id_){
 //   //             ofs << " t_" << teamPath[t]->id_ << "->t_" <<
 //   //             (*leiter)->action_ << " [arrowsize=" << arrowSize_2  << ",
 //   //             penwidth=" << edgeWidth_2 << " color=" << "black" << "];" <<
@@ -1762,7 +1762,7 @@ void TPG::printGraphDotGPTPXXI(long rootTeamId,
 //   for (auto leiter = programs.begin(); leiter != programs.end(); leiter++) {
 //     if ((*leiter)->action_ >= 0 &&
 //         find(visitedTeamsAllTasks.begin(), visitedTeamsAllTasks.end(),
-//              _teamMap[(*leiter)->action_]) != visitedTeamsAllTasks.end()) {
+//              team_map_[(*leiter)->action_]) != visitedTeamsAllTasks.end()) {
 //       double w = find(winningProgramsDepth.begin(),
 //       winningProgramsDepth.end(),
 //                       *leiter) == winningProgramsDepth.end() ||
@@ -1924,7 +1924,7 @@ void TPG::printTeamInfo(long t, int phase, bool singleBest, long teamId) {
          visitedTeams.clear();
          vector<int> programInstructionCounts,
              effectiveProgramInstructionCounts;
-         (*teiter)->policyInstructions(_teamMap, visitedTeams,
+         (*teiter)->policyInstructions(team_map_, visitedTeams,
                                        programInstructionCounts,
                                        effectiveProgramInstructionCounts);
 
@@ -1941,14 +1941,14 @@ void TPG::printTeamInfo(long t, int phase, bool singleBest, long teamId) {
          set<RegisterMachine*, RegisterMachineIdComp> programs;
          // set<MemoryEigen *, MemoryEigenIdComp> memories;
          set<team*, teamIdComp> visitedTeams2;
-         (*teiter)->GetAllNodes(_teamMap, visitedTeams2, programs);
+         (*teiter)->GetAllNodes(team_map_, visitedTeams2, programs);
          oss << " nP " << programs.size();
          oss << " nT " << visitedTeams2.size();
          // oss << " nM " << memories.size();
 
          // visitedTeams.clear();
          // set<long> pF;
-         // (*teiter)->policyFeatures(_teamMap, visitedTeams, pF, true);
+         // (*teiter)->policyFeatures(team_map_, visitedTeams, pF, true);
          // oss << " pF " << (double)pF.size() / n_input_[];
          // //GetParam<int>("n_input");
 
@@ -1962,7 +1962,7 @@ void TPG::printTeamInfo(long t, int phase, bool singleBest, long teamId) {
             for (size_t i = 0; i < op_countsSingle.size(); i++)
                op_countsTally[i] += op_countsSingle[i];
          }
-         oss << " nOp " << vecToStr(op_countsTally);
+         oss << " nOp " << VectorToString(op_countsTally);
 
          vector<int> tmSizesRoot, tmSizesSub;
          tmSizesRoot.push_back((*teiter)->size());
@@ -2054,7 +2054,7 @@ void TPG::trackTeamInfo(long t, int phase, bool singleBest, long teamId) {
          visitedTeams.clear();
          vector<int> programInstructionCounts,
              effectiveProgramInstructionCounts;
-         (*teiter)->policyInstructions(_teamMap, visitedTeams,
+         (*teiter)->policyInstructions(team_map_, visitedTeams,
                                        programInstructionCounts,
                                        effectiveProgramInstructionCounts);
 
@@ -2075,7 +2075,7 @@ void TPG::trackTeamInfo(long t, int phase, bool singleBest, long teamId) {
          set<RegisterMachine*, RegisterMachineIdComp> programs;
          // set<MemoryEigen *, MemoryEigenIdComp> memories;
          set<team*, teamIdComp> visitedTeams2;
-         (*teiter)->GetAllNodes(_teamMap, visitedTeams2, programs);
+         (*teiter)->GetAllNodes(team_map_, visitedTeams2, programs);
          api_client_->LogMetric("teamInfo/nP", std::to_string(programs.size()),
                                 "", gen);
          api_client_->LogMetric("teamInfo/nT",
@@ -2095,7 +2095,7 @@ void TPG::trackTeamInfo(long t, int phase, bool singleBest, long teamId) {
                op_countsTally[i] += op_countsSingle[i];
          }
 
-         api_client_->LogMetric("teamInfo/nOp", vecToStr(op_countsTally), "",
+         api_client_->LogMetric("teamInfo/nOp", VectorToString(op_countsTally), "",
                                 gen);
 
          vector<int> tmSizesRoot, tmSizesSub;
@@ -2282,8 +2282,8 @@ void TPG::ReadCheckpoint(long t, int phase, bool fromString,
       char filename[80];
       // sprintf(filename, "%s/%s.%ld.%d.%lu.%d.rslt", "checkpoints", "cp", t,
       //         chkpID, seeds_[TPG_SEED], phase);
-      sprintf(filename, "%s.%d.%lu.%d.rslt", "checkpoints/cp",
-           GetState("t_current") - 1, seeds_[TPG_SEED], GetState("phase"));        
+      sprintf(filename, "%s.%ld.%lu.%d.rslt", "checkpoints/cp",
+           t, seeds_[TPG_SEED], phase);        
       ifstream t(filename);
       t.seekg(0, ios::end);
       str.reserve(t.tellg());
@@ -2344,7 +2344,7 @@ void TPG::ReadCheckpoint(long t, int phase, bool fromString,
          long id = atoi(outcome_fields[f++].c_str());
          for (size_t ii = f; ii < outcome_fields.size(); ii++) {
             long incomingId = atoi(outcome_fields[ii].c_str());
-            _teamMap[id]->AddIncomingProgram(incomingId);
+            team_map_[id]->AddIncomingProgram(incomingId);
          }
       } else if (!fromString && outcome_fields[0].compare("phyloNode") == 0 &&
                  find(outcome_fields.begin(), outcome_fields.end(), "gtime") ==
@@ -2448,18 +2448,18 @@ void TPG::CleanupProgramsWithNoRefs() {
       auto prog = it->second;
       if (prog->nrefs_ < 1) {
          if (prog->action_ >= 0) {
-            if (_teamMap[prog->action_]->inDeg() == 1) {
-               phylo_graph_[_teamMap[prog->action_]->id_].root = true;
+            if (team_map_[prog->action_]->inDeg() == 1) {
+               phylo_graph_[team_map_[prog->action_]->id_].root = true;
             }
-            _teamMap[prog->action_]->removeIncomingProgram(prog->id_);
+            team_map_[prog->action_]->removeIncomingProgram(prog->id_);
             // If team was a subsumed root clone that has now become a root
             // itself, just delete it
-            if (_teamMap[prog->action_]->root() &&
-                _teamMap[prog->action_]->cloneId_ != -1) {
-               auto it = _teamMap.find(_teamMap[prog->action_]->cloneId_);
-               if (it != _teamMap.end())
+            if (team_map_[prog->action_]->root() &&
+                team_map_[prog->action_]->cloneId_ != -1) {
+               auto it = team_map_.find(team_map_[prog->action_]->cloneId_);
+               if (it != team_map_.end())
                   it->second->clones_ = it->second->clones_ - 1;
-               team* tm = _teamMap[prog->action_];
+               team* tm = team_map_[prog->action_];
                phylo_graph_[tm->id_].dtime = GetState("t_current");
                RemoveTeam(tm);
             }
@@ -2525,7 +2525,7 @@ void TPG::updateMODESFilters(bool roots) {
                // store active programs for novelty metric
                set<team*, teamIdComp> teams;
                set<RegisterMachine*, RegisterMachineIdComp> programs;
-               tm->GetAllNodes(_teamMap, teams, programs);
+               tm->GetAllNodes(team_map_, teams, programs);
                for (auto leiter = programs.begin(); leiter != programs.end();
                     leiter++) {
                   _persistenceFilterA[tm->id_].activeProgramIds.insert(
@@ -2652,7 +2652,7 @@ void TPG::WriteCheckpoint(bool elite) {
          for (auto fm : ps.second) {  // ...for each fitness mode
             auto tm = fm.second[GetState("phase")];
             teams.clear();
-            tm->GetAllNodes(_teamMap, teams, programs, memories);
+            tm->GetAllNodes(team_map_, teams, programs, memories);
             teamsAll.insert(teams.begin(), teams.end());
          }
       }
@@ -2717,7 +2717,7 @@ void TPG::WriteMPICheckpoint(string& s, vector<team*>& root_teams) {
    set<RegisterMachine*, RegisterMachineIdComp> programs;
    set<team*, teamIdComp> teams;
    for (auto tm : root_teams) {
-      tm->GetAllNodes(_teamMap, teams, programs, memories);
+      tm->GetAllNodes(team_map_, teams, programs, memories);
    }
    stringstream ss;
    ss << "seed_tpg:" << seeds_[TPG_SEED] << endl;
@@ -2740,4 +2740,19 @@ void TPG::WriteMPICheckpoint(string& s, vector<team*>& root_teams) {
    }
    ss << endl;
    s = ss.str();
+}
+
+/******************************************************************************/
+string TPG::AgentOpUseToString(team* agent) {
+   set<MemoryEigen*> memories;
+   set<RegisterMachine*, RegisterMachineIdComp> programs;
+   set<team*, teamIdComp> teams;
+   agent->GetAllNodes(team_map_, teams, programs, memories);
+   vector<double>op_use(instruction::NUM_OP, 0);
+   for (auto prog : programs) {
+      for (size_t i = 0; i < op_use.size(); i++) {
+         op_use[i] += prog->op_counts_[i];
+      }
+   }
+   return VectorToString(op_use);
 }
