@@ -306,6 +306,7 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
          for (auto m : private_memory_) {
             m->MutateConstants(rng);
          }
+         changed = true;
       }
 
       // Swap positions of two instructions

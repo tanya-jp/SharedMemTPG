@@ -106,6 +106,7 @@ if [ $mode -eq 1 ]; then
     2> tpg.${seed_tpg}.${seed_aux}.replay.err &
 
 fi
+fi
 
 # Debug mode ###################################################################
 if [ $mode -eq 2 ]; then
@@ -136,8 +137,7 @@ if [ $mode -eq 4 ]; then
   checkpoints/cp.*.${seed_tpg}.${checkpoint_in_phase}.rslt | \
   cut -d '.' -f 2 | sort -n | tail -n 1)
   pid=$(ls tpg.${seed_tpg}.*.std | cut -d '.' -f 3 | tail -n 1)
-  echo "pid $pid"
-  echo "Starting run ${seed_tpg} t ${checkpoint_in_t}"
+  echo "Starting run ${seed_tpg} t ${checkpoint_in_t} pid $pid"
   mpirun --oversubscribe -np $num_mpi_proc \
     $TPG/build/release/cpp/experiments/TPGExperimentMPI \
     parameters_file=${parameters_file} \
@@ -147,7 +147,6 @@ if [ $mode -eq 4 ]; then
     checkpoint_in_t=${checkpoint_in_t} \
     1>> tpg.${seed_tpg}.${pid}.std \
     2>> tpg.${seed_tpg}.${pid}.err &
-fi
 fi
 
 # below this line is just sketches to be cleaned ###############################

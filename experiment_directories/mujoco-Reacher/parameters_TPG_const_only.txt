@@ -78,7 +78,7 @@ seed_tpg 42
 seed_aux 42
 
 # Max number of generations
-n_generations 30
+n_generations 40
 
 # Number of root teams (agents) to keep each generation
 n_root 100
@@ -111,18 +111,18 @@ max_team_size 10
 ###############################################################################
 
 # Team variation: probability of team crossover
-pmx 0.5
+pmx 0.0
 # Team variation: probability of team crossover adding each parent prog to child
 pmx_p 0.5
 
 # Team variation: probability of deleting program from team
-pmd 0.25
+pmd 0.0
 
 # Team variation: probability of adding program to team
-pma 0.2
+pma 0.0
 
 # Team variation: probability of mutating program execution order
-pmw 0.25
+pmw 0.0
 
 ################################################################################
 ## Program  parameters #########################################################
@@ -137,25 +137,25 @@ pmw 0.25
 p_clone_program 1.0
 
 # Program variation: probability of mutating a program's action pointer
-pmn 0.25
+pmn 0.0
 # When changing action pointer, probability of selecting atomic action
 p_atomic 0.995
 
 # Program variation: probability of changing a random instruction
-p_instructions_mutate 0.25
+p_instructions_mutate 0.0
 
 # Program variation: probability of swaping the position of two instructions
-p_instructions_swap 0.25
+p_instructions_swap 0.0
 
 # Program variation: probability of deleting an instruction
-p_instructions_delete 0.25
+p_instructions_delete 0.0
 
 # program variation: probability of adding an instruction
-p_instructions_add 0.2
+p_instructions_add 0.0
 
 # Program variation: probability of mutating constants
 # If set to 0.0, evolved constants are not used & memory is initialized to zero
-p_memory_mu_const 0.5
+p_memory_mu_const 1.0
 
 # Program variation: probability of changing observation_buff_size
 p_observation_buff_size 0.0
