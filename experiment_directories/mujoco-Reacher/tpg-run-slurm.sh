@@ -2,9 +2,9 @@
 #SBATCH --account=def-skelly
 
 # cpus anywhere
-#SBATCH --ntasks=51               
+#SBATCH --ntasks=11               
 #SBATCH --mem-per-cpu=4G      
-#SBATCH --time=0-12:00  # time (DD-HH:MM)
+#SBATCH --time=0-00:20  # time (DD-HH:MM)
 
 #defaults
 mode=0 #Train:0, Replay:1, Debug:2
@@ -36,7 +36,7 @@ if [ $mode -eq 4 ]; then
   checkpoints/cp.*.${seed_tpg}.${checkpoint_in_phase}.rslt | \
   cut -d '.' -f 2 | sort -n | tail -n 1)
   pid=$(ls tpg.${seed_tpg}.*.std | cut -d '.' -f 3 | tail -n 1)
-  echo "Starting run ${seed_tpg} t ${checkpoint_in_t} pid $pid"
+  echo "Starting run ${seed_tpg} t ${checkpoint_in_t} pid $pid" > oot
   srun $TPG/build/release/cpp/experiments/TPGExperimentMPI \
     parameters_file=${parameters_file} \
     seed_tpg=${seed_tpg} \
