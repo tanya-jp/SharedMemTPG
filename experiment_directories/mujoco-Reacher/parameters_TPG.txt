@@ -95,7 +95,7 @@ tournament_size 3
 keep_old_outcomes 1
 
 # Whether to seed the environment with the episode number
-seed_with_episode_number 1
+seed_with_episode_number 0
 
 ################################################################################
 ## Team  parameters ############################################################
@@ -116,10 +116,10 @@ pmx 0.5
 pmx_p 0.5
 
 # Team variation: probability of deleting program from team
-pmd 0.25
+pmd 0.15
 
 # Team variation: probability of adding program to team
-pma 0.2
+pma 0.1
 
 # Team variation: probability of mutating program execution order
 pmw 0.25
@@ -148,10 +148,10 @@ p_instructions_mutate 0.25
 p_instructions_swap 0.25
 
 # Program variation: probability of deleting an instruction
-p_instructions_delete 0.25
+p_instructions_delete 0.15
 
 # program variation: probability of adding an instruction
-p_instructions_add 0.2
+p_instructions_add 0.1
 
 # Program variation: probability of mutating constants
 # If set to 0.0, evolved constants are not used & memory is initialized to zero
@@ -255,7 +255,7 @@ mj_max_timestep 200
 
 mj_reward_control_weight 0.0
 
-mj_n_eval_train 200
+mj_n_eval_train 100
 mj_n_eval_validation 0
 mj_n_eval_test 0
 
