@@ -84,7 +84,7 @@ n_generations 1000000
 n_root 1000
 
 # Number of new root teams to create each generation
-n_root_gen 20
+n_root_gen 200
 
 # Whether to constrain parent selection to root teams
 parent_select_roots_only 1
@@ -95,7 +95,7 @@ tournament_size 3
 keep_old_outcomes 1
 
 # Whether to seed the environment with the episode number
-seed_with_episode_number 0
+seed_with_episode_number 1
 
 ################################################################################
 ## Team  parameters ############################################################
