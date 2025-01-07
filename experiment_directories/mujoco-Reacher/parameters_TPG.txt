@@ -116,10 +116,10 @@ pmx 0.5
 pmx_p 0.5
 
 # Team variation: probability of deleting program from team
-pmd 0.15
+pmd 0.25
 
 # Team variation: probability of adding program to team
-pma 0.1
+pma 0.2
 
 # Team variation: probability of mutating program execution order
 pmw 0.25
@@ -148,10 +148,10 @@ p_instructions_mutate 0.25
 p_instructions_swap 0.25
 
 # Program variation: probability of deleting an instruction
-p_instructions_delete 0.15
+p_instructions_delete 0.25
 
 # program variation: probability of adding an instruction
-p_instructions_add 0.1
+p_instructions_add 0.2
 
 # Program variation: probability of mutating constants
 # If set to 0.0, evolved constants are not used & memory is initialized to zero
