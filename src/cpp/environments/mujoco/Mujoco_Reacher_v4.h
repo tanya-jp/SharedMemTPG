@@ -119,7 +119,7 @@ class Mujoco_Reacher_v4 : public MujocoEnv {
          if (goal[0] * goal[0] + goal[1] * goal[1] < 0.04)
             break;
       }
-
+      
       std::copy_n(goal.begin(), 2, qpos.end() - 2);
 
       std::uniform_real_distribution<> dis_vel(-0.005, 0.005);

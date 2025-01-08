@@ -179,7 +179,7 @@ void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
         for (eval.episode = 0; eval.episode < eval.tm->_n_eval;
              eval.episode++) {   
            if (tpg.GetParam<int>("seed_with_episode_number")) {
-              tpg.rngs_[AUX_SEED].seed(eval.episode);
+              tpg.rngs_[AUX_SEED].seed(eval.episode * 42);
            }
           eval.tm->InitMemory(tpg.team_map_, tpg.params_);
           evaluator_map[eval.task->eval_type_](tpg, eval);
@@ -218,7 +218,7 @@ void replayer(TPG &tpg, vector<TaskEnv *> &tasks) {
         for (eval.episode = 0; eval.episode < eval.tm->_n_eval;
              eval.episode++) {
               if (!eval.animate) {
-                tpg.rngs_[AUX_SEED].seed(eval.episode);
+                tpg.rngs_[AUX_SEED].seed(eval.episode * 42);
               }
             eval.tm->InitMemory(tpg.team_map_, tpg.params_);
 
