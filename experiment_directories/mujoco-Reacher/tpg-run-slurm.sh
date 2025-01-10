@@ -3,9 +3,9 @@
 
 # cpus anywhere
 # #SBATCH --nodes=1
-#SBATCH --ntasks=201               
+#SBATCH --ntasks=101               
 #SBATCH --mem-per-cpu=4G      
-#SBATCH --time=0-03:00  # time (DD-HH:MM)
+#SBATCH --time=0-12:00  # time (DD-HH:MM)
 
 #defaults
 mode=0 #Train:0, Replay:1, Debug:2
