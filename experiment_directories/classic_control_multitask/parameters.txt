@@ -183,7 +183,7 @@ continuous_output 1
 
 # Number of inputs (aka "features" or "state variables")
 # Note MuJoco does not use this
-n_input 2
+n_input 2,2,2
 
 # Max initial program size
 max_initial_prog_size 10
@@ -211,7 +211,7 @@ max_observation_buff_size 1
 
 # Which tasks are active
 # Right-hand-side should be a single task name or a comma-separated list
-active_tasks Cartpole
+active_tasks Cartpole,Acrobot,Pendulum
 
 # Use the partially-observable version of a task, if available
 # Currently only available for calssic control and Mujoco tasks
