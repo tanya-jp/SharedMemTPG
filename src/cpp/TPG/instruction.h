@@ -1020,29 +1020,19 @@ class instruction {
 
    inline void ExecuteScalarMemWriteOp(bool dbg) {
 
-      normal_distribution<double> dis;
+      int memory_size = static_cast<int>(memory_out_->team_vector_memory_[0]->n_memories_);
+      double mean = (memory_size)/2;
+      double std = (memory_size)/6;
 
+      normal_distribution<double> dis(mean, std);
       double randomValue = dis(rng_);
 
-      int memory_size = memory_out_->team_vector_memory_[0]->n_memories_;
-
-      // Scale by 7 and convert to integer
-      int scaledValue = static_cast<int>(randomValue * (memory_size-1));
-
-      // Optionally clamp the value to ensure it's in the range [0, 7]
-      int index = std::clamp(scaledValue, 0, (memory_size-1));
-
-      // std::cout << "Generated Gaussian value: " << randomValue 
-      //             << ", Scaled value: " << scaledValue << std::endl;
-
-      // std::cout << ", Scaled value: " << memory_out_->team_vector_memory_[index]->memory_size_ << std::endl;
+      int index = std::clamp(static_cast<int>(randomValue), 0, (memory_size-1));
 
       for (int i = 0; i < memory_size; i++)
       {
          memory_out_->team_scalar_memory_[index]->working_memory_[i](0, 0)=in1_->working_memory_[i](0, 0);
       }
-
-
 
       if (dbg){
 
@@ -1060,17 +1050,14 @@ class instruction {
 
    inline void ExecuteVectorMemWriteOp(bool dbg) {
 
-      normal_distribution<double> dis;
+      int memory_size = static_cast<int>(memory_out_->team_vector_memory_[0]->n_memories_);
+      double mean = (memory_size)/2;
+      double std = (memory_size)/6;
 
+      normal_distribution<double> dis(mean, std);
       double randomValue = dis(rng_);
 
-      int memory_size = memory_out_->team_vector_memory_[0]->n_memories_;
-
-      // Scale by 7 and convert to integer
-      int scaledValue = static_cast<int>(randomValue * (memory_size-1));
-
-      // Optionally clamp the value to ensure it's in the range [0, 7]
-      int index = std::clamp(scaledValue, 0, (memory_size-1));
+      int index = std::clamp(static_cast<int>(randomValue), 0, (memory_size-1));
 
       // Loop through all memories in the working memory of the input vector
       for (int i = 0; i < static_cast<int>(in1_->n_memories_); i++) {
@@ -1099,18 +1086,15 @@ class instruction {
    }
 
    inline void ExecuteMatrixMemWriteOp(bool dbg) {
+      
+      int memory_size = static_cast<int>(memory_out_->team_vector_memory_[0]->n_memories_);
+      double mean = (memory_size)/2;
+      double std = (memory_size)/6;
 
-      normal_distribution<double> dis;
-
+      normal_distribution<double> dis(mean, std);
       double randomValue = dis(rng_);
 
-      int memory_size = memory_out_->team_vector_memory_[0]->n_memories_;
-
-      // Scale by 7 and convert to integer
-      int scaledValue = static_cast<int>(randomValue * (memory_size-1));
-
-      // Optionally clamp the value to ensure it's in the range [0, 7]
-      int index = std::clamp(scaledValue, 0, (memory_size-1));
+      int index = std::clamp(static_cast<int>(randomValue), 0, (memory_size-1));
 
       for (int i = 0; i < static_cast<int>(in1_->n_memories_); i++) {
         for (int row = 0; row < static_cast<int>(memory_out_->team_matrix_memory_[index]->memory_size_); row++) {
