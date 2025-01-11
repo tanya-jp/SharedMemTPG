@@ -362,14 +362,42 @@ void instruction::SetupOps() {
       {MemoryEigen::kVectorType_, MemoryEigen::kVectorType_};
   op_list_[OBS_BUFF_SLICE_OP_] = {&instruction::ExecuteObsBuffSliceOp};
 
-  op_signatures_[MEM_WRITE_OP_] = 
-      {sharedMemoryEigen::SHARED_MEM_TYPE, MemoryEigen::kScalarType_};
-  op_list_[MEM_WRITE_OP_] =
-      (&instruction::ExecuteMemWriteOp);
+//   op_signatures_[MEM_WRITE_OP_] = 
+//       {sharedMemoryEigen::SHARED_MEM_TYPE, MemoryEigen::kScalarType_};
+//   op_list_[MEM_WRITE_OP_] =
+//       (&instruction::ExecuteMemWriteOp);
 
-  op_signatures_[MEM_READ_OP_] =
+//   op_signatures_[MEM_READ_OP_] =
+//       {MemoryEigen::kScalarType_, sharedMemoryEigen::SHARED_MEM_TYPE};
+//   op_list_[MEM_READ_OP_] = {&instruction::ExecuteMemReadOp};
+
+  op_signatures_[SCALAR_MEM_WRITE_OP_] = 
+      {sharedMemoryEigen::SHARED_MEM_TYPE, MemoryEigen::kScalarType_};
+  op_list_[SCALAR_MEM_WRITE_OP_] =
+      (&instruction::ExecuteScalarMemWriteOp);
+
+  op_signatures_[SCALAR_MEM_READ_OP_] =
       {MemoryEigen::kScalarType_, sharedMemoryEigen::SHARED_MEM_TYPE};
-  op_list_[MEM_READ_OP_] = {&instruction::ExecuteMemReadOp};
+  op_list_[SCALAR_MEM_READ_OP_] = {&instruction::ExecuteScalarMemReadOp};
+
+  op_signatures_[VECTOR_MEM_WRITE_OP_] = 
+      {sharedMemoryEigen::SHARED_MEM_TYPE, MemoryEigen::kVectorType_};
+  op_list_[VECTOR_MEM_WRITE_OP_] =
+      (&instruction::ExecuteVectorMemWriteOp);
+
+  op_signatures_[VECTOR_MEM_READ_OP_] =
+      {MemoryEigen::kVectorType_, sharedMemoryEigen::SHARED_MEM_TYPE};
+  op_list_[VECTOR_MEM_READ_OP_] = {&instruction::ExecuteVectorMemReadOp};
+
+  op_signatures_[MATRIX_MEM_WRITE_OP_] = 
+      {sharedMemoryEigen::SHARED_MEM_TYPE, MemoryEigen::kMatrixType_};
+  op_list_[MATRIX_MEM_WRITE_OP_] =
+      (&instruction::ExecuteMatrixMemWriteOp);
+
+  op_signatures_[MATRIX_MEM_READ_OP_] =
+      {MemoryEigen::kMatrixType_, sharedMemoryEigen::SHARED_MEM_TYPE};
+  op_list_[MATRIX_MEM_READ_OP_] = {&instruction::ExecuteMatrixMemReadOp};
+  
 }
 
 // Constructor

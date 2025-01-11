@@ -87,10 +87,16 @@ class instruction {
    static const int SCALAR_VECTOR_ASSIGN_OP_ = 70;
    static const int SCALAR_MATRIX_ASSIGN_OP_ = 71;
    static const int OBS_BUFF_SLICE_OP_ = 73;
-   static const int MEM_WRITE_OP_ = 74;
-   static const int MEM_READ_OP_ = 75;
+   // static const int MEM_WRITE_OP_ = 74;
+   // static const int MEM_READ_OP_ = 75;
+   static const int SCALAR_MEM_WRITE_OP_ = 74;
+   static const int SCALAR_MEM_READ_OP_ = 75;
+   static const int VECTOR_MEM_WRITE_OP_ = 76;
+   static const int VECTOR_MEM_READ_OP_ = 77;
+   static const int MATRIX_MEM_WRITE_OP_ = 78;
+   static const int MATRIX_MEM_READ_OP_ = 79;
    
-   static const int NUM_OP = 76;
+   static const int NUM_OP = 80;
 
    static const vector<double> constants_;
    mt19937 rng_;
@@ -967,43 +973,168 @@ class instruction {
 
    /* Teams' memory*/
    inline void ExecuteMemWriteOp(bool dbg) {
-      // if (in1_->working_memory_.size() != 1 && in1_->working_memory_.size() != 8){
-         // cout << "size  " << in1_->working_memory_.size()<< endl;
-      // }
+      // // if (in1_->working_memory_.size() != 1 && in1_->working_memory_.size() != 8){
+      //    // cout << "size  " << in1_->working_memory_.size()<< endl;
+      // // }
 
-      int halfRows = static_cast<int>(memory_out_->rows_ / 2);
-      for (int i = 0; i < halfRows; ++i) {
-         // Probability to write (gets smaller as i increases)
-         double writeProb = memory_out_->memWriteProb_cauchy1(i);
+      // int halfRows = static_cast<int>(memory_out_->rows_ / 2);
+      // for (int i = 0; i < halfRows; ++i) {
+      //    // Probability to write (gets smaller as i increases)
+      //    double writeProb = memory_out_->memWriteProb_cauchy1(i);
 
-         for (int col = 0; col < static_cast<int>(memory_out_->cols_); ++col){
+      //    for (int col = 0; col < static_cast<int>(memory_out_->cols_); ++col){
 
-            uniform_real_distribution<double> dis;
+      //       uniform_real_distribution<double> dis;
 
-            double randomValue = dis(rng_);
+      //       double randomValue = dis(rng_);
 
-            if (randomValue < writeProb){
-               int lower_row = halfRows - i - 1;
-               // memory_out_->team_memory_(lower_row, col) = regs[col]
-               memory_out_->setMatrixValue(lower_row, col, in1_->working_memory_[col](0, 0));
+      //       if (randomValue < writeProb){
+      //          int lower_row = halfRows - i - 1;
+      //          // memory_out_->team_memory_(lower_row, col) = regs[col]
+      //          memory_out_->setMatrixValue(lower_row, col, in1_->working_memory_[col](0, 0));
                
-               int upper_row = halfRows + i;
-               // memory_out_->team_memory_(upper_row, col) = regs[col]
-               memory_out_->setMatrixValue(upper_row, col, in1_->working_memory_[col](0, 0));
-               // memory_out_->team_memory_(upper_row, col) = in1_->working_memory_[col](0, 0);
-            }
+      //          int upper_row = halfRows + i;
+      //          // memory_out_->team_memory_(upper_row, col) = regs[col]
+      //          memory_out_->setMatrixValue(upper_row, col, in1_->working_memory_[col](0, 0));
+      //          // memory_out_->team_memory_(upper_row, col) = in1_->working_memory_[col](0, 0);
+      //       }
 
-         }
-      }
+      //    }
+      // }
+      if (dbg){
+
+      } 
       // memory_out_->printTeamMemory();
    }
 
    inline void ExecuteMemReadOp(bool dbg) {
+      // int row = in0IdxE_ / memory_in1_->rows_; 
+      // int col = in0IdxE_ % memory_in1_->cols_; 
+      // //if (out_->working_memory_ .size()< static_cast<size_t>(col))
+      //    out_->working_memory_[outIdxE_](0, 0) = memory_in1_->team_memory_(row, col);
+      // // memory_in1_->printTeamMemory();
+      if (dbg){
+
+      } 
+   }
+
+   inline void ExecuteScalarMemWriteOp(bool dbg) {
+
+      normal_distribution<double> dis;
+
+      double randomValue = dis(rng_);
+
+      int memory_size = memory_out_->team_vector_memory_[0]->n_memories_;
+
+      // Scale by 7 and convert to integer
+      int scaledValue = static_cast<int>(randomValue * (memory_size-1));
+
+      // Optionally clamp the value to ensure it's in the range [0, 7]
+      int index = std::clamp(scaledValue, 0, (memory_size-1));
+
+      // std::cout << "Generated Gaussian value: " << randomValue 
+      //             << ", Scaled value: " << scaledValue << std::endl;
+
+      // std::cout << ", Scaled value: " << memory_out_->team_vector_memory_[index]->memory_size_ << std::endl;
+
+      for (int i = 0; i < memory_size; i++)
+      {
+         memory_out_->team_scalar_memory_[index]->working_memory_[i](0, 0)=in1_->working_memory_[i](0, 0);
+      }
+
+
+
+      if (dbg){
+
+      }
+   }
+
+   inline void ExecuteScalarMemReadOp(bool dbg) {
       int row = in0IdxE_ / memory_in1_->rows_; 
       int col = in0IdxE_ % memory_in1_->cols_; 
-      //if (out_->working_memory_ .size()< static_cast<size_t>(col))
-         out_->working_memory_[outIdxE_](0, 0) = memory_in1_->team_memory_(row, col);
-      // memory_in1_->printTeamMemory();
+      out_->working_memory_[outIdxE_](0, 0) = memory_in1_->team_scalar_memory_[col]->working_memory_[row](0, 0);
+      if (dbg){
+
+      } 
+   }
+
+   inline void ExecuteVectorMemWriteOp(bool dbg) {
+
+      normal_distribution<double> dis;
+
+      double randomValue = dis(rng_);
+
+      int memory_size = memory_out_->team_vector_memory_[0]->n_memories_;
+
+      // Scale by 7 and convert to integer
+      int scaledValue = static_cast<int>(randomValue * (memory_size-1));
+
+      // Optionally clamp the value to ensure it's in the range [0, 7]
+      int index = std::clamp(scaledValue, 0, (memory_size-1));
+
+      // Loop through all memories in the working memory of the input vector
+      for (int i = 0; i < static_cast<int>(in1_->n_memories_); i++) {
+         for (int row = 0; row < static_cast<int>(memory_out_->team_vector_memory_[index]->memory_size_); row++) {
+               memory_out_->team_vector_memory_[index]->working_memory_[i](row, 0) = 
+                  in1_->working_memory_[i](row, 0);
+         }
+      }
+
+      if (dbg){
+
+      }
+   }
+
+   inline void ExecuteVectorMemReadOp(bool dbg) {
+      int row = in0IdxE_ / memory_in1_->rows_; 
+      int col = in0IdxE_ % memory_in1_->cols_; 
+
+      for (int i = 0; i < static_cast<int>(memory_in1_->team_scalar_memory_[col]->memory_size_); i++){
+         out_->working_memory_[outIdxE_](i, 0) = memory_in1_->team_scalar_memory_[col]->working_memory_[row](i, 0);
+      }
+
+      if (dbg){
+
+      } 
+   }
+
+   inline void ExecuteMatrixMemWriteOp(bool dbg) {
+
+      normal_distribution<double> dis;
+
+      double randomValue = dis(rng_);
+
+      int memory_size = memory_out_->team_vector_memory_[0]->n_memories_;
+
+      // Scale by 7 and convert to integer
+      int scaledValue = static_cast<int>(randomValue * (memory_size-1));
+
+      // Optionally clamp the value to ensure it's in the range [0, 7]
+      int index = std::clamp(scaledValue, 0, (memory_size-1));
+
+      for (int i = 0; i < static_cast<int>(in1_->n_memories_); i++) {
+        for (int row = 0; row < static_cast<int>(memory_out_->team_matrix_memory_[index]->memory_size_); row++) {
+            for (int col = 0; col < static_cast<int>(memory_out_->team_matrix_memory_[index]->memory_size_); col++) {
+                memory_out_->team_matrix_memory_[index]->working_memory_[i](row, col) = 
+                    in1_->working_memory_[i](row, col);
+            }
+        }
+      }
+      if (dbg){
+
+      }
+   }
+
+   inline void ExecuteMatrixMemReadOp(bool dbg) {
+      int row = in0IdxE_ / memory_in1_->rows_; 
+      int col = in0IdxE_ % memory_in1_->cols_; 
+
+      for (int i = 0; i < static_cast<int>(memory_in1_->team_matrix_memory_[col]->memory_size_); i++) {
+        for (int j = 0; j < static_cast<int>(memory_in1_->team_matrix_memory_[col]->memory_size_); j++) {
+            out_->working_memory_[outIdxE_](i, j) = 
+                memory_in1_->team_matrix_memory_[col]->working_memory_[row](i, j);
+        }
+      }
       if (dbg){
 
       } 

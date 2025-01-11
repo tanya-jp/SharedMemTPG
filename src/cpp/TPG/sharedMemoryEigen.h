@@ -23,9 +23,10 @@ public:
     size_t rows_;
     size_t cols_;
 
-    sharedMemoryEigen(int rows=10, int cols=8){
-        rows_ = rows;
-        cols_ = cols;
+    sharedMemoryEigen(int n_memories=8, int memory_size=2){
+
+        rows_ = n_memories;
+        cols_ = n_memories;
 
         // // Add scalar, vector, and matrix MemoryEigen
         // MemoryEigen scalarMemory(MemoryEigen::kScalarType_, 1, 1);
@@ -36,14 +37,15 @@ public:
         
 
         // Add to memories vectors
-        for (int i=0; i<= 8; i++){
+        for (int i=0; i<= static_cast<int>(cols_); i++){
 
+            // std::any_cast<int>(params["n_memories"])
             team_scalar_memory_.push_back(
-                new MemoryEigen (MemoryEigen::kScalarType_, 1, 1));
+                new MemoryEigen (MemoryEigen::kScalarType_, n_memories, 1));
             team_vector_memory_.push_back(
-                new MemoryEigen (MemoryEigen::kVectorType_, 3, 3));
+                new MemoryEigen (MemoryEigen::kVectorType_, n_memories, memory_size));
             team_matrix_memory_.push_back(
-                new MemoryEigen (MemoryEigen::kMatrixType_, 2, 2));
+                new MemoryEigen (MemoryEigen::kMatrixType_, n_memories, memory_size));
         }
     }
 

@@ -382,10 +382,22 @@ void TPG::ReadParameters(string file_name,
          _ops[instruction::SCALAR_MATRIX_ASSIGN_OP_] = true;
       if (outcome_fields[0] == "OBS_BUFF_SLICE_OP")
          _ops[instruction::OBS_BUFF_SLICE_OP_] = true;
-      if (outcome_fields[0] == "MEM_WRITE_OP")
-         _ops[instruction::MEM_WRITE_OP_] = true;  
-      if (outcome_fields[0] == "MEM_READ_OP")
-         _ops[instruction::MEM_READ_OP_] = true;
+      // if (outcome_fields[0] == "MEM_WRITE_OP")
+      //    _ops[instruction::MEM_WRITE_OP_] = true;  
+      // if (outcome_fields[0] == "MEM_READ_OP")
+      //    _ops[instruction::MEM_READ_OP_] = true;
+      if (outcome_fields[0] == "SCALAR_MEM_WRITE_OP")
+         _ops[instruction::SCALAR_MEM_WRITE_OP_] = true;  
+      if (outcome_fields[0] == "SCALAR_MEM_READ_OP")
+         _ops[instruction::SCALAR_MEM_READ_OP_] = true;
+      if (outcome_fields[0] == "VECTOR_MEM_WRITE_OP")
+         _ops[instruction::VECTOR_MEM_WRITE_OP_] = true;  
+      if (outcome_fields[0] == "VECTOR_MEM_READ_OP")
+         _ops[instruction::VECTOR_MEM_READ_OP_] = true;
+      if (outcome_fields[0] == "MATRIX_MEM_WRITE_OP")
+         _ops[instruction::MATRIX_MEM_WRITE_OP_] = true;  
+      if (outcome_fields[0] == "MATRIX_MEM_READ_OP")
+         _ops[instruction::MATRIX_MEM_READ_OP_] = true;
 
       // TODO(skelly): make types part of parameter file
       // string parameters are "hard coded" here
@@ -505,7 +517,7 @@ void TPG::TeamMutator_RemovePrograms(team *team_to_mu) {
 
 /******************************************************************************/
 team *TPG::CloneTeam(team *team_to_clone) {
-   team *team_clone = new team(GetState("t_current"), state_["team_count"]++);
+   team *team_clone = new team(GetState("t_current"), state_["team_count"]++, params_);
    for (auto m : team_to_clone->members_) {
       team_clone->AddProgram(m);
    }
@@ -571,7 +583,7 @@ void TPG::MutateActionToTeam(RegisterMachine *prog_to_mu, team *new_team,
          prog_to_mu->action_ = tm->id_;
          tm->AddIncomingProgram(prog_to_mu->id_);
       } else {  // clone when subsumed
-         team *sub = new team(GetState("t_current"), state_["team_count"]++);
+         team *sub = new team(GetState("t_current"), state_["team_count"]++, params_);
          tm->clone(_phyloGraph, &sub);
          prog_to_mu->action_ = sub->id_;
          sub->AddIncomingProgram(prog_to_mu->id_);
@@ -624,7 +636,7 @@ team *TPG::TeamXover(vector<team *> &parents) {
    std::list<RegisterMachine *> p2programs = pm2->members_;
    auto p2liter = p2programs.begin();
 
-   team *child_team = new team(GetState("t_current"), state_["team_count"]++);
+   team *child_team = new team(GetState("t_current"), state_["team_count"]++, params_);
 
    // TODO(skelly): linear crossover
    if (pm1->size() == 1 && pm2->size() == 1) {
@@ -1241,7 +1253,7 @@ void TPG::InitTeams() {
        1, GetParam<int>("max_initial_team_size"));
    int initial_team_size = dis_team_size(rngs_[TPG_SEED]);
    for (int t = 0; t < GetParam<int>("n_root"); t++) {
-      auto new_team = new team(GetState("t_current"), state_["team_count"]++);
+      auto new_team = new team(GetState("t_current"), state_["team_count"]++, params_);
       for (int p = 0; p < initial_team_size; p++) {
          // Discrete atomic actions are negatives -1 to -numAtomicActions()
          long discrete_action = -1 - dis_actions(rngs_[TPG_SEED]);
@@ -2487,7 +2499,7 @@ void TPG::ReadCheckpoint(long t, int phase, int chkpID, bool fromString,
          long id = atoi(outcome_fields[f++].c_str());
          if (id > max_teamCount) max_teamCount = id;
          long gtime = atoi(outcome_fields[f++].c_str());
-         m = new team(gtime, id);
+         m = new team(gtime, id, params_);
          m->_n_eval = atoi(outcome_fields[f++].c_str());
          // add programs in order
          for (size_t ii = f; ii < outcome_fields.size(); ii++) {

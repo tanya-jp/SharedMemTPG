@@ -173,7 +173,7 @@ class team {
   void taskCode(string tc) { task_code_ = tc; }
 
   // this constructor used for initialization and checkpointing
-  team(long gtime, long id) {
+  team(long gtime, long id, std::unordered_map<std::string, std::any> &params) {
     cloneId_ = -1;
     clones_ = 0;
     //_depthSum = 0;
@@ -193,7 +193,7 @@ class team {
     runTimeComplexityIns_ = 0;
     runTimeComplexityTms_ = 0;
 
-    team_memory_ = sharedMemoryEigen();
+    team_memory_ = sharedMemoryEigen(std::any_cast<int>(params["n_memories"]), std::any_cast<int>(params["memory_size"]));
   };
 
   ~team() {  // TODO(skelly) clean outcome data structure
