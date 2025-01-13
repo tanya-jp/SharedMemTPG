@@ -550,7 +550,7 @@ void TPG::MutateActionToTeam(RegisterMachine *prog_to_mu, team *new_team,
          prog_to_mu->action_ = tm->id_;
          tm->AddIncomingProgram(prog_to_mu->id_);
       } else {  // clone when subsumed
-         team *sub = new team(GetState("t_current"), state_["team_count"]++);
+         team *sub = new team(GetState("t_current"), state_["team_count"]++,  params_);
          tm->clone(phylo_graph_, &sub);
          prog_to_mu->action_ = sub->id_;
          sub->AddIncomingProgram(prog_to_mu->id_);
@@ -593,7 +593,7 @@ void TPG::AddTeamToPhylogeny(team *new_team) {
 
 /******************************************************************************/
 team* TPG::TeamCrossover(team* parent1, team* parent2) {
-   team* child_team = new team(GetState("t_current"), state_["team_count"]++);
+   team* child_team = new team(GetState("t_current"), state_["team_count"]++, params_);
    // TODO(skelly): linear crossover
    if (parent1->size() == 1 && 
        parent2->size() == 1 &&
