@@ -30,7 +30,7 @@ typedef void (*EvaluatorFunction)(TPG &, EvalData &);
   current phase (train, test, validate) and current task
 */
 vector<team *> GetTeamsToEval(TPG &tpg, TaskEnv *task) {
-  auto root_teams = tpg.GetTeamsInVec(true);
+  auto root_teams = tpg.GetRootTeamsInVec();
   vector<team *> teams_to_eval;
   // Train and validate all teams.
   if (tpg.GetState("phase") != _TEST_PHASE) {
@@ -145,7 +145,7 @@ void evaluate_main(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks,
   }
 
   // Collect evaluation result from each evaluator
-  auto root_teams_map = tpg.GetTeamsInMap(true);
+  auto root_teams_map = tpg.GetRootTeamsInMap();
   all_strings.clear();
   gather(world, my_string, all_strings, 0);
 
@@ -171,7 +171,7 @@ void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
     world.recv(0, 0, eval.checkpointString);
     if (NotDoneAndActive(eval)) {
       tpg.ReadCheckpoint(-1, _TRAIN_PHASE, -1, true, eval.checkpointString);
-      tpg.getTeams(eval.teams, true);
+      eval.teams = tpg.GetRootTeamsInVec();
       eval.task = tasks[tpg.GetState("active_task")];
       eval.eval_result = "";
       for (auto tm : eval.teams) {
@@ -201,7 +201,7 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
   teamUseMapPerTask.resize(tpg.GetState("n_task"));
   std::set<team *, teamIdComp> teams_visitedAllTasks;
 
-  tpg.getTeams(eval.teams, true);
+  eval.teams = tpg.GetRootTeamsInVec();
   eval.eval_result = "";
   for (auto tm : eval.teams) {
     if (tm->id_ != tpg.GetParam<int>("id_to_replay")) continue;
