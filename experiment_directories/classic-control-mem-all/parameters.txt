@@ -78,7 +78,7 @@ seed_tpg 42
 seed_aux 42
 
 # Max number of generations
-n_generations 500
+n_generations 1500
 
 # Number of root teams (agents) to keep each generation
 n_root 500
@@ -346,9 +346,9 @@ MATRIX_ST_DEV_OP
 #MEM_WRITE_OP
 #MEM_READ_OP
 
-#SCALAR_MEM_WRITE_OP
-#SCALARMEM_READ_OP
-#VECTOR_MEM_WRITE_OP
-#VECTOR_MEM_READ_OP
-#MATRIX_MEM_WRITE_OP
-#MATRIX_MEM_READ_OP
+SCALAR_MEM_WRITE_OP
+SCALARMEM_READ_OP
+VECTOR_MEM_WRITE_OP
+VECTOR_MEM_READ_OP
+MATRIX_MEM_WRITE_OP
+MATRIX_MEM_READ_OP
