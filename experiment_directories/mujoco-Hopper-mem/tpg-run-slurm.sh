@@ -21,7 +21,7 @@ done
 if [ $mode -eq 0 ]; then
   srun $TPG/build/release/cpp/experiments/TPGExperimentMPI \
   seed_tpg=$seed \
-  1> tpg.$seed.$$.std \
+  1> tpg.$seed.$$.std \ 
   2> tpg.$seed.$$.err
 fi
 
