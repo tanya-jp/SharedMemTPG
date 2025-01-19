@@ -213,8 +213,8 @@ void replayer(TPG &tpg, vector<TaskEnv *> &tasks) {
     for (int task = 0; task < tpg.GetState("n_task"); task++) {
         tpg.state_["active_task"] = task;
         eval.task = tasks[tpg.GetState("active_task")];
-            eval.tm->_n_eval =
-                eval.task->GetNumEval(tpg.GetParam<int>("checkpoint_in_phase"));
+        tm->_n_eval =
+          eval.task->GetNumEval(_TEST_PHASE);
         for (eval.episode = 0; eval.episode < eval.tm->_n_eval;
              eval.episode++) {
               if (!eval.animate) {

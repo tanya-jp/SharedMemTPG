@@ -9,7 +9,7 @@ seed_aux=42
 task_to_replay=0
 replay_gen=0
 tm_id=0
-parameters_file="parameters_TPG.txt"
+parameters_dir=$(pwd)
 checkpoint_in_phase=0
 min_fitness=-1000000
 
@@ -22,7 +22,7 @@ do
       g) seed_aux=${OPTARG};;
       m) mode=${OPTARG};;
       n) num_mpi_proc=${OPTARG};;
-      p) parameters_file=${OPTARG};;
+      p) parameters_file="${parameters_dir}/${OPTARG}";;
       s) seed_tpg=${OPTARG};;
       T) tm_id=${OPTARG};;
       t) replay_gen=${OPTARG};;
