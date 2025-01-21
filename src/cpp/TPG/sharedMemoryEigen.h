@@ -3,6 +3,7 @@
 
 #include <Eigen/Dense>
 #include <vector>
+#include <memory>
 #include "MemoryEigen.h"
 
 class sharedMemoryEigen {
