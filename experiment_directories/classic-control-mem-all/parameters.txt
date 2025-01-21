@@ -150,6 +150,8 @@ p_instructions_delete 0.1
 # program variation: probability of adding an instruction
 p_instructions_add 0.075
 
+# Program variation: probability of mutating constants
+
 # Program variation: probability of linear crossover with another team
 p_instructions_xover 0.0
 
@@ -158,6 +160,9 @@ p_instructions_mu_const 0.5
 
 # Program variation: stddev of normal noise added to each const
 instructions_mu_const_stddev 0.05
+
+# If set to 0.0, evolved constants are not used & memory is initialized to zero
+p_memory_mu_const 0.5
 
 # Program variation: probability of changing observation_buff_size
 p_observation_buff_size 0.0
