@@ -1,6 +1,9 @@
 # %%
 import numpy as np
 import pandas as pd
+import csv
+import os
+import sys
 import matplotlib
 matplotlib.use('TkAgg')  # Or 'Qt5Agg'
 import matplotlib.pyplot as plt
@@ -15,11 +18,55 @@ def AddToPlot(reps, l):
     plt.plot(range(len(reps[0])), reps_mean, label=l)
 
 # %%
+def process_csv_file(input_file, output_file):
+    """
+    Process a CSV file to truncate rows to the minimum row length and save the output.
 
-path_1="/home/tanya/mcmaster/research/tpg/experiment_directories/mujoco-InvertedDoublePendulum-mem"
-path_2="/home/tanya/mcmaster/research/tpg/experiment_directories/mujoco-InvertedDoublePendulum"
+    Parameters:
+    - input_file (str): Path to the input CSV file.
+    - output_file (str): Path to save the processed CSV file.
+    """
+    # Increase field size limit to handle large fields
+    csv.field_size_limit(sys.maxsize)
 
-result_to_compare="aux_2_ST_0_p0.csv"
+    # Ensure the output directory exists
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+    # Read the input file and process rows
+    rows = []
+    with open(input_file, 'r') as infile:
+        reader = csv.reader(infile)
+        for row in reader:
+            # Split numbers by space and store them as lists
+            rows.append(row[0].split())
+
+    # Find the minimum row length
+    min_length = min(len(row) for row in rows)
+
+    # Truncate each row to the minimum length and join with spaces
+    processed_rows = [" ".join(row[:min_length]) for row in rows]
+
+    # Create and write to the output file
+    with open(output_file, 'w', newline='') as outfile:
+        writer = csv.writer(outfile)
+        for row in processed_rows:
+            writer.writerow([row])
+
+    print(f"Processed file saved as {output_file}. Minimum length of rows was {min_length}.")
+
+
+
+# %%
+
+path_1="/home/tanya/mcmaster/research/tpg/experiment_directories/mujoco-Hopper-mem"
+path_2="/home/tanya/mcmaster/research/tpg/experiment_directories/mujoco-Hopper"
+
+result_to_compare_raw="aux_2_ST_0_p0.csv"
+result_to_compare="aux_2_ST_0_p0_new.csv"
+
+
+process_csv_file(path_1 + "/" + result_to_compare_raw, path_1 + "/" + result_to_compare)
+process_csv_file(path_2 + "/" + result_to_compare_raw, path_2 + "/" + result_to_compare)
 
 # df1 = pd.read_csv(path_1 + "/" + result_to_compare, sep='\s+', header=None, on_bad_lines='warn')
 df1 = pd.read_csv(path_1 + "/" + result_to_compare, sep=r'\s+', header=None, on_bad_lines='warn')
