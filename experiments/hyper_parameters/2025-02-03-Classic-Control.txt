@@ -84,7 +84,7 @@ n_generations 1000000
 n_root 1000
 
 # Number of new root teams to create each generation
-n_root_gen 100
+n_root_gen 200
 
 # Whether to constrain parent selection to root teams
 parent_select_roots_only 1
@@ -183,7 +183,7 @@ continuous_output 2
 
 # Number of inputs (aka "features" or "state variables")
 # Note MuJoco does not use this
-n_input 0
+n_input 2
 
 # Max initial program size
 max_initial_prog_size 10
@@ -196,7 +196,7 @@ max_prog_size 10
 n_memories 8
 
 # Dimensionality for vector & matrix memory
-memory_size 9
+memory_size 2
 min_memory_size 2
 max_memory_size 32
 
@@ -211,14 +211,14 @@ max_observation_buff_size 1
 
 # Which tasks are active
 # Right-hand-side should be a single task name or a comma-separated list
-active_tasks Mujoco_Inverted_Double_Pendulum_v4
+active_tasks Cartpole
 
 # Use the partially-observable version of a task, if available
 # Currently only available for calssic control and Mujoco tasks
-partially_observable 0
+partially_observable 1
 
 # Number of discrete actions
-n_discrete_action 0
+n_discrete_action 3
 
 ################################################################################
 ## Parameters Specific to Recursive Forecasting ################################
@@ -249,13 +249,13 @@ forecast_n_eval_val 10
 ################################################################################
 
 # Model path
-mj_model_path $TPG/datasets/mujoco_models/inverted_double_pendulum.xml
+mj_model_path $TPG/datasets/mujoco_models/reacher.xml
 
-mj_max_timestep 1000
+mj_max_timestep 200
 
 mj_reward_control_weight 0.0
 
-mj_n_eval_train 20
+mj_n_eval_train 200
 mj_n_eval_validation 0
 mj_n_eval_test 0
 

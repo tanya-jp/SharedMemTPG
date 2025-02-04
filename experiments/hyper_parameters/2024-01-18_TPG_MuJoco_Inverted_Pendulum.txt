@@ -257,7 +257,7 @@ mj_reward_control_weight 0.0
 
 mj_n_eval_train 100
 mj_n_eval_validation 0
-mj_n_eval_test 0
+mj_n_eval_test 1
 
 ################################################################################
 ## Operations, uncomment to activate ###########################################

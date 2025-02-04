@@ -84,7 +84,7 @@ n_generations 1000000
 n_root 1000
 
 # Number of new root teams to create each generation
-n_root_gen 200
+n_root_gen 100
 
 # Whether to constrain parent selection to root teams
 parent_select_roots_only 1
@@ -196,7 +196,7 @@ max_prog_size 10
 n_memories 8
 
 # Dimensionality for vector & matrix memory
-memory_size 10
+memory_size 9
 min_memory_size 2
 max_memory_size 32
 
@@ -211,7 +211,7 @@ max_observation_buff_size 1
 
 # Which tasks are active
 # Right-hand-side should be a single task name or a comma-separated list
-active_tasks Mujoco_Reacher_v4
+active_tasks Mujoco_Inverted_Double_Pendulum_v4
 
 # Use the partially-observable version of a task, if available
 # Currently only available for calssic control and Mujoco tasks
@@ -249,71 +249,96 @@ forecast_n_eval_val 10
 ################################################################################
 
 # Model path
-mj_model_path $TPG/datasets/mujoco_models/reacher.xml
+mj_model_path $TPG/datasets/mujoco_models/inverted_double_pendulum.xml
 
-mj_max_timestep 200
+mj_max_timestep 1000
 
 mj_reward_control_weight 0.0
 
-mj_n_eval_train 200
+mj_n_eval_train 20
 mj_n_eval_validation 0
-mj_n_eval_test 0
+mj_n_eval_test 1
 
 ################################################################################
 ## Operations, uncomment to activate ###########################################
 ################################################################################
 
-MATRIX_COLUMN_NORM_OP
-MATRIX_CONST_SET_OP
-MATRIX_MAX_OP
-MATRIX_MEAN_OP
-MATRIX_NORM_OP
-MATRIX_PRODUCT_OP
-MATRIX_ROW_NORM_OP
-MATRIX_ROW_ST_DEV_OP
-MATRIX_ST_DEV_OP
-MATRIX_VECTOR_PRODUCT_OP
-SCALAR_ABS_OP
-SCALAR_ARCCOS_OP
-SCALAR_ARCSIN_OP
-SCALAR_ARCTAN_OP
-SCALAR_BROADCAST_OP
-SCALAR_CONDITIONAL_OP
-SCALAR_CONST_SET_OP
-SCALAR_COS_OP
-SCALAR_CUBE_OP
+# scalar ######################
+SCALAR_SUM_OP
 SCALAR_DIFF_OP
-SCALAR_DIVISION_OP
-SCALAR_EXP_OP
-SCALAR_GAUSSIAN_SET_OP
-SCALAR_HEAVYSIDE_OP
-SCALAR_LOG_OP
-SCALAR_MATRIX_ASSIGN_OP
-SCALAR_MAX_OP
-SCALAR_MIN_OP
-SCALAR_POW_OP
 SCALAR_PRODUCT_OP
+SCALAR_DIVISION_OP
+SCALAR_ABS_OP
 SCALAR_RECIPROCAL_OP
 SCALAR_SIN_OP
-SCALAR_SQR_OP
-SCALAR_SQRT_OP
-SCALAR_SUM_OP
-SCALAR_TANH_OP
+SCALAR_COS_OP
 SCALAR_TAN_OP
-SCALAR_VECTOR_ASSIGN_OP
-SCALAR_VECTOR_PRODUCT_OP
-VECTOR_ABS_OP
-VECTOR_COLUMN_BROADCAST_OP
-VECTOR_CONST_SET_OP
-VECTOR_DIFF_OP
-VECTOR_GAUSSIAN_SET_OP
+SCALAR_ARCSIN_OP
+SCALAR_ARCCOS_OP
+SCALAR_ARCTAN_OP
+SCALAR_EXP_OP
+SCALAR_LOG_OP
+SCALAR_HEAVYSIDE_OP
+SCALAR_CONDITIONAL_OP
+SCALAR_POW_OP
+SCALAR_SQR_OP
+SCALAR_CUBE_OP
+SCALAR_TANH_OP
+SCALAR_SQRT_OP
+SCALAR_CONST_SET_OP
+SCALAR_MIN_OP
+SCALAR_MAX_OP
+
+# vector #########################
 VECTOR_HEAVYSIDE_OP
+MATRIX_HEAVYSIDE_OP
+SCALAR_VECTOR_PRODUCT_OP
+SCALAR_BROADCAST_OP
+VECTOR_RECIPROCAL_OP
+VECTOR_NORM_OP
+VECTOR_ABS_OP
+VECTOR_SUM_OP
+VECTOR_DIFF_OP
+VECTOR_PRODUCT_OP
+VECTOR_DIVISION_OP
 VECTOR_INNER_PRODUCT_OP
+VECTOR_MIN_OP
 VECTOR_MAX_OP
 VECTOR_MEAN_OP
-VECTOR_MIN_OP
-VECTOR_NORM_OP
-VECTOR_PRODUCT_OP
-VECTOR_RECIPROCAL_OP
 VECTOR_ST_DEV_OP
-VECTOR_SUM_OP
+VECTOR_CONST_SET_OP
+SCALAR_VECTOR_ASSIGN_OP
+ 
+# matrix #########################
+VECTOR_OUTER_PRODUCT_OP
+SCALAR_MATRIX_PRODUCT_OP
+MATRIX_RECIPROCAL_OP
+MATRIX_VECTOR_PRODUCT_OP
+VECTOR_COLUMN_BROADCAST_OP
+VECTOR_ROW_BROADCAST_OP
+MATRIX_NORM_OP
+MATRIX_COLUMN_NORM_OP
+MATRIX_ROW_NORM_OP
+MATRIX_TRANSPOSE_OP
+MATRIX_ABS_OP
+MATRIX_SUM_OP
+MATRIX_DIFF_OP
+MATRIX_PRODUCT_OP
+MATRIX_DIVISION_OP
+MATRIX_MATRIX_PRODUCT_OP
+MATRIX_MIN_OP
+MATRIX_MAX_OP
+MATRIX_MEAN_OP
+MATRIX_ROW_MEAN_OP
+MATRIX_ROW_ST_DEV_OP
+MATRIX_ST_DEV_OP
+MATRIX_CONST_SET_OP
+SCALAR_MATRIX_ASSIGN_OP
+
+## noise ##########################
+##SCALAR_UNIFORM_SET_OP
+SCALAR_GAUSSIAN_SET_OP
+##VECTOR_UNIFORM_SET_OP
+VECTOR_GAUSSIAN_SET_OP
+##MATRIX_UNIFORM_SET_OP
+MATRIX_GAUSSIAN_SET_OP
