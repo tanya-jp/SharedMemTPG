@@ -2,9 +2,15 @@
 #SBATCH --account=def-skelly
 
 # cpus anywhere
+<<<<<<< HEAD
 #SBATCH --ntasks=101               
 #SBATCH --mem-per-cpu=4G      
 #SBATCH --time=0-12:00  # time (DD-HH:MM)
+=======
+#SBATCH --ntasks=21               
+#SBATCH --mem-per-cpu=6G      
+#SBATCH --time=0-03:00  # time (DD-HH:MM)
+>>>>>>> origin/main
 
 #defaults
 mode=0 #Train:0, Replay:1, Debug:2
@@ -23,10 +29,16 @@ done
 # Start from scratch ###########################################################
 if [ $mode -eq 0 ]; then
   srun $TPG/build/release/cpp/experiments/TPGExperimentMPI \
+<<<<<<< HEAD
   parameters_file=${parameters_file} \
   seed_tpg=${seed_tpg} \
   1> tpg.${seed_tpg}.$$.std \
   2> tpg.${seed_tpg}.$$.err
+=======
+  seed_tpg=$seed \
+  1> tpg.$seed.$$.std \
+  2> tpg.$seed.$$.err
+>>>>>>> origin/main
 fi
 
 # Pickup from checkpoint #######################################################

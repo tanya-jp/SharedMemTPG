@@ -179,7 +179,11 @@ skip_introns 1
 # 1: output is scalar s1
 # 2: output is vector v1
 # 3: output is matrix m1
+<<<<<<< HEAD:experiments/hyper_parameters/2025-02-03-Classic-Control.txt
 continuous_output 2
+=======
+continuous_output 1
+>>>>>>> origin/main:experiment_directories/classic_control/parameters.txt
 
 # Number of inputs (aka "features" or "state variables")
 # Note MuJoco does not use this

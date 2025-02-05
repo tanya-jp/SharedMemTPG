@@ -15,7 +15,7 @@ TPG::TPG() {
 }
 
 /******************************************************************************/
-TPG::~TPG() {}
+TPG::~TPG() { params_.clear(); }
 
 /******************************************************************************/
 void TPG::AddProgram(RegisterMachine* p) {
@@ -460,7 +460,11 @@ void TPG::TeamMutator_AddPrograms(team* team_to_mu) {
       int random_prog_index = dis_programs(rngs_[TPG_SEED]);
       auto it = program_pop_.begin();
       std::advance(it, random_prog_index);
+<<<<<<< HEAD
       RegisterMachine* p = it->second;
+=======
+      RegisterMachine *p = it->second;
+>>>>>>> origin/main
       team_to_mu->AddProgram(p, dis_team_size(rngs_[TPG_SEED]));
    }
 }
@@ -591,8 +595,14 @@ void TPG::AddTeamToPhylogeny(team* new_team) {
 team* TPG::TeamCrossover(team* parent1, team* parent2) {
    team* child_team = new team(GetState("t_current"), state_["team_count"]++);
    // TODO(skelly): linear crossover
+<<<<<<< HEAD
    if (parent1->size() == 1 && parent2->size() == 1 &&
        parent1->members_.front()->instructions_.size() > 1 &&
+=======
+   if (parent1->size() == 1 && 
+       parent2->size() == 1 &&
+       parent1->members_.front()->instructions_.size() > 1 && 
+>>>>>>> origin/main
        parent2->members_.front()->instructions_.size() > 1) {
       RegisterMachine* child_1;
       RegisterMachine* child_2;
@@ -2178,7 +2188,7 @@ void TPG::RegisterMachineCrossover(RegisterMachine* p1, RegisterMachine* p2,
    c2_instructions.insert(c2_instructions.end(), p2_chunks[2].begin(),
                           p2_chunks[2].end());
    *c2 = new RegisterMachine(p2->action_, c2_instructions, params_, state_,
-                             rngs_[TPG_SEED], _ops);
+                             rngs_[TPG_SEED], _ops);                         
 }
 
 // /******************************************************************************/
