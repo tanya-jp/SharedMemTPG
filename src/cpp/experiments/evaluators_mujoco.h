@@ -251,12 +251,8 @@ void MaybeStartAnimation(TPG& tpg, TaskEnv* task, EvalData& eval) {
 
 void MaybeAnimateStep(TPG& tpg) {
     if (tpg.GetParam<int>("animate")) {
-<<<<<<< HEAD
-        StepVisualization();
-        this_thread::sleep_for(std::chrono::milliseconds(25));
-=======
         StepVisualization(tpg);
->>>>>>> origin/main
+        this_thread::sleep_for(std::chrono::milliseconds(25));
     }
 }
 

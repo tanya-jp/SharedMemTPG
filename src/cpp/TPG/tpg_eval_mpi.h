@@ -242,14 +242,11 @@ void replayer(TPG &tpg, vector<TaskEnv *> &tasks) {
     }
     tpg.printGraphDotGPTPXXI(eval.tm->id_, teams_visitedAllTasks,
                              teamUseMapPerTask, steps_per_task);
-<<<<<<< HEAD
+
     cout << " Evaluation result team:" << eval.tm->id_ << " n_outcomes "
          << outcomes.size() << " mean " << VectorMean(outcomes) << " median "
          << VectorMedian(outcomes) << endl;
     cout << VectorToString(outcomes) << endl;
-=======
-    cout << " Evaluation result team:" << eval.tm->id_ << 
-      " score:" << eval.stats_double[REWARD1_IDX] << endl;
 
           // Add video creation for headless mode
     if (headless && frame_idx > 0) {
@@ -273,7 +270,6 @@ void replayer(TPG &tpg, vector<TaskEnv *> &tasks) {
             cerr << "Error removing frame files" << endl;
         }
     }
->>>>>>> origin/main
   }
   WriteStringToFile("op_use_" + to_string(tpg.seeds_[TPG_SEED]) + ".csv", tpg.AgentOpUseToString(eval.tm));
 }

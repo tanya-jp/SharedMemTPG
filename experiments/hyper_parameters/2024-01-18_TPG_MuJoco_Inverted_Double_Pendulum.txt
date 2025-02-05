@@ -253,13 +253,9 @@ mj_model_path $TPG/datasets/mujoco_models/inverted_double_pendulum.xml
 
 mj_max_timestep 1000
 
-<<<<<<< HEAD:experiments/hyper_parameters/2024-01-18_TPG_MuJoco_Inverted_Double_Pendulum.txt
 mj_reward_control_weight 0.0
 
 mj_n_eval_train 20
-=======
-mj_n_eval_train 5
->>>>>>> origin/main:experiment_directories/mujoco-InvertedDoublePendulum/parameters.txt
 mj_n_eval_validation 0
 mj_n_eval_test 1
 
