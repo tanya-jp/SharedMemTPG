@@ -1,4 +1,7 @@
 #include "TPG.h"
+#include "core/event_dispatcher.h"
+#include "metrics/mta/mta_metrics.h"
+#include "metrics/mta/mta_metrics_builder.h"
 
 /******************************************************************************/
 TPG::TPG() {
@@ -935,7 +938,7 @@ void TPG::SetEliteTeams(vector<TaskEnv*>& tasks) {
                                 ->fit_
              << " ";
          printTeamInfo(GetState("t_current"), GetState("phase"), false,
-                       elite_id);
+                       false, elite_id);
 
          if (GetParam<int>("track_experiments") &&
              GetState("t_current") % GetParam<int>("track_mod") == 0) {
@@ -954,7 +957,7 @@ void TPG::SetEliteTeams(vector<TaskEnv*>& tasks) {
                                 ->fit_
              << " ";
          printTeamInfo(GetState("t_current"), GetState("phase"), false,
-                       elite_id);
+                       true, elite_id);
 
          if (GetParam<int>("track_experiments") &&
              GetState("t_current") % GetParam<int>("track_mod") == 0) {
@@ -1046,6 +1049,7 @@ void TPG::SetParams(int argc, char** argv) {
    // First read parameters file
    // ReadParameters("parameters.txt", params_);
    // Parse command line parameters
+   params_["pid"] = 0; // Set default param value for PID
    if (argc > 1) {
       for (int i = 1; i < argc; ++i) {
          std::string arg = argv[i];
@@ -1868,7 +1872,7 @@ void TPG::printPhyloGraphDot(team* tm) {
 }
 
 /******************************************************************************/
-void TPG::printTeamInfo(long t, int phase, bool singleBest, long teamId) {
+void TPG::printTeamInfo(long t, int phase, bool singleBest, bool multitask, long teamId) {
    team* bestTeam = *(team_pop_.begin());
    if (singleBest && teamId == -1)
       bestTeam = GetBestTeam();
@@ -1883,7 +1887,7 @@ void TPG::printTeamInfo(long t, int phase, bool singleBest, long teamId) {
           (!singleBest && (*teiter)->id_ == teamId) ||  // specific team
           (singleBest &&
            (*teiter)->id_ == bestTeam->id_))  // singleBest root team
-      {
+      {      
          oss << "tminfo t " << t << " id " << (*teiter)->id_ << " gtm "
              << (*teiter)->gtime_ << " phs " << phase;
          oss << " root " << ((*teiter)->root() ? 1 : 0);
@@ -1899,7 +1903,8 @@ void TPG::printTeamInfo(long t, int phase, bool singleBest, long teamId) {
 
          oss << setprecision(5) << fixed;
 
-         oss << " mnOut";
+         oss << " mnOut";            
+
          for (int phs : {0, 1, 2}) {
             // bool allPhase = false;
             // bool allTask = false;  // for genomic, set to true
@@ -1945,6 +1950,24 @@ void TPG::printTeamInfo(long t, int phase, bool singleBest, long teamId) {
          oss << " nP " << programs.size();
          oss << " nT " << visitedTeams2.size();
          // oss << " nM " << memories.size();
+
+         // dispatching MTA team information for only multitask events
+         if (multitask) {
+            MTAMetricsBuilder builder;
+            builder.with_generation(t)
+               .with_best_fitness((*teiter)->GetMeanOutcome(0, 0, 0))
+               .with_team_id((*teiter)->id_)
+               .with_team_size((*teiter)->size())
+               .with_age(t - (*teiter)->gtime_)
+               .with_fitness_value_for_selection((*teiter)->fit_)
+               .with_total_program_instructions(accumulate(programInstructionCounts.begin(),
+                           programInstructionCounts.end(), 0))
+               .with_total_effective_program_instructions(accumulate(effectiveProgramInstructionCounts.begin(),
+                           effectiveProgramInstructionCounts.end(), 0));
+            
+            MTAMetrics metrics = builder.build();
+            EventDispatcher<MTAMetrics>::instance().notify(EventType::MTA, metrics);
+         }           
 
          // visitedTeams.clear();
          // set<long> pF;
