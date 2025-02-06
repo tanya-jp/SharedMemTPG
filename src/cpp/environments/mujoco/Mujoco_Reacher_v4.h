@@ -23,7 +23,8 @@ class Mujoco_Reacher_v4 : public MujocoEnv {
           std::any_cast<double>(params["mj_reward_control_weight"]);
 
       model_path_ =
-          ExpandEnvVars(std::any_cast<string>(params["mj_model_path"]));
+          ExpandEnvVars(std::any_cast<string>(params["mj_model_path"])+ 
+                        "reacher.xml");
 
       initialize_simulation();
 
