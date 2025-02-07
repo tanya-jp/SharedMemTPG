@@ -114,21 +114,15 @@ class Mujoco_Hopper_v4 : public MujocoEnv {
       } else {
          std::copy_n(d_->qpos, position_size, state_.begin());
       }
-      std::copy_n(d_->qvel, m_->nv, state_.begin() + position_size);
+      // std::copy_n(d_->qvel, m_->nv, state_.begin() + position_size);
+      std::fill_n(state_.begin() + position_size, m_->nv, 0.0);
 
-      // for (int i = 0; i < m_->nv; ++i) {
-      //    state_[position_size + i] =
-      //        std::clamp(state_[position_size + i], -10.0, 10.0);
-      // }
       for (int i = 0; i < m_->nv; ++i) {
-        if (i == 3 || i == 6) { // Skip updating indices 3 and 6
-            state_[position_size + i] = 0.0; // Set to zero or another default value
-        } else {
-            state_[position_size + i] =
-                std::clamp(state_[position_size + i], -10.0, 10.0);
-        }
+          state_[position_size + i] =
+             std::clamp(state_[position_size + i], -10.0, 10.0);
+      }
     }
-   }
+   
 
    void reset(mt19937& rng) {
       std::uniform_real_distribution<> dis_pos(-reset_noise_scale_,
