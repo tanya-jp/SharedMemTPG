@@ -69,21 +69,22 @@ public:
 
     void get_obs(std::vector<double>& obs) {
         // obs[0]: cart x position
-        // obs[0] = d_->qpos[0];
-        obs[0] = 0.0;
+        obs[0] = d_->qpos[0];
+        //obs[0] = 0.0;
 
         // obs[1], obs[2]: sin(qpos[1]), sin(qpos[2])
         obs[1] = sin(d_->qpos[1]);
         obs[2] = sin(d_->qpos[2]);
 
         // obs[3], obs[4]: cos(qpos[1]), cos(qpos[2])
-        // obs[3] = cos(d_->qpos[1]);
-        obs[3] = 0;
+        obs[3] = cos(d_->qpos[1]);
+        // obs[3] = 0;
         obs[4] = cos(d_->qpos[2]);
 
         // obs[5], obs[6], obs[7]: qvel[0], qvel[1], qvel[2], clipped to [-10,10]
         for (int i = 0; i < 3; i++) {
-            obs[5 + i] = std::max(std::min(d_->qvel[i], 10.0), -10.0);
+            //obs[5 + i] = std::max(std::min(d_->qvel[i], 10.0), -10.0);
+              obs[5 + i] = 0.0;
         }
 
         // obs[8], obs[9], obs[10]: qfrc_constraint[0], [1], [2], clipped to [-10,10]
