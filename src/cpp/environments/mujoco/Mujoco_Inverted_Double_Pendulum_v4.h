@@ -8,9 +8,11 @@
 #include <vector>
 #include <unordered_map>
 #include <any>
+#include <random>
 
 class Mujoco_Inverted_Double_Pendulum_v4 : public MujocoEnv {
 public:
+    mt19937 rng_;
     Mujoco_Inverted_Double_Pendulum_v4(std::unordered_map<std::string, std::any>& params) {
         eval_type_ = "Mujoco";
         n_eval_train_ = std::any_cast<int>(params["mj_n_eval_train"]);
@@ -68,6 +70,10 @@ public:
     }
 
     void get_obs(std::vector<double>& obs) {
+        uniform_real_distribution<double> dis(0, 11); 
+        int obs1 = dis(rng_);
+        int obs2 = dis(rng_);
+
         // obs[0]: cart x position
         obs[0] = d_->qpos[0];
         //obs[0] = 0.0;
@@ -91,6 +97,9 @@ public:
         for (int i = 0; i < 3; i++) {
             obs[8 + i] = std::max(std::min(d_->qfrc_constraint[i], 10.0), -10.0);
         }
+
+        obs[obs1] = 0.0;
+        obs[obs2] = 0.0;
     }
 
     void reset(std::mt19937& rng) {
