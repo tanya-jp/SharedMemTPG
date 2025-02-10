@@ -166,7 +166,7 @@ p_memory_size 0.0
 # Use stateful programs
 # If set to 0, memories are set to 0 prior to each program execution
 # If set to 1, memories are only set to 0 prior to each evaluation
-stateful 1
+stateful 0
 
 # Whether to skip introns during evaluation
 skip_introns 1
@@ -337,10 +337,3 @@ MATRIX_ST_DEV_OP
 #VECTOR_GAUSSIAN_SET_OP
 ##MATRIX_UNIFORM_SET_OP
 #MATRIX_GAUSSIAN_SET_OP
-
-SCALAR_MEM_WRITE_OP
-SCALAR_MEM_READ_OP
-VECTOR_MEM_WRITE_OP
-VECTOR_MEM_READ_OP
-MATRIX_MEM_WRITE_OP
-MATRIX_MEM_READ_OP

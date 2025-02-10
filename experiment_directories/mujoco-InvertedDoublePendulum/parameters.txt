@@ -78,13 +78,13 @@ seed_tpg 42
 seed_aux 42
 
 # Max number of generations
-n_generations 300
+n_generations 100000
 
 # Number of root teams (agents) to keep each generation
-n_root 1000
+n_root 1500
 
 # Number of new root teams to create each generation
-n_root_gen 100
+n_root_gen 500
 
 # Whether to constrain parent selection to root teams
 parent_select_roots_only 0
@@ -99,10 +99,10 @@ keep_old_outcomes 1
 ################################################################################
 
 # Initial team size
-max_initial_team_size 1
+max_initial_team_size 10
 
 # Max team size
-max_team_size 1
+max_team_size 1000
 
 ### Independent team mutation ops #############################################
 ###############################################################################
