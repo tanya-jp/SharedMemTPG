@@ -84,7 +84,7 @@ n_generations 1000000
 n_root 1000
 
 # Number of new root teams to create each generation
-n_root_gen 100
+n_root_gen 500
 
 # Whether to constrain parent selection to root teams
 parent_select_roots_only 0
@@ -99,10 +99,10 @@ keep_old_outcomes 1
 ################################################################################
 
 # Initial team size
-max_initial_team_size 1
+max_initial_team_size 10
 
 # Max team size
-max_team_size 1
+max_team_size 100000
 
 ### Independent team mutation ops #############################################
 ###############################################################################
@@ -200,7 +200,7 @@ max_prog_size 1000000
 
 # Number of memory indices
 # Each memory index points to a data structure (scalar, vector, or matrix)
-n_memories 8
+n_memories 16
 
 # Dimensionality for vector & matrix memory
 memory_size 11
@@ -349,7 +349,7 @@ MATRIX_ST_DEV_OP
 #MATRIX_GAUSSIAN_SET_OP
 
 SCALAR_MEM_WRITE_OP
-SCALARMEM_READ_OP
+SCALAR_MEM_READ_OP
 VECTOR_MEM_WRITE_OP
 VECTOR_MEM_READ_OP
 MATRIX_MEM_WRITE_OP
