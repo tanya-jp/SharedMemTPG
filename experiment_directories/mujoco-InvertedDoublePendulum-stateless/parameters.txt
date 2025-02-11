@@ -193,7 +193,7 @@ max_prog_size 1000000
 n_memories 8
 
 # Dimensionality for vector & matrix memory
-memory_size 9
+memory_size 11
 min_memory_size 2
 max_memory_size 32
 
