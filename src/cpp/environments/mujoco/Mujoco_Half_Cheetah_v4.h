@@ -74,16 +74,13 @@ class Mujoco_Half_Cheetah_v4 : public MujocoEnv {
    void get_obs(std::vector<double>& obs) {
       if (exclude_current_positions_from_observation_) {
          std::copy_n(d_->qpos + 1, m_->nq - 1, obs.begin());
-         std::copy_n(d_->qvel, m_->nv, obs.begin() + (m_->nq - 1));
+         // std::copy_n(d_->qvel, m_->nv, obs.begin() + (m_->nq - 1));
+         std::fill_n(obs.begin() + (m_->nq - 1), m_->nv, 0.0);
       } else {
          std::copy_n(d_->qpos, m_->nq, obs.begin());
-         std::copy_n(d_->qvel, m_->nv, obs.begin() + m_->nq);
+         // std::copy_n(d_->qvel, m_->nv, obs.begin() + m_->nq);
+         std::fill_n(obs.begin() + m_->nq, m_->nv, 0.0);
       }
-
-      // Inactivate 5th, 6th, and 10th observations (indices 4, 5, 9 in zero-based indexing)
-      if (obs.size() > 4) obs[4] = 0.0; // Inactivate 5th observation
-      if (obs.size() > 5) obs[5] = 0.0; // Inactivate 6th observation
-      if (obs.size() > 9) obs[9] = 0.0; // Inactivate 10th observatio
    }
 
    void reset(mt19937& rng) {
