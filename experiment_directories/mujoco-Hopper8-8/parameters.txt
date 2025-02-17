@@ -136,7 +136,7 @@ p_clone_program 1.0
 # Program variation: probability of mutating a program's action pointer
 pmn 0.1
 # When changing action pointer, probability of selecting atomic action
-p_atomic 0.9
+p_atomic 0.8
 
 # Program variation: probability of changing a random instruction
 p_instructions_mutate 0.1
@@ -176,7 +176,7 @@ p_memory_size 0.0
 # Use stateful programs
 # If set to 0, memories are set to 0 prior to each program execution
 # If set to 1, memories are only set to 0 prior to each evaluation
-stateful 0
+stateful 1
 
 # Whether to skip introns during evaluation
 skip_introns 1
