@@ -4,6 +4,7 @@
 #include <MujocoEnv.h>
 #include <misc.h>
 #include <iostream>
+#include <random>
 
 class Mujoco_Hopper_v4 : public MujocoEnv {
   public:
@@ -17,6 +18,7 @@ class Mujoco_Hopper_v4 : public MujocoEnv {
    std::vector<double> healthy_angle_range_;
    double reset_noise_scale_ = 5e-3;
    bool exclude_current_positions_from_observation_ = true;
+   mt19937 rng_;
 
    Mujoco_Hopper_v4(std::unordered_map<std::string, std::any>& params) {
       eval_type_ = "Mujoco";
@@ -106,6 +108,12 @@ class Mujoco_Hopper_v4 : public MujocoEnv {
    }
 
    void get_obs(std::vector<double>& obs) {
+
+      uniform_real_distribution<double> dis(0, obs_size_); 
+      int obs1 = dis(rng_);
+      int obs2 = dis(rng_);
+
+
       auto position_size =
           exclude_current_positions_from_observation_ ? m_->nq - 1 : m_->nq;
 
@@ -117,10 +125,13 @@ class Mujoco_Hopper_v4 : public MujocoEnv {
       // std::copy_n(d_->qvel, m_->nv, state_.begin() + position_size);
       std::fill_n(state_.begin() + position_size, m_->nv, 0.0);
 
-      for (int i = 0; i < m_->nv; ++i) {
-          state_[position_size + i] =
-             std::clamp(state_[position_size + i], -10.0, 10.0);
-      }
+      // for (int i = 0; i < m_->nv; ++i) {
+      //     state_[position_size + i] =
+      //        std::clamp(state_[position_size + i], -10.0, 10.0);
+      // }
+
+      state_[obs1] = 0.0;
+      state_[obs2] = 0.0;
     }
    
 

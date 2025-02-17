@@ -3,6 +3,7 @@
 
 #include <MujocoEnv.h>
 #include <misc.h>
+#include <random>
 
 class Mujoco_Half_Cheetah_v4 : public MujocoEnv {
   public:
@@ -11,6 +12,7 @@ class Mujoco_Half_Cheetah_v4 : public MujocoEnv {
    double control_cost_weight_ = 0.5;
    double reset_noise_scale_ = 0.1;
    bool exclude_current_positions_from_observation_ = true;
+   mt19937 rng_;
 
    Mujoco_Half_Cheetah_v4(std::unordered_map<std::string, std::any>& params) {
       eval_type_ = "Mujoco";
@@ -81,6 +83,13 @@ class Mujoco_Half_Cheetah_v4 : public MujocoEnv {
          // std::copy_n(d_->qvel, m_->nv, obs.begin() + m_->nq);
          std::fill_n(obs.begin() + m_->nq, m_->nv, 0.0);
       }
+
+      uniform_real_distribution<double> dis(0, obs_size_); 
+      int obs1 = dis(rng_);
+      int obs2 = dis(rng_);
+
+      state_[obs1] = 0.0;
+      state_[obs2] = 0.0;
    }
 
    void reset(mt19937& rng) {
