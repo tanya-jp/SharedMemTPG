@@ -70,9 +70,10 @@ public:
     }
 
     void get_obs(std::vector<double>& obs) {
-        uniform_real_distribution<double> dis(0, 11); 
-        int obs1 = dis(rng_);
-        int obs2 = dis(rng_);
+       uniform_real_distribution<double> dis(0, 2); 
+        int blind = dis(rng_);
+	if (blind == 0){
+        //int obs2 = dis(rng_);
 
         // obs[0]: cart x position
         obs[0] = d_->qpos[0];
@@ -89,17 +90,21 @@ public:
 
         // obs[5], obs[6], obs[7]: qvel[0], qvel[1], qvel[2], clipped to [-10,10]
         for (int i = 0; i < 3; i++) {
-            //obs[5 + i] = std::max(std::min(d_->qvel[i], 10.0), -10.0);
-              obs[5 + i] = 0.0;
+            obs[5 + i] = std::max(std::min(d_->qvel[i], 10.0), -10.0);
+              //obs[5 + i] = 0.0;
         }
 
         // obs[8], obs[9], obs[10]: qfrc_constraint[0], [1], [2], clipped to [-10,10]
         for (int i = 0; i < 3; i++) {
             obs[8 + i] = std::max(std::min(d_->qfrc_constraint[i], 10.0), -10.0);
-        }
+        }}
+	else{
+	for (int i=0; i<11; i++)
+	obs[i] = 0;
+}}
 
-        obs[obs1] = 0.0;
-        obs[obs2] = 0.0;
+        //obs[obs1] = 0.0;
+        //obs[obs2] = 0.0;
     }
 
     void reset(std::mt19937& rng) {

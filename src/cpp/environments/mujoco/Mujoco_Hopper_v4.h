@@ -109,9 +109,9 @@ class Mujoco_Hopper_v4 : public MujocoEnv {
 
    void get_obs(std::vector<double>& obs) {
 
-      uniform_real_distribution<double> dis(0, obs_size_); 
-      int obs1 = dis(rng_);
-      int obs2 = dis(rng_);
+     // uniform_real_distribution<double> dis(0, obs_size_); 
+      //int obs1 = dis(rng_);
+      //int obs2 = dis(rng_);
 
 
       auto position_size =
@@ -122,16 +122,16 @@ class Mujoco_Hopper_v4 : public MujocoEnv {
       } else {
          std::copy_n(d_->qpos, position_size, state_.begin());
       }
-      // std::copy_n(d_->qvel, m_->nv, state_.begin() + position_size);
-      std::fill_n(state_.begin() + position_size, m_->nv, 0.0);
+      std::copy_n(d_->qvel, m_->nv, state_.begin() + position_size);
+      //std::fill_n(state_.begin() + position_size, m_->nv, 0.0);
 
-      // for (int i = 0; i < m_->nv; ++i) {
-      //     state_[position_size + i] =
-      //        std::clamp(state_[position_size + i], -10.0, 10.0);
-      // }
+      for (int i = 0; i < m_->nv; ++i) {
+           state_[position_size + i] =
+              std::clamp(state_[position_size + i], -10.0, 10.0);
+       }
 
-      state_[obs1] = 0.0;
-      state_[obs2] = 0.0;
+      //state_[obs1] = 0.0;
+      //state_[obs2] = 0.0;
     }
    
 
