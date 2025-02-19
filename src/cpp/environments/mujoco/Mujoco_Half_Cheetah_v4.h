@@ -76,20 +76,20 @@ class Mujoco_Half_Cheetah_v4 : public MujocoEnv {
    void get_obs(std::vector<double>& obs) {
       if (exclude_current_positions_from_observation_) {
          std::copy_n(d_->qpos + 1, m_->nq - 1, obs.begin());
-         // std::copy_n(d_->qvel, m_->nv, obs.begin() + (m_->nq - 1));
-         std::fill_n(obs.begin() + (m_->nq - 1), m_->nv, 0.0);
+         std::copy_n(d_->qvel, m_->nv, obs.begin() + (m_->nq - 1));
+         //std::fill_n(obs.begin() + (m_->nq - 1), m_->nv, 0.0);
       } else {
          std::copy_n(d_->qpos, m_->nq, obs.begin());
-         // std::copy_n(d_->qvel, m_->nv, obs.begin() + m_->nq);
-         std::fill_n(obs.begin() + m_->nq, m_->nv, 0.0);
+         std::copy_n(d_->qvel, m_->nv, obs.begin() + m_->nq);
+         //std::fill_n(obs.begin() + m_->nq, m_->nv, 0.0);
       }
 
-      uniform_real_distribution<double> dis(0, obs_size_); 
-      int obs1 = dis(rng_);
-      int obs2 = dis(rng_);
+      //uniform_real_distribution<double> dis(0, obs_size_); 
+      //int obs1 = dis(rng_);
+      //int obs2 = dis(rng_);
 
-      state_[obs1] = 0.0;
-      state_[obs2] = 0.0;
+      //state_[obs1] = 0.0;
+      //state_[obs2] = 0.0;
    }
 
    void reset(mt19937& rng) {
