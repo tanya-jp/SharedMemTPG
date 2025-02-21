@@ -572,7 +572,7 @@ void team::GetAction(EvalData& eval_data) {
 
    int l = 0;
    for (auto prog : members_) {
-      prog->Run(eval_data.obs, eval_data.timestep, eval_data.team_path.size(),
+      prog->Run(eval_data, eval_data.timestep, eval_data.team_path.size(),
                 eval_data.verbose);
       members_run_[l++] = prog;
       eval_data.instruction_count +=

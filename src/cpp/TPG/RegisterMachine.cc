@@ -1,4 +1,5 @@
 #include "RegisterMachine.h"
+#include "EvalData.h"
 
 #include <stacktrace>
 
@@ -376,7 +377,7 @@ void RegisterMachine::CopyObservationToMemoryBuff(state *obs, size_t mem_t) {
    AddToInputMemoryBuff(mat, mem_t);
 }
 
-void RegisterMachine::Run(state *obs, int &time_step, const size_t &graph_depth,
+void RegisterMachine::Run(EvalData& eval_data, int &time_step, const size_t &graph_depth,
                           bool &verbose) {
    // Clear working memory prior to execution, making this program stateless
    if (!stateful_) {
@@ -413,24 +414,24 @@ void RegisterMachine::Run(state *obs, int &time_step, const size_t &graph_depth,
                // Copy to obs buff only once.
                if (istr->GetInType(in) == MemoryEigen::kVectorType_ &&
                    !copied_obs_vec) {
-                  CopyObservationToMemoryBuff(obs, MemoryEigen::kVectorType_);
+                  CopyObservationToMemoryBuff(eval_data.obs, MemoryEigen::kVectorType_);
                   copied_obs_vec = true;
                } else if (istr->GetInType(in) == MemoryEigen::kMatrixType_ &&
                           !copied_obs_mat) {
-                  CopyObservationToMemoryBuff(obs, MemoryEigen::kMatrixType_);
+                  CopyObservationToMemoryBuff(eval_data.obs, MemoryEigen::kMatrixType_);
                   copied_obs_mat = true;
                }
             }
             // This copies scalar input data to temporary scalar variables
             if (istr->GetInType(in) == MemoryEigen::kScalarType_) {
-               istr->SetupScalarIn(in, obs);
+               istr->SetupScalarIn(in, eval_data.obs);
             }
          }
       }
       // Track write times for temporal memory
       istr->out_->write_time_[istr->outIdxE_] =
           time_step + (graph_depth / MAX_GRAPH_DEPTH);
-      istr->exec(verbose);  // Execute instruction
+      istr->exec(eval_data);  // Execute instruction
    }
    bid_val_ =
        private_memory_[MemoryEigen::kScalarType_]->working_memory_[0](0, 0);

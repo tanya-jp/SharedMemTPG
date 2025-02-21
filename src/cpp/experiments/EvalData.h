@@ -10,10 +10,11 @@
 #include <list>
 #include <map>
 #include "TaskEnv.h"
-#include "RegisterMachine.h"
+// #include "RegisterMachine.h"
 #include "state.h"
 
 class team;
+class RegisterMachine;
 
 /*******************************************************************************
  EvalData encapsulates all data relating to evaluation results.
@@ -21,6 +22,7 @@ class team;
 */
 class EvalData {
     public:
+    int tpg_seed;
     int timestep;
     bool verbose;
     std::map<long, team *> team_map;
@@ -30,6 +32,7 @@ class EvalData {
                                 // observable
 
     /* Per individual eval data ***********************************************/
+    ofstream dbg_out;
     team *tm;  // Current team to evaluate
     TaskEnv *task;
     std::string eval_result;       // For passing eval results between mpi procs

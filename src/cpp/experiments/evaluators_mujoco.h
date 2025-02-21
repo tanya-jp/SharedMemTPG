@@ -263,24 +263,28 @@ void MaybeAnimateStep(TPG& tpg) {
 
 /******************************************************************************/
 void EvalMujoco(TPG& tpg, EvalData& eval) {
-    MujocoEnv* task = dynamic_cast<MujocoEnv*>(eval.task);
-    task->reset(tpg.rngs_[AUX_SEED]);
-    MaybeStartAnimation(tpg, task, eval);
-    MaybeAnimateStep(tpg);
-    eval.n_prediction = 0;
-    eval.obs = new state(task->GetObsSize());
-    eval.obs->Set(task->GetObsVec(eval.partially_observable));
-    while (!task->terminal()) {
-        tpg.GetAction(eval);
-        auto ctrl = WrapVectorActionMuJoco(eval);
-        TaskEnv::Results r = task->sim_step(ctrl);
-        eval.stats_double[REWARD1_IDX] += r.r1;
-        eval.AccumulateStepData();
-        eval.n_prediction++;
-        eval.obs->Set(task->GetObsVec(eval.partially_observable));
-        MaybeAnimateStep(tpg);
-    }
-    delete eval.obs;
+   MujocoEnv* task = dynamic_cast<MujocoEnv*>(eval.task);
+   task->reset(tpg.rngs_[AUX_SEED]);
+   MaybeStartAnimation(tpg, task, eval);
+   MaybeAnimateStep(tpg);
+   eval.n_prediction = 0;
+   eval.obs = new state(task->GetObsSize());
+   eval.obs->Set(task->GetObsVec(eval.partially_observable));
+   eval.verbose = true;
+   eval.dbg_out.open(to_string(eval.tpg_seed) + "_" + to_string(eval.tm->id_) +
+                     "_eval.dbg");  // dbg
+   while (!task->terminal()) {
+      tpg.GetAction(eval);
+      auto ctrl = WrapVectorActionMuJoco(eval);
+      TaskEnv::Results r = task->sim_step(ctrl);
+      eval.stats_double[REWARD1_IDX] += r.r1;
+      eval.AccumulateStepData();
+      eval.n_prediction++;
+      eval.obs->Set(task->GetObsVec(eval.partially_observable));
+      MaybeAnimateStep(tpg);
+   }
+   delete eval.obs;
+   eval.dbg_out.close();
 }
 
 #endif

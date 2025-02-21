@@ -2881,6 +2881,7 @@ void TPG::FinalizeStepData(EvalData& eval_data) {
 /******************************************************************************/
 EvalData TPG::InitEvalData() {
    EvalData eval_data;
+   eval_data.tpg_seed = seeds_[TPG_SEED];
    eval_data.stats_double.resize(GetParam<int>("n_point_aux_double"));
    eval_data.stats_int.resize(GetParam<int>("n_point_aux_int"));
    eval_data.animate = GetParam<int>("animate") == 1;
