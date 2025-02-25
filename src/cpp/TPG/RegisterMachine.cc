@@ -266,9 +266,7 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
                              std::unordered_map<std::string, int> &state,
                              mt19937 &rng, vector<bool> &legal_ops) {
    uniform_real_distribution<> dis_real(0, 1.0);
-   bool changed = false;
 
-   // while (!changed) {
       // Remove random instruction
       if (instructions_.size() > 1 &&
           dis_real(rng) <
@@ -277,7 +275,6 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
          int i = disBid(rng);
          delete *(instructions_.begin() + i);
          instructions_.erase(instructions_.begin() + i);
-         changed = true;
       }
 
       // Insert a new random instruction
@@ -289,7 +286,6 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
          uniform_int_distribution<int> disBid(0, instructions_.size());
          int i = disBid(rng);
          instructions_.insert(instructions_.begin() + i, instr);
-         changed = true;
       }
 
       // Mutate a randomly selected instruction
@@ -301,7 +297,6 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
          cerr <<"mu t" << state["t_current"] << " id" << id_  << " s" << instructions_.size() << " i" << i << endl;
          instructions_[i]->Mutate(false, legal_ops,
                                             observation_buff_size_, rng);
-         changed = true;
       }
 
       // Mutate constants
@@ -310,7 +305,6 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
          for (auto m : private_memory_) {
             m->MutateConstants(rng);
          }
-         changed = true;
       }
 
       // Swap positions of two instructions
@@ -324,7 +318,6 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
             j = disBid(rng);
          } while (i == j);
          std::swap(instructions_[i], instructions_[j]);
-         changed = true;
       }
 
       // // Change observation buff size
@@ -332,13 +325,11 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
       //     std::any_cast<double>(params["p_observation_buff_size"])) {
       //   MutateObsBuffSize(std::any_cast<int>(params["max_observation_buff_size"]),
       //                     rng);
-      //   changed = true;
       // }
 
       // Change memory size
       if (dis_real(rng) < std::any_cast<double>(params["p_memory_size"])) {
          MutateMemorySize(params, state, rng);
-         changed = true;
       }
 
       // Change observation index
@@ -350,9 +341,7 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
          do {
             obs_index_ = dis(rng);
          } while (obs_index_ == prev);
-         changed = true;
       }
-   // }
 }
 
 // This functions currently assumes obs is a vector of state vars
