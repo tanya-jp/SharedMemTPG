@@ -268,7 +268,7 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
    uniform_real_distribution<> dis_real(0, 1.0);
    bool changed = false;
 
-   while (!changed) {
+   // while (!changed) {
       // Remove random instruction
       if (instructions_.size() > 1 &&
           dis_real(rng) <
@@ -295,8 +295,11 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
       // Mutate a randomly selected instruction
       if (dis_real(rng) <
           std::any_cast<double>(params["p_instructions_mutate"])) {
+            
          uniform_int_distribution<int> disBid(0, instructions_.size() - 1);
-         instructions_[disBid(rng)]->Mutate(false, legal_ops,
+         auto i = disBid(rng);
+         cerr <<"mu t" << state["t_current"] << " id" << id_  << " s" << instructions_.size() << " i" << i << endl;
+         instructions_[i]->Mutate(false, legal_ops,
                                             observation_buff_size_, rng);
          changed = true;
       }
@@ -349,7 +352,7 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
          } while (obs_index_ == prev);
          changed = true;
       }
-   }
+   // }
 }
 
 // This functions currently assumes obs is a vector of state vars

@@ -256,6 +256,7 @@ int main(int argc, char** argv) {
             // Replacement /////////////////////////////////////////////////
             if (tpg.GetState("t_current") > tpg.GetState("t_start")) {
                startGenTeams = chrono::system_clock::now();
+               tpg.rngs_[TPG_SEED].seed(tpg.GetState("t_current"));  //TO(skelly):remove
                tpg.GenerateNewTeams();
                endGenTeams = chrono::system_clock::now() - startGenTeams;
             }
@@ -263,23 +264,23 @@ int main(int argc, char** argv) {
             // Evaluation //////////////////////////////////////////////////
             startEval = chrono::system_clock::now();
             tpg.MarkEffectiveCode();
-            if (tpg.GetState("t_current") > tpg.GetState("t_start") &&
-                tpg.HaveParam("n_sampled_tasks_for_eval")) {
-               // Split tasks into evaluated and estimated
-               vector<int> evalTasks, estTasks;
-               SplitSet(taskIndices, evalTasks, estTasks,
-                        tpg.GetParam<int>("n_sampled_tasks_for_eval"),
-                        tpg.rngs_[TPG_SEED]);
+            // if (tpg.GetState("t_current") > tpg.GetState("t_start") &&
+            //     tpg.HaveParam("n_sampled_tasks_for_eval")) {
+            //    // Split tasks into evaluated and estimated
+            //    vector<int> evalTasks, estTasks;
+            //    SplitSet(taskIndices, evalTasks, estTasks,
+            //             tpg.GetParam<int>("n_sampled_tasks_for_eval"),
+            //             tpg.rngs_[TPG_SEED]);
 
-               // Evaluate tasks
-               evaluate_main(tpg, world, tasks, evalTasks);
+            //    // Evaluate tasks
+            //    evaluate_main(tpg, world, tasks, evalTasks);
 
-               // Estimate remaining tasks with phylogeny
-               estimate_main(tpg, tasks, estTasks);
-            } else {
+            //    // Estimate remaining tasks with phylogeny
+            //    estimate_main(tpg, tasks, estTasks);
+            // } else {
                // If first generation, evaluate on all tasks
                evaluate_main(tpg, world, tasks, taskIndices);
-            }
+            // }
 
             endEval = chrono::system_clock::now() - startEval;
 

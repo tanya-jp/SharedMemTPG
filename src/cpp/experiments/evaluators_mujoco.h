@@ -262,29 +262,34 @@ void MaybeAnimateStep(TPG& tpg) {
 }
 
 /******************************************************************************/
-void EvalMujoco(TPG& tpg, EvalData& eval) {
-   MujocoEnv* task = dynamic_cast<MujocoEnv*>(eval.task);
+void EvalMujoco(TPG& tpg, EvalData& eval_data) {
+   MujocoEnv* task = dynamic_cast<MujocoEnv*>(eval_data.task);
    task->reset(tpg.rngs_[AUX_SEED]);
-   MaybeStartAnimation(tpg, task, eval);
+   MaybeStartAnimation(tpg, task, eval_data);
    MaybeAnimateStep(tpg);
-   eval.n_prediction = 0;
-   eval.obs = new state(task->GetObsSize());
-   eval.obs->Set(task->GetObsVec(eval.partially_observable));
-   eval.verbose = true;
-   eval.dbg_out.open(to_string(eval.tpg_seed) + "_" + to_string(eval.tm->id_) +
-                     "_eval.dbg");  // dbg
+   eval_data.n_prediction = 0;
+   eval_data.obs = new state(task->GetObsSize());
+   eval_data.obs->Set(task->GetObsVec(eval_data.partially_observable));
+//    eval_data.verbose = true;
+//    eval_data.dbg_out.open("s"+ to_string(eval_data.tpg_seed) + 
+//    "_g" + to_string(tpg.GetState("t_current")) +
+//    "_ws" + to_string(eval_data.world_size) +
+//    "_wr" + to_string(eval_data.world_rank) + 
+//    "_id" + to_string(eval_data.tm->id_) +
+//                      "_eval.dbg");  // dbg
+//    eval_data.dbg_out << (*(eval_data.tm->members_.begin()))->instructions_.size() << endl;                  
    while (!task->terminal()) {
-      tpg.GetAction(eval);
-      auto ctrl = WrapVectorActionMuJoco(eval);
+      tpg.GetAction(eval_data);
+      auto ctrl = WrapVectorActionMuJoco(eval_data);
       TaskEnv::Results r = task->sim_step(ctrl);
-      eval.stats_double[REWARD1_IDX] += r.r1;
-      eval.AccumulateStepData();
-      eval.n_prediction++;
-      eval.obs->Set(task->GetObsVec(eval.partially_observable));
+      eval_data.stats_double[REWARD1_IDX] += r.r1;
+      eval_data.AccumulateStepData();
+      eval_data.n_prediction++;
+      eval_data.obs->Set(task->GetObsVec(eval_data.partially_observable));
       MaybeAnimateStep(tpg);
    }
-   delete eval.obs;
-   eval.dbg_out.close();
+   delete eval_data.obs;
+//    eval_data.dbg_out.close();
 }
 
 #endif

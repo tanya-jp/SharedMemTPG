@@ -23,6 +23,8 @@ class RegisterMachine;
 class EvalData {
     public:
     int tpg_seed;
+    int world_rank;
+    int world_size;
     int timestep;
     bool verbose;
     std::map<long, team *> team_map;

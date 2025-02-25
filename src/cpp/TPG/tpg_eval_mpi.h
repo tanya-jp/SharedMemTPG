@@ -99,9 +99,9 @@ void AssignTeamsToEvaluators(TPG &tpg, mpi::communicator &world,
 }
 
 /******************************************************************************/
-bool NotDoneAndActive(EvalData &eval) {
-  return eval.checkpointString.compare("x") != 0 &&
-         eval.checkpointString.compare("done") != 0;
+bool NotDoneAndActive(EvalData &eval_data) {
+  return eval_data.checkpointString.compare("x") != 0 &&
+         eval_data.checkpointString.compare("done") != 0;
 }
 
 /*******************************************************************************
@@ -162,29 +162,30 @@ void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
   evaluator_map["Control"] = &EvalControl;
   evaluator_map["RecursiveForecast"] = &EvalRecursiveForecast;
   evaluator_map["Mujoco"] = &EvalMujoco;
-  // EvalData eval(tpg);
-  auto eval = tpg.InitEvalData();
-  while (NotDoneAndActive(eval)) {
-    world.recv(0, 0, eval.checkpointString);
-    if (NotDoneAndActive(eval)) {
-      tpg.ReadCheckpoint(-1, _TRAIN_PHASE, true, eval.checkpointString);
-      eval.teams = tpg.GetRootTeamsInVec();
-      eval.task = tasks[tpg.GetState("active_task")];
-      eval.eval_result = "";
-      for (auto tm : eval.teams) {
-        eval.tm = tm;
-        for (eval.episode = 0; eval.episode < eval.tm->_n_eval;
-             eval.episode++) {   
+  auto eval_data = tpg.InitEvalData();
+  eval_data.world_rank = world.rank();
+  eval_data.world_size = world.size();
+  while (NotDoneAndActive(eval_data)) {
+    world.recv(0, 0, eval_data.checkpointString);
+    if (NotDoneAndActive(eval_data)) {
+      tpg.ReadCheckpoint(-1, _TRAIN_PHASE, true, eval_data.checkpointString);
+      eval_data.teams = tpg.GetRootTeamsInVec();
+      eval_data.task = tasks[tpg.GetState("active_task")];
+      eval_data.eval_result = "";
+      for (auto tm : eval_data.teams) {
+        eval_data.tm = tm;
+        for (eval_data.episode = 0; eval_data.episode < eval_data.tm->_n_eval;
+             eval_data.episode++) {   
            if (tpg.GetParam<int>("seed_with_episode_number")) {
-              tpg.rngs_[AUX_SEED].seed(eval.episode * 42);
+              tpg.rngs_[AUX_SEED].seed(eval_data.episode * 42);
            }
-          eval.tm->InitMemory(tpg.team_map_, tpg.params_);
-          evaluator_map[eval.task->eval_type_](tpg, eval);
-          // eval.FinalizeStepData(tpg);
-          tpg.FinalizeStepData(eval);
+          eval_data.tm->InitMemory(tpg.team_map_, tpg.params_);
+          evaluator_map[eval_data.task->eval_type_](tpg, eval_data);
+          // eval_data.FinalizeStepData(tpg);
+          tpg.FinalizeStepData(eval_data);
         }
       }
-      gather(world, eval.eval_result, 0);
+      gather(world, eval_data.eval_result, 0);
     }
   }
 }
@@ -192,18 +193,17 @@ void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
 /******************************************************************************/
 void replayer(TPG &tpg, vector<TaskEnv *> &tasks) {
   // MaybeStartAnimation(tpg);
-  // EvalData eval(tpg);
-  auto eval = tpg.InitEvalData();
+  auto eval_data = tpg.InitEvalData();
 
   vector<map<long, double>> teamUseMapPerTask;
   teamUseMapPerTask.resize(tpg.GetState("n_task"));
   std::set<team *, teamIdComp> teams_visitedAllTasks;
 
-  eval.teams = tpg.GetRootTeamsInVec();
-  eval.eval_result = "";
-  for (auto tm : eval.teams) {
+  eval_data.teams = tpg.GetRootTeamsInVec();
+  eval_data.eval_result = "";
+  for (auto tm : eval_data.teams) {
     if (tm->id_ != tpg.GetParam<int>("id_to_replay")) continue;
-    eval.tm = tm;
+    eval_data.tm = tm;
     
     vector<int> steps_per_task(tpg.GetState("n_task"), 0);
     // TODO(skelly): clean up
@@ -211,36 +211,36 @@ void replayer(TPG &tpg, vector<TaskEnv *> &tasks) {
     std::vector<double> outcomes;
     for (int task = 0; task < tpg.GetState("n_task"); task++) {
         tpg.state_["active_task"] = task;
-        eval.task = tasks[tpg.GetState("active_task")];
+        eval_data.task = tasks[tpg.GetState("active_task")];
         tm->_n_eval =
-          eval.task->GetNumEval(_TEST_PHASE);
-        for (eval.episode = 0; eval.episode < eval.tm->_n_eval;
-             eval.episode++) {
-              if (!eval.animate) {
-                tpg.rngs_[AUX_SEED].seed(eval.episode * 42);
+          eval_data.task->GetNumEval(_TEST_PHASE);
+        for (eval_data.episode = 0; eval_data.episode < eval_data.tm->_n_eval;
+             eval_data.episode++) {
+              if (!eval_data.animate) {
+                tpg.rngs_[AUX_SEED].seed(eval_data.episode * 42);
               }
-            eval.tm->InitMemory(tpg.team_map_, tpg.params_);
+            eval_data.tm->InitMemory(tpg.team_map_, tpg.params_);
 
-            if (eval.task->eval_type_ == "RecursiveForecast") {
+            if (eval_data.task->eval_type_ == "RecursiveForecast") {
                 EvalRecursiveForecastViz(
-                    tpg, eval, teamUseMapPerTask, teams_visitedAllTasks,
+                    tpg, eval_data, teamUseMapPerTask, teams_visitedAllTasks,
                     steps_per_task[tpg.GetState("active_task")]);
-            } else if (eval.task->eval_type_ == "Control") {
-                EvalControlViz(tpg, eval, teamUseMapPerTask,
+            } else if (eval_data.task->eval_type_ == "Control") {
+                EvalControlViz(tpg, eval_data, teamUseMapPerTask,
                                teams_visitedAllTasks,
                                steps_per_task[tpg.GetState("active_task")]);
             } else {
-                EvalMujoco(tpg, eval);
+                EvalMujoco(tpg, eval_data);
             }
-            // eval.FinalizeStepData(tpg);
-            tpg.FinalizeStepData(eval);
-            outcomes.push_back(eval.stats_double[REWARD1_IDX]);
+            // eval_data.FinalizeStepData(tpg);
+            tpg.FinalizeStepData(eval_data);
+            outcomes.push_back(eval_data.stats_double[REWARD1_IDX]);
         }
     }
-    tpg.printGraphDotGPTPXXI(eval.tm->id_, teams_visitedAllTasks,
+    tpg.printGraphDotGPTPXXI(eval_data.tm->id_, teams_visitedAllTasks,
                              teamUseMapPerTask, steps_per_task);
 
-    cout << " Evaluation result team:" << eval.tm->id_ << " n_outcomes "
+    cout << " Evaluation result team:" << eval_data.tm->id_ << " n_outcomes "
          << outcomes.size() << " mean " << VectorMean(outcomes) << " median "
          << VectorMedian(outcomes) << endl;
     cout << VectorToString(outcomes) << endl;
@@ -268,7 +268,7 @@ void replayer(TPG &tpg, vector<TaskEnv *> &tasks) {
         }
     }
   }
-  WriteStringToFile("op_use_" + to_string(tpg.seeds_[TPG_SEED]) + ".csv", tpg.AgentOpUseToString(eval.tm));
+  WriteStringToFile("op_use_" + to_string(tpg.seeds_[TPG_SEED]) + ".csv", tpg.AgentOpUseToString(eval_data.tm));
 }
 
 #endif
