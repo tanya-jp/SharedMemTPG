@@ -16,6 +16,8 @@ public:
     static const size_t SHARED_MEM_TYPE = 4;
     static const int NUM_SHARED_MEM_TYPES = 1;
 
+    // void printVectorMemories();
+
 
     size_t rows_;
     size_t cols_;
@@ -23,9 +25,19 @@ public:
     sharedMemoryEigen(int n_memories = 8, int memory_size = 2) 
         : rows_(n_memories), cols_(n_memories) {
         for (int i = 0; i <= static_cast<int>(cols_); i++) {
-            team_scalar_memory_.emplace_back(std::make_unique<MemoryEigen>(MemoryEigen::kScalarType_, n_memories, 1));
-            team_vector_memory_.emplace_back(std::make_unique<MemoryEigen>(MemoryEigen::kVectorType_, n_memories, memory_size));
-            team_matrix_memory_.emplace_back(std::make_unique<MemoryEigen>(MemoryEigen::kMatrixType_, n_memories, memory_size));
+            team_scalar_memory_.emplace_back(std::make_unique<MemoryEigen>(MemoryEigen::kScalarType_, n_memories, 1, false));
+            team_vector_memory_.emplace_back(std::make_unique<MemoryEigen>(MemoryEigen::kVectorType_, n_memories, memory_size, false));
+            team_matrix_memory_.emplace_back(std::make_unique<MemoryEigen>(MemoryEigen::kMatrixType_, n_memories, memory_size, false));
+        }
+        // printMemory();
+    }
+
+    void printMemory() {
+        std::cout << "Vector Memories:\n";
+        for (const auto& mem : team_vector_memory_) {
+            if (mem) {
+                mem->printVectorMemory();  // Ensure `MemoryEigen` has this method
+            }
         }
     }
 

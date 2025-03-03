@@ -195,6 +195,7 @@ class team {
     runTimeComplexityTms_ = 0;
 
     team_memory_ = sharedMemoryEigen(std::any_cast<int>(params["n_memories"]), std::any_cast<int>(params["memory_size"]));
+    // team_memory_.printMemory();
   };
 
   ~team() {  // TODO(skelly) clean outcome data structure

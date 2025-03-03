@@ -213,6 +213,10 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
     for (int task = 0; task < tpg.GetState("n_task"); task++) {
         tpg.state_["active_task"] = task;
         eval.task = tasks[tpg.GetState("active_task")];
+        // Change it for stat test
+        // change the number of episodes
+        // turn off visulalization
+        // print the fitness from each episode
         if (eval.animate) {
             eval.tm->_n_eval = 1;
         } else {

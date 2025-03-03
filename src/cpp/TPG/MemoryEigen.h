@@ -44,12 +44,15 @@ class MemoryEigen {
    std::vector<double> write_time_;
 
    // Construct random MemoryEigen
-   MemoryEigen(int type, size_t n_indices, size_t memory_size)
+   MemoryEigen(int type, size_t n_indices, size_t memory_size, bool setZero = true)
        : type_(type),
          n_memories_(n_indices),
          memory_size_(memory_size) {
       ResizeMemory();
-      ClearWorking();
+      if(setZero)
+         ClearWorking();
+      else
+         ClearWorkingToOne();
       RandomizeConst();
       ClearReadTime();
       ClearWriteTime();
@@ -137,6 +140,10 @@ class MemoryEigen {
       for (auto &m : const_memory_) m.setZero();
    }
 
+   inline void ClearWorkingToOne() {
+      for (auto &m : working_memory_) m.setOnes();
+   }
+
    inline void ClearWorking() {
       for (auto &m : working_memory_) m.setZero();
    }
@@ -203,6 +210,18 @@ class MemoryEigen {
       oss << std::endl;
       return oss.str();
    }
+
+
+   void printVectorMemory() const {
+      if (type_ != kVectorType_) {
+          return; // Only print if it's a vector memory
+      }
+  
+      std::cout << "Vector Memory (Type: " << type_ << ")\n";
+      for (size_t i = 0; i < working_memory_.size(); i++) {
+          std::cout << "Index " << i << ":\n" << working_memory_[i] << "\n";
+      }
+  }
 };
 
 // struct MemoryEigenIdComp {

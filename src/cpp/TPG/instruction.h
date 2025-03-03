@@ -298,6 +298,8 @@ class instruction {
 
    inline void ExecuteScalarSumOp(bool dbg) {
       out_->working_memory_[outIdxE_](0, 0) = scalar_in1_ + scalar_in2_;
+      // if(!out_->working_memory_[outIdxE_].isZero())
+      //    cout<<"scalar" << out_->working_memory_[outIdxE_](0, 0)<<endl;
 
       if (dbg) {
          cerr << std::setprecision(std::numeric_limits<double>::digits10 + 1)
@@ -521,6 +523,8 @@ class instruction {
    inline void ExecuteVectorSumOp(bool dbg) {
       out_->working_memory_[outIdxE_] =
           in1_->working_memory_[in0IdxE_] + in2_->working_memory_[in1IdxE_];
+      // if(!out_->working_memory_[outIdxE_].isZero())
+      //    cout<<"vector"<<out_->working_memory_[outIdxE_]<<endl;
       if (dbg) {
       }
    }
@@ -646,6 +650,8 @@ class instruction {
    inline void ExecuteMatrixSumOp(bool dbg) {
       out_->working_memory_[outIdxE_] =
           in1_->working_memory_[in0IdxE_] + in2_->working_memory_[in1IdxE_];
+      // if(!out_->working_memory_[outIdxE_].isZero())
+      //    cout<<"matrix"<<out_->working_memory_[outIdxE_]<<endl;
       if (dbg) {
       }
    }
