@@ -22,8 +22,11 @@ public:
     size_t rows_;
     size_t cols_;
 
+    bool reset = false;
+
     sharedMemoryEigen(int n_memories = 8, int memory_size = 2) 
         : rows_(n_memories), cols_(n_memories) {
+        // cols_ = 4;
         for (int i = 0; i <= static_cast<int>(cols_); i++) {
             team_scalar_memory_.emplace_back(std::make_unique<MemoryEigen>(MemoryEigen::kScalarType_, n_memories, 1, false));
             team_vector_memory_.emplace_back(std::make_unique<MemoryEigen>(MemoryEigen::kVectorType_, n_memories, memory_size, false));

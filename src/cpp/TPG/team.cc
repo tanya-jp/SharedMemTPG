@@ -33,11 +33,29 @@ string team::checkpoint() const {
 }
 
 /******************************************************************************/
+//Reset the shared memory 
 void team::InitMemory(map<long, team *> &teamMap,
                       std::unordered_map<std::string, std::any> &params) {
    set<team *, teamIdComp> teams;
    set<RegisterMachine *, RegisterMachineIdComp> RegisterMachines;
    GetAllNodes(teamMap, teams, RegisterMachines);
+
+      // Reset shared memory for all teams
+      for (auto tm : teams) {
+         if (tm) {
+            // Reset all scalar, vector, and matrix memories
+            for (auto& mem : tm->team_memory_.team_scalar_memory_) {
+                if (mem) mem->ClearWorkingToOne();
+            }
+            for (auto& mem : tm->team_memory_.team_vector_memory_) {
+                if (mem) mem->ClearWorkingToOne();
+            }
+            for (auto& mem : tm->team_memory_.team_matrix_memory_) {
+                if (mem) mem->ClearWorkingToOne();
+            }
+         }
+      }
+
    for (auto prog : RegisterMachines) {
       if (!isEqual(std::any_cast<double>(params["p_memory_mu_const"]),
                    0.0)) {

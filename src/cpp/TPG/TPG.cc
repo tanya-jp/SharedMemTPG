@@ -2600,6 +2600,7 @@ void TPG::updateMODESFilters(bool roots) {
 }
 
 /******************************************************************************/
+// HERE
 void TPG::WriteCheckpoint(long t, bool elite) {
    ofstream ofs;
    char filename[80];

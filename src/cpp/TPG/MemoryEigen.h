@@ -69,6 +69,7 @@ class MemoryEigen {
       ClearWriteTime();
       for (size_t i = 0; i < const_memory_.size(); i++) {
          const_memory_[i] = m.const_memory_[i];
+         // cout<<const_memory_[i]<<endl;
       }
    }
 
@@ -141,7 +142,9 @@ class MemoryEigen {
    }
 
    inline void ClearWorkingToOne() {
-      for (auto &m : working_memory_) m.setOnes();
+      for (auto &m : working_memory_) {
+         // cout<<m<<endl; 
+         m.setOnes();}
    }
 
    inline void ClearWorking() {

@@ -1026,7 +1026,7 @@ class instruction {
 
    inline void ExecuteScalarMemWriteOp(bool dbg) {
 
-      int memory_size = static_cast<int>(memory_out_->team_vector_memory_[0]->n_memories_);
+      int memory_size = static_cast<int>(memory_out_->cols_);
       double mean = (memory_size)/2;
       double std = (memory_size)/6;
 
@@ -1035,7 +1035,7 @@ class instruction {
 
       int index = std::clamp(static_cast<int>(randomValue), 0, (memory_size-1));
 
-      for (int i = 0; i < memory_size; i++)
+      for (int i = 0; i < static_cast<int>(in1_->n_memories_); i++)
       {
          memory_out_->team_scalar_memory_[index]->working_memory_[i](0, 0)=in1_->working_memory_[i](0, 0);
       }
@@ -1056,7 +1056,7 @@ class instruction {
 
    inline void ExecuteVectorMemWriteOp(bool dbg) {
 
-      int memory_size = static_cast<int>(memory_out_->team_vector_memory_[0]->n_memories_);
+      int memory_size = static_cast<int>(memory_out_->cols_);
       double mean = (memory_size)/2;
       double std = (memory_size)/6;
 
@@ -1067,7 +1067,7 @@ class instruction {
 
       // Loop through all memories in the working memory of the input vector
       for (int i = 0; i < static_cast<int>(in1_->n_memories_); i++) {
-         for (int row = 0; row < static_cast<int>(memory_out_->team_vector_memory_[index]->memory_size_); row++) {
+         for (int row = 0; row < static_cast<int>(in1_->memory_size_); row++) {
                memory_out_->team_vector_memory_[index]->working_memory_[i](row, 0) = 
                   in1_->working_memory_[i](row, 0);
          }
@@ -1093,7 +1093,7 @@ class instruction {
 
    inline void ExecuteMatrixMemWriteOp(bool dbg) {
       
-      int memory_size = static_cast<int>(memory_out_->team_vector_memory_[0]->n_memories_);
+      int memory_size = static_cast<int>(memory_out_->cols_);
       double mean = (memory_size)/2;
       double std = (memory_size)/6;
 
@@ -1103,8 +1103,8 @@ class instruction {
       int index = std::clamp(static_cast<int>(randomValue), 0, (memory_size-1));
 
       for (int i = 0; i < static_cast<int>(in1_->n_memories_); i++) {
-        for (int row = 0; row < static_cast<int>(memory_out_->team_matrix_memory_[index]->memory_size_); row++) {
-            for (int col = 0; col < static_cast<int>(memory_out_->team_matrix_memory_[index]->memory_size_); col++) {
+        for (int row = 0; row < static_cast<int>(in1_->memory_size_); row++) {
+            for (int col = 0; col < static_cast<int>(in1_->memory_size_); col++) {
                 memory_out_->team_matrix_memory_[index]->working_memory_[i](row, col) = 
                     in1_->working_memory_[i](row, col);
             }
