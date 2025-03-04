@@ -44,15 +44,17 @@ class MemoryEigen {
    std::vector<double> write_time_;
 
    // Construct random MemoryEigen
-   MemoryEigen(int type, size_t n_indices, size_t memory_size, bool setZero = true)
+   MemoryEigen(int type, size_t n_indices, size_t memory_size, float p_evolve = -1)
        : type_(type),
          n_memories_(n_indices),
          memory_size_(memory_size) {
       ResizeMemory();
-      if(setZero)
+      if(p_evolve == -1)
          ClearWorking();
-      else
+      else if(p_evolve == 0.0)
          ClearWorkingToOne();
+      else
+         CopyConstToWorking();
       RandomizeConst();
       ClearReadTime();
       ClearWriteTime();

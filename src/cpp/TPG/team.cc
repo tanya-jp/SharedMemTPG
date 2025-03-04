@@ -40,19 +40,26 @@ void team::InitMemory(map<long, team *> &teamMap,
    set<RegisterMachine *, RegisterMachineIdComp> RegisterMachines;
    GetAllNodes(teamMap, teams, RegisterMachines);
 
-      // Reset shared memory for all teams
-      for (auto tm : teams) {
-         if (tm) {
-            // Reset all scalar, vector, and matrix memories
-            for (auto& mem : tm->team_memory_.team_scalar_memory_) {
-                if (mem) mem->ClearWorkingToOne();
-            }
-            for (auto& mem : tm->team_memory_.team_vector_memory_) {
-                if (mem) mem->ClearWorkingToOne();
-            }
-            for (auto& mem : tm->team_memory_.team_matrix_memory_) {
-                if (mem) mem->ClearWorkingToOne();
-            }
+   // Reset shared memory for all teams
+   for (auto tm : teams) {
+      if (!isEqual(std::any_cast<double>(params["p_memory_mu_const"]),
+            0.0)){
+         // Reset all scalar, vector, and matrix memories
+         for (auto& mem : tm->team_memory_.team_scalar_memory_) 
+            mem->CopyConstToWorking();
+         for (auto& mem : tm->team_memory_.team_vector_memory_) 
+            mem->CopyConstToWorking();
+         for (auto& mem : tm->team_memory_.team_matrix_memory_) 
+            mem->CopyConstToWorking();
+         }
+      else{
+         // Reset all scalar, vector, and matrix memories
+         for (auto& mem : tm->team_memory_.team_scalar_memory_) 
+            mem->ClearWorkingToOne();
+         for (auto& mem : tm->team_memory_.team_vector_memory_) 
+            mem->ClearWorkingToOne();
+         for (auto& mem : tm->team_memory_.team_matrix_memory_) 
+            mem->ClearWorkingToOne();
          }
       }
 

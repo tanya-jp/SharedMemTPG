@@ -194,7 +194,9 @@ class team {
     runTimeComplexityIns_ = 0;
     runTimeComplexityTms_ = 0;
 
-    team_memory_ = sharedMemoryEigen(std::any_cast<int>(params["n_memories"]), std::any_cast<int>(params["memory_size"]));
+    team_memory_ = sharedMemoryEigen(std::any_cast<int>(params["n_memories"]), 
+                                    std::any_cast<int>(params["memory_size"]),
+                                    std::any_cast<double>(params["p_memory_mu_const"]));
     // team_memory_.printMemory();
   };
 
