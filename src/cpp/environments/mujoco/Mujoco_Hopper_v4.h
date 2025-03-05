@@ -108,7 +108,7 @@ class Mujoco_Hopper_v4 : public MujocoEnv {
    }
 
    void get_obs(std::vector<double>& obs) {
-      uniform_real_distribution<double> dis(0, 2); 
+      uniform_real_distribution<double> dis(0, 3); 
       int blind = dis(rng_);
       auto position_size =
        exclude_current_positions_from_observation_ ? m_->nq - 1 : m_->nq;

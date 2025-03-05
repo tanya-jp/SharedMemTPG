@@ -70,7 +70,7 @@ public:
     }
 
     void get_obs(std::vector<double>& obs) {
-       uniform_real_distribution<double> dis(0, 2); 
+       uniform_real_distribution<double> dis(0, 3); 
        int blind = dis(rng_);
 	   if (blind == 0){
             //int obs2 = dis(rng_);

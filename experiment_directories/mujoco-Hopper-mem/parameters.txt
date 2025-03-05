@@ -81,10 +81,10 @@ seed_aux 42
 n_generations 1000000
 
 # Number of root teams (agents) to keep each generation
-n_root 1000
+n_root 1500
 
 # Number of new root teams to create each generation
-n_root_gen 500
+n_root_gen 1000
 
 # Whether to constrain parent selection to root teams
 parent_select_roots_only 0
@@ -136,7 +136,7 @@ p_clone_program 1.0
 # Program variation: probability of mutating a program's action pointer
 pmn 0.1
 # When changing action pointer, probability of selecting atomic action
-p_atomic 1.0
+p_atomic 0.9
 
 # Program variation: probability of changing a random instruction
 p_instructions_mutate 0.1
@@ -200,7 +200,7 @@ max_prog_size 1000000
 
 # Number of memory indices
 # Each memory index points to a data structure (scalar, vector, or matrix)
-n_memories 16
+n_memories 8
 
 # Dimensionality for vector & matrix memory
 memory_size 11
