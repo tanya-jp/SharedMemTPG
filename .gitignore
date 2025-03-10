@@ -56,3 +56,7 @@ __pycache__/
 
 # Pip files
 *.egg-info/
+
+# Experiment Outputs
+experiments/*/*/
+
