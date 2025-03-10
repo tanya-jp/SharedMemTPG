@@ -6,7 +6,9 @@ import matplotlib.pyplot as plt
 import glob
 import os
 import sys
+import csv
 from matplotlib.cm import get_cmap
+from matplotlib.backends.backend_pdf import PdfPages
 
 '''
 The script is included within the environmental variables for TPG.
@@ -30,12 +32,14 @@ For the optional parameter `csv_files`, possible values can be:
 
 Example:
     
-    tpg-plot-evolution.py all-selection best_fitness
-    tpg-plot-evolution.py selection.42.42.csv,selection.42.43.csv best_fitness
-    tpg-plot-evolution.py timing.42.42,timing.42.43 generation_time
-    tpg-plot-evolution.py best_fitness
+    tpg-plot-evolve.py all-selection best_fitness
+    tpg-plot-evolve.py selection.42.42.csv,selection.42.43.csv best_fitness
+    tpg-plot-evolve.py timing.42.42,timing.42.43 generation_time
+    tpg-plot-evolve.py best_fitness
 '''
 
+log_dir = "logs"
+plot_dir = "plots"
 
 def get_unique_filename(base_filename):
     """
@@ -48,13 +52,23 @@ def get_unique_filename(base_filename):
     counter = 1
     new_filename = base_filename
     
-    while os.path.exists(new_filename):
+    while os.path.exists(f"{plot_dir}/{new_filename}"):
         new_filename = f"{filename}_{counter}{ext}"
         counter += 1
     
     return new_filename
 
-def plot_generations(csv_files, column_name):
+def get_csv_columns(filepath):
+    """Extracts column names from a CSV file."""
+    with open(filepath, newline="", encoding="utf-8") as file:
+        reader = csv.reader(file)
+        column_names = next(reader)
+        return column_names[1:]
+
+def capitalize_snake_case(s):
+    return ' '.join(word.capitalize() for word in s.split('_'))
+
+def plot_generations_single(csv_files, column_name, pdf = None):
     """
     Plots the given csv_files and column name against generations.
     
@@ -71,7 +85,9 @@ def plot_generations(csv_files, column_name):
     # start processing the listed csv files
     for idx, csv_file in enumerate(csv_files):
         try:
-            df = pd.read_csv(csv_file)
+            # Use full path to read the CSV file
+            full_path = os.path.join(log_dir, csv_file)
+            df = pd.read_csv(full_path)
             if 'generation' not in df.columns:
                 print(f"Skipping {csv_file}: missing 'generation' column")
                 continue
@@ -96,20 +112,15 @@ def plot_generations(csv_files, column_name):
             
         except Exception as e:
             print(f"Error processing {csv_file}: {str(e)}")
-    
+
     if not valid_files:
         print("No valid CSV files with required columns found!")
         return
 
-    # configure properties of the graph (x-axis, y-axis, title, grid)
+    # configure properties of the graph (x-axis, y-axis, grid)
     plt.xlabel('Generation', fontsize=12)
-    plt.ylabel(column_name, fontsize=12)
-    title = f'{column_name} vs. Generations'
-    
-    if len(valid_files) > 1:
-        title += f' ({len(valid_files)} files)'
-    plt.title(title, fontsize=14)
-    
+    plt.ylabel(capitalize_snake_case(column_name), fontsize=12)
+
     plt.grid(True, alpha=0.3)
     
     # if more than 1 file, add a legend of file names and color schemes
@@ -117,20 +128,40 @@ def plot_generations(csv_files, column_name):
         plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
     
     plt.tight_layout()
-
-    output_filename = f"{column_name}_vs_generations"
-
-    # multiple file plots will end with '_combined' 
-    if len(valid_files) > 1:
-        output_filename += "_combined"
-    output_filename += ".png"
-
-    # if output file already exists, add a number in the end
-    output_filename = get_unique_filename(output_filename)
     
-    plt.savefig(output_filename, bbox_inches='tight')
-    print(f"Plot saved to '{output_filename}'")
+    if pdf:
+        pdf.savefig()
+    else:
+        output_filename = f"{column_name}_vs_generations"
+
+        # multiple file plots will end with '_combined' 
+        if len(valid_files) > 1:
+            output_filename += "_combined"
+        output_filename += ".pdf"
+
+        # if output file already exists, add a number in the end
+        output_filename =  f"{plot_dir}/{get_unique_filename(output_filename)}"
+
+        plt.savefig(output_filename)
+        print(f"Plot saved to '{output_filename}'")
+
     plt.close()
+
+def plot_generations_multiple(csv_files, column_names):
+    # Get prefix from the first file - use basename to handle subdirectory structure
+    first_file = os.path.basename(csv_files[0]) if csv_files else ""
+    prefix = first_file.split('.')[0] if first_file else ""
+
+    if not os.path.exists(plot_dir):
+        os.makedirs(plot_dir)
+
+    output_filename = plot_dir + "/" + get_unique_filename(f"{prefix}_all_vs_generations.pdf")
+
+    with PdfPages(output_filename) as pdf:
+        for column_name in column_names:
+            plot_generations_single(csv_files, column_name, pdf)
+
+    print(f"All plots saved to '{output_filename}'")
 
 if __name__ == "__main__":
     # two arguments: CSV file(s) (optional) and column name (required)
@@ -149,33 +180,62 @@ if __name__ == "__main__":
     if csv_key.startswith("all-"):
         prefix = csv_key[4:]  # extract part after "all-"
         if prefix in prefixes:
-            csv_files = glob.glob(f"{prefix}.*.*.csv")
+            # Use direct path construction - don't rely on chdir
+            prefix_dir = os.path.join(log_dir, prefix)
+            
+            if not os.path.exists(prefix_dir):
+                raise ValueError(f"Subdirectory '{prefix}' not found in {log_dir}")
+            
+            csv_files = [f for f in os.listdir(prefix_dir) if f.endswith('.csv')]
+            if not csv_files:
+                print(f"No CSV files found in {prefix_dir}")
+                sys.exit(1)
+                
+            # Store paths relative to log_dir
+            csv_files = [os.path.join(prefix, f) for f in csv_files]
         else:
             raise ValueError(f"Invalid prefix '{prefix}'. Expected one of {prefixes}.")
     else:
-        csv_files = [f"{f.strip()}.csv" if not f.strip().lower().endswith(".csv") else f.strip()
-                    for f in args.csv_files.split(',')]
-
-        # ensure all files have the same valid prefix
-        file_prefixes = {f.split('.')[0].lower() for f in csv_files}
-        if len(file_prefixes) > 1 or not file_prefixes.issubset(prefixes):
-            raise ValueError(f"All files must have the same prefix, but found: {file_prefixes}")
+        # Extract files and determine their prefixes
+        raw_files = [f.strip() for f in args.csv_files.split(',')]
+        csv_files = []
+        
+        for f in raw_files:
+            if not f.lower().endswith(".csv"):
+                f = f"{f}.csv"
+                
+            # Extract prefix from filename
+            prefix = f.split('.')[0].lower()
+            if prefix not in prefixes:
+                raise ValueError(f"File '{f}' doesn't have a valid prefix. Expected one of {prefixes}.")
+            
+            # Store with subdirectory
+            csv_files.append(os.path.join(prefix, f))
 
         csv_files = list(set(csv_files))  # remove duplicates
-
+    
     valid_files = []
     for f in csv_files:
-        if not os.path.exists(f):
-            print(f"Warning: File '{f}' not found")
+        full_path = os.path.join(log_dir, f)
+        if not os.path.exists(full_path):
+            print(f"Warning: File '{full_path}' not found")
         else:
             valid_files.append(f)
     
     if not valid_files:
         print("No valid CSV files found!")
         sys.exit(1)
-    
+
+    column_name = args.column_name
+
     try:
-        plot_generations(valid_files, args.column_name)
+        if column_name == "all":
+            # Get columns from the first valid file using full path
+            full_path = os.path.join(log_dir, valid_files[0])
+            column_names = get_csv_columns(full_path)
+            plot_generations_multiple(valid_files, column_names)
+        else:
+            plot_generations_single(valid_files, column_name)
     except Exception as e:
         print(f"Error: {str(e)}")
         sys.exit(1)
