@@ -64,7 +64,7 @@ program_parameters:
   continuous_output: 2  # Enable continuous outputs: 0 (disabled), 1 (scalar), 2 (vector), 3 (matrix)
   n_input: "0"  # Number of inputs (features/state variables), Note: MuJoco does not use this
   max_initial_prog_size: 10  # Max initial program size
-  max_prog_size: 10  # Max program size
+  max_prog_size: 1000000  # Max program size
   n_memories: 8  # Number of memory indices
   memory_size: 17  # Dimensionality for vector & matrix memory
   min_memory_size: 2  # Minimum memory size
