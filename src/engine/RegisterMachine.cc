@@ -294,7 +294,6 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
             
          uniform_int_distribution<int> disBid(0, instructions_.size() - 1);
          auto i = disBid(rng);
-         cerr <<"mu t" << state["t_current"] << " id" << id_  << " s" << instructions_.size() << " i" << i << endl;
          instructions_[i]->Mutate(false, legal_ops,
                                             observation_buff_size_, rng);
       }

@@ -2506,14 +2506,14 @@ void TPG::updateMODESFilters(bool roots) {
 /******************************************************************************/
 void TPG::WriteCheckpoint(bool elite) {
    ofstream ofs;
-   char filename[80];
-   sprintf(filename, "%s.%d.%lu.%d.rslt", "checkpoints/cp",
-           GetState("t_current"), seeds_[TPG_SEED], GetState("phase"));
+   auto filename = "checkpoints/cp." + to_string(GetState("t_current")) + "." +
+                   to_string(seeds_[TPG_SEED]) + "." +
+                   to_string(GetState("phase")) + ".rslt";
    ofs.open(filename, ios::out);
    if (!ofs.is_open() || ofs.fail()) {
-      cerr << "open failed for file: " << filename
+      std::cerr << "open failed for file: " << filename
            << " error:" << strerror(errno) << '\n';
-      die(__FILE__, __FUNCTION__, __LINE__, "Can't open file.");
+      die(__FILE__, __FUNCTION__, __LINE__, "Can't open checkpoint file.");
    }
    ofs << "seed_tpg:" << seeds_[TPG_SEED] << endl;
    ofs << "seed_aux:" << seeds_[AUX_SEED] << endl;
@@ -2557,11 +2557,16 @@ void TPG::WriteCheckpoint(bool elite) {
    }
    ofs << "end" << endl;
    ofs.close();
-   sprintf(filename, "%s.%d.%lu.%d.rslt", "checkpoints/cp",
-           GetState("t_current") - 1, seeds_[TPG_SEED], GetState("phase"));
-   if (std::filesystem::exists(filename) && remove(filename) != 0) {
-      std::cerr << "Error removing old checkpoint file t "
-                << GetState("t_current)") << endl;
+
+   // Remove old checkpoints.
+   std::regex reg("checkpoints/cp.*." + to_string(seeds_[TPG_SEED]) + "." +
+                  to_string(GetState("phase")) + ".rslt");
+   for (const auto& entry :
+        std::filesystem::directory_iterator("checkpoints")) {
+      if (std::regex_match(entry.path().string(), reg) &&
+          entry.path().string() != filename) {
+         remove(entry.path().string().c_str());
+      }
    }
 }
 

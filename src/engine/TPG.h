@@ -4,6 +4,7 @@
 
 #include <any>
 #include <filesystem>
+#include <regex>
 #include <iomanip>
 #include <random>
 #include <yaml-cpp/yaml.h>

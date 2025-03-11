@@ -40,7 +40,6 @@ target_include_directories(TPGExperimentMPI
     ${CMAKE_CURRENT_SOURCE_DIR}/../environments/sequence
     ${EIGEN3_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
-    ${OpenCV_INCLUDE_DIRS}
     ${CURL_INCLUDE_DIRS}
     ${MUJOCOPATH}/include
 )
@@ -55,7 +54,6 @@ target_link_libraries(TPGExperimentMPI
     Boost::mpi
     Boost::serialization
     Boost::iostreams
-    ${OpenCV_LIBS}
     CURL::libcurl
     ${CMAKE_THREAD_LIBS_INIT}
     glfw
