@@ -170,6 +170,7 @@ inline void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tas
     if (NotDoneAndActive(eval_data)) {
       tpg.ReadCheckpoint(-1, _TRAIN_PHASE, true, eval_data.checkpointString);
       eval_data.teams = tpg.GetRootTeamsInVec();
+      eval_data.team_map = tpg.team_map_;
       eval_data.task = tasks[tpg.GetState("active_task")];
       eval_data.eval_result = "";
       for (auto tm : eval_data.teams) {

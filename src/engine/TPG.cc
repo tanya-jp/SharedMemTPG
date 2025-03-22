@@ -2144,8 +2144,6 @@ void TPG::ReadCheckpoint(long t, int phase, bool fromString,
       str = inString;
    } else {
       char filename[80];
-      // sprintf(filename, "%s/%s.%ld.%d.%lu.%d.rslt", "checkpoints", "cp", t,
-      //         chkpID, seeds_[TPG_SEED], phase);
       sprintf(filename, "%s.%ld.%lu.%d.rslt", "checkpoints/cp",
            t, seeds_[TPG_SEED], phase);        
       ifstream t(filename);
@@ -2160,7 +2158,6 @@ void TPG::ReadCheckpoint(long t, int phase, bool fromString,
    long memberId = 0;
    long max_teamCount = -1;
    long max_programCount = -1;
-   // long max_memoryCount = -1;
    int f;
 
    while (getline(iss, oneline)) {
@@ -2748,7 +2745,6 @@ EvalData TPG::InitEvalData() {
    eval_data.animate = GetParam<int>("animate") == 1;
    eval_data.partially_observable = GetParam<int>("partially_observable") == 1;
    eval_data.n_prediction = 0;
-   eval_data.team_map = team_map_;
    eval_data.verbose = false;
    return eval_data;
 }
