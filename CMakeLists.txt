@@ -35,7 +35,7 @@ endif()
 # Find required packages
 find_package(MPI REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread mpi serialization iostreams)
-find_package(OpenCV REQUIRED)
+#find_package(OpenCV REQUIRED)
 find_package(CURL REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
