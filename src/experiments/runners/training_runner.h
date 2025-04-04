@@ -14,19 +14,21 @@
 class TaskEnv;
 
 class TrainingRunner : public ExperimentRunner {
- public:
-  TrainingRunner(TPG& tpg, std::vector<TaskEnv*>& tasks, boost::mpi::communicator& world, std::vector<int>& taskIndices);
-  void run() override;
+  public:
+   TrainingRunner(TPG& tpg, std::vector<TaskEnv*>& tasks,
+                  boost::mpi::communicator& world,
+                  std::vector<int>& taskIndices);
+   void run() override;
 
- private:
-  void initialization();
-  void trainingLoop();
-  // void logGenerationMetrics();
+  private:
+   void initialization();
+   void trainingLoop();
+   // void logGenerationMetrics();
 
-  TPG& tpg_;
-  std::vector<TaskEnv*>& tasks_;
-  boost::mpi::communicator& world_;
-  std::vector<int>& taskIndices_;
+   TPG& tpg_;
+   std::vector<TaskEnv*>& tasks_;
+   boost::mpi::communicator& world_;
+   std::vector<int>& taskIndices_;
 };
 
 #endif  // TRAINING_RUNNER_H

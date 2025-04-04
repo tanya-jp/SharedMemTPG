@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <span>
 
 namespace mpi = boost::mpi;
 
@@ -64,38 +65,32 @@ inline vector<team *> GetTeamsToEval(TPG &tpg, TaskEnv *task) {
   return teams_to_eval;
 }
 
-/*******************************************************************************
- Given a vector of teams to evaluate, assign each team to a specific mpi job.
- Parameters:
-  - tpg: TPG instance
-  - world: MPI communicator object, which represents a group of processes that
-    can communicate with each other
-  - teams_to_eval: teams to evaluate
-  - world_size_per_task: number of processors available to evaluate on this
-    task
-  - mpi_job: keeps track of current mpi job
- */
-inline void AssignTeamsToEvaluators(TPG &tpg, mpi::communicator &world,
-                             vector<team *> &teams_to_eval,
-                             int world_size_per_task, int &mpi_job) {
-  auto teams_per_evaluator = teams_to_eval.size() / world_size_per_task;
-  auto remainder = teams_to_eval.size() % world_size_per_task;
-  vector<team *> teams;
-  // Assign teams_per_evaluator teams to each of world_size_per_task mpi jobs
-  for (auto it = teams_to_eval.begin(); it != teams_to_eval.end(); it++) {
-    teams.push_back(*it);
-    if ((remainder > 0 && teams.size() == teams_per_evaluator + 1) ||
-        (remainder == 0 && teams.size() == teams_per_evaluator) ||
-        next(it) == teams_to_eval.end()) {
-      string s = "";
-      tpg.WriteMPICheckpoint(s, teams);
+/******************************************************************************/
+inline void AssignTeamsToEvaluators(TPG& tpg, mpi::communicator& world,
+                                    vector<team*>& teams_to_eval,
+                                    int n_mpi_jobs, 
+                                    int& mpi_job_id) {
+   int teams_per_evaluator = teams_to_eval.size() / n_mpi_jobs;
+   int remainder = teams_to_eval.size() % n_mpi_jobs;
 
-      world.send(mpi_job, 0, s);
-      mpi_job++;
-      teams.clear();
-      if (remainder > 0) remainder--;
-    }
-  }
+   // Divide teams into one group per mpi job
+   vector<vector<team*>> team_groups;
+   int start = 0;
+   for (int i = 0; i < n_mpi_jobs; ++i) {
+      int end = start + teams_per_evaluator +
+                (i < remainder ? 1 : 0);
+      team_groups.push_back(std::vector<team*>(
+          teams_to_eval.begin() + start, teams_to_eval.begin() + end));
+      start = end;
+   }
+
+   // Send each group of teams to an evaluator mpi job
+   for (auto g : team_groups) {
+      string s = "";
+      tpg.WriteMPICheckpoint(s, g);
+      world.send(mpi_job_id, 0, s);
+      mpi_job_id++;
+   }
 }
 
 /******************************************************************************/
@@ -141,14 +136,13 @@ inline void evaluate_main(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> 
   }
 
   // Collect evaluation result from each evaluator
-  auto root_teams_map = tpg.GetRootTeamsInMap();
   all_strings.clear();
   gather(world, my_string, all_strings, 0);
 
   for (int proc = 1; proc < world.size(); proc++) {
     if (!all_strings[proc].empty()) {
       istringstream f(all_strings[proc]);
-      tpg.DecodeEvalResultString(f, tasks, root_teams_map);
+      tpg.DecodeEvalResultString(f, tasks);
     }
   }
 }

@@ -2657,8 +2657,7 @@ void TPG::EncodeEvalResultString(EvalData& eval_data) {
 }
 
 /******************************************************************************/
-void TPG::DecodeEvalResultString(istringstream& f, vector<TaskEnv*>& tasks,
-                                 std::map<long, team*> root_teams_map) {
+void TPG::DecodeEvalResultString(istringstream& f, vector<TaskEnv*>& tasks) {
    string line;
    vector<string> split_str;
    while (getline(f, line)) {
@@ -2674,17 +2673,18 @@ void TPG::DecodeEvalResultString(istringstream& f, vector<TaskEnv*>& tasks,
          r_stats_double.push_back(atof(split_str[s++].c_str()));
       for (int i = 0; i < GetParam<int>("n_point_aux_int"); i++)
          r_stats_int.push_back(atoi(split_str[s++].c_str()));
-      setOutcome(root_teams_map[rslt_id], fingerprint, r_stats_double,
+      cerr << "eval id " << rslt_id << " " << VectorToString(r_stats_double) << endl;
+      setOutcome(team_map_[rslt_id], fingerprint, r_stats_double,
                  r_stats_int, GetState("t_current"));
-      // For control tasks, re-use training results as validation.
-      // TODO(skelly): fix
-      if (r_stats_int[POINT_AUX_INT_PHASE] == _TRAIN_PHASE &&
-          (tasks[GetParam<int>("active_task")]->eval_type_ == "Control" ||
-           tasks[GetParam<int>("active_task")]->eval_type_ == "Mujoco")) {
-         r_stats_int[POINT_AUX_INT_PHASE] = _VALIDATION_PHASE;
-         setOutcome(root_teams_map[rslt_id], fingerprint, r_stats_double,
-                    r_stats_int, GetState("t_current"));
-      }
+      // // For control tasks, re-use training results as validation.
+      // // TODO(skelly): fix
+      // if (r_stats_int[POINT_AUX_INT_PHASE] == _TRAIN_PHASE &&
+      //     (tasks[GetParam<int>("active_task")]->eval_type_ == "Control" ||
+      //      tasks[GetParam<int>("active_task")]->eval_type_ == "Mujoco")) {
+      //    r_stats_int[POINT_AUX_INT_PHASE] = _VALIDATION_PHASE;
+      //    setOutcome(team_map_[rslt_id], fingerprint, r_stats_double,
+      //               r_stats_int, GetState("t_current"));
+      // }
    }
 }
 
