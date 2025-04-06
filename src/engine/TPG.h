@@ -207,7 +207,7 @@ class TPG {
 
     // Method used by TPG processes to share evaluation data.
     void EncodeEvalResultString(EvalData& eval_data);
-    void DecodeEvalResultString(istringstream& f, vector<TaskEnv*>& tasks);
+    void DecodeEvalResultString(std::string& s, vector<TaskEnv*>& tasks);
     void FinalizeStepData(EvalData& eval_data);  
     EvalData InitEvalData();
 };

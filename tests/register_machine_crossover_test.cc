@@ -90,7 +90,7 @@ TEST_CASE("RegisterMachine Crossover Test", "[TPG]") {
    }
 
    SECTION("Test chunk splitting and recombination") {
-      tpg.Seed(TPG_SEED, 42);
+      tpg.rngs_[TPG_SEED].seed(42);
 
       // Create parent machines with known instruction sequences
       RegisterMachine* parent1 =

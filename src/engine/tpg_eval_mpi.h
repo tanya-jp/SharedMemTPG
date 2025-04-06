@@ -68,8 +68,7 @@ inline vector<team *> GetTeamsToEval(TPG &tpg, TaskEnv *task) {
 /******************************************************************************/
 inline void AssignTeamsToEvaluators(TPG& tpg, mpi::communicator& world,
                                     vector<team*>& teams_to_eval,
-                                    int n_mpi_jobs, 
-                                    int& mpi_job_id) {
+                                    int n_mpi_jobs, int& mpi_job_id) {
    int teams_per_evaluator = teams_to_eval.size() / n_mpi_jobs;
    int remainder = teams_to_eval.size() % n_mpi_jobs;
 
@@ -77,10 +76,9 @@ inline void AssignTeamsToEvaluators(TPG& tpg, mpi::communicator& world,
    vector<vector<team*>> team_groups;
    int start = 0;
    for (int i = 0; i < n_mpi_jobs; ++i) {
-      int end = start + teams_per_evaluator +
-                (i < remainder ? 1 : 0);
-      team_groups.push_back(std::vector<team*>(
-          teams_to_eval.begin() + start, teams_to_eval.begin() + end));
+      int end = start + teams_per_evaluator + (i < remainder ? 1 : 0);
+      team_groups.push_back(std::vector<team*>(teams_to_eval.begin() + start,
+                                               teams_to_eval.begin() + end));
       start = end;
    }
 
@@ -113,38 +111,31 @@ inline bool NotDoneAndActive(EvalData &eval_data) {
  - tasks The set of all tasks in the TPG
  - eval_tasks The indices of the tasks to evaluate
 */
-inline void evaluate_main(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks,
-                   vector<int> eval_tasks) {
-  string my_string = "MAIN";
-  vector<team *> teams_this_eval;
-  vector<string> all_strings;
-  string resultLine;
 
-  int world_size_per_task = (world.size() - 1) / tasks.size();
-  // Assign agents to evaluators
-  int evaluator = 1;
-  for (int task : eval_tasks) {
-    tpg.state_["active_task"] = task;
-    auto teams_to_eval = GetTeamsToEval(tpg, tasks[task]);
-    AssignTeamsToEvaluators(tpg, world, teams_to_eval, world_size_per_task,
-                            evaluator);
-  }
+inline void evaluate_main(TPG& tpg, mpi::communicator& world,
+                          vector<TaskEnv*>& tasks, vector<int> eval_tasks) {
+   int world_size_per_task = (world.size() - 1) / tasks.size();
+   // Assign agents to evaluators
+   int evaluator = 1;
+   for (int task : eval_tasks) {
+      tpg.state_["active_task"] = task;
+      auto teams_to_eval = GetTeamsToEval(tpg, tasks[task]);
+      AssignTeamsToEvaluators(tpg, world, teams_to_eval, world_size_per_task,
+                              evaluator);
+   }
+   // Let the rest of the procs know they are not needed this round
+   while (evaluator <= (world.size() - 1)) {
+      world.send(evaluator++, 0, "x");
+   }
+   // Collect evaluation result from each evaluator
+   vector<string> all_strings;
+   gather(world, std::string("MAIN"), all_strings, 0);
 
-  // Let the rest of the procs know they are not needed this round
-  while (evaluator <= (world.size() - 1)) {
-    world.send(evaluator++, 0, "x");
-  }
-
-  // Collect evaluation result from each evaluator
-  all_strings.clear();
-  gather(world, my_string, all_strings, 0);
-
-  for (int proc = 1; proc < world.size(); proc++) {
-    if (!all_strings[proc].empty()) {
-      istringstream f(all_strings[proc]);
-      tpg.DecodeEvalResultString(f, tasks);
-    }
-  }
+   for (int proc = 1; proc < world.size(); proc++) {
+      if (!all_strings[proc].empty()) {
+         tpg.DecodeEvalResultString(all_strings[proc], tasks);
+      }
+   }
 }
 
 /*******************************************************************************
