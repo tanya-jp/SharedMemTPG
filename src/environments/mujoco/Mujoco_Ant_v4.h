@@ -142,6 +142,7 @@ class Mujoco_Ant_v4 : public MujocoEnv {
       mj_resetData(m_, d_);
       set_state(qpos, qvel);
       step_ = 0;
+      get_obs(state_);
    }
 };
 

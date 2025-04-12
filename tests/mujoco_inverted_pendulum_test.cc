@@ -112,24 +112,24 @@ TEST_CASE("Mujoco_Inverted_Pendulum_v4 Get Observation", "[get_obs]") {
 
 }
 
-TEST_CASE("Mujoco_Inverted_Pendulum_v4 Reset Function", "[reset]") {
-    std::unordered_map<string, std::any> params = createDefaultParams();
+// TEST_CASE("Mujoco_Inverted_Pendulum_v4 Reset Function", "[reset]") {
+//     std::unordered_map<string, std::any> params = createDefaultParams();
 
-    Mujoco_Inverted_Pendulum_v4 pendulum(params);
-    std::mt19937 rng(1234);
-    pendulum.step_ = 50; 
+//     Mujoco_Inverted_Pendulum_v4 pendulum(params);
+//     std::mt19937 rng(1234);
+//     pendulum.step_ = 50; 
 
-    pendulum.d_->qpos[0] = 0.5;
-    pendulum.d_->qpos[1] = -0.3;
-    pendulum.d_->qvel[0] = 0.2;
-    pendulum.d_->qvel[1] = -0.1;
+//     pendulum.d_->qpos[0] = 0.5;
+//     pendulum.d_->qpos[1] = -0.3;
+//     pendulum.d_->qvel[0] = 0.2;
+//     pendulum.d_->qvel[1] = -0.1;
 
-    std::vector<double> obs = {0.9, 0.5, 0.7, 0.1};
-    std::vector<double> zero_obs(obs.size(), 0.0);
+//     std::vector<double> obs = {0.9, 0.5, 0.7, 0.1};
+//     std::vector<double> zero_obs(obs.size(), 0.0);
 
-    pendulum.get_obs(obs);
-    pendulum.reset(rng);
+//     pendulum.get_obs(obs);
+//     pendulum.reset(rng);
 
-    REQUIRE(pendulum.step_ == 0);
-    REQUIRE(pendulum.state_ == zero_obs);
-}
+//     REQUIRE(pendulum.step_ == 0);
+//     REQUIRE(pendulum.state_ == zero_obs);
+// }

@@ -68,12 +68,12 @@ inline vector<team *> GetTeamsToEval(TPG &tpg, TaskEnv *task) {
 /******************************************************************************/
 inline void AssignTeamsToEvaluators(TPG& tpg, mpi::communicator& world,
                                     vector<team*>& teams_to_eval,
-                                    int n_mpi_jobs, int& mpi_job_id) {
+                                    int n_mpi_jobs, int& mpi_job_id) {                                   
    int teams_per_evaluator = teams_to_eval.size() / n_mpi_jobs;
    int remainder = teams_to_eval.size() % n_mpi_jobs;
 
    // Divide teams into one group per mpi job
-   vector<vector<team*>> team_groups;
+   std::vector<vector<team*>> team_groups;
    int start = 0;
    for (int i = 0; i < n_mpi_jobs; ++i) {
       int end = start + teams_per_evaluator + (i < remainder ? 1 : 0);
@@ -84,10 +84,7 @@ inline void AssignTeamsToEvaluators(TPG& tpg, mpi::communicator& world,
 
    // Send each group of teams to an evaluator mpi job
    for (auto g : team_groups) {
-      string s = "";
-      tpg.WriteMPICheckpoint(s, g);
-      world.send(mpi_job_id, 0, s);
-      mpi_job_id++;
+      world.send(mpi_job_id++, 0, tpg.WriteMPICheckpoint(g));
    }
 }
 
@@ -111,29 +108,29 @@ inline bool NotDoneAndActive(EvalData &eval_data) {
  - tasks The set of all tasks in the TPG
  - eval_tasks The indices of the tasks to evaluate
 */
-
 inline void evaluate_main(TPG& tpg, mpi::communicator& world,
-                          vector<TaskEnv*>& tasks, vector<int> eval_tasks) {
-   int world_size_per_task = (world.size() - 1) / tasks.size();
-   // Assign agents to evaluators
-   int evaluator = 1;
-   for (int task : eval_tasks) {
+                          std::vector<TaskEnv*>& all_tasks,
+                          std::vector<int> eval_tasks) {
+   int world_size_per_task = (world.size() - 1) / eval_tasks.size();
+   // Assign agents to evaluator mpi jobs
+   int mpi_job_id = 1;
+   for (auto& task : eval_tasks) {
       tpg.state_["active_task"] = task;
-      auto teams_to_eval = GetTeamsToEval(tpg, tasks[task]);
+      auto teams_to_eval = GetTeamsToEval(tpg, all_tasks[task]);
       AssignTeamsToEvaluators(tpg, world, teams_to_eval, world_size_per_task,
-                              evaluator);
+                              mpi_job_id);
    }
    // Let the rest of the procs know they are not needed this round
-   while (evaluator <= (world.size() - 1)) {
-      world.send(evaluator++, 0, "x");
+   while (mpi_job_id <= (world.size() - 1)) {
+      world.send(mpi_job_id++, 0, "x");
    }
    // Collect evaluation result from each evaluator
    vector<string> all_strings;
    gather(world, std::string("MAIN"), all_strings, 0);
 
-   for (int proc = 1; proc < world.size(); proc++) {
-      if (!all_strings[proc].empty()) {
-         tpg.DecodeEvalResultString(all_strings[proc], tasks);
+   for (size_t job_id = 1; job_id < all_strings.size(); job_id++) {
+      if (!all_strings[job_id].empty()) {
+         tpg.DecodeEvalResultString(all_strings[job_id]);
       }
    }
 }
@@ -159,17 +156,16 @@ inline void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tas
       eval_data.task = tasks[tpg.GetState("active_task")];
       eval_data.eval_result = "";
       for (auto tm : eval_data.teams) {
-        eval_data.tm = tm;
-        for (eval_data.episode = 0; eval_data.episode < eval_data.tm->_n_eval;
-             eval_data.episode++) {   
-           if (tpg.GetParam<int>("seed_with_episode_number")) {
-              tpg.rngs_[AUX_SEED].seed(eval_data.episode * 42);
-           }
-          eval_data.tm->InitMemory(tpg.team_map_, tpg.params_);
-          evaluator_map[eval_data.task->eval_type_](tpg, eval_data);
-          // eval_data.FinalizeStepData(tpg);
-          tpg.FinalizeStepData(eval_data);
-        }
+         eval_data.tm = tm;
+         for (eval_data.episode = 0; eval_data.episode < eval_data.tm->_n_eval;
+              eval_data.episode++) {
+            if (tpg.GetParam<int>("seed_with_episode_number")) {
+               tpg.rngs_[AUX_SEED].seed(eval_data.episode * 42);
+            }
+            eval_data.tm->InitMemory(tpg.team_map_, tpg.params_);
+            evaluator_map[eval_data.task->eval_type_](tpg, eval_data);
+            tpg.FinalizeStepData(eval_data);
+         }
       }
       gather(world, eval_data.eval_result, 0);
     }
@@ -218,7 +214,6 @@ inline void replayer(TPG &tpg, vector<TaskEnv *> &tasks) {
               } else {
                   EvalMujoco(tpg, eval_data);
               }
-              // eval_data.FinalizeStepData(tpg);
               tpg.FinalizeStepData(eval_data);
               outcomes.push_back(eval_data.stats_double[REWARD1_IDX]);
           }

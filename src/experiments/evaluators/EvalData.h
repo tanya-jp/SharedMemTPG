@@ -39,7 +39,7 @@ class EvalData {
     TaskEnv *task;
     std::string eval_result;       // For passing eval results between mpi procs
     int episode;              // Episode number
-    std::vector<int> fingerprint;  // Behaviour fingerprint (usually not used)
+    std::vector<double> fingerprint;  // Behaviour fingerprint (usually not used)
 
     // double Stats to track for each evaluation
     // Currently this vec will contain:

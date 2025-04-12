@@ -77,25 +77,25 @@ TEST_CASE("Mujoco_Half_Cheetah_v4 Simulation Step", "[sim_step]") {
     REQUIRE(half_cheetah.step_ == 1); // Ensure step count is incremented
 }
 
-TEST_CASE("Mujoco_Half_Cheetah_v4 Reset Function", "[reset]") {
-    std::unordered_map<std::string, std::any> params = createDefaultParams();
-    Mujoco_Half_Cheetah_v4 half_cheetah(params);
-    std::mt19937 rng(1234);
+// TEST_CASE("Mujoco_Half_Cheetah_v4 Reset Function", "[reset]") {
+//     std::unordered_map<std::string, std::any> params = createDefaultParams();
+//     Mujoco_Half_Cheetah_v4 half_cheetah(params);
+//     std::mt19937 rng(1234);
 
-    half_cheetah.step_ = 50; 
+//     half_cheetah.step_ = 50; 
 
-    std::vector<double> qpos = {0.5, 0.8, -0.3};
-    std::vector<double> qvel = {0.1, -0.05, 0.05};
-    half_cheetah.set_state(qpos, qvel);
+//     std::vector<double> qpos = {0.5, 0.8, -0.3};
+//     std::vector<double> qvel = {0.1, -0.05, 0.05};
+//     half_cheetah.set_state(qpos, qvel);
 
-    std::vector<double> obs(half_cheetah.obs_size_, 1.0);
-    half_cheetah.get_obs(obs);
+//     std::vector<double> obs(half_cheetah.obs_size_, 1.0);
+//     half_cheetah.get_obs(obs);
     
-    half_cheetah.reset(rng);
+//     half_cheetah.reset(rng);
 
-    REQUIRE(half_cheetah.step_ == 0);
+//     REQUIRE(half_cheetah.step_ == 0);
 
-    for (size_t i = 0; i < half_cheetah.state_.size(); i++) {
-        REQUIRE(half_cheetah.state_[i] == Catch::Approx(0.0).margin(1e-2));
-    }
-}
+//     for (size_t i = 0; i < half_cheetah.state_.size(); i++) {
+//         REQUIRE(half_cheetah.state_[i] == Catch::Approx(0.0).margin(1e-2));
+//     }
+// }

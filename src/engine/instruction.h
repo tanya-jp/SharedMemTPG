@@ -164,9 +164,6 @@ class instruction {
 
    // Execute this instruction
    inline void exec(EvalData& eval_data) {
-      if (eval_data.verbose) {
-         eval_data.dbg_out << op_ << endl;
-      }
       (this->*op_functions_[op_])(eval_data.verbose);
 
       // TODO(skelly): set to 1.0 instead of 0.0?
@@ -174,7 +171,7 @@ class instruction {
       // This "protects" output memory by filtering nan value.
       out_->working_memory_[outIdxE_].array() =
           out_->working_memory_[outIdxE_].array().unaryExpr(
-              [](double v) { return std::isfinite(v) ? v : 0.0; });
+              [](double v) { return std::isfinite(v) ? v : 0.0; });     
    }
 
    inline int GetInIdx(int i) const {
@@ -783,8 +780,7 @@ class instruction {
 
    inline void ExecuteScalarConstSetOp(bool dbg) {
       out_->working_memory_[outIdxE_] = in1_->const_memory_[in0IdxE_];
-      if (dbg) {
-      }
+      if (dbg) {}
    }
 
    inline void ExecuteVectorConstSetOp(bool dbg) {

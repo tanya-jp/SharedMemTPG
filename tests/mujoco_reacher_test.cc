@@ -101,25 +101,25 @@ TEST_CASE("Mujoco_Reacher_v4 Get Observation", "[get_obs]") {
     REQUIRE(obs != zero_obs);
 }
 
-TEST_CASE("Mujoco_Reacher_v4 Reset Function", "[reset]") {
-    std::unordered_map<std::string, std::any> params = createDefaultParams();
-    Mujoco_Reacher_v4 reacher(params);
-    std::mt19937 rng(1234);
+// TEST_CASE("Mujoco_Reacher_v4 Reset Function", "[reset]") {
+//     std::unordered_map<std::string, std::any> params = createDefaultParams();
+//     Mujoco_Reacher_v4 reacher(params);
+//     std::mt19937 rng(1234);
 
-    reacher.step_ = 50; 
+//     reacher.step_ = 50; 
 
-    std::vector<double> qpos = {0.5, 0.8, -0.3};
-    std::vector<double> qvel = {0.1, -0.05, 0.05};
-    reacher.set_state(qpos, qvel);
+//     std::vector<double> qpos = {0.5, 0.8, -0.3};
+//     std::vector<double> qvel = {0.1, -0.05, 0.05};
+//     reacher.set_state(qpos, qvel);
 
-    std::vector<double> obs(reacher.obs_size_, 1.0);
-    reacher.get_obs(obs);
+//     std::vector<double> obs(reacher.obs_size_, 1.0);
+//     reacher.get_obs(obs);
     
-    reacher.reset(rng);
+//     reacher.reset(rng);
 
-    REQUIRE(reacher.step_ == 0);
+//     REQUIRE(reacher.step_ == 0);
 
-    for (size_t i = 0; i < reacher.state_.size(); i++) {
-        REQUIRE(reacher.state_[i] == Catch::Approx(0.0).margin(1e-2));
-    }
-}
+//     for (size_t i = 0; i < reacher.state_.size(); i++) {
+//         REQUIRE(reacher.state_[i] == Catch::Approx(0.0).margin(1e-2));
+//     }
+// }

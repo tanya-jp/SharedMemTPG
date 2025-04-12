@@ -74,7 +74,8 @@ class TPG {
 
 
     team *GetBestTeam();
-    set<team*, teamFitnessLexicalCompare> GetRootTeamsInSet();
+    // set<team*, teamFitnessLexicalCompare> GetRootTeamsInSet();
+    set<team*, teamIdComp> GetRootTeamsInSet();
     vector<team *> GetRootTeamsInVec() const;
     map<long, team *> GetRootTeamsInMap() const;
     void InitTeams();
@@ -148,7 +149,7 @@ class TPG {
     // void teamTaskRank(int, const vector<int> &);
     void updateMODESFilters(bool);
     void WriteCheckpoint(bool);
-    void WriteMPICheckpoint(string &, vector<team *> &);
+    std::string WriteMPICheckpoint(vector<team *> &);
 
     /*****************************************************************************
      *  TPG member variables and data structures.
@@ -207,7 +208,7 @@ class TPG {
 
     // Method used by TPG processes to share evaluation data.
     void EncodeEvalResultString(EvalData& eval_data);
-    void DecodeEvalResultString(std::string& s, vector<TaskEnv*>& tasks);
+    void DecodeEvalResultString(std::string& s);
     void FinalizeStepData(EvalData& eval_data);  
     EvalData InitEvalData();
 };

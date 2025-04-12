@@ -468,50 +468,56 @@ instruction::instruction(instruction &i) {
   rng_ = i.rng_;
 }
 
-void instruction::Mutate(bool randomize, vector<bool> &legal_ops,
-                         int observation_buff_size, mt19937 &rng) {
-  const int max_index = 1000000;  // TODO(skelly): fix magic
-  auto dis_index = std::uniform_int_distribution<>(0, max_index);                         
-  if (randomize) {  // Randomly set each part of this instruction.
-    std::uniform_int_distribution<> dis(0, 1);
-    in1Src_ = dis(rng);
-    in2Src_ = dis(rng);
+void instruction::Mutate(bool randomize, vector<bool>& legal_ops,
+                         int observation_buff_size, mt19937& rng) {
+   const int max_index = 1000000;  // TODO(skelly): fix magic
+   auto dis_index = std::uniform_int_distribution<>(0, max_index);
+   if (randomize) {  // Randomly set each part of this instruction.
+      std::uniform_int_distribution<> dis(0, 1);
+      in1Src_ = dis(rng);
+      in2Src_ = dis(rng);
 
-    dis = std::uniform_int_distribution<>(0, legal_ops.size() - 1);
-    do {
-      op_ = dis(rng);
-    } while (!legal_ops[op_]);
-
-    //TODO(skelly): use MutateInt()
-    outIdx_ = dis_index(rng);
-    in0Idx_ = dis_index(rng);
-    in1Idx_ = dis_index(rng);
-    in2Idx_ = dis_index(rng);
-    in3Idx_ = dis_index(rng);
-
-  } else {  // Randomly change one part of this instruction.
-    std::uniform_int_distribution<> dis(0, 7);
-    int i = dis(rng);
-    if (i == 0) {  // Change in1 src to private memory or observation.
-      MutateInt(in1Src_, 0, 1, rng);
-    } else if (i == 1) {  // Change in2 src to private memory or observation.
-      MutateInt(in2Src_, 0, 1, rng);
-    } else if (i == 2) {  // Change out index.
-      MutateInt(outIdx_, 0, max_index, rng);
-    } else if (i == 3) {  // Change operation.
+      dis = std::uniform_int_distribution<>(0, legal_ops.size() - 1);
       do {
-        MutateInt(op_, 0, int(legal_ops.size() - 1), rng);
+         op_ = dis(rng);
       } while (!legal_ops[op_]);
-    } else if (i == 4) {  // Change in0 index.
-      MutateInt(in0Idx_, 0, max_index, rng);
-    } else if (i == 5) {  // Change in1 index.
-      MutateInt(in1Idx_, 0, max_index, rng);
-    } else if (i == 6) {  // Change in2 index. 
-      MutateInt(in2Idx_, 0, max_index, rng);
-    } else if (i == 7) {  // Change in3 index. 
-      MutateInt(in3Idx_, 0, max_index, rng);
-    }
-  }
+
+      //TODO(skelly): use MutateInt()
+      outIdx_ = dis_index(rng);
+      in0Idx_ = dis_index(rng);
+      in1Idx_ = dis_index(rng);
+      in2Idx_ = dis_index(rng);
+      in3Idx_ = dis_index(rng);
+
+   } else {  // Randomly change one part of this instruction.
+      std::uniform_int_distribution<> dis(0, 7);
+      int i = dis(rng);
+      if (i == 0) {  // Change in1 src to private memory or observation.
+         MutateInt(in1Src_, 0, 1, rng);
+      } else if (i == 1) {  // Change in2 src to private memory or observation.
+         MutateInt(in2Src_, 0, 1, rng);
+      } else if (i == 2) {  // Change out index.
+         MutateInt(outIdx_, 0, max_index, rng);
+      } else if (i == 3) {  // Change operation.
+         do {
+            MutateInt(op_, 0, int(legal_ops.size() - 1), rng);
+         } while (!legal_ops[op_]);
+         
+      } else if (i == 4) {  // Change in0 index.
+         MutateInt(in0Idx_, 0, max_index, rng);
+      } else if (i == 5) {  // Change in1 index.
+         MutateInt(in1Idx_, 0, max_index, rng);
+      } else if (i == 6) {  // Change in2 index.
+         MutateInt(in2Idx_, 0, max_index, rng);
+      } else if (i == 7) {  // Change in3 index.
+         MutateInt(in3Idx_, 0, max_index, rng);
+      }  
+   }
+   // TODO(skelly): is this the right place for this check?
+   if (op_ == SCALAR_CONST_SET_OP_ || op_ == VECTOR_CONST_SET_OP_ ||
+       op_ == MATRIX_CONST_SET_OP_) {
+      in1Src_ = 0;
+   }
 }
 
 int instruction::GetOpCodeFromName(const std::string& name) {

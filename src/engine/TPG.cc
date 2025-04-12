@@ -117,8 +117,8 @@ map<long, team*> TPG::GetRootTeamsInMap() const {
 }
 
 /******************************************************************************/
-set<team*, teamFitnessLexicalCompare> TPG::GetRootTeamsInSet() {
-   set<team*, teamFitnessLexicalCompare> teams;
+set<team*, teamIdComp> TPG::GetRootTeamsInSet() {
+   set<team*, teamIdComp> teams;
    for (auto tm : team_pop_) {
       if (tm->root_) {
          teams.insert(tm);
@@ -2592,7 +2592,7 @@ std::string TPG::PhylogenyToString() {
 }
 
 /******************************************************************************/
-void TPG::WriteMPICheckpoint(string& s, vector<team*>& root_teams) {
+std::string TPG::WriteMPICheckpoint(vector<team*>& root_teams) {
    set<MemoryEigen*> memories;
    set<RegisterMachine*, RegisterMachineIdComp> programs;
    set<team*, teamIdComp> teams;
@@ -2619,7 +2619,7 @@ void TPG::WriteMPICheckpoint(string& s, vector<team*>& root_teams) {
       ss << tm->ToString();
    }
    ss << endl;
-   s = ss.str();
+   return ss.str();
 }
 
 /******************************************************************************/
@@ -2642,22 +2642,21 @@ string TPG::AgentOpUseToString(team* agent) {
 }
 
 /******************************************************************************/
-
 void TPG::EncodeEvalResultString(EvalData& eval_data) {
    eval_data.eval_result += to_string(static_cast<long>(eval_data.tm->id_));
    eval_data.eval_result += ":" + VectorToStringNoSpace(eval_data.fingerprint);
    eval_data.eval_result += ":" + to_string(GetState("active_task"));
    for (size_t r = 0; r < eval_data.stats_double.size(); r++) {
-   eval_data.eval_result += ":" + to_string(eval_data.stats_double[r]);
+      eval_data.eval_result += ":" + to_string(eval_data.stats_double[r]);
    }
    for (size_t r = 0; r < eval_data.stats_int.size(); r++) {
-   eval_data.eval_result += ":" + to_string(eval_data.stats_int[r]);
+      eval_data.eval_result += ":" + to_string(eval_data.stats_int[r]);
    }
    eval_data.eval_result += "\n";
 }
 
 /******************************************************************************/
-void TPG::DecodeEvalResultString(std::string& s, vector<TaskEnv*>& tasks) {
+void TPG::DecodeEvalResultString(std::string& s) {
    string line;
    vector<string> split_str;
    istringstream f(s);
@@ -2681,49 +2680,49 @@ void TPG::DecodeEvalResultString(std::string& s, vector<TaskEnv*>& tasks) {
 
 /******************************************************************************/
 void TPG::FinalizeStepData(EvalData& eval_data) {
-   if (eval_data.task->eval_type_ == "RecursiveForecast") {
-      if (GetParam<string>("forecast_fitness") == "mse") {
-         auto err =
-             MeanSquaredError(eval_data.sequence_targ, eval_data.sequence_pred);
-         eval_data.stats_double[REWARD1_IDX] = -err;
-      } else if (GetParam<string>("forecast_fitness") == "correlation") {
-         auto corr =
-             Correlation(eval_data.sequence_targ, eval_data.sequence_pred);
-         eval_data.stats_double[REWARD1_IDX] = corr;
-      } else if (GetParam<string>("forecast_fitness") == "pearson") {
-         auto corr = PearsonCorrelation(eval_data.sequence_targ,
-                                        eval_data.sequence_pred);
-         eval_data.stats_double[REWARD1_IDX] = corr;
-      } else if (GetParam<string>("forecast_fitness") == "theils") {
-         auto err =
-             TheilsStatistic(eval_data.sequence_targ, eval_data.sequence_pred);
-         eval_data.stats_double[REWARD1_IDX] = -err;
-      } else if (GetParam<string>("forecast_fitness") == "mse_multivar") {
-         auto err = calculateMSE_Multi(eval_data.sequence_targ,
-                                       eval_data.sequence_pred);
-         eval_data.stats_double[REWARD1_IDX] = -err;
-      } else if (GetParam<string>("forecast_fitness") == "theils_multivar") {
-         auto err = calculateTheils_Multi(eval_data.sequence_targ,
-                                          eval_data.sequence_pred);
-         eval_data.stats_double[REWARD1_IDX] = -err;
-      } else if (GetParam<string>("forecast_fitness") == "pearson_multivar") {
-         auto corr = calculatePearson_Multi(eval_data.sequence_targ,
-                                            eval_data.sequence_pred);
-         eval_data.stats_double[REWARD1_IDX] = corr;
-         if (!isfinite(eval_data.stats_double[REWARD1_IDX]))
-            eval_data.stats_double[REWARD1_IDX] = 0;
-      } else {
-         die(__FILE__, __FUNCTION__, __LINE__,
-             "Unsupported forecast fitness function");
-      }
-   }
+   // if (eval_data.task->eval_type_ == "RecursiveForecast") {
+   //    if (GetParam<string>("forecast_fitness") == "mse") {
+   //       auto err =
+   //           MeanSquaredError(eval_data.sequence_targ, eval_data.sequence_pred);
+   //       eval_data.stats_double[REWARD1_IDX] = -err;
+   //    } else if (GetParam<string>("forecast_fitness") == "correlation") {
+   //       auto corr =
+   //           Correlation(eval_data.sequence_targ, eval_data.sequence_pred);
+   //       eval_data.stats_double[REWARD1_IDX] = corr;
+   //    } else if (GetParam<string>("forecast_fitness") == "pearson") {
+   //       auto corr = PearsonCorrelation(eval_data.sequence_targ,
+   //                                      eval_data.sequence_pred);
+   //       eval_data.stats_double[REWARD1_IDX] = corr;
+   //    } else if (GetParam<string>("forecast_fitness") == "theils") {
+   //       auto err =
+   //           TheilsStatistic(eval_data.sequence_targ, eval_data.sequence_pred);
+   //       eval_data.stats_double[REWARD1_IDX] = -err;
+   //    } else if (GetParam<string>("forecast_fitness") == "mse_multivar") {
+   //       auto err = calculateMSE_Multi(eval_data.sequence_targ,
+   //                                     eval_data.sequence_pred);
+   //       eval_data.stats_double[REWARD1_IDX] = -err;
+   //    } else if (GetParam<string>("forecast_fitness") == "theils_multivar") {
+   //       auto err = calculateTheils_Multi(eval_data.sequence_targ,
+   //                                        eval_data.sequence_pred);
+   //       eval_data.stats_double[REWARD1_IDX] = -err;
+   //    } else if (GetParam<string>("forecast_fitness") == "pearson_multivar") {
+   //       auto corr = calculatePearson_Multi(eval_data.sequence_targ,
+   //                                          eval_data.sequence_pred);
+   //       eval_data.stats_double[REWARD1_IDX] = corr;
+   //       if (!isfinite(eval_data.stats_double[REWARD1_IDX]))
+   //          eval_data.stats_double[REWARD1_IDX] = 0;
+   //    } else {
+   //       die(__FILE__, __FUNCTION__, __LINE__,
+   //           "Unsupported forecast fitness function");
+   //    }
+   // }
    eval_data.stats_double[VISITED_TEAMS_IDX] /= eval_data.n_prediction;
    eval_data.stats_double[INSTRUCTIONS_IDX] /= eval_data.n_prediction;
    eval_data.stats_int[POINT_AUX_INT_TASK] = GetState("active_task");
    eval_data.stats_int[POINT_AUX_INT_PHASE] = GetState("phase");
    eval_data.stats_int[POINT_AUX_INT_ENVSEED] = eval_data.episode;
    eval_data.stats_int[POINT_AUX_INT_internalTestNodeId] =
-       GetState("internal_test_node_id");
+       GetState("internal_test_node_id");           
    EncodeEvalResultString(eval_data);
 }
 

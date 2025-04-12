@@ -6,6 +6,7 @@
 #include <random>
 #include <sstream>
 #include <string>
+#include <iostream>
 
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> MatrixDynamic;
 
@@ -179,8 +180,8 @@ class MemoryEigen {
 
    std::string ToString(long prog_id) {
       std::ostringstream oss;
-      oss << "MemoryEigen:" << prog_id << ":" << type_ << ":" << n_memories_ << ":"
-          << memory_size_;
+      oss << "MemoryEigen:" << prog_id << ":" << type_ << ":" << n_memories_
+          << ":" << memory_size_;
       if (type_ == kScalarType_) {
          for (auto m : const_memory_) {
             oss << ":" << m(0, 0);
@@ -193,6 +194,33 @@ class MemoryEigen {
          }
       } else {
          for (auto m : const_memory_) {
+            for (size_t r = 0; r < memory_size_; r++) {
+               for (size_t c = 0; c < memory_size_; c++) {
+                  oss << ":" << m(r, c);
+               }
+            }
+         }
+      }
+      oss << std::endl;
+      return oss.str();
+   }
+
+   std::string ToStringWorkingMemory(long prog_id) {
+      std::ostringstream oss;
+      oss << "MemoryEigen:" << prog_id << ":" << type_ << ":" << n_memories_ << ":"
+          << memory_size_;
+      if (type_ == kScalarType_) {
+         for (auto m : working_memory_) {
+            oss << ":" << m(0, 0);
+         }
+      } else if (type_ == kVectorType_) {
+         for (auto m : working_memory_) {
+            for (size_t r = 0; r < memory_size_; r++) {
+               oss << ":" << m(r, 0);
+            }
+         }
+      } else {
+         for (auto m : working_memory_) {
             for (size_t r = 0; r < memory_size_; r++) {
                for (size_t c = 0; c < memory_size_; c++) {
                   oss << ":" << m(r, c);

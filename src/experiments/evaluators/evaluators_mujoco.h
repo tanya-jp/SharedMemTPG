@@ -270,14 +270,13 @@ inline void EvalMujoco(TPG& tpg, EvalData& eval_data) {
    MaybeAnimateStep(tpg);
    eval_data.n_prediction = 0;
    eval_data.obs = new state(task->GetObsSize());
-   eval_data.obs->Set(task->GetObsVec(eval_data.partially_observable));                 
+   eval_data.obs->Set(task->GetObsVec(eval_data.partially_observable));
    while (!task->terminal()) {
-      tpg.GetAction(eval_data);
+      tpg.GetAction(eval_data);  
       auto ctrl = WrapVectorActionMuJoco(eval_data);
       TaskEnv::Results r = task->sim_step(ctrl);
-      eval_data.stats_double[REWARD1_IDX] += r.r1;
+      eval_data.stats_double[REWARD1_IDX] += r.r1;  
       eval_data.AccumulateStepData();
-      eval_data.n_prediction++;
       eval_data.obs->Set(task->GetObsVec(eval_data.partially_observable));
       MaybeAnimateStep(tpg);
    }

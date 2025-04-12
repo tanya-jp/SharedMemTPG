@@ -378,6 +378,7 @@ void RegisterMachine::Run(EvalData& eval_data, int &time_step, const size_t &gra
          ClearWorkingMemory();
       }
    }
+
    bool copied_obs_vec = false;
    bool copied_obs_mat = false;
 
@@ -421,7 +422,7 @@ void RegisterMachine::Run(EvalData& eval_data, int &time_step, const size_t &gra
       }
       // Track write times for temporal memory
       istr->out_->write_time_[istr->outIdxE_] =
-          time_step + (graph_depth / MAX_GRAPH_DEPTH);
+          time_step + (graph_depth / MAX_GRAPH_DEPTH);  
       istr->exec(eval_data);  // Execute instruction
    }
    bid_val_ =

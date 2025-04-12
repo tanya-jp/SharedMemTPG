@@ -110,6 +110,7 @@ class Mujoco_Inverted_Double_Pendulum_v4 : public MujocoEnv {
       set_state(qpos, qvel);
 
       step_ = 0;
+      get_obs(state_);
       terminalState = false;
    }
 

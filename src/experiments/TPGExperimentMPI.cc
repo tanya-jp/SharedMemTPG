@@ -59,7 +59,6 @@ int main(int argc, char** argv) {
    };
 
    if (world.rank() == 0) {  // Master Process
-      string my_string = "MAIN";
 
       ExperimentRunner* runner = nullptr;
 
