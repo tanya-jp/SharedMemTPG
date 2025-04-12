@@ -182,6 +182,8 @@ inline void replayer(TPG &tpg, vector<TaskEnv *> &tasks) {
   std::set<team *, teamIdComp> teams_visitedAllTasks;
 
   eval_data.teams = tpg.GetRootTeamsInVec();
+  eval_data.team_map = tpg.team_map_;
+  eval_data.task = tasks[tpg.GetState("active_task")];
   eval_data.eval_result = "";
   for (auto tm : eval_data.teams) {
       if (tm->id_ != tpg.GetParam<int>("id_to_replay")) continue;
