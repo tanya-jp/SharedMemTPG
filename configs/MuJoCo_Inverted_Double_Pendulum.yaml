@@ -43,19 +43,19 @@ independent_team_mutation_ops:
   pmx: 0.5  # Team variation: probability of team crossover
   pmx_p: 0.5  # Team variation: probability of team crossover adding each parent prog to child
   pmd: 0.25  # Team variation: probability of deleting program from team
-  pma: 0.2  # Team variation: probability of adding program to team
-  pmw: 0.25  # Team variation: probability of mutating program execution order
+  pma: 0.125  # Team variation: probability of adding program to team
+  pmw: 0.0  # Team variation: probability of mutating program execution order
 
 # Program Parameters
 program_parameters:
   p_clone_program: 1.0  # Probability of cloning program before modifying
-  pmn: 0.25  # Probability of mutating a program's action pointer
+  pmn: 0.125  # Probability of mutating a program's action pointer
   p_atomic: 0.995  # Probability of selecting atomic action when changing action pointer
-  p_instructions_mutate: 0.25  # Probability of changing a random instruction
-  p_instructions_swap: 0.25  # Probability of swapping the position of two instructions
-  p_instructions_delete: 0.25  # Probability of deleting an instruction
-  p_instructions_add: 0.2  # Probability of adding an instruction
-  p_memory_mu_const: 0.5  # Probability of mutating constants
+  p_instructions_mutate: 1.0  # Probability of changing a random instruction
+  p_instructions_swap: 1.0  # Probability of swapping the position of two instructions
+  p_instructions_delete: 1.0  # Probability of deleting an instruction
+  p_instructions_add: 1.0  # Probability of adding an instruction
+  p_memory_mu_const: 1.0  # Probability of mutating constants
   p_observation_buff_size: 0.0 # Program variation: probability of changing observation_buff_size
   p_observation_index: 0.1 # Program variation: probability of changing observation_index
   p_memory_size: 0.0 # Program variation: probability of changing memory_size
