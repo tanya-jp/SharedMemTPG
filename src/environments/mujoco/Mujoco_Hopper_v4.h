@@ -8,7 +8,7 @@
 class Mujoco_Hopper_v4 : public MujocoEnv {
   public:
    // Parameters
-   double forward_reward_weight = 1.0;
+   double forward_reward_weight_ = 2.0;
    double control_cost_weight_ = 1e-3;
    double healthy_reward_ = 1.0;
    bool terminate_when_unhealthy_ = true;
@@ -97,7 +97,7 @@ class Mujoco_Hopper_v4 : public MujocoEnv {
       auto x_vel = (x_pos_after - x_pos_before) / m_->opt.timestep;
       auto ctrl_cost = control_cost(action);
 
-      auto forward_reward = forward_reward_weight * x_vel;
+      auto forward_reward = forward_reward_weight_ * x_vel;
       auto rewards = forward_reward + healthy_reward();
 
       auto costs = ctrl_cost;
