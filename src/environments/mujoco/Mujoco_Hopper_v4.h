@@ -32,6 +32,7 @@ class Mujoco_Hopper_v4 : public MujocoEnv {
       healthy_state_range_ = {-100.0, 100.0};
       healthy_z_range_ = {0.7, float(INFINITY)};
       healthy_angle_range_ = {-0.2, 0.2};
+      frame_skip_ = 4;
       initialize_simulation();
 
       obs_size_ = 12;
