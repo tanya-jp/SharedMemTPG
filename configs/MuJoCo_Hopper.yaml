@@ -96,9 +96,9 @@ recursive_forecasting:
 # Parameters Specific to Mujoco
 mujoco_parameters:
   mj_model_path: "$TPG/datasets/mujoco_models/"  # Model path
-  mj_max_timestep: 5000  # Max simulation time steps
+  mj_max_timestep: 1000  # Max simulation time steps
   mj_reward_control_weight: 0.0  # Reward control weight
-  mj_n_eval_train: 3  # Number of training evaluations
+  mj_n_eval_train: 5  # Number of training evaluations
   mj_n_eval_validation: 0  # Number of validation evaluations
   mj_n_eval_test: 1  # Number of test evaluations
 

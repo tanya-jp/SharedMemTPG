@@ -8,9 +8,9 @@
 class Mujoco_Hopper_v4 : public MujocoEnv {
   public:
    // Parameters
-   double forward_reward_weight_ = 2.0;
+   double forward_reward_weight_ = 1.0;
    double control_cost_weight_ = 1e-3;
-   double healthy_reward_ = 1.0;
+   double healthy_reward_ = 0.0;
    bool terminate_when_unhealthy_ = true;
    std::vector<double> healthy_state_range_;
    std::vector<double> healthy_z_range_;
