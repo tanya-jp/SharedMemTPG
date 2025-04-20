@@ -99,10 +99,10 @@ class Mujoco_Hopper_v4 : public MujocoEnv {
       auto ctrl_cost = control_cost(action);
 
       auto forward_reward = forward_reward_weight_ * x_vel;
-      auto rewards = forward_reward + healthy_reward();
+      // auto rewards = forward_reward + healthy_reward();  
 
       auto costs = ctrl_cost;
-      auto reward = rewards - costs;
+      auto reward = forward_reward - costs;
 
       get_obs(state_);
       step_++;
