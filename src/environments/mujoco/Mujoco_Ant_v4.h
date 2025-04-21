@@ -28,6 +28,7 @@ class Mujoco_Ant_v4 : public MujocoEnv {
                         "ant.xml");
       healthy_z_range_ = {0.2, 1.0};
       contact_force_range_ = {-1.0, 1.0};
+      frame_skip_ = 5;
       initialize_simulation();
 
       obs_size_ = 27;
