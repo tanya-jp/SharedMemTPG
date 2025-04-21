@@ -27,7 +27,7 @@ ga_parameters:
   seed_aux: 42  # Auxiliary seed, e.g. for simulators
   n_generations: 1000000  # Max number of generations
   n_root: 1000  # Number of root teams (agents) to keep each generation
-  n_root_gen: 100  # Number of new root teams to create each generation
+  n_root_gen: 1000  # Number of new root teams to create each generation
   parent_select_roots_only: 0  # Whether to constrain parent selection to root teams
   tournament_size: 3  # Tournament size for selection
   keep_old_outcomes: 1  # Whether to keep evaluation outcome over time or re-evaluate each generation
@@ -35,40 +35,40 @@ ga_parameters:
 
 # Team Parameters
 team_parameters:
-  max_initial_team_size: 10  # Initial team size
-  max_team_size: 1000000  # Max team size
+  max_initial_team_size: 1  # Initial team size
+  max_team_size: 10  # Max team size
 
 # Independent Team Mutation Ops
 independent_team_mutation_ops:
   pmx: 0.5  # Team variation: probability of team crossover
   pmx_p: 0.5  # Team variation: probability of team crossover adding each parent prog to child
-  pmd: 0.1  # Team variation: probability of deleting program from team
-  pma: 0.075  # Team variation: probability of adding program to team
-  pmw: 0.1  # Team variation: probability of mutating program execution order
+  pmd: 0.25  # Team variation: probability of deleting program from team
+  pma: 0.125  # Team variation: probability of adding program to team
+  pmw: 0.0  # Team variation: probability of mutating program execution order
 
 # Program Parameters
 program_parameters:
   p_clone_program: 1.0  # Probability of cloning program before modifying
-  pmn: 0.1  # Probability of mutating a program's action pointer
-  p_atomic: 0.99  # Probability of selecting atomic action when changing action pointer
-  p_instructions_mutate: 0.1  # Probability of changing a random instruction
-  p_instructions_swap: 0.1  # Probability of swapping the position of two instructions
-  p_instructions_delete: 0.1  # Probability of deleting an instruction
-  p_instructions_add: 0.075  # Probability of adding an instruction
-  p_memory_mu_const: 0.5  # Probability of mutating constants
+  pmn: 0.125  # Probability of mutating a program's action pointer
+  p_atomic: 0.995  # Probability of selecting atomic action when changing action pointer
+  p_instructions_mutate: 1.0  # Probability of changing a random instruction
+  p_instructions_swap: 1.0  # Probability of swapping the position of two instructions
+  p_instructions_delete: 1.0  # Probability of deleting an instruction
+  p_instructions_add: 1.0  # Probability of adding an instruction
+  p_memory_mu_const: 1.0  # Probability of mutating constants
   p_observation_buff_size: 0.0 # Program variation: probability of changing observation_buff_size
   p_observation_index: 0.1 # Program variation: probability of changing observation_index
-  p_memory_size: 0.0 # Program variation: probability of changing memory_size
+  p_memory_size: 1.0 # Program variation: probability of changing memory_size
   stateful: 1  # Use stateful programs
   skip_introns: 1  # Whether to skip introns during evaluation
   continuous_output: 2  # Enable continuous outputs: 0 (disabled), 1 (scalar), 2 (vector), 3 (matrix)
   n_input: "0"  # Number of inputs (features/state variables), Note: MuJoco does not use this
   max_initial_prog_size: 10  # Max initial program size
-  max_prog_size: 1000000  # Max program size
+  max_prog_size: 10  # Max program size
   n_memories: 8  # Number of memory indices
   memory_size: 27  # Dimensionality for vector & matrix memory
   min_memory_size: 2  # Minimum memory size
-  max_memory_size: 32  # Maximum memory size
+  max_memory_size: 27  # Maximum memory size
   # Observations are stored in a buffer with this time window
   observation_buff_size: 1
   min_observation_buff_size: 1
@@ -100,7 +100,7 @@ mujoco_parameters:
   mj_reward_control_weight: 0.0  # Reward control weight
   mj_n_eval_train: 5  # Number of training evaluations
   mj_n_eval_validation: 0  # Number of validation evaluations
-  mj_n_eval_test: 0  # Number of test evaluations
+  mj_n_eval_test: 1  # Number of test evaluations
 
 # Operations (set 1 to activate, 0 to deactivate)
 operations:
@@ -147,8 +147,8 @@ operations:
   VECTOR_MAX_OP: 1
   VECTOR_MEAN_OP: 1
   VECTOR_ST_DEV_OP: 1
-  VECTOR_CONST_SET_OP: 0
-  SCALAR_VECTOR_ASSIGN_OP: 0
+  VECTOR_CONST_SET_OP: 1
+  SCALAR_VECTOR_ASSIGN_OP: 1
 
   # Matrix Operations:
   VECTOR_OUTER_PRODUCT_OP: 1
@@ -178,8 +178,8 @@ operations:
 
   # Noise Operations:
   SCALAR_UNIFORM_SET_OP: 0
-  SCALAR_GAUSSIAN_SET_OP: 0
+  SCALAR_GAUSSIAN_SET_OP: 1
   VECTOR_UNIFORM_SET_OP: 0
-  VECTOR_GAUSSIAN_SET_OP: 0
+  VECTOR_GAUSSIAN_SET_OP: 1
   MATRIX_UNIFORM_SET_OP: 0
-  MATRIX_GAUSSIAN_SET_OP: 0
+  MATRIX_GAUSSIAN_SET_OP: 1
