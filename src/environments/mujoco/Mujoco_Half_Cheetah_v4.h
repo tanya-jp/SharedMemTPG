@@ -22,8 +22,7 @@ class Mujoco_Half_Cheetah_v4 : public MujocoEnv {
           std::any_cast<double>(params["mj_reward_control_weight"]);
       model_path_ =
           ExpandEnvVars(std::any_cast<string>(params["mj_model_path"]) + 
-                        "half_cheetah.xml");
-      frame_skip_ = 5;                  
+                        "half_cheetah.xml");                 
       initialize_simulation();
       obs_size_ = 17;
       if (!exclude_current_positions_from_observation_)
