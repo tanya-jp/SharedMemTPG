@@ -6,6 +6,7 @@
 // Allow duplicates
 void team::AddProgram(RegisterMachine *prog, int position) {
    prog->SetMemory(&team_memory_);
+   cout<<id_<<" "<<prog->id_<<endl;
    auto it = members_.begin();
    advance(it, position);
    members_.insert(it, prog);

@@ -401,6 +401,7 @@ void RegisterMachine::Run(state *obs, int &time_step, const size_t &graph_depth,
          // TODO(Tan):if writing function acts with some receieved values
          // this needs to have some pointer assignments
          istr->memory_out_ = team_memory_;
+         cout << "write " << id_ <<endl;
          // cout << "istr->GetOutType(): " << istr->GetOutType() << endl;
       }
 
@@ -408,6 +409,7 @@ void RegisterMachine::Run(state *obs, int &time_step, const size_t &graph_depth,
          // Check if this input is used in the operation.
          if (istr->GetInType(in) == sharedMemoryEigen::SHARED_MEM_TYPE){
            // istr->ClearObsRef(in);
+           cout<< "read " << id_ <<endl;
             istr->SetInSharedMem(team_memory_);
             istr->SetInIdxE(
                in, istr->GetInIdx(in) % 

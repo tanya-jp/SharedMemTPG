@@ -563,6 +563,8 @@ void TPG::MutateActionToTeam(RegisterMachine *prog_to_mu, team *new_team,
          n_new_teams++;
       }
    }
+
+   // cout << "atomic : prog to mutate "<< prog_to_mu->id_ << " new team " << new_team->id_ <<endl;
 }
 
 /******************************************************************************/

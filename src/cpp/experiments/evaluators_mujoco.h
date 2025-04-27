@@ -140,16 +140,16 @@ void StepVisualization() {
 }
 
 void MaybeStartAnimation(TPG& tpg, TaskEnv* task) {
-    if (tpg.GetParam<int>("animate")) {
-        MujocoEnv* t = dynamic_cast<MujocoEnv*>(task);
-        InitVisualization(t->m_, t->d_);
-    }
+    // if (tpg.GetParam<int>("animate")) {
+    //     MujocoEnv* t = dynamic_cast<MujocoEnv*>(task);
+    //     InitVisualization(t->m_, t->d_);
+    // }
 }
 
 void MaybeAnimateStep(TPG& tpg) {
-    if (tpg.GetParam<int>("animate")) {
-        StepVisualization();
-    }
+    // if (tpg.GetParam<int>("animate")) {
+    //     StepVisualization();
+    // }
 }
 
 /******************************************************************************/

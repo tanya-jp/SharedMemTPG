@@ -194,6 +194,11 @@ void evaluator(TPG &tpg, mpi::communicator &world, vector<TaskEnv *> &tasks) {
 
 /******************************************************************************/
 void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
+
+  // long generation_to_run = 10;
+  // // **Load the specific generation checkpoint before initializing EvalData**
+  // tpg.ReadCheckpoint(generation_to_run, 2, -1, false, "");
+
   // MaybeStartAnimation(tpg);
   EvalData eval(tpg);
 
@@ -217,11 +222,19 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
         // change the number of episodes
         // turn off visulalization
         // print the fitness from each episode
+
+        // **Turn off visualization**
+        eval.animate = false;  // Ensure visualization is disabled
+
+
         if (eval.animate) {
             eval.tm->_n_eval = 1;
         } else {
-            eval.tm->_n_eval =
-                eval.task->GetNumEval(tpg.GetParam<int>("checkpoint_in_phase"));
+            // eval.tm->_n_eval =
+            //     eval.task->GetNumEval(tpg.GetParam<int>("checkpoint_in_phase"));
+
+            // **Set the number of episodes (Change this value as needed)**
+            eval.tm->_n_eval = 100;
         }
         for (eval.episode = 0; eval.episode < eval.tm->_n_eval;
              eval.episode++) {
@@ -239,6 +252,10 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
                 EvalMujoco(tpg, eval);
             }
             eval.FinalizeStepData(tpg);
+
+            // **Print fitness from each episode**
+            // cout << "Episode " << eval.episode << " | Team: " << eval.tm->id_
+            //      << " | Score: " << eval.stats_double[REWARD1_IDX] << endl;
         }
     }
     tpg.printGraphDotGPTPXXI(eval.tm->id_, teams_visitedAllTasks,

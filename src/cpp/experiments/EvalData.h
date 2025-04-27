@@ -63,7 +63,8 @@ struct EvalData {
     EvalData(TPG &tpg) {
         stats_double.resize(tpg.GetParam<int>("n_point_aux_double"));
         stats_int.resize(tpg.GetParam<int>("n_point_aux_int"));
-        animate = tpg.GetParam<int>("animate") == 1;
+        // animate = tpg.GetParam<int>("animate") == 1;
+        animate = false;
         partially_observable = tpg.GetParam<int>("partially_observable") == 1;
         n_prediction = 0;
     }

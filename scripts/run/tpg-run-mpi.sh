@@ -41,10 +41,12 @@ if [ $mode -eq 1 ]; then
    if ls rplay/graphs/* 1> /dev/null 2>&1; then rm replay/graphs/*; fi
   
   
+  checkpoint_in_t=5928 
    # Get fitness of best team
-   best_fitness=$(grep setElTmsMTA  tpg.${seed_tpg}.*.std | \
+  best_fitness=$(grep setElTmsMTA  tpg.${seed_tpg}.*.std | \
      grep " fm 0 " | \
      grep " phs $phase " | \
+     grep " t $checkpoint_in_t " | \
      awk -F"mnOut" '{print $2}' | \
      awk -F "p${phase}t${task_to_replay}a0 " '{print $2}' | \
      awk '{print $1}' | \
@@ -52,14 +54,15 @@ if [ $mode -eq 1 ]; then
      uniq | \
      tail -n 1)
 
-   # Get generation of best team
-   checkpoint_in_t=$(grep setElTmsMTA tpg.${seed_tpg}.*.std | \
-     grep " fm 0 " | \
-     grep "p${phase}t${task_to_replay}a0 ${best_fitness} " | \
-     grep " phs $phase " | \
-     head -n 1 | \
-     awk -F" t " '{print $2}' | \
-     awk '{print $1}')
+  #  Get generation of best team
+  #  add a line to define the generation (for all on them)
+   # checkpoint_in_t=$(grep setElTmsMTA tpg.${seed_tpg}.*.std | \
+   #   grep " fm 0 " | \
+   #   grep "p${phase}t${task_to_replay}a0 ${best_fitness} " | \
+   #   grep " phs $phase " | \
+   #   head -n 1 | \
+   #   awk -F" t " '{print $2}' | \
+   #   awk '{print $1}')
    
    # Get id of best team
    tm_id=$(grep "setElTmsMTA" tpg.${seed_tpg}.*.std | \

@@ -1035,6 +1035,8 @@ class instruction {
 
       int index = std::clamp(static_cast<int>(randomValue), 0, (memory_size-1));
 
+      // cout<<"scalarw "<<index<<endl;
+
       for (int i = 0; i < static_cast<int>(in1_->n_memories_); i++)
       {
          memory_out_->team_scalar_memory_[index]->working_memory_[i](0, 0)=in1_->working_memory_[i](0, 0);
@@ -1048,6 +1050,9 @@ class instruction {
    inline void ExecuteScalarMemReadOp(bool dbg) {
       int row = in0IdxE_ / memory_in1_->rows_; 
       int col = in0IdxE_ % memory_in1_->cols_; 
+
+      // cout<<"scalarr "<<col<<endl; 
+
       out_->working_memory_[outIdxE_](0, 0) = memory_in1_->team_scalar_memory_[col]->working_memory_[row](0, 0);
       if (dbg){
 
@@ -1065,6 +1070,8 @@ class instruction {
 
       int index = std::clamp(static_cast<int>(randomValue), 0, (memory_size-1));
 
+      // cout<<"vectorw "<<index<<endl;
+
       // Loop through all memories in the working memory of the input vector
       for (int i = 0; i < static_cast<int>(in1_->n_memories_); i++) {
          for (int row = 0; row < static_cast<int>(in1_->memory_size_); row++) {
@@ -1081,6 +1088,8 @@ class instruction {
    inline void ExecuteVectorMemReadOp(bool dbg) {
       int row = in0IdxE_ / memory_in1_->rows_; 
       int col = in0IdxE_ % memory_in1_->cols_; 
+
+      // cout<<"vectorr "<<col<<endl;
 
       for (int i = 0; i < static_cast<int>(memory_in1_->team_scalar_memory_[col]->memory_size_); i++){
          out_->working_memory_[outIdxE_](i, 0) = memory_in1_->team_scalar_memory_[col]->working_memory_[row](i, 0);
@@ -1102,6 +1111,8 @@ class instruction {
 
       int index = std::clamp(static_cast<int>(randomValue), 0, (memory_size-1));
 
+      // cout<<"matrixw "<<index<<endl;
+
       for (int i = 0; i < static_cast<int>(in1_->n_memories_); i++) {
         for (int row = 0; row < static_cast<int>(in1_->memory_size_); row++) {
             for (int col = 0; col < static_cast<int>(in1_->memory_size_); col++) {
@@ -1118,6 +1129,8 @@ class instruction {
    inline void ExecuteMatrixMemReadOp(bool dbg) {
       int row = in0IdxE_ / memory_in1_->rows_; 
       int col = in0IdxE_ % memory_in1_->cols_; 
+
+      // cout<<"matrixr "<<col<<endl;
 
       for (int i = 0; i < static_cast<int>(memory_in1_->team_matrix_memory_[col]->memory_size_); i++) {
         for (int j = 0; j < static_cast<int>(memory_in1_->team_matrix_memory_[col]->memory_size_); j++) {

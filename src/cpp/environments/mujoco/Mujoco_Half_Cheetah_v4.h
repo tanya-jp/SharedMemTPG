@@ -87,6 +87,7 @@ class Mujoco_Half_Cheetah_v4 : public MujocoEnv {
             std::copy_n(d_->qvel, m_->nv, obs.begin() + m_->nq);
             //std::fill_n(obs.begin() + m_->nq, m_->nv, 0.0);
          }
+         cout<<"\"Not\""<<endl;
       }
 
       else{
@@ -97,6 +98,7 @@ class Mujoco_Half_Cheetah_v4 : public MujocoEnv {
             std::fill_n(obs.begin(), m_->nq, 0.0);
             std::fill_n(obs.begin() + m_->nq, m_->nv, 0.0);
          }
+         cout<<"\"Blind\""<<endl;
       }
    }
 

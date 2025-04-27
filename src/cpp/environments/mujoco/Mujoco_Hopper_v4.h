@@ -108,12 +108,13 @@ class Mujoco_Hopper_v4 : public MujocoEnv {
    }
 
    void get_obs(std::vector<double>& obs) {
-      uniform_real_distribution<double> dis(0, 2); 
+      uniform_real_distribution<double> dis(0, 3); 
       int blind = dis(rng_);
       auto position_size =
        exclude_current_positions_from_observation_ ? m_->nq - 1 : m_->nq;
 
 	   if (blind == 0){
+         cout<< "\"Not\""<<endl;
          if (exclude_current_positions_from_observation_) {
             std::copy_n(d_->qpos + 1, position_size, state_.begin());
          } else {
@@ -129,6 +130,7 @@ class Mujoco_Hopper_v4 : public MujocoEnv {
       }
 
       else{
+         cout<<"\"Blind\""<<endl;
          std::fill_n(state_.begin(), position_size, 0.0);
          std::fill_n(state_.begin() + position_size, m_->nv, 0.0);
       }
