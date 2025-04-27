@@ -3,8 +3,13 @@
 
 # cpus anywhere
 #SBATCH --ntasks=21               
+<<<<<<< HEAD
 #SBATCH --mem-per-cpu=16G      
 #SBATCH --time=5-00:00  # time (DD-HH:MM)
+=======
+#SBATCH --mem-per-cpu=8G      
+#SBATCH --time=2-15:00  # time (DD-HH:MM)
+>>>>>>> 711154ac232f5fa06bf96f0011609cff23eaa51a
 
 #defaults
 mode=0 #Train:0, Replay:1, Debug:2

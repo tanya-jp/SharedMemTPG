@@ -4,7 +4,11 @@
 # cpus anywhere
 #SBATCH --ntasks=21               
 #SBATCH --mem-per-cpu=4G      
+<<<<<<< HEAD
 #SBATCH --time=0-6:00  # time (DD-HH:MM)
+=======
+#SBATCH --time=0-4:00  # time (DD-HH:MM)
+>>>>>>> 711154ac232f5fa06bf96f0011609cff23eaa51a
 
 #defaults
 mode=0 #Train:0, Replay:1, Debug:2
