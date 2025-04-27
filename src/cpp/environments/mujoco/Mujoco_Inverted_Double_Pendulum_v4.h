@@ -23,7 +23,7 @@ public:
 
         initialize_simulation();
 
-        obs_size_ = 11;
+        obs_size_ = 9;
         state_.resize(obs_size_);
     }
 
@@ -70,7 +70,7 @@ public:
     }
 
     void get_obs(std::vector<double>& obs) {
-       uniform_real_distribution<double> dis(0, 2); 
+       uniform_real_distribution<double> dis(0, 3); 
        int blind = dis(rng_);
 	   if (blind == 0){
             //int obs2 = dis(rng_);
@@ -95,13 +95,17 @@ public:
             }
 
             // obs[8], obs[9], obs[10]: qfrc_constraint[0], [1], [2], clipped to [-10,10]
-            for (int i = 0; i < 3; i++) {
-                obs[8 + i] = std::max(std::min(d_->qfrc_constraint[i], 10.0), -10.0);
-            }
+            // for (int i = 0; i < 3; i++) {
+            //     obs[8 + i] = std::max(std::min(d_->qfrc_constraint[i], 10.0), -10.0);
+            // }
+            // cout << "***" << obs[8] << " " << obs[9] << " " << obs[10]<< endl;
+            obs[8] = std::max(std::min(d_->qfrc_constraint[0], 10.0), -10.0);
+            cout<< "\"Not\""<<endl;
         }
 	    else{
-            for (int i=0; i<11; i++)
+            for (int i=0; i<9; i++)
                 obs[i] = 0;
+            cout<<"\"Blind\""<<endl;
         } 
 
         //obs[obs1] = 0.0;
