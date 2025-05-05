@@ -163,7 +163,7 @@ void team::updateComplexityRecord(map<long, team *> &teamMap, int rtcIndex,
        getMeanOutcome(phase, 0, rtcIndex - 1, auxInt, auxIntMatch, false, true);
 }
 
-// TODO(skelly): remove shared memory code
+// TODO(sk): remove shared memory code
 /******************************************************************************/
 // void team::GetAllMemories(
 //     map<long, team *> &teamMap, set<team *, teamIdComp> &visitedTeams,
@@ -360,7 +360,7 @@ double team::getMeanOutcome(int phase, int task, int auxDouble, int auxInt,
 }
 
 /******************************************************************************/
-// TODO(skelly): fix outcomes_ data structure
+// TODO(sk): fix outcomes_ data structure
 double team::GetMedianOutcome(int phase, int task, int auxDouble) {
    vector<double> outcomes;
    for (auto o1 : outcomes_) {  //task
@@ -649,7 +649,7 @@ RegisterMachine *team::getAction(
 
       featuresSingle = prog->features_;
       features.insert(featuresSingle.begin(), featuresSingle.end());
-      // TODO(skelly): remove shared memory code
+      // TODO(sk): remove shared memory code
       //  for (int mem_t = 0; mem_t < MemoryEigen::kNumMemoryType_;
       //  mem_t++) {
       //    memories.insert(prog->MemGet(mem_t));

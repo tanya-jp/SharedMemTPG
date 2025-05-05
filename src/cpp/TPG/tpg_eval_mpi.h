@@ -213,7 +213,7 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
     eval.tm = tm;
 
     vector<int> steps_per_task(tpg.GetState("n_task"), 0);
-    // TODO(skelly): clean up
+    // TODO(sk): clean up
     tpg.rngs_[AUX_SEED].seed(tpg.GetParam<int>("seed_aux"));
     for (int task = 0; task < tpg.GetState("n_task"); task++) {
         tpg.state_["active_task"] = task;

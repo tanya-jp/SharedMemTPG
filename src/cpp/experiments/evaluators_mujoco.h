@@ -1,4 +1,4 @@
-// TODO(skelly): move visualization code the MujocoEnv.h
+// TODO(sk): move visualization code the MujocoEnv.h
 #ifndef evaluators_mujoco_h
 #define evaluators_mujoco_h
 

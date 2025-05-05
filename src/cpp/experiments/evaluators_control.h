@@ -35,7 +35,7 @@ void MaybeAnimateStep(EvalData &eval) {
         sprintf(filename, "%s_%05d_%03d_%05d_%05d_%05d.tga", "replay/frames/gl",
                 eval.save_frame++, eval.episode, eval.task->step_, 0, 0);
         task->SaveScreenshotToFile(filename, 1200, 1200);
-        // this_thread::sleep_for(std::chrono::milliseconds(10)); TODO(skelly):
+        // this_thread::sleep_for(std::chrono::milliseconds(10)); TODO(sk):
         // add
     }
 #endif

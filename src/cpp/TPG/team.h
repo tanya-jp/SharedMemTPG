@@ -200,7 +200,7 @@ class team {
     // team_memory_.printMemory();
   };
 
-  ~team() {  // TODO(skelly) clean outcome data structure
+  ~team() {  // TODO(sk) clean outcome data structure
     for (auto ouiter1 = outcomes_.begin(); ouiter1 != outcomes_.end();
          ouiter1++) {
       for (auto ouiter2 = ouiter1->second.begin();
@@ -280,7 +280,7 @@ class team {
   int numActivePrograms_;
   int numEffectiveInstructions_;
   int numActiveFeatures_;
-  // TODO(skelly): simplify this data structure
+  // TODO(sk): simplify this data structure
   // Maps point[task][phase][envSeed] -> outcome
   map<int, map<int, map<int, point *>>> outcomes_;
 
@@ -323,7 +323,7 @@ struct teamFitnessLexicalCompare {
       t1->lastCompareFactor_ = 7;
       t2->lastCompareFactor_ = 7;
 
-      // TODO(skelly): potential dramatic effect on neutrality & evolution!
+      // TODO(sk): potential dramatic effect on neutrality & evolution!
       // return t1->id_ > t2->id_;    // Younger is better
       return t1->id_ < t2->id_;  // Older is better
     }

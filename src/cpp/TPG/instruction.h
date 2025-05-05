@@ -102,7 +102,7 @@ class instruction {
    mt19937 rng_;
 
    // Mutable instruction parameters
-   // TODO(skelly) synch variable naming with index naming in1_ -> in0_, etc
+   // TODO(sk) synch variable naming with index naming in1_ -> in0_, etc
    // Whether in1 is a memory or input reference
    // 0: memory ref
    // 1: observation ref
@@ -181,7 +181,7 @@ class instruction {
    inline void exec(bool dbg) {
       (this->*op_list_[op_])(dbg);
 
-      // TODO(skelly): set to 1.0 instead of 0.0?
+      // TODO(sk): set to 1.0 instead of 0.0?
       // Change infinite values to 0.0 in output memory
       // This "protects" output memory by filtering nan value.
       // TODO (Tan) have this for the shared memory
@@ -271,7 +271,7 @@ class instruction {
       double* scalar = in == 0 ? &scalar_in1_ : &scalar_in2_;
       int* index = in == 0 ? &in0Idx_ : &in1Idx_;
       if (IsObs(in)) {
-         // TODO (skelly): should this also be range limited to memory_size?
+         // TODO (sk): should this also be range limited to memory_size?
          *scalar = obs->stateValueAtIndex(*index % obs->dim_);
       } else {
          MemoryEigen* input_memory = in == 0 ? in1_ : in2_;
@@ -341,7 +341,7 @@ class instruction {
       // Protected division
       if (isEqual(scalar_in2_, 0.0)) {
          out_->working_memory_[outIdxE_](0, 0) =
-             0;  // TODO(skelly): 1.0 instead?
+             0;  // TODO(sk): 1.0 instead?
       } else {
          out_->working_memory_[outIdxE_](0, 0) = scalar_in1_ / scalar_in2_;
       }
@@ -955,7 +955,7 @@ class instruction {
       }
    }
 
-   // TODO(skelly): warning: this op assumes obs_buff == memory_size
+   // TODO(sk): warning: this op assumes obs_buff == memory_size
    // so, can't evolve obs buff size
    inline void ExecuteObsBuffSliceOp(bool dbg) {
       for (size_t i = 0; i < in1_->working_memory_.size(); i++) {
@@ -964,7 +964,7 @@ class instruction {
       }
 
       if (dbg) {
-         // TO(skelly): improve debug format
+         // TO(sk): improve debug format
          cerr << "from ";
          for (size_t i = 0; i < in1_->working_memory_.size(); i++) {
             cerr << " " << in1_->working_memory_[i](in2IdxE_, 0);

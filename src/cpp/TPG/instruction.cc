@@ -409,7 +409,7 @@ instruction::instruction(std::unordered_map<string, std::any> &params,
 
 // Copy constructor
 instruction::instruction(instruction &i) {
-  // TODO(skelly): check which things actually need to be copied
+  // TODO(sk): check which things actually need to be copied
   memIndices_ = i.memIndices_;
   out_ = i.out_;
   in1_ = i.in1_;
@@ -431,7 +431,7 @@ instruction::instruction(instruction &i) {
 
 void instruction::Mutate(bool randomize, vector<bool> &legal_ops,
                          int observation_buff_size, mt19937 &rng) {
-  const int max_index = 1000000;  // TODO(skelly): fix magic
+  const int max_index = 1000000;  // TODO(sk): fix magic
   auto dis_index = std::uniform_int_distribution<>(0, max_index);                         
   if (randomize) {  // Randomly set each part of this instruction.
     std::uniform_int_distribution<> dis(0, 1);
@@ -443,7 +443,7 @@ void instruction::Mutate(bool randomize, vector<bool> &legal_ops,
       op_ = dis(rng);
     } while (!legal_ops[op_]);
 
-    //TODO(skelly): use MutateInt()
+    //TODO(sk): use MutateInt()
     outIdx_ = dis_index(rng);
     in0Idx_ = dis_index(rng);
     in1Idx_ = dis_index(rng);

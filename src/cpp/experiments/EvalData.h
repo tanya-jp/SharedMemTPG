@@ -83,7 +83,7 @@ struct EvalData {
             if (tpg.GetParam<string>("forecast_fitness") == "mse") {
                 auto err = MeanSquaredError(sequence_targ, sequence_pred);
                 stats_double[REWARD1_IDX] = -err;
-                // TODO(skelly): remove debug out
+                // TODO(sk): remove debug out
                 // cerr << "targ " << vecToStr(sequence_targ) << endl;
                 // cerr << " pred " << vecToStr(sequence_pred) << endl;
                 // cerr << "err " << err << endl;
@@ -163,7 +163,7 @@ struct EvalData {
             tpg.setOutcome(root_teams_map[rslt_id], fingerprint, r_stats_double,
                            r_stats_int, tpg.GetState("t_current"));
             // For control tasks, re-use training results as validation.
-            // TODO(skelly): fix
+            // TODO(sk): fix
             if (r_stats_int[POINT_AUX_INT_PHASE] == _TRAIN_PHASE &&
                 (tasks[tpg.GetParam<int>("active_task")]->eval_type_ ==
                      "Control" ||

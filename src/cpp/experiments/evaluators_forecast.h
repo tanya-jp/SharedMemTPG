@@ -13,7 +13,7 @@ void SaveRecursiveForecast(TPG &tpg, EvalData &eval) {
                 eval.sequence_targ.push_back(targ[var]);    
                 eval.sequence_pred.push_back(pred[var]);    
             }
-            // // TODO(skelly):remove debugging output
+            // // TODO(sk):remove debugging output
             // cerr << "targ " << vecToStr(targ) << endl;
             // cerr << "pred " << vecToStr(pred) << endl;
 }
@@ -125,7 +125,7 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalData &eval,
             eval.tm, eval.obs, true, eval.teams_visited, eval.instruction_count,
             eval.task->step_, eval.team_path, tpg.rngs_[AUX_SEED], false);
 
-        // Team user per task stats TODO(skelly): move to accumulator?
+        // Team user per task stats TODO(sk): move to accumulator?
         for (auto tm : eval.teams_visited) {
             if (teamUseMapPerTask[tpg.state_["active_task"]].find(tm->id_) ==
                 teamUseMapPerTask[tpg.state_["active_task"]].end()) {
@@ -151,7 +151,7 @@ void EvalRecursiveForecastViz(TPG &tpg, EvalData &eval,
         eval.program_out = tpg.getAction(
             eval.tm, eval.obs, true, eval.teams_visited, eval.instruction_count,
             task->step_, eval.team_path, tpg.rngs_[AUX_SEED], false);
-        // Team user per task stats TODO(skelly): move to accumulator?
+        // Team user per task stats TODO(sk): move to accumulator?
         for (auto tm : eval.teams_visited) {
             if (teamUseMapPerTask[tpg.state_["active_task"]].find(tm->id_) ==
                 teamUseMapPerTask[tpg.state_["active_task"]].end()) {

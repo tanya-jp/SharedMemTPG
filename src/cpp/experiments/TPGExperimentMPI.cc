@@ -224,7 +224,7 @@ int main(int argc, char** argv) {
       } else {
          while (tpg.GetState("t_current") <=
                 tpg.GetParam<int>("n_generations")) {
-            tpg.phylo_graph_.clear();  // TODO(skelly): add switch for phylo     
+            tpg.phylo_graph_.clear();  // TODO(sk): add switch for phylo     
             // Replacement /////////////////////////////////////////////////
             if (tpg.GetState("t_current") > tpg.GetState("t_start")) {
                startGenTeams = chrono::system_clock::now();

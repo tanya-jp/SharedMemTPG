@@ -1,5 +1,5 @@
 #!/bin/bash 
-#SBATCH --account=def-skelly
+#SBATCH --account=def-sk
 
 # cpus anywhere
 #SBATCH --ntasks=21               

@@ -170,7 +170,7 @@ RegisterMachine::~RegisterMachine() {
    for (auto *m : observation_memory_buff_) delete m;
 }
 
-// TODO(skelly): WARNING: confirm this function works as expected.
+// TODO(sk): WARNING: confirm this function works as expected.
 void RegisterMachine::MarkFeatures(instruction *istr, int in) {
    // Setting input memory pointer is required for MarkIntrons.
    istr->SetInMem(in, observation_memory_buff_[istr->GetInType(in)]);
@@ -235,7 +235,7 @@ void RegisterMachine::MarkIntrons(
    //    }
    // }
 
-   // // TODO(skelly): Is this the most efficient method? Currently O(n^2)
+   // // TODO(sk): Is this the most efficient method? Currently O(n^2)
    // for (size_t t = 0; t < instructions_.size(); t++) {
    //    instructions_effective_.clear();
    //    // Count occurance of each op.
@@ -340,7 +340,7 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
       // Change observation index
       if (dis_real(rng) <
           std::any_cast<double>(params["p_observation_index"])) {
-         const int max_index = 1000000;  // TODO(skelly): fix magic #
+         const int max_index = 1000000;  // TODO(sk): fix magic #
          uniform_int_distribution<int> dis(0, max_index);
          auto prev = obs_index_;
          do {
@@ -354,7 +354,7 @@ void RegisterMachine::Mutate(std::unordered_map<std::string, std::any> &params,
 // This functions currently assumes obs is a vector of state vars
 void RegisterMachine::CopyObservationToMemoryBuff(state *obs, size_t mem_t) {
    auto memory_size = private_memory_[0]->memory_size_;
-   // TODO(skelly): this can be optimized further
+   // TODO(sk): this can be optimized further
    int n_col = mem_t == MemoryEigen::kVectorType_ ? 1 : memory_size;
    MatrixDynamic mat(memory_size, n_col);
 

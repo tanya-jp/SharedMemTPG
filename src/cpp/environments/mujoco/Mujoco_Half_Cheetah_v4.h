@@ -70,7 +70,7 @@ class Mujoco_Half_Cheetah_v4 : public MujocoEnv {
 
       auto reward = rewards - costs;
       step_++;
-      return {reward, 0.0};  // TODO(skelly): maybe add gym 'info' to results
+      return {reward, 0.0};  // TODO(sk): maybe add gym 'info' to results
    }
 
    void get_obs(std::vector<double>& obs) {

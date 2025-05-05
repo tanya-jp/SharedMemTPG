@@ -1,5 +1,5 @@
 #!/bin/bash 
-#SBATCH --account=def-skelly
+#SBATCH --account=def-sk
 
 # # whole node node
 # #SBATCH --nodes=1

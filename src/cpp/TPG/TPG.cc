@@ -33,7 +33,7 @@ void TPG::RemoveTeam(team *tm) {
    for (auto prog : tm->members_) {
       prog->nrefs_--;
    }
-   // TODO(skelly): test cloning
+   // TODO(sk): test cloning
    if (_teamMap.find(tm->cloneId_) != _teamMap.end())
       _teamMap[tm->cloneId_]->clones_--;
    _teamMap.erase(tm->id_);
@@ -362,7 +362,7 @@ void TPG::ReadParameters(string file_name,
       if (outcome_fields[0] == "MATRIX_MEM_READ_OP")
          _ops[instruction::MATRIX_MEM_READ_OP_] = true;
 
-      // TODO(skelly): make types part of parameter file
+      // TODO(sk): make types part of parameter file
       // string parameters are "hard coded" here
       if (outcome_fields[0] == "active_tasks" ||
           outcome_fields[0] == "n_input" ||
@@ -405,13 +405,13 @@ void TPG::setOutcome(team *tm, string behav, vector<double> &rewards,
 
 /******************************************************************************/
 void TPG::finalize() {
-   // TODO(skelly): remove clears that are not required
+   // TODO(sk): remove clears that are not required
    _allComponentsA.clear();
    _allComponentsAt.clear();
    _eliteTeams.clear();
    _eliteTeamPS.clear();
    _teamMap.clear();
-   _Memids.clear();  //TODO(skelly): remove 
+   _Memids.clear();  //TODO(sk): remove 
    _Memids.resize(MemoryEigen::kNumMemoryType_);
    state_["memory_count"] = 0;
    _numEliteTeamsCurrent.clear();
@@ -554,7 +554,7 @@ void TPG::MutateActionToTeam(RegisterMachine *prog_to_mu, team *new_team,
          tm->clone(phylo_graph_, &sub);
          prog_to_mu->action_ = sub->id_;
          sub->AddIncomingProgram(prog_to_mu->id_);
-         // TODO(skelly): put in PhyloGraph functions
+         // TODO(sk): put in PhyloGraph functions
          phylo_graph_[tm->id_].adj.push_back(sub->id_);
          phylo_graph_.insert(pair<long, phyloRecord>(sub->id_, phyloRecord()));
          phylo_graph_[sub->id_].gtime = GetState("t_current");
@@ -596,7 +596,7 @@ void TPG::AddTeamToPhylogeny(team *new_team) {
 /******************************************************************************/
 team* TPG::TeamCrossover(team* parent1, team* parent2) {
    team* child_team = new team(GetState("t_current"), state_["team_count"]++, params_);
-   // TODO(skelly): linear crossover
+   // TODO(sk): linear crossover
    if (parent1->size() == 1 && 
        parent2->size() == 1 &&
        parent1->members_.front()->instructions_.size() > 1 && 
@@ -619,7 +619,7 @@ team* TPG::TeamCrossover(team* parent1, team* parent2) {
       auto p1liter = p1programs.begin();
       std::list<RegisterMachine*> p2programs = parent2->members_;
       auto p2liter = p2programs.begin();
-      // TODO(skelly): intertwine crossover
+      // TODO(sk): intertwine crossover
       while (p1liter != p1programs.end() || p2liter != p2programs.end()) {
          if (p1liter != p1programs.end()) {
             if ((*p1liter)->action_ < 0 && child_team->n_atomic_ < 1) {
@@ -680,7 +680,7 @@ void TPG::GenerateNewTeams() {
       std::copy(team_pop_.begin(), team_pop_.end(), candidate_parent_teams.begin());
    }
    for (auto &subset : task_power_set) {
-      //TODO(skelly): put selection in a separate function
+      //TODO(sk): put selection in a separate function
       if (GetParam<int>("parent_select_roots_only")) {
          if (task_set_map_[vecToStrNoSpace(subset)].size() == 0) continue;
          candidate_parent_teams = task_set_map_[vecToStrNoSpace(subset)];
@@ -737,7 +737,7 @@ void TPG::ApplyVariationOps(team *team_to_modify, int &n_new_teams) {
           team_to_modify->CopyMembers();
       for (auto prog : new_team_programs) {
          if (real_dist_(rngs_[TPG_SEED]) < 1.0 / new_team_programs.size()) {
-            // TODO(skelly): add/remove changes order and thus behaviour?
+            // TODO(sk): add/remove changes order and thus behaviour?
             team_to_modify->RemoveProgram(prog);
             RegisterMachine *prog_clone = CloneProgram(prog);
             // ProgramMutator_Memory(prog_clone);
@@ -772,7 +772,7 @@ team* TPG::GetBestTeam() {
 void TPG::UpdateTeamPhyloData(team *tm) {
    // MarkEffectiveCode(tm);
    if (tm->runTimeComplexityIns() == 0) {
-      // TODO(skelly): clean out magic number - 2
+      // TODO(sk): clean out magic number - 2
       tm->updateComplexityRecord(_teamMap,
                                  GetParam<int>("n_point_aux_double") - 2);
    }
@@ -854,7 +854,7 @@ vector<team *> TPG::NormalizeScoresAndRankTeams(
              "This team should have a score for all tasks.");
       }
       tm->fit_ = *min_element(normalizedScores.begin(), normalizedScores.end());
-      // TODO(skelly): debug, test, and cleanup complexity record
+      // TODO(sk): debug, test, and cleanup complexity record
       // GetParam<int>("n_point_aux_double") - 2 refers to
       // decision_instructions
       tm->updateComplexityRecord(_teamMap,
@@ -873,7 +873,7 @@ void TPG::FindMultiTaskElites(vector<TaskEnv *> &tasks,
    for (auto &set : PS) {
       if (GetState("phase") == _TRAIN_PHASE)
          task_set_map_[vecToStrNoSpace(set)]
-             .clear();  // TODO(skelly): check this
+             .clear();  // TODO(sk): check this
       auto teams_normed_scores =
           NormalizeScoresAndRankTeams(tasks, set, min_scores, max_scores);
 
@@ -1011,7 +1011,7 @@ void TPG::InitTeams() {
          AddProgram(new_prog);  // add program to program population
       }
       AddTeam(new_team);  // add team to team population
-      phyloRecord p;  // TODO(skelly): make pointer?
+      phyloRecord p;  // TODO(sk): make pointer?
       phylo_graph_.insert(pair<long, phyloRecord>(new_team->id_, p));
       phylo_graph_[new_team->id_].gtime = 0;
    }
@@ -2262,7 +2262,7 @@ void TPG::RegisterMachineCrossover(RegisterMachine* p1, RegisterMachine* p2,
 
 /******************************************************************************/
 // Read in populations from a checkpoint file.
-// TODO(skelly): move reading logic to "deserialize" constructors and cleanup
+// TODO(sk): move reading logic to "deserialize" constructors and cleanup
 void TPG::ReadCheckpoint(long t, int phase, int chkpID, bool fromString,
                          const string &inString) {
    finalize();  // clear populations
@@ -2389,7 +2389,7 @@ void TPG::TeamSizesMatchProgRefs() {
 }
 
 /******************************************************************************/
-// TODO(skelly): survivor selection
+// TODO(sk): survivor selection
 void TPG::SelectTeams() {
 
    int n_old_deleted = 0;

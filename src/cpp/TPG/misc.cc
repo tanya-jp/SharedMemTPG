@@ -152,7 +152,7 @@ vector<string> SplitString(const string& s, char delim) {
 }
 
 /******************************************************************************/
-// TODO(skelly): ChatGPT code:
+// TODO(sk): ChatGPT code:
 std::string ExpandEnvVars(const std::string& str) {
    std::string result;
    size_t pos = 0;

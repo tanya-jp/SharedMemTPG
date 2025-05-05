@@ -7,7 +7,7 @@
 
 class RegisterMachine {
   public:
-   bool from_string_;        // TODO(skelly):remove
+   bool from_string_;        // TODO(sk):remove
    bool use_evolved_const_;  // Fixed parameter: whether to use constants
    bool stateful_;           // Fixed parameter: whether memories maintain state
 
