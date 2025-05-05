@@ -234,7 +234,7 @@ void replayer_viz(TPG &tpg, vector<TaskEnv *> &tasks) {
             //     eval.task->GetNumEval(tpg.GetParam<int>("checkpoint_in_phase"));
 
             // **Set the number of episodes (Change this value as needed)**
-            eval.tm->_n_eval = 100;
+            eval.tm->_n_eval = 3;
         }
         for (eval.episode = 0; eval.episode < eval.tm->_n_eval;
              eval.episode++) {

@@ -41,7 +41,7 @@ if [ $mode -eq 1 ]; then
    if ls rplay/graphs/* 1> /dev/null 2>&1; then rm replay/graphs/*; fi
   
   
-  checkpoint_in_t=5928 
+  checkpoint_in_t=1286 
    # Get fitness of best team
   best_fitness=$(grep setElTmsMTA  tpg.${seed_tpg}.*.std | \
      grep " fm 0 " | \
