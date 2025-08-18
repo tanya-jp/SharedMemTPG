@@ -4,6 +4,8 @@ This code reproduces results from the paper:
 
 Stephen Kelly, Tatiana Voegerl, Wolfgang Banzhaf, and Cedric Gondro. Evolving Hierarchical Memory-Prediction Machines in Multi-Task Reinforcement Learning. Genetic Programming and Evolvable Machines, 2021. [pdf](https://rdcu.be/czd3s)
 
+For the latest versions of this project, please visit [Creative Algorithms Lab's GitLab page](https://gitlab.cas.mcmaster.ca/kellys32/tpg).
+
 ## Quick Start
 
 This code is designed to be used in Linux. If you use Windows, you can use Windows Subsystem for Linux (WSL). You can work with WSL in Visual Studio Code by following [this tutorial](https://code.visualstudio.com/docs/remote/wsl-tutorial). Run this to automatically install all dependencies and compile:
