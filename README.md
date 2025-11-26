@@ -1,9 +1,13 @@
 # Tangled Program Graphs (TPG)
 This code reproduces results from the paper: 
 
-Stephen Kelly, Tatiana Voegerl, Wolfgang Banzhaf, and Cedric Gondro. Evolving Hierarchical Memory-Prediction Machines in Multi-Task Reinforcement Learning. Genetic Programming and Evolvable Machines, 2021. [pdf](https://rdcu.be/czd3s)
+- Tanya Djavaherpour, Ali Naqvi, Fatemeh Norouziani, Quentin Vacher, Stephen Kelly. Genetic Encoding and Shared Knowledge in Reinforcement Learning with Structured Memory, ALife 2025.
 
-For the latest versions of this project, please visit [Creative Algorithms Lab's GitLab page](https://gitlab.cas.mcmaster.ca/kellys32/tpg).
+The base TPG implementation is from the paper:
+
+- Stephen Kelly, Tatiana Voegerl, Wolfgang Banzhaf, and Cedric Gondro. Evolving Hierarchical Memory-Prediction Machines in Multi-Task Reinforcement Learning. Genetic Programming and Evolvable Machines, 2021. [pdf](https://rdcu.be/czd3s)
+
+- For the latest versions of the TPG project, please visit [Creative Algorithms Lab's GitLab page](https://gitlab.cas.mcmaster.ca/kellys32/tpg).
 
 ## Quick Start
 This code is designed to be used in Linux. If you use Windows, you can use Windows Subsystem for Linux (WSL). You can work with WSL in Visual Studio Code by following [this tutorial](https://code.visualstudio.com/docs/remote/wsl-tutorial).
